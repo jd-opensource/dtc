@@ -1,0 +1,12 @@
+{
+    global:
+	*DTC*;
+	__invoke_dynamic_linker__;
+	set_network_mode;
+    set_server_address;
+    set_server_tablename;
+
+    local:
+	*;
+};
+
