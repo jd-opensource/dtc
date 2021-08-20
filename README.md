@@ -6,7 +6,7 @@
 * g++ 4.8
 * cmake >= 3.6.2
 * 执行以下命令安装依赖：<br />
-    `sudo apt-get install snappy libsnappy-dev zlib1g zlib1g-dev bzip2 liblz4-dev libasan0  openssl`<br />
+    `sudo apt-get install snappy libsnappy-dev zlib1g zlib1g-dev bzip2 liblz4-dev libasan0  openssl libmxml-dev`<br />
 * 安装gflags:<br />
     gflags是google开源的一套命令行参数解析工具，支持从环境变量和配置文件读取参数<br />
     `git clone https://github.com/gflags/gflags.git`<br />
