@@ -1,4 +1,4 @@
-![DTC](http://dtc.jd.com/images/dtc_logo.png)
+![DTC](http://storage.360buyimg.com/bq-install/release/dtc_logo.png)
 # 编译
 ## 编译依赖包
 ### Ubuntu
