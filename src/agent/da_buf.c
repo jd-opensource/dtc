@@ -1,9 +1,18 @@
 /*
- * da_buf.c
- *
- *  Created on: 2014Äê12ÔÂ3ÈÕ
- *      Author: Jiansong
- */
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 #include "da_buf.h"
 #include "stdlib.h"
 #include "da_mem_pool.h"
@@ -78,7 +87,7 @@ struct mbuf *mbuf_get() {
 }
 
 /*
- * ½«mbuf¹é»¹ÄÚ´æ³Ø
+ * å°†mbufå½’è¿˜å†…å­˜æ± 
  */
 void mbuf_put(struct mbuf *mbuf) {
 	uint8_t *buf;
@@ -90,7 +99,7 @@ void mbuf_put(struct mbuf *mbuf) {
 }
 
 /*
- * ÖØÖÃmbuf
+ * é‡ç½®mbuf
  */
 void mbuf_rewind(struct mbuf *mbuf) {
 	mbuf->pos = mbuf->start;
@@ -98,7 +107,7 @@ void mbuf_rewind(struct mbuf *mbuf) {
 }
 
 /*
- * ·µ»ØmbufÖÐÏÖÓÐµÄÊý¾Ý
+ * è¿”å›žmbufä¸­çŽ°æœ‰çš„æ•°æ®
  */
 uint32_t mbuf_length(struct mbuf *mbuf) {
 	ASSERT(mbuf->last >= mbuf->pos);
