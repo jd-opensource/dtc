@@ -1,9 +1,18 @@
 /*
- * da_server.c
- *
- *  Created on: 2014Äê12ÔÂ2ÈÕ
- *      Author: Jiansong
- */
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 #include <inttypes.h>
 #include "da_server.h"
 #include "da_hashkit.h"
@@ -17,10 +26,10 @@
 #include "da_stats.h"
 #include "da_time.h"
 
-static int keep_alive = 1;   // ¿ªÆôkeepaliveÊôĞÔ. È±Ê¡Öµ: 0(¹Ø±Õ)  
-static int keep_idle = 5;   // Èç¹ûÔÚ60ÃëÄÚÃ»ÓĞÈÎºÎÊı¾İ½»»¥,Ôò½øĞĞÌ½²â. È±Ê¡Öµ:7200(s)  
-static int keep_interval = 5;   // Ì½²âÊ±·¢Ì½²â°üµÄÊ±¼ä¼ä¸ôÎª5Ãë. È±Ê¡Öµ:75(s)  
-static int keep_count = 1;   // Ì½²âÖØÊÔµÄ´ÎÊı. È«²¿³¬Ê±ÔòÈÏ¶¨Á¬½ÓÊ§Ğ§..È±Ê¡Öµ:9(´Î)  
+static int keep_alive = 1;   // å¼€å¯keepaliveå±æ€§. ç¼ºçœå€¼: 0(å…³é—­)  
+static int keep_idle = 5;   // å¦‚æœåœ¨60ç§’å†…æ²¡æœ‰ä»»ä½•æ•°æ®äº¤äº’,åˆ™è¿›è¡Œæ¢æµ‹. ç¼ºçœå€¼:7200(s)  
+static int keep_interval = 5;   // æ¢æµ‹æ—¶å‘æ¢æµ‹åŒ…çš„æ—¶é—´é—´éš”ä¸º5ç§’. ç¼ºçœå€¼:75(s)  
+static int keep_count = 1;   // æ¢æµ‹é‡è¯•çš„æ¬¡æ•°. å…¨éƒ¨è¶…æ—¶åˆ™è®¤å®šè¿æ¥å¤±æ•ˆ..ç¼ºçœå€¼:9(æ¬¡)  
 
 
 void instance_ref(struct conn *conn, void *owner) {
@@ -876,7 +885,7 @@ int server_pool_run(struct server_pool *pool) {
 }
 
 /*
- * ¶ÔÓÚÃ¿¸öserver pool ¹¹½¨ºóÌ¨µÄ·şÎñÆ÷½á¹¹£¬¹¹½¨hash»·
+ * å¯¹äºæ¯ä¸ªserver pool æ„å»ºåå°çš„æœåŠ¡å™¨ç»“æ„ï¼Œæ„å»ºhashç¯
  */
 static int server_pool_each_run(void *elem, void *data) {
 	return server_pool_run(elem);
@@ -885,7 +894,7 @@ static int server_pool_each_run(void *elem, void *data) {
 
 
 /*
- * ³õÊ¼»¯server pool
+ * åˆå§‹åŒ–server pool
  */
 int server_pool_init(struct array *server_pool, struct array *conf_pool,
 		struct context *ctx) {
@@ -902,7 +911,7 @@ int server_pool_init(struct array *server_pool, struct array *conf_pool,
 	}
 
 	/* transform conf pool to server pool */
-	// ¶ÔÓÚconf_poolÖĞµÄÃ¿¸ö¶ÔÏóµ÷ÓÃconf_pool_each_transformº¯Êı
+	// å¯¹äºconf_poolä¸­çš„æ¯ä¸ªå¯¹è±¡è°ƒç”¨conf_pool_each_transformå‡½æ•°
 	status = array_each(conf_pool, conf_pool_each_transform, server_pool);
 	if (status != 0) {
 		server_pool_deinit(server_pool);
