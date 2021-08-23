@@ -1,31 +1,39 @@
 /*
- * da_mem.h
+ * Copyright [2021] JD.com, Inc.
  *
- *  Created on: 2014Äê11ÔÂ30ÈÕ
- *      Author: Jiansong
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef DA_MEM_POOL_H_
 #define DA_MEM_POOL_H_
 
+#include "da_queue.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "da_queue.h"
-
 
 #define MEM_F_SHARED 0x01
 
 struct pool_head {
-	void **free_list;
-	CIRCLEQ_ENTRY(pool_head) pool_circqe;
-	unsigned int used;
-	unsigned int allocated;
-	unsigned int limit;
-	unsigned int minavail;
-	unsigned int size;
-	unsigned int flags;
-	unsigned int users;
-	char name[12];
+  void **free_list;
+  CIRCLEQ_ENTRY(pool_head) pool_circqe;
+  unsigned int used;
+  unsigned int allocated;
+  unsigned int limit;
+  unsigned int minavail;
+  unsigned int size;
+  unsigned int flags;
+  unsigned int users;
+  char name[12];
 };
 
 CIRCLEQ_HEAD(pool_circqh, pool_head);
@@ -40,7 +48,8 @@ void init_pools();
  * returns it, otherwise creates this one. NULL is returned if no memory
  * is available for a new creation.
  */
-struct pool_head *create_pool(char *name, unsigned int size, unsigned int flags);
+struct pool_head *create_pool(char *name, unsigned int size,
+                              unsigned int flags);
 
 /* Allocate a new entry for pool <pool>, and return it for immediate use.
  * NULL is returned if no memory is available for a new creation.
@@ -78,17 +87,17 @@ void dump_pools(void);
  * first case, <pool_type> is updated to point to the
  * next element in the list.
  */
-#define pool_alloc(pool)                                        \
-({                                                              \
-        void *__p;                                              \
-        if ((__p = (pool)->free_list) == NULL)					\
-                __p = pool_refill_alloc(pool);                  \
-        else {                                                  \
-                (pool)->free_list = *(void **)(pool)->free_list;\
-                (pool)->used++;									\
-        }                                                       \
-        __p;                                                    \
-})
+#define pool_alloc(pool)                                                       \
+  ({                                                                           \
+    void *__p;                                                                 \
+    if ((__p = (pool)->free_list) == NULL)                                     \
+      __p = pool_refill_alloc(pool);                                           \
+    else {                                                                     \
+      (pool)->free_list = *(void **)(pool)->free_list;                         \
+      (pool)->used++;                                                          \
+    }                                                                          \
+    __p;                                                                       \
+  })
 
 /*
  * Puts a memory area back to the corresponding pool.
@@ -99,13 +108,13 @@ void dump_pools(void);
  * pointer. Just like with the libc's free(), nothing
  * is done if <ptr> is NULL.
  */
-#define pool_free(pool, ptr)                           			\
-({                                                      		\
-        if (likely((ptr) != NULL)) {                    		\
-                *(void **)(ptr) = (void *)(pool)->free_list;	\
-                (pool)->free_list = (void *)(ptr);				\
-                (pool)->used--;									\
-        }                                               		\
-})
+#define pool_free(pool, ptr)                                                   \
+  ({                                                                           \
+    if (likely((ptr) != NULL)) {                                               \
+      *(void **)(ptr) = (void *)(pool)->free_list;                             \
+      (pool)->free_list = (void *)(ptr);                                       \
+      (pool)->used--;                                                          \
+    }                                                                          \
+  })
 
 #endif /* DA_MEM_H_ */
