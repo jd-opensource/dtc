@@ -1,0 +1,23 @@
+# Build matrix / environment variables are explained on:
+# http://about.travis-ci.org/docs/user/build-configuration/
+# This file can be validated on: http://lint.travis-ci.org/
+
+language: cpp
+sudo: required
+
+compiler:
+- gcc
+- g++
+os:
+- linux
+
+install:
+- echo ${CC}
+- echo ${CXX}
+- ${CXX} --version
+- cmake --version
+- sudo apt-get install snappy libsnappy-dev zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
+
+script:
+- cd src/
+- make
