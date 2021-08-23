@@ -1,9 +1,18 @@
 /*
- * da_listener.c
- *
- *  Created on: 2014年12月3日
- *      Author: Jiansong
- */
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 #include "da_listener.h"
 #include "da_array.h"
@@ -243,7 +252,7 @@ static int listener_accept(struct context *ctx, struct conn *l) {
 				continue;
 			}
 			/*
-			 * 多进程情况下，同时accept会出现错误，errno=11,程序吞掉这个错误
+			 * 澶氳繘绋嬫儏鍐典笅锛屽悓鏃禷ccept浼氬嚭鐜伴敊璇紝errno=11,绋嬪簭鍚炴帀杩欎釜閿欒
 			 */
 			if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ECONNABORTED) {
 				log_debug("accept on l %d not ready - eagain", l->fd);
@@ -265,7 +274,7 @@ static int listener_accept(struct context *ctx, struct conn *l) {
 	}
 
 	/*
-	 * 对全局的FD资源进行限制,每个进程单独资源
+	 * 瀵瑰叏灞�鐨凢D璧勬簮杩涜闄愬埗,姣忎釜杩涚▼鍗曠嫭璧勬簮
 	 */
 	if (get_ncurr_cconn() >= ctx->max_ncconn
 			|| get_ncurr_cconn()
@@ -302,7 +311,7 @@ static int listener_accept(struct context *ctx, struct conn *l) {
 		return status;
 	}
 
-	/*所有的客户端连接在exec之后全部关闭*/
+	/*鎵�鏈夌殑瀹㈡埛绔繛鎺ュ湪exec涔嬪悗鍏ㄩ儴鍏抽棴*/
 	status = fcntl(c->fd, F_SETFD, FD_CLOEXEC);
 	if (status < 0) {
 		log_error("fcntl FD_CLOEXEC on c %d from p %d failed: %s",
@@ -312,7 +321,7 @@ static int listener_accept(struct context *ctx, struct conn *l) {
 	}
 
 	/*
-	 * 对于ipv4与ipv6协议关闭negale算法
+	 * 瀵逛簬ipv4涓巌pv6鍗忚鍏抽棴negale绠楁硶
 	 */
 	if (l->family == AF_INET || l->family == AF_INET6) {
 		status = set_tcpnodelay(c->fd);

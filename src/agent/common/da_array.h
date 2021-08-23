@@ -1,46 +1,54 @@
 /*
- * da_array.h
+ * Copyright [2021] JD.com, Inc.
  *
- *  Created on: 2014Äê12ÔÂ3ÈÕ
- *      Author: Jiansong
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef DA_ARRAY_H_
 #define DA_ARRAY_H_
 
-#include "stdlib.h"
 #include "stdint.h"
+#include "stdlib.h"
 
 typedef int (*array_compare_t)(const void *, const void *);
 typedef int (*array_each_t)(void *, void *);
 
 struct array {
-	uint32_t nelem; /* # element */
-	void *elem; /* element */
-	size_t size; /* element size */
-	uint32_t nalloc; /* # allocated element */
+  uint32_t nelem;  /* # element */
+  void *elem;      /* element */
+  size_t size;     /* element size */
+  uint32_t nalloc; /* # allocated element */
 };
 
-#define null_array { 0, NULL, 0, 0 }
+#define null_array                                                             \
+  { 0, NULL, 0, 0 }
 
 static inline void array_null(struct array *a) {
-	a->nelem = 0;
-	a->elem = NULL;
-	a->size = 0;
-	a->nalloc = 0;
+  a->nelem = 0;
+  a->elem = NULL;
+  a->size = 0;
+  a->nalloc = 0;
 }
 
 static inline void array_set(struct array *a, void *elem, size_t size,
-		uint32_t nalloc) {
-	a->nelem = 0;
-	a->elem = elem;
-	a->size = size;
-	a->nalloc = nalloc;
+                             uint32_t nalloc) {
+  a->nelem = 0;
+  a->elem = elem;
+  a->size = size;
+  a->nalloc = nalloc;
 }
 
-static inline uint32_t array_n(const struct array *a) {
-	return a->nelem;
-}
+static inline uint32_t array_n(const struct array *a) { return a->nelem; }
 
 struct array *array_create(uint32_t n, size_t size);
 void array_destroy(struct array *a);
