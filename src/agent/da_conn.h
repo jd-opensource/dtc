@@ -1,45 +1,54 @@
 /*
- * da_conn.h
+ * Copyright [2021] JD.com, Inc.
  *
- *  Created on: 2014Äê11ÔÂ30ÈÕ
- *      Author: Jiansong
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef DA_CONN_H_
 #define DA_CONN_H_
 
-#include <sys/socket.h>
-#include <stdint.h>
-#include <stdbool.h>
+#include "compiler.h"
+#include "da_errno.h"
+#include "da_msg.h"
 #include "da_queue.h"
 #include "da_rbtree.h"
-#include "compiler.h"
 #include "da_util.h"
-#include "da_msg.h"
-#include "da_errno.h"
-
+#include <stdbool.h>
+#include <stdint.h>
+#include <sys/socket.h>
 
 struct conn;
 struct context;
 struct msg;
 
-//connection type
+// connection type
 #define FRONTWORK 0x0001
-#define BACKWORK  0x0002
-#define LISTENER  0x0004
+#define BACKWORK 0x0002
+#define LISTENER 0x0004
 
-//connection epoll flag
+// connection epoll flag
 #define RECV_ACTIVE 0x0001
 #define SEND_ACTIVE 0x0002
-#define RECV_READY  0x0004
-#define SEND_READY  0x0008
+#define RECV_READY 0x0004
+#define SEND_READY 0x0008
 
-typedef int (*conn_recv_t)(struct context *, struct conn*);
-typedef struct msg* (*conn_recv_next_t)(struct context *, struct conn *, bool);
-typedef void (*conn_recv_done_t)(struct context *, struct conn *, struct msg *,struct msg *);
+typedef int (*conn_recv_t)(struct context *, struct conn *);
+typedef struct msg *(*conn_recv_next_t)(struct context *, struct conn *, bool);
+typedef void (*conn_recv_done_t)(struct context *, struct conn *, struct msg *,
+                                 struct msg *);
 
-typedef int (*conn_send_t)(struct context *, struct conn*);
-typedef struct msg* (*conn_send_next_t)(struct context *, struct conn *);
+typedef int (*conn_send_t)(struct context *, struct conn *);
+typedef struct msg *(*conn_send_next_t)(struct context *, struct conn *);
 typedef void (*conn_send_done_t)(struct context *, struct conn *, struct msg *);
 
 typedef void (*conn_close_t)(struct context *, struct conn *);
@@ -52,57 +61,56 @@ typedef void (*conn_msgq_t)(struct context *, struct conn *, struct msg *);
 typedef void (*conn_msgtree_t)(struct context *, struct conn *, struct msg *);
 
 struct conn {
-	TAILQ_ENTRY(conn) conn_tqe; 	/*list linked in server or server pool*/
-	void *owner;					/*owner server server_pool*/
+  TAILQ_ENTRY(conn) conn_tqe; /*list linked in server or server pool*/
+  void *owner;                /*owner server server_pool*/
 
-	int fd;							/*socket fd*/
-	int family;						/*socket family*/
-	socklen_t addrlen;				/*socket addr len*/
-	struct sockaddr *addr; 			/*socket address (ref in server)*/
+  int fd;                /*socket fd*/
+  int family;            /*socket family*/
+  socklen_t addrlen;     /*socket addr len*/
+  struct sockaddr *addr; /*socket address (ref in server)*/
 
-	uint32_t type; 					/*front conn,back conn,or listener*/
-	uint32_t events; 				/*the event need process*/
-	uint32_t flag; 					/*epool flag*/
+  uint32_t type;   /*front conn,back conn,or listener*/
+  uint32_t events; /*the event need process*/
+  uint32_t flag;   /*epool flag*/
 
-	struct rbtree msg_tree; 		/*tree for message search*/
-	struct rbnode msg_rbs;			/*sentinel for msg_tree	*/
-	struct msg_tqh imsg_q; 			/*request msgq */
-	struct msg_tqh omsg_q; 			/*outstanding request Q */
+  struct rbtree msg_tree; /*tree for message search*/
+  struct rbnode msg_rbs;  /*sentinel for msg_tree	*/
+  struct msg_tqh imsg_q;  /*request msgq */
+  struct msg_tqh omsg_q;  /*outstanding request Q */
 
+  struct msg *rmsg; /* current message being rcvd */
+  struct msg *smsg; /* current message being sent */
 
-	struct msg *rmsg; 				/* current message being rcvd */
-	struct msg *smsg; 				/* current message being sent */
+  conn_recv_t recv;           /* recv (read) handler */
+  conn_recv_next_t recv_next; /* recv next message handler */
+  conn_recv_done_t recv_done; /* read done handler */
+  conn_send_t send;           /* send (write) handler */
+  conn_send_next_t send_next; /* write next message handler */
+  conn_send_done_t send_done; /* write done handler */
+  conn_close_t close;         /* close handler */
+  conn_active_t active;       /* active? handler */
+  conn_ref_t ref;             /* connection reference handler */
+  conn_unref_t unref;         /* connection unreference handler */
 
-	conn_recv_t recv; 				/* recv (read) handler */
-	conn_recv_next_t recv_next; 	/* recv next message handler */
-	conn_recv_done_t recv_done; 	/* read done handler */
-	conn_send_t send; 				/* send (write) handler */
-	conn_send_next_t send_next; 	/* write next message handler */
-	conn_send_done_t send_done; 	/* write done handler */
-	conn_close_t close; 			/* close handler */
-	conn_active_t active; 			/* active? handler */
-	conn_ref_t ref; 				/* connection reference handler */
-	conn_unref_t unref; 			/* connection unreference handler */
+  conn_msgq_t enqueue_outq; /* connection outq msg enqueue handler */
+  conn_msgq_t dequeue_outq; /* connection outq msg dequeue handler */
+  conn_msgq_t enqueue_inq;  /* connection outq msg enqueue handler */
+  conn_msgq_t dequeue_inq;  /* connection outq msg dequeue handler */
 
-	conn_msgq_t enqueue_outq;  		/* connection outq msg enqueue handler */
-	conn_msgq_t dequeue_outq;  		/* connection outq msg dequeue handler */
-	conn_msgq_t enqueue_inq;  		/* connection outq msg enqueue handler */
-	conn_msgq_t dequeue_inq;  		/* connection outq msg dequeue handler */
+  conn_msgtree_t en_msgtree; /* connection msg tree entree handler*/
+  conn_msgtree_t de_msgtree; /* connection msg tree detree handler*/
 
-	conn_msgtree_t en_msgtree;		/* connection msg tree entree handler*/
-	conn_msgtree_t de_msgtree;		/* connection msg tree detree handler*/
+  size_t recv_bytes; /* received (read) bytes */
+  size_t send_bytes; /* sent (written) bytes */
 
-	size_t recv_bytes; 				/* received (read) bytes */
-	size_t send_bytes; 				/* sent (written) bytes */
-
-	int err ;						/*connection error no*/
-	unsigned error :1;				/*connetion err sig*/
-	unsigned connecting :1;			/*connecting is on*/
-	unsigned connected :1;			/*connected*/
-	unsigned eof:1;					/*connection is end,half connection*/
-	unsigned done :1;				/*connection is done*/
-	unsigned writecached:1;
-	unsigned isvalid:1;
+  int err;                 /*connection error no*/
+  unsigned error : 1;      /*connetion err sig*/
+  unsigned connecting : 1; /*connecting is on*/
+  unsigned connected : 1;  /*connected*/
+  unsigned eof : 1;        /*connection is end,half connection*/
+  unsigned done : 1;       /*connection is done*/
+  unsigned writecached : 1;
+  unsigned isvalid : 1;
 };
 
 TAILQ_HEAD(conn_tqh, conn);
@@ -138,8 +146,8 @@ struct conn *get_client_conn(void *owner);
 struct conn *get_server_conn(void *owner);
 
 /*
-*get instance conn
-*/
+ *get instance conn
+ */
 struct conn *get_instance_conn(void *owner);
 
 /*

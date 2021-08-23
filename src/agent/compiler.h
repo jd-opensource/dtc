@@ -1,8 +1,17 @@
 /*
- * compiler.h
+ * Copyright [2021] JD.com, Inc.
  *
- *  Created on: 2014Äê12ÔÂ2ÈÕ
- *      Author: Jiansong
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef COMPILER_H_
@@ -12,13 +21,12 @@
  * Gcc before 3.0 needs [0] to declare a variable-size array
  */
 #ifndef VAR_ARRAY
-#if  __GNUC__  < 3
-#define VAR_ARRAY	0
+#if __GNUC__ < 3
+#define VAR_ARRAY 0
 #else
 #define VAR_ARRAY
 #endif
 #endif
-
 
 /* Support passing function parameters in registers. For this, the
  * CONFIG_REGPARM macro has to be set to the maximal number of registers
@@ -28,7 +36,7 @@
  */
 #ifndef REGPRM1
 #if CONFIG_REGPARM >= 1 && __GNUC__ >= 3
-#define REGPRM1	__attribute__((regparm(1)))
+#define REGPRM1 __attribute__((regparm(1)))
 #else
 #define REGPRM1
 #endif
@@ -36,7 +44,7 @@
 
 #ifndef REGPRM2
 #if CONFIG_REGPARM >= 2 && __GNUC__ >= 3
-#define REGPRM2	__attribute__((regparm(2)))
+#define REGPRM2 __attribute__((regparm(2)))
 #else
 #define REGPRM2 REGPRM1
 #endif
@@ -44,12 +52,11 @@
 
 #ifndef REGPRM3
 #if CONFIG_REGPARM >= 3 && __GNUC__ >= 3
-#define REGPRM3	__attribute__((regparm(3)))
+#define REGPRM3 __attribute__((regparm(3)))
 #else
 #define REGPRM3 REGPRM2
 #endif
 #endif
-
 
 /* By default, gcc does not inline large chunks of code, but we want it to
  * respect our choices.
@@ -62,7 +69,6 @@
 #endif
 #endif
 
-
 /*
  * Gcc >= 3 provides the ability for the programme to give hints to the
  * compiler about what branch of an if is most likely to be taken. This
@@ -71,7 +77,7 @@
  */
 #if !defined(likely)
 #if __GNUC__ < 3
-#define __builtin_expect(x,y) (x)
+#define __builtin_expect(x, y) (x)
 #define likely(x) (x)
 #define unlikely(x) (x)
 #elif __GNUC__ < 4

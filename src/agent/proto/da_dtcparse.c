@@ -1,10 +1,18 @@
 /*
- * da_dtcparse.c
- *
- *  Created on: 2014Äê12ÔÂ24ÈÕ
- *      Author: Jiansong
- */
-
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 #include <inttypes.h>
 #include <math.h>
 #include <inttypes.h>
@@ -408,7 +416,7 @@ void dtc_parse_req(struct msg *r) {
 					state = ST_ID;
 					break;
 				}
-					//¼¶Áª»Ò¶È°æ±¾ÌØ±ðµÄµØ·½
+					//çº§è”ç°åº¦ç‰ˆæœ¬ç‰¹åˆ«çš„åœ°æ–¹
 //				case 17: {
 //					if (b->last - p < r->cur_parse_lenth) {
 //						log_debug(
@@ -563,7 +571,7 @@ void dtc_parse_req(struct msg *r) {
 						r->keys[0].end = p + r->cur_parse_lenth;
 
 						if (r->keytype == String || r->keytype == Binary) {
-							r->keys[0].end -= 1;  //È¥³ý×Ö·û´®Ä©Î²µÄ\0
+							r->keys[0].end -= 1;  //åŽ»é™¤å­—ç¬¦ä¸²æœ«å°¾çš„\0
 						}
 
 						log_debug(
@@ -1720,7 +1728,7 @@ static int dtc_encode_agentid(struct msg *r) {
 }
 
 /*
- * get·Ö°üº¯Êý,ÔÝÊ±²»¿¼ÂÇÁªºÏ×é¼þµÄÇé¿ö
+ * getåˆ†åŒ…å‡½æ•°,æš‚æ—¶ä¸è€ƒè™‘è”åˆç»„ä»¶çš„æƒ…å†µ
  */
 static int dtc_fragment_get(struct msg *r, uint32_t ncontinuum,
 		struct msg_tqh *frag_msgq) {
@@ -1733,7 +1741,7 @@ static int dtc_fragment_get(struct msg *r, uint32_t ncontinuum,
 	CValue val;
 	uint32_t idx = 0;
 	int version_len = 0, requestinfo_len = 0;
-	//ÓÃÓÚ·ÅÖÃ·Ö×éËùÓÐµÄkey
+	//ç”¨äºŽæ”¾ç½®åˆ†ç»„æ‰€æœ‰çš„key
 	struct keypos keys[ncontinuum][r->keyCount];
 	int keynum[ncontinuum];
 
@@ -1746,7 +1754,7 @@ static int dtc_fragment_get(struct msg *r, uint32_t ncontinuum,
 		struct keypos *kpos = &r->keys[i];
 		if(r->keytype == Unsigned || r->keytype == Signed) {
 			if(sizeof(uint64_t) == kpos->end - kpos->start) {
-				//´Ë´¦Ã»ÓÐ¿¼ÂÇ´ó¶ËÐ¡¶ËÎÊÌâÔ´ÓÚSDK±àÂë
+				//æ­¤å¤„æ²¡æœ‰è€ƒè™‘å¤§ç«¯å°ç«¯é—®é¢˜æºäºŽSDKç¼–ç 
 				val.u64 = *(uint64_t*)kpos->start;
 				idx = msg_backend_idx(r, (uint8_t *)&val.u64, sizeof(uint64_t));
 				log_debug("key is %lu, idx is %u, len is %ld",
@@ -1756,7 +1764,7 @@ static int dtc_fragment_get(struct msg *r, uint32_t ncontinuum,
 				return -1;
 		}
 		else {
-			//¶àKeyÊ±Ã¿¸ökey±»¸½¼Ó4Byte Key³¤¶È
+			//å¤šKeyæ—¶æ¯ä¸ªkeyè¢«é™„åŠ 4Byte Keyé•¿åº¦
 			int len = kpos->end - kpos->start - sizeof(uint32_t);
 			if(len > 0) {
 				char temp[len + 2];
@@ -1936,7 +1944,7 @@ int dtc_fragment(struct msg *r, uint32_t ncontinuum, struct msg_tqh *frag_msgq) 
 	{
 		uint64_t randomkey=randomHashSeed++;
 		r->idx = msg_backend_idx(r, (uint8_t *)&randomkey,sizeof(uint64_t));
-		//¼¶Áª»Ò¶È°æ±¾ÌØ±ðµÄµØ·½
+		//çº§è”ç°åº¦ç‰ˆæœ¬ç‰¹åˆ«çš„åœ°æ–¹
 		status = dtc_encode_agentid(r);
 		return status;
 	}
@@ -1989,7 +1997,7 @@ int dtc_fragment(struct msg *r, uint32_t ncontinuum, struct msg_tqh *frag_msgq) 
 					break;
 				}
 			}
-			//¼¶Áª»Ò¶È°æ±¾ÌØ±ðµÄµØ·½
+			//çº§è”ç°åº¦ç‰ˆæœ¬ç‰¹åˆ«çš„åœ°æ–¹
 			status = dtc_encode_agentid(r);
 			return status;
 		}
@@ -2108,7 +2116,7 @@ static int dtc_coalesce_get(struct msg *r) {
 			}
 		}
 	}
-	if (errortag == 1) { //ÓÐ·Ö°ü²éÕÒ³ö´í,one of the search result is in error
+	if (errortag == 1) { //æœ‰åˆ†åŒ…æŸ¥æ‰¾å‡ºé”™,one of the search result is in error
 		cmsg->peer = NULL;
 		cmsg->peerid = 0;
 		peermsg->peer = NULL;
@@ -2118,7 +2126,7 @@ static int dtc_coalesce_get(struct msg *r) {
 		peermsg->peer = r;
 		peermsg->id = r->id;
 		goto coalesce_succ_err;
-	} else if (validmsgcount == 0 || validmsgcount == 1) { //½á¹û¼¯Í³Í³´¦ÓÚÒ»¸ö°üÖÐ£¬only a package contain search resule
+	} else if (validmsgcount == 0 || validmsgcount == 1) { //ç»“æžœé›†ç»Ÿç»Ÿå¤„äºŽä¸€ä¸ªåŒ…ä¸­ï¼Œonly a package contain search resule
 		peermsg = singleresmsg->peer;
 		singleresmsg->peer = NULL;
 		singleresmsg->peerid = 0;

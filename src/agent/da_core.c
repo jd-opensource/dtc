@@ -1,9 +1,18 @@
 /*
- * da_core.c
- *
- *  Created on: 2014Äê11ÔÂ30ÈÕ
- *      Author: Jiansong
- */
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 #include <sys/resource.h>
 #include <inttypes.h>
@@ -35,7 +44,7 @@ void cache_send_event(struct conn *conn) {
 }
 
 /*
- * ¸ù¾İ¿ÉÓÃÁ¬½Ó¼°ºó¶ËÁ¬½ÓÊı£¬¼ÆËãÇ°¶ËÁ¬½Ó¿ÉÓÃµÄÁ¬½ÓÊı
+ * æ ¹æ®å¯ç”¨è¿æ¥åŠåç«¯è¿æ¥æ•°ï¼Œè®¡ç®—å‰ç«¯è¿æ¥å¯ç”¨çš„è¿æ¥æ•°
  */
 static int core_calc_connections(struct context *ctx) {
 	int status;
