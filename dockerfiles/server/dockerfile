@@ -1,14 +1,16 @@
 FROM centos:centos7.2.1511
 RUN yum install -y wget
 
-RUN mkdir -p /usr/local/dtc/bin
-RUN mkdir -p /usr/local/dtc/conf
-RUN mkdir -p /usr/local/dtc/log
+ARG basepath=/usr/local/dtc
+
+RUN mkdir -p $basepath/bin
+RUN mkdir -p $basepath/conf
+RUN mkdir -p $basepath/log
 
 COPY start.sh /root/start.sh
-COPY ../../script/dtcd.sh /usr/local/dtc/bin/dtcd.sh
-COPY ../../bin/dtcd /usr/local/dtc/bin/dtcd
-COPY ../../conf/table.yaml /usr/local/dtc/conf/table.yaml
-COPY ../../conf/cache.yaml /usr/local/dtc/conf/cache.yaml
+COPY ../../script/dtcd.sh $basepath/bin/dtcd.sh
+COPY ../../bin/dtcd $basepath/bin/dtcd
+COPY ../../conf/table.yaml $basepath/conf/table.yaml
+COPY ../../conf/cache.yaml $basepath/conf/cache.yaml
 
 CMD ["/bin/bash", "/root/start.sh"]
