@@ -21,3 +21,13 @@ install:
 script:
 - cd src/
 - make
+- make install
+
+after_success:
+- cd ../dockerfiles/server/
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+- docker build -t $DOCKER_USERNAME/server:latest .
+- docker push $DOCKER_USERNAME/server:latest
+- cd ../sdk-cpp/
+- docker build -t $DOCKER_USERNAME/sdk-cpp:latest .
+- docker push $DOCKER_USERNAME/sdk-cpp:latest
