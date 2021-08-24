@@ -20,8 +20,8 @@
 #include "stat_thread.h"
 #include "stat_dtc_def.h"
 
-#define STATIDX "../stat/dtc.stat.idx"
-
+//#define STATIDX "../stat/dtc.stat.idx"
+#define STATIDX "/export/servers/dtc_instance/000022859249515bcccac13ebaee2c399c67471e/20015/stat/dtc.stat.idx"
 extern StatThread g_stat_mgr;
 extern int init_statistics(void);
 
