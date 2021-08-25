@@ -1,5 +1,9 @@
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/libs/common)
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+    add_compile_options(-std=gnu++11)
+endif(CMAKE_COMPILER_IS_GNUCXX)
+
 #把当前目录下的源文件列表存放到变量SRC_LIST里
 FILE(GLOB_RECURSE SRC_LIST ./*.cc ./*.c)
 
@@ -27,7 +31,7 @@ LINK_LIBRARIES(libz64.a)
 LINK_LIBRARIES(pthread)
 
 #编译参数
-ADD_DEFINITIONS ("-g -fPIC -fpermissive -std=gnu++11")
+ADD_DEFINITIONS ("-g -fPIC -fpermissive")
 #编译为.so/.a
 ADD_LIBRARY (common ${SRC_LIST})
 
