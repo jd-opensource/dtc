@@ -3,12 +3,11 @@ set (EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/core)
 
 #把当前目录下的源文件列表存放到变量SRC_LIST里
 FILE(GLOB_RECURSE SRC_LIST ./*.cc ./*.c)
+FILE(GLOB_RECURSE SRC_LIST_INC ./*.h)
 
 #添加头文件搜索路径，相当于gcc -I
 include_directories (
-                    . ./algorithm  ./chain ./data
-                    ./hotbk ./log ./mem ./misc ./node
-                    ./nodegroup ./raw ./task ./time ./tree ./buffer
+                    .
                     ../libs/common
                     ../devel/cpp
                     ../daemons
@@ -18,6 +17,20 @@ include_directories (
                     ../libs/zlib/include64
                     ../libs/yaml-cpp/include)
     
+                    # ./algorithm
+                    # ./buffer
+                    # ./chain
+                    # ./data
+                    # ./hotbk
+                    # ./log
+                    # ./mem
+                    # ./misc
+                    # ./node
+                    # ./nodegroup
+                    # ./raw
+                    # ./task
+                    # ./time
+                    # ./tree                    
 #添加.so/.a文件搜索路径，相当于gcc -L
 link_directories (
     ${PROJECT_SOURCE_DIR}/libs/log4cplus/libs
@@ -40,16 +53,10 @@ link_libraries(dl)
 add_definitions (" -g -rdynamic -fPIC -fpermissive -D_GLIBCXX_USE_CXX11_ABI=0 -export-dynamic -Wl,--version-script,dtcd.export.lst -std=gnu++11")
 
 #编译为.so/.a
-add_executable (dtcd    ${SRC_LIST1}  ${SRC_LIST2}  ./buffer/buffer_flush ./buffer/buffer_pond  ${SRC_LIST4}  ${SRC_LIST5}
-                        ${SRC_LIST6}  ${SRC_LIST7}  ${SRC_LIST8}  ${SRC_LIST9}  ${SRC_LIST10}
-                        ${SRC_LIST11} ${SRC_LIST12} ${SRC_LIST13} ${SRC_LIST14} ${SRC_LIST15}
-                        )
+add_executable (dtcd ${SRC_LIST})
 
 
-add_library (dtcdd  ${SRC_LIST1}  ${SRC_LIST2}  ./buffer/buffer_flush ./buffer/buffer_pond  ${SRC_LIST4}  ${SRC_LIST5}
-                    ${SRC_LIST6}  ${SRC_LIST7}  ${SRC_LIST8}  ${SRC_LIST9}  ${SRC_LIST10}
-                    ${SRC_LIST11} ${SRC_LIST12} ${SRC_LIST13} ${SRC_LIST14} ${SRC_LIST15}
-                    )
+add_library (dtcdd  ${SRC_LIST})
 
 #将目标文件与库文件链接
 target_link_libraries(dtcd libdaemons.a libstat.a libcommon.a libyaml-cpp.a liblog4cplus.a libz64.a)
