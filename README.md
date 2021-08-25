@@ -23,7 +23,7 @@ DTC系统由以下组件组成:
     `git clone https://github.com/gflags/gflags.git`<br />
     `cd gflags`<br />
     `git checkout -b 2.2 v2.2.2`<br />
-    `cmake3 -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_SHARED_LIBS=ON -DGFLAGS_NAMESPACE=google -G "Unix Makefiles" .`<br />
+    `cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_SHARED_LIBS=ON -DGFLAGS_NAMESPACE=google -G "Unix Makefiles" .`<br />
     `make && sudo make install`<br />
     `sudo ldconfig  `<br />
     `sudo ln -s /usr/local/lib/libgflags.so.2.2 /lib64`<br />
