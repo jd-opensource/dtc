@@ -43,10 +43,10 @@ DTC系统由以下组件组成:
     `sudo ln -s /usr/local/lib/libgflags.so.2.2 /lib64`<br />
     ### CentOS
     - 执行以下命令安装依赖：<br />
-    `sudo yum install -y snappy snappy-devel zlib zlib-devel bzip2 bzip2-devel lz4-devel libasan openssl-devel cmake3 mysql-devel mxml-devel`<br />
+    `sudo yum install -y make snappy snappy-devel zlib zlib-devel bzip2 bzip2-devel lz4-devel libasan openssl-devel cmake3 mysql-devel mxml-devel`<br />
     ### Ubuntu
     - 执行以下命令安装依赖：<br />
-    `sudo apt-get install snappy libsnappy-dev zlib1g zlib1g-dev bzip2 liblz4-dev libasan0  openssl libmxml-dev`<br />
+    `sudo apt-get install make snappy libsnappy-dev zlib1g zlib1g-dev bzip2 liblz4-dev libasan0  openssl libmxml-dev`<br />
 * src目录下，执行make即可编译。
 
 ## 第三方依赖
