@@ -1,0 +1,55 @@
+DB_DEFINE:
+  DbName: test
+  DbNum: (1,1)
+  dbMax: 1
+  MachineNum: 1
+  Deploy: 0
+  EnableKeyHash: 0
+  KeyHashSo: ../lib/key-hash.so
+  KeyHashFunction: StringHash(1,128)
+
+MACHINE1:
+  Procs: 10
+  WriteProcs: 10
+  CommitProcs: 10
+  DbIdx: 0
+  DbAddr: 127.0.0.1:3306
+  DbUser: root
+  DbPass: DTC@ecc2014
+
+TABLE_DEFINE:
+  TableName: Table_Test
+  FieldCount: 5
+  eyFieldCount: 1
+  TableNum: (1,100)
+
+# None=0, Signed=1, Unsigned=2, Float=3, String=4, Binary=5
+FIELD1:
+  FieldName: uid
+  FieldType: 1
+  FieldSize: 4
+  UniqField: 0
+
+FIELD2:
+  FieldName: name
+  FieldType: 4
+  FieldSize: 255
+  UniqField: 0
+        
+FIELD3:
+  FieldName: city
+  FieldType: 4
+  FieldSize: 255
+  UniqField: 0
+  
+FIELD4:
+  FieldName: sex
+  FieldType: 1
+  FieldSize: 4
+  UniqField: 0
+  
+FIELD5:
+  FieldName: age
+  FieldType: 1
+  FieldSize: 4
+  UniqField: 0

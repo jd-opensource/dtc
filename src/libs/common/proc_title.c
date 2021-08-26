@@ -30,6 +30,7 @@
 static char *arg_start;
 static char *arg_end;
 static char *env_start;
+extern char **environ;
 
 //初始化进程名
 void init_proc_title(int argc, char **argv)
