@@ -10,6 +10,15 @@ compiler:
 - g++
 os:
 - linux
+addons:
+  apt:
+    packages:
+    - g++-4.9
+env:
+- DTC_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+befor_install:
+- eval "${DTC_EVAL}"
 
 install:
 - echo ${CC}
