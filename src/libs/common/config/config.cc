@@ -126,6 +126,7 @@ int DTCConfig::parse_config(const char *fn, const char *defsec, bool bakconfig)
 		char bak_config[1024];
 		int err = 0;
 		snprintf(bak_config, sizeof(bak_config), "cp %s /usr/local/dtc/stat/", fn);
+		printf("bakconfig:%s\n", bak_config);
 		if (err == 0)
 			err = system(bak_config);
 	}
