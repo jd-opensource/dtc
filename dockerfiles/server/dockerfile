@@ -9,10 +9,9 @@ RUN mkdir -p $confpath
 RUN mkdir -p $logpath
 
 COPY start.sh /root/start.sh
-COPY ../../script/dtcd.sh $basepath/bin/dtcd.sh
-COPY ../../src/core/dtcd $basepath/bin/dtcd
-COPY ../../conf/table.yaml $confpath/table.yaml
-COPY ../../conf/cache.yaml $confpath/cache.yaml
-COPY ../../conf/log4cplus.conf $logpath/log4cplus.conf
+COPY dtcd $basepath/bin/dtcd
+COPY table.yaml $confpath/table.yaml
+COPY cache.yaml $confpath/cache.yaml
+COPY log4cplus.conf $logpath/log4cplus.conf
 
 CMD ["/bin/bash", "/root/start.sh"]
