@@ -22,7 +22,7 @@
 namespace ClusterConfig
 {
 //#define CLUSTER_CONFIG_FILE "../conf/ClusterConfig.xml"
-#define CLUSTER_CONFIG_FILE "/export/servers/dtc_instance/000022859249515bcccac13ebaee2c399c67471e/20015/conf/ClusterConfig.xml"
+#define CLUSTER_CONFIG_FILE "/etc/dtc/clusterconfig.xml"
 struct ClusterNode {
 	std::string name;
 	std::string addr;
