@@ -13,6 +13,7 @@ os:
 
 install:
 - echo ${CC}
+- ${CC} --version
 - echo ${CXX}
 - ${CXX} --version
 - cmake --version
