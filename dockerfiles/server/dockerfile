@@ -1,5 +1,4 @@
 FROM centos:centos7.2.1511
-RUN yum install -y wget
 
 ARG basepath=/usr/local/dtc
 ARG confpath=/etc/dtc

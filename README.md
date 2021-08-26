@@ -59,6 +59,16 @@ DTC系统由以下组件组成:
 * [mxml](https://www.msweet.org/mxml/)
 * [twemproxy](https://github.com/twitter/twemproxy)
 
+## 项目成员
+付学宝--项目发起者、导师、总设计师
+林金明--项目开发
+杨爽--项目开发
+仇路--项目开发
+吴昕臻--项目开发
+曹沛--项目开发
+陈雨杰--项目开发
+朱林--项目开发
+
 ## 许可证
 
 京东集团 版权所有 © Copyright 2021 [JD.com](https://www.jd.com), Inc.
