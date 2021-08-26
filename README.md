@@ -61,13 +61,13 @@ DTC系统由以下组件组成:
 
 ## 项目成员
 - 付学宝--项目发起者、导师、总设计师
-- 林金明--项目开发
-- 杨爽--项目开发
-- 仇路--项目开发
-- 吴昕臻--项目开发
+- [林金明](https://gitee.com/shrewdlin)--项目开发
+- [杨爽](https://gitee.com/kfysck)--项目开发
+- [仇路](https://gitee.com/qiuluAbel)--项目开发
+- [吴昕臻](https://gitee.com/wuxinzhen_1997)--项目开发
 - 曹沛--项目开发
-- 陈雨杰--项目开发
-- 朱林--项目开发
+- [陈雨杰](https://gitee.com/chenyujie28)--项目开发
+- [朱林](https://gitee.com/leol3)--项目开发
 
 ## 许可证
 
