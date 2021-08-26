@@ -66,7 +66,7 @@ using namespace log4cplus::helpers;
 
 static Logger logger = Logger::getRoot();
 
-#define LOG4CPLUS_CONF_FILE "/export/servers/dtc_instance/000022859249515bcccac13ebaee2c399c67471e/20015/conf/log4cplus.conf"
+#define LOG4CPLUS_CONF_FILE "/etc/dtc/log4cplus.conf"
 
 /*********************************************
 **TRACE：调试应用的详细步骤

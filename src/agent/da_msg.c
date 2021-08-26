@@ -27,6 +27,10 @@
 #include "da_conn.h"
 #include "da_stats.h"
 
+
+#define __IOV_MAX	1024
+# define IOV_MAX __IOV_MAX
+
 #if (IOV_MAX > 128)
 #define NC_IOV_MAX 128
 #else

@@ -50,10 +50,16 @@ ADD_DEFINITIONS(" -g -rdynamic -fPIC -fpermissive -D_GLIBCXX_USE_CXX11_ABI=0 -ex
 
 #编译为.so/.a
 ADD_EXECUTABLE(dtcd ${SRC_LIST})
-ADD_LIBRARY(dtcdd  ${SRC_LIST})
+ADD_LIBRARY(dtcd_static  ${SRC_LIST})
 
 #将目标文件与库文件链接
 TARGET_LINK_LIBRARIES(dtcd libdaemons.a libstat.a libcommon.a libyaml-cpp.a liblog4cplus.a libz64.a)
-TARGET_LINK_LIBRARIES(dtcdd libdaemons.a libstat.a libcommon.a libyaml-cpp.a liblog4cplus.a libz64.a)
+TARGET_LINK_LIBRARIES(dtcd_static libdaemons.a libstat.a libcommon.a libyaml-cpp.a liblog4cplus.a libz64.a)
 
+SET_TARGET_PROPERTIES (dtcd_static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+SET_TARGET_PROPERTIES (dtcd PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+SET_TARGET_PROPERTIES(dtcd_static PROPERTIES OUTPUT_NAME "dtcd")
+
+#设置make install 安装路径
+INSTALL(TARGETS dtcd RUNTIME DESTINATION /usr/local/dtc/bin)
 

@@ -1,25 +1,44 @@
-cmake_minimum_required (VERSION 3.5)
-project (agent)
+#设置库文件输出路径
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/agent)
 
-#添加头文件搜索路径，相当于gcc -I
-include_directories(. ./common ./event 
-                    ./hashkit ./proto)
-
+IF("${GPROF}" EQUAL 1)
+    ADD_COMPILE_OPTIONS(-pg)
+ENDIF()
+IF("${USE_REGPARM}" EQUAL 1)
+    ADD_COMPILE_OPTIONS(-DCONFIG_REGPARM=3)
+ENDIF()
+IF("${HAVE_STATS}" EQUAL 1)
+    ADD_COMPILE_OPTIONS(-DHAVE_STATS=1)
+ENDIF()
+IF("${USE_COMPATIBLE_MODE}" EQUAL 1)
+    ADD_COMPILE_OPTIONS(-DUSE_COMPATIBLE_MODE=1)
+ENDIF()
+IF("${HAVE_ASSERT_LOG}" EQUAL 1)
+    ADD_COMPILE_OPTIONS(-DHAVE_ASSERT_LOG=1)
+ENDIF()
 
 #把当前目录下的源文件列表存放到变量SRC_LIST1里
-aux_source_directory(. SRC_LIST1)
-aux_source_directory(./common SRC_LIST2)
-aux_source_directory(./event SRC_LIST3)
-aux_source_directory(./hashkit SRC_LIST4)
-aux_source_directory(./proto STRC_LIST5)
+#FILE(GLOB_RECURSE SRC_LIST ${PROJECT_SOURCE_DIR}/*.c)
+FILE(GLOB SRC_LIST1 ./*.c)
+FILE(GLOB SRC_LIST2 ./common/*.c)
+FILE(GLOB SRC_LIST3 ./event/*.c)
+FILE(GLOB SRC_LIST4 ./hashkit/*.c)
+FILE(GLOB SRC_LIST5 ./proto/*.c)
+
+#添加头文件搜索路径，相当于gcc -I
+INCLUDE_DIRECTORIES(
+    .
+    ./common 
+    ./event 
+    ./hashkit 
+    ./proto)
 
 #链接目标库
-link_libraries(rt) 
-link_libraries(mxml)
-link_libraries(pthread)
+LINK_LIBRARIES(rt) 
+LINK_LIBRARIES(mxml)
+LINK_LIBRARIES(pthread)
 #编译参数
-add_definitions("-pg -DCONFIG_REGPARM=3 -DHAVE_STATS=1 -DUSE_COMPATIBLE_MODE=1 -DHAVE_ASSERT_LOG=1")
-
+ADD_DEFINITIONS ("-D_GNU_SOURCE")
 #编译为.so/.a
-add_executable(dtcagent ${SRC_LIST1} ${SRC_LIST2} ${SRC_LIST3} ${SRC_LIST4} ${SRC_LIST5})
+ADD_EXECUTABLE(dtcagent ${SRC_LIST1} ${SRC_LIST2} ${SRC_LIST3} ${SRC_LIST4} ${SRC_LIST5})
 

@@ -1,8 +1,9 @@
+#设置库文件输出路径
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/libs/common)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-    add_compile_options(-std=gnu++11)
-endif(CMAKE_COMPILER_IS_GNUCXX)
+IF(CMAKE_COMPILER_IS_GNUCXX)
+    ADD_COMPILE_OPTIONS(-std=gnu++11)
+ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 #把当前目录下的源文件列表存放到变量SRC_LIST里
 FILE(GLOB_RECURSE SRC_LIST ./*.cc ./*.c)
