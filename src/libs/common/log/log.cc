@@ -31,11 +31,6 @@
 #include "config/config.h"
 #include "../../stat/stat_dtc.h"
 
-static char log_dir[128] = "../log";
-static char appname[32] = "";
-static int (*alert_hook)(const char *, int);
-
-
 void init_log4cplus()
 {
 	PropertyConfigurator::doConfigure(LOG4CPLUS_TEXT(LOG4CPLUS_CONF_FILE));

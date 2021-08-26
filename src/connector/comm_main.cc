@@ -38,6 +38,7 @@
 #include <unix_socket.h>
 #include <listener.h>
 #include <task_base.h>
+#include <fork.cc>
 
 const char service_file[] = "./helper-service.so";
 const char create_handle_name[] = "create_process";

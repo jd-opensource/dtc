@@ -1,10 +1,7 @@
-cmake_minimum_required (VERSION 3.5)
-project (configcenter)
-
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/configcenter/ca_api)
 #添加头文件搜索路径，相当于gcc -I
 include_directories (.)
     
-
 #把当前目录下的源文件列表存放到变量SRC_LIST1里
 aux_source_directory (. SRC_LIST1)
 

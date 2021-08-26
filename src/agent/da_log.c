@@ -24,7 +24,7 @@
 #define MSGSIZE 4096
 #define REMOTELOG_ERR_TYPE 14
 #define AGENT_CLIENT_TYPE 1
-
+#define O_LARGEFILE __O_LARGEFILE
 int __log_level__ = 6;
 int __log_switch__ = 1;
 int __business_id__ = 0;
