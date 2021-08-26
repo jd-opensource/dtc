@@ -36,7 +36,11 @@ script:
 - make
 
 after_success:
-- cd ../../dockerfiles/server/
+- cd ../../
+- cp conf/* dockerfiles/server/
+- cp src/core/dtcd dockerfiles/server/
+- cp src/devel/cpp/libdtc.2.so dockerfiles/sdk-cpp/
+- cd dockerfiles/server/
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 - docker build -t $DOCKER_USERNAME/server:latest .
 - docker push $DOCKER_USERNAME/server:latest
