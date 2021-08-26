@@ -36,7 +36,7 @@ script:
 - make
 
 after_success:
-- cd ../dockerfiles/server/
+- cd ../../dockerfiles/server/
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 - docker build -t $DOCKER_USERNAME/server:latest .
 - docker push $DOCKER_USERNAME/server:latest
