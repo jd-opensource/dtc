@@ -3,7 +3,7 @@
 INIT(){
     cd /usr/local/dtc/bin
     chmod +x dtcd
-    ./dtcd.sh start
+    ./dtcd
 }
 
 PROCESS_DAEMON(){
