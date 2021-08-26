@@ -3,7 +3,7 @@ FROM centos:centos7.2.1511
 COPY start.sh /root/start.sh
 
 ARG sofile=libdtc.2.so
-COPY ../../src/devel/cpp/$sofile /usr/lib/$sofile
+COPY $sofile /usr/lib/$sofile
 RUN ln -sf /usr/lib/$sofile /usr/lib/libdtc.so.1 && \
     ln -sf /usr/lib/libdtc.so.1 /usr/lib/libdtc.so && \
     echo "/usr/lib" >> /etc/ld.so.conf && \
