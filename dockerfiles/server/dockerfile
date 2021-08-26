@@ -12,6 +12,6 @@ COPY start.sh /root/start.sh
 COPY dtcd $basepath/bin/dtcd
 COPY table.yaml $confpath/table.yaml
 COPY cache.yaml $confpath/cache.yaml
-COPY log4cplus.conf $logpath/log4cplus.conf
+COPY log4cplus.conf $confpath/log4cplus.conf
 
 CMD ["/bin/bash", "/root/start.sh"]
