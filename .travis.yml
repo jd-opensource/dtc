@@ -3,7 +3,6 @@
 # This file can be validated on: http://lint.travis-ci.org/
 
 language: cpp
-sudo: required
 
 compiler:
 - g++
@@ -16,7 +15,7 @@ addons:
 env:
 - DTC_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
 
-befor_install:
+before_install:
 - eval "${DTC_EVAL}"
 
 install:

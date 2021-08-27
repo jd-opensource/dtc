@@ -18,7 +18,7 @@ MACHINE1:
   DbPass: password
 
 TABLE_DEFINE:
-  TableName: Table_Test
+  TableName: dtc_opensource
   FieldCount: 5
   eyFieldCount: 1
   TableNum: (1,100)
