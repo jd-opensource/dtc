@@ -1,5 +1,5 @@
 #设置库文件输出路径
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/libs/common)
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/libs/common)
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
     ADD_COMPILE_OPTIONS(-std=gnu++11)
@@ -20,9 +20,9 @@ INCLUDE_DIRECTORIES (
 
 #添加.so/.a文件搜索路径，相当于gcc -L
 LINK_DIRECTORIES (
-    ${PROJECT_SOURCE_DIR}/libs/zlib/lib/libz64.a
-    ${PROJECT_SOURCE_DIR}/libs/log4cplus/libs
-    ${PROJECT_SOURCE_DIR}/libs/yaml-cpp/libs
+    ${PROJECT_SOURCE_DIR}/src/libs/zlib/lib/libz64.a
+    ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/libs
+    ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/libs
 )
 
 #添加链接库，相当于gcc -l

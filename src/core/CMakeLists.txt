@@ -1,7 +1,7 @@
 #设置库文件输出路径
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/core)
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/core)
 #设置可执行文件输出路径
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/core)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/core)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     add_compile_options(-std=gnu++11)
@@ -28,12 +28,12 @@ INCLUDE_DIRECTORIES(
 
 #添加.so/.a文件搜索路径，相当于gcc -L
 LINK_DIRECTORIES(
-    ${PROJECT_SOURCE_DIR}/libs/log4cplus/libs
-    ${PROJECT_SOURCE_DIR}/libs/yaml-cpp/libs
-    ${PROJECT_SOURCE_DIR}/libs/zlib/lib/
-    ${PROJECT_SOURCE_DIR}/libs/common
-    ${PROJECT_SOURCE_DIR}/libs/stat
-    ${PROJECT_SOURCE_DIR}/daemons)
+    ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/libs
+    ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/libs
+    ${PROJECT_SOURCE_DIR}/src/libs/zlib/lib/
+    ${PROJECT_SOURCE_DIR}/src/libs/common
+    ${PROJECT_SOURCE_DIR}/src/libs/stat
+    ${PROJECT_SOURCE_DIR}/src/daemons)
 
 #添加链接库，相当于gcc -l
 LINK_LIBRARIES(liblog4cplus.a) 
