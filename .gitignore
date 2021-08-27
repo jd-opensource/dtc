@@ -1,3 +1,7 @@
 # Prerequisites
 #
 .history
+.vscode
+settings.json
+*.o
+.dep*

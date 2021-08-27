@@ -1,12 +1,18 @@
 /*
- * da_mem.c
- *
- *  Created on: 2014年11月30日
- *      Author: Jiansong
- *
- *  利用双向尾队列链接内存,经过测试发现为队列的效率略高于双向循环队列
- */
-
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 #include "da_mem_pool.h"
 #include "da_log.h"
 #include "da_util.h"
@@ -26,7 +32,7 @@ struct pool_head *create_pool(char *name, unsigned int size, unsigned int flags)
 	struct pool_head *start;
 	unsigned int align;
 
-	//16字节对齐
+	//16瀛楄妭瀵归綈
 	align = 16;
 	size = (size + align - 1) & -align;
 
@@ -111,7 +117,7 @@ void pool_gc() {
 	static int recurse;
 	struct pool_head *entry;
 
-	//预防重复调用
+	//棰勯槻閲嶅璋冪敤
 	if (recurse++)
 		goto out;
 

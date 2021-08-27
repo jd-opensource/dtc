@@ -1,9 +1,18 @@
 /*
- * The crc32 functions and data was originally written by Spencer
- * Garrett <srg@quick.com> and was gleaned from the PostgreSQL source
- * tree via the files contrib/ltree/crc32.[ch] and from FreeBSD at
- * src/usr.bin/cksum/crc32.c.
- */
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 #include <da_hashkit.h>
 

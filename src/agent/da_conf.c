@@ -1,9 +1,18 @@
 /*
- * da_conf.c
- *
- *  Created on: 2014Äê12ÔÂ4ÈÕ
- *      Author: Jiansong
- */
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 #include <sys/socket.h>
 #include <fcntl.h>
@@ -522,7 +531,7 @@ static int conf_parse_core(struct conf *cf) {
 			return -1;
 		}
 		
-		//×ª´æÒ»ÏÂlocalipµ½conf_poolÖÐ£¬ºóÐøserver_poolÐèÒªÊ¹ÓÃ
+		//è½¬å­˜ä¸€ä¸‹localipåˆ°conf_poolä¸­ï¼ŒåŽç»­server_pooléœ€è¦ä½¿ç”¨
 		struct conf_pool *tmpCP = (struct conf_pool *)void_cp;
 		strncpy(tmpCP->localip, cf->localip, sizeof(tmpCP->localip));
 		
@@ -1010,7 +1019,7 @@ struct conf *conf_create(char *filename) {
 		return NULL;
 	}
 
-	//ºóÐøÐèÒªÓÃµ½±¾µØIP£¬ËùÒÔ·ÅÔÚÇ°Ãæ»ñÈ¡
+	//åŽç»­éœ€è¦ç”¨åˆ°æœ¬åœ°IPï¼Œæ‰€ä»¥æ”¾åœ¨å‰é¢èŽ·å–
 	get_local_ip(cf->localip, sizeof(cf->localip));
 	
 	status = conf_parse(cf);

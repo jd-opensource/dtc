@@ -1,3 +1,18 @@
+/*
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -9,7 +24,7 @@
 #include "../da_log.h"
 
 /*
- * Ò»ÖÂÐÔhash½ÚµãÊý
+ * ä¸€è‡´æ€§hashèŠ‚ç‚¹æ•°
  */
 #define KETAMA_CONTINUUM_ADDITION   10  /* # extra slots to build into continuum */
 #define KETAMA_POINTS_PER_SERVER    160 /* 40 points per hash */
@@ -68,7 +83,7 @@ int ketama_update(struct server_pool *pool) {
 		if (continuum == NULL) {
 			return -1;
 		}
-		//ÉèÖÃpoolµÄÒ»ÖÂÐÔhash»·
+		//è®¾ç½®poolçš„ä¸€è‡´æ€§hashçŽ¯
 		pool->continuum = continuum;
 		pool->nserver_continuum = nserver_continuum;
 		/* pool->ncontinuum is initialized later as it could be <= ncontinuum */
@@ -102,7 +117,7 @@ int ketama_update(struct server_pool *pool) {
 		pointer_counter += points_per_server;
 	}
 	pool->ncontinuum = pointer_counter;
-	//¶Ôcontinum½øÐÐÅÅÐò
+	//å¯¹continumè¿›è¡ŒæŽ’åº
 	qsort(pool->continuum, pool->ncontinuum, sizeof(*pool->continuum),
 			ketama_item_cmp);
 	for (pointer_index = 0;
@@ -142,7 +157,7 @@ int ketama_update(struct server_pool *pool) {
 	for (server_index = 0; server_index < nserver; server_index++) {
 
 		struct server *server = array_get(&pool->server, server_index);
-		//¡®host:port:weight¡¯ or ¡®host:port:weight name¡¯
+		//â€˜host:port:weightâ€™ or â€˜host:port:weight nameâ€™
 		ASSERT(server->weight > 0);
 		total_weight += server->weight;
 
@@ -163,7 +178,7 @@ int ketama_update(struct server_pool *pool) {
 		if (continuum == NULL) {
 			return -1;
 		}
-		//ÉèÖÃpoolµÄÒ»ÖÂÐÔhash»·
+		//è®¾ç½®poolçš„ä¸€è‡´æ€§hashçŽ¯
 		pool->continuum = continuum;
 		pool->nserver_continuum = nserver_continuum;
 		/* pool->ncontinuum is initialized later as it could be <= ncontinuum */
@@ -181,7 +196,7 @@ int ketama_update(struct server_pool *pool) {
 
 		server = array_get(&pool->server, server_index);
 
-		pct = (float) server->weight / (float) total_weight; //È¨ÖØ¼ÆËã
+		pct = (float) server->weight / (float) total_weight; //æƒé‡è®¡ç®—
 		pointer_per_server = (uint32_t) ((floorf(
 				(float) (pct * KETAMA_POINTS_PER_SERVER / 4 * (float) nserver
 						+ 0.0000000001))) * 4);
@@ -208,7 +223,7 @@ int ketama_update(struct server_pool *pool) {
 	}
 
 	pool->ncontinuum = pointer_counter;
-	//¶Ôcontinum½øÐÐÅÅÐò
+	//å¯¹continumè¿›è¡ŒæŽ’åº
 	qsort(pool->continuum, pool->ncontinuum, sizeof(*pool->continuum),
 			ketama_item_cmp);
 
