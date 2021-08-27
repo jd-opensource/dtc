@@ -33,7 +33,7 @@ DTC系统由以下组件组成:
   项目提供docker镜像，可快速启动和运行示例：
   - 启动server镜像：<br/>
   `docker pull dtc/server:latest`<br/>
-  `docker run -i -t -p localhost:20015:20015 dtc/server:latest /bin/bash`
+  `docker run -i -t -p 127.0.0.1:20015:20015 dtc/server:latest /bin/bash`
   - 启动SDK镜像：
     - C++:<br/>
     `docker pull dtc/sdk-cpp:latest`<br/>
