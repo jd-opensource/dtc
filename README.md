@@ -58,7 +58,7 @@ DTC系统由以下组件组成:
 - [杨爽](https://gitee.com/kfysck)（项目开发）
 - [仇路](https://gitee.com/qiuluAbel)（项目开发）
 - [吴昕臻](https://gitee.com/wuxinzhen_1997)（项目开发）
-- 曹沛（项目开发）
+- [曹沛](https://gitee.com/warm-byte)（项目开发）
 - [陈雨杰](https://gitee.com/chenyujie28)（项目开发）
 - [朱林](https://gitee.com/leol3)（项目开发）
 
