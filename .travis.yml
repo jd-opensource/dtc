@@ -6,7 +6,6 @@ language: cpp
 sudo: required
 
 compiler:
-- gcc
 - g++
 os:
 - linux
@@ -29,7 +28,6 @@ install:
 - sudo apt-get install snappy libsnappy-dev zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
 
 script:
-- cd src/
 - mkdir build/
 - cd build/
 - cmake ../
