@@ -1,5 +1,5 @@
 DB_DEFINE:
-  DbName: test
+  DbName: dtc_opensource
   DbNum: (1,1)
   dbMax: 1
   MachineNum: 1
@@ -14,8 +14,8 @@ MACHINE1:
   CommitProcs: 10
   DbIdx: 0
   DbAddr: 127.0.0.1:3306
-  DbUser: root
-  DbPass: DTC@ecc2014
+  DbUser: username
+  DbPass: password
 
 TABLE_DEFINE:
   TableName: Table_Test
@@ -32,14 +32,14 @@ FIELD1:
 
 FIELD2:
   FieldName: name
-  FieldType: 4
-  FieldSize: 255
+  FieldType: 5
+  FieldSize: 50
   UniqField: 0
         
 FIELD3:
   FieldName: city
   FieldType: 4
-  FieldSize: 255
+  FieldSize: 50
   UniqField: 0
   
 FIELD4:
