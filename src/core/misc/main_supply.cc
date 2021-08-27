@@ -593,8 +593,8 @@ int init_data_connector_ask_chain(PollerBase *thread)
 //获取、配置基础信息
 int init_config_info()
 {
-	mkdir("../stat", 0777);
-	mkdir("../data", 0777);
+	// mkdir("/usr/local/dtc/stat", 0777);
+	// mkdir("/usr/local/dtc/data", 0777);
 
 	g_hash_changing = g_dtc_config->get_int_val("cache", "HashChanging", 0);
 	g_target_new_hash =

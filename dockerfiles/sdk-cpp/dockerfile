@@ -1,0 +1,18 @@
+FROM centos:centos8
+
+COPY start.sh /root/start.sh
+
+ARG sofile=libdtc.2.so
+COPY $sofile /usr/lib/$sofile
+RUN ln -sf /usr/lib/$sofile /usr/lib/libdtc.so.1 && \
+    ln -sf /usr/lib/libdtc.so.1 /usr/lib/libdtc.so && \
+    echo "/usr/lib" >> /etc/ld.so.conf && \
+    /sbin/ldconfig -v
+
+#cpp test
+RUN mkdir -p /usr/local/sdk-cpp
+COPY ../../tests/get.cc /usr/local/sdk-cpp/get.cc
+COPY ../../tests/insert.cc /usr/local/sdk-cpp/insert.cc
+COPY ../../tests/build.sh /usr/local/sdk-cpp/build.sh
+
+CMD ["/bin/bash", "/root/start.sh"]
