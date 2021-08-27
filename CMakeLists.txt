@@ -1,9 +1,7 @@
-cmake_minimum_required (VERSION 2.8)
-project (dtc)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+PROJECT(dtc)
 
-add_subdirectory(./src)
+ADD_SUBDIRECTORY(./src)
 
-
-
-#想卸载make install安装的库，进入到build文件夹，执行
+#if you want to uninstall the library ,you should enter the build folder, and use this command.
 # cat install_manifest.txt | sudo xargs rm
