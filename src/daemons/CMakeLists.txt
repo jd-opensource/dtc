@@ -1,5 +1,5 @@
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/daemons)
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/daemons)
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/daemons)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/daemons)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     add_compile_options(-std=gnu++11)
@@ -7,18 +7,18 @@ endif(CMAKE_COMPILER_IS_GNUCXX)
 
 #添加头文件搜索路径，相当于gcc -I
 INCLUDE_DIRECTORIES(
-    ${PROJECT_SOURCE_DIR}/daemons
-    ${PROJECT_SOURCE_DIR}/libs/common
-    ${PROJECT_SOURCE_DIR}/libs/stat
-    ${PROJECT_SOURCE_DIR}/libs/log4cplus/include
-    ${PROJECT_SOURCE_DIR}/libs/yaml-cpp/include)
+    ${PROJECT_SOURCE_DIR}/src/daemons
+    ${PROJECT_SOURCE_DIR}/src/libs/common
+    ${PROJECT_SOURCE_DIR}/src/libs/stat
+    ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/include
+    ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/include)
     
 #添加.so/.a文件搜索路径，相当于gcc -L
 LINK_DIRECTORIES(
-    ${PROJECT_SOURCE_DIR}/libs/log4cplus/libs
-    ${PROJECT_SOURCE_DIR}/libs/yaml-cpp/libs
-    ${PROJECT_SOURCE_DIR}/libs/common
-    ${PROJECT_SOURCE_DIR}/libs/stat)
+    ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/libs
+    ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/libs
+    ${PROJECT_SOURCE_DIR}/src/libs/common
+    ${PROJECT_SOURCE_DIR}/src/libs/stat)
 
 #把当前目录下的源文件列表存放到变量SRC_LIST1里
 FILE(GLOB_RECURSE SRC_LIST1 ./*.cc ./*.c)
