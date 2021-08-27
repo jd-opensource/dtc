@@ -1,4 +1,4 @@
-FROM centos:centos7.2.1511
+FROM centos:centos8
 
 COPY start.sh /root/start.sh
 
@@ -10,9 +10,9 @@ RUN ln -sf /usr/lib/$sofile /usr/lib/libdtc.so.1 && \
     /sbin/ldconfig -v
 
 #cpp test
-#RUN mkdir -p /usr/local/sdk-cpp
-#COPY ../../tests/get.cc /usr/local/sdk-cpp/get.cc
-#COPY ../../tests/insert.cc /usr/local/sdk-cpp/insert.cc
-#COPY ../../tests/build.sh /usr/local/sdk-cpp/build.sh
+RUN mkdir -p /usr/local/sdk-cpp
+COPY ../../tests/get.cc /usr/local/sdk-cpp/get.cc
+COPY ../../tests/insert.cc /usr/local/sdk-cpp/insert.cc
+COPY ../../tests/build.sh /usr/local/sdk-cpp/build.sh
 
 CMD ["/bin/bash", "/root/start.sh"]
