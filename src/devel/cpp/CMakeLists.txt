@@ -1,6 +1,6 @@
 
 #设置库文件输出路径
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/devel/cpp)
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/devel/cpp)
 
 #把当前目录下的源文件列表存放到变量SRC_LIST1里
 FILE(GLOB SRC_LIST1 ./*.c)
@@ -33,11 +33,11 @@ INCLUDE_DIRECTORIES(
 
 #添加.so/.a文件搜索路径，相当于gcc -L
 LINK_DIRECTORIES(
-    ${PROJECT_SOURCE_DIR}/libs/log4cplus/libs
-    ${PROJECT_SOURCE_DIR}/libs/yaml-cpp/libs
-    ${PROJECT_SOURCE_DIR}/libs/zlib/lib/
-    ${PROJECT_SOURCE_DIR}/libs/common
-    ${PROJECT_SOURCE_DIR}/configcenter/ca_api/)
+    ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/libs
+    ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/libs
+    ${PROJECT_SOURCE_DIR}/src/libs/zlib/lib/
+    ${PROJECT_SOURCE_DIR}/src/libs/common
+    ${PROJECT_SOURCE_DIR}/src/configcenter/ca_api/)
 
 #链接目标库
 LINK_LIBRARIES(dl) 
@@ -58,6 +58,3 @@ ADD_LIBRARY(dtc.pic SHARED ${SRC_LIST1} ${SRC_LIST2})
 
 #设置make install 安装路径
 INSTALL(TARGETS dtc.2 LIBRARY DESTINATION /usr/lib/)
-# SET_TARGET_PROPERTIES(dtc_static PROPERTIES OUTPUT_NAME "dtc")
-# SET_TARGET_PROPERTIES (dtc_static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
-# SET_TARGET_PROPERTIES (dtc PROPERTIES CLEAN_DIRECT_OUTPUT 1)
