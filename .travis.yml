@@ -1,0 +1,49 @@
+# Build matrix / environment variables are explained on:
+# http://about.travis-ci.org/docs/user/build-configuration/
+# This file can be validated on: http://lint.travis-ci.org/
+
+language: cpp
+sudo: required
+
+compiler:
+- gcc
+- g++
+os:
+- linux
+addons:
+  apt:
+    packages:
+    - g++-4.9
+env:
+- DTC_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+befor_install:
+- eval "${DTC_EVAL}"
+
+install:
+- echo ${CC}
+- ${CC} --version
+- echo ${CXX}
+- ${CXX} --version
+- cmake --version
+- sudo apt-get install snappy libsnappy-dev zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
+
+script:
+- cd src/
+- mkdir build/
+- cd build/
+- cmake ../
+- make
+
+after_success:
+- cd ../../
+- cp conf/* dockerfiles/server/
+- cp src/core/dtcd dockerfiles/server/
+- cp src/devel/cpp/libdtc.2.so dockerfiles/sdk-cpp/
+- cd dockerfiles/server/
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+- docker build -t $DOCKER_USERNAME/server:latest .
+- docker push $DOCKER_USERNAME/server:latest
+- cd ../sdk-cpp/
+- docker build -t $DOCKER_USERNAME/sdk-cpp:latest .
+- docker push $DOCKER_USERNAME/sdk-cpp:latest

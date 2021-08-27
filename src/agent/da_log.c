@@ -1,9 +1,18 @@
 /*
- * da_log.c
- *
- *  Created on: 2014ƒÍ11‘¬29»’
- *      Author: Jiansong
- */
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
@@ -15,7 +24,7 @@
 #define MSGSIZE 4096
 #define REMOTELOG_ERR_TYPE 14
 #define AGENT_CLIENT_TYPE 1
-
+#define O_LARGEFILE __O_LARGEFILE
 int __log_level__ = 6;
 int __log_switch__ = 1;
 int __business_id__ = 0;
@@ -31,6 +40,7 @@ static int noconsole = 0;
 //remote log area
 static struct sockaddr_in remote_log_addr;
 static int sockaddr_length = 0;
+int da_gettid(void);
 
 void _set_remote_log_config_(const char *addr, int port, const char *own_addr, int own_port, int businessid, int iSwitch)
 {
@@ -119,7 +129,7 @@ void _set_log_level_(int l) {
 
 void _set_log_switch_(int iSwitch)
 {
-	//0 ≤ªø™∆Ù±æµÿ»’÷æ
+	//0 ‰∏çÂºÄÂêØÊú¨Âú∞Êó•Âøó
 	__log_switch__ = iSwitch;
 }
 
@@ -148,7 +158,7 @@ void _write_log_(int level, char *filename, const char *funcname,
 		filename = basename(filename);
 		off = snprintf(buf, LOGSIZE,
 				"<%d>[%02d:%02d:%02d] pid[%d]: %s(%d)[%s]: ", level, tm.tm_hour,
-				tm.tm_min, tm.tm_sec, gettid(), filename, lineno, funcname);
+				tm.tm_min, tm.tm_sec, da_gettid(), filename, lineno, funcname);
 	}
 	if (off >= LOGSIZE)
 		off = LOGSIZE - 1;

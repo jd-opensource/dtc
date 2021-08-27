@@ -1,9 +1,18 @@
 /*
- * da_msg.c
- *
- *  Created on: 2014Äê12ÔÂ2ÈÕ
- *      Author: Jiansong
- */
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 #include <limits.h>
 #include "da_msg.h"
@@ -17,6 +26,10 @@
 #include "limits.h"
 #include "da_conn.h"
 #include "da_stats.h"
+
+
+#define __IOV_MAX	1024
+# define IOV_MAX __IOV_MAX
 
 #if (IOV_MAX > 128)
 #define NC_IOV_MAX 128
@@ -108,7 +121,7 @@ int msg_init() {
 	}
 	msg_id = 0;
 	frag_id = 0;
-	//ºìºÚÊ÷£¬³¬Ê±ÉèÖÃ
+	//çº¢é»‘æ ‘ï¼Œè¶…æ—¶è®¾ç½®
 	rbtree_init(&tmo_rbt, &tmo_rbs);
 	return 0;
 }
@@ -226,7 +239,7 @@ struct msg *msg_get(struct conn *conn, bool request) {
 }
 
 /*
- *ÊÍ·ÅmsgËù¶ÔÓ¦µÄ×ÊÔ´£¬»ØÊÕmsg¶ÔÏó
+ *é‡Šæ”¾msgæ‰€å¯¹åº”çš„èµ„æºï¼Œå›æ”¶msgå¯¹è±¡
  */
 void msg_put(struct msg *m) {
 
@@ -428,8 +441,8 @@ int msg_recv(struct context *ctx, struct conn *conn) {
 
 	do {
 		/*
-		 * ´Ómsg³ØÖĞ»ñÈ¡Ò»¸ömsg£¬µ±ÓÉÓÚÄÚ´æÔ­Òò»ñÈ¡msgÊ§°ÜÊ±ÖÃ
-		 * conn->err±êÖ¾£¬ÓÉÓÚÁ¬½Ó¿Í»§¶Ë¹Ø±ÕÔ­Òò·µ»Ø¿ÕµÄ²»´¦Àí
+		 * ä»msgæ± ä¸­è·å–ä¸€ä¸ªmsgï¼Œå½“ç”±äºå†…å­˜åŸå› è·å–msgå¤±è´¥æ—¶ç½®
+		 * conn->erræ ‡å¿—ï¼Œç”±äºè¿æ¥å®¢æˆ·ç«¯å…³é—­åŸå› è¿”å›ç©ºçš„ä¸å¤„ç†
 		 */
 		
 		msg = conn->recv_next(ctx, conn, true);
@@ -599,7 +612,7 @@ static int msg_send_chain(struct context *ctx, struct conn *conn,
 				msg->sending = 0;
 				conn->send_done(ctx, conn, msg);
 			}
-			//ÒòÎªÒªÖ´ĞĞTAILQ_REMOVE(&send_msgq, msg, m_tqe);
+			//å› ä¸ºè¦æ‰§è¡ŒTAILQ_REMOVE(&send_msgq, msg, m_tqe);
 			continue;
 		}
 
