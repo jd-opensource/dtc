@@ -17,5 +17,4 @@ COPY cache.yaml $confpath/cache.yaml
 COPY log4cplus.conf $confpath/log4cplus.conf
 
 #CMD ["/bin/bash", "/root/start.sh"]
-CMD ["/bin/echo", "DTC SERVER..."]
-CMD ["/usr/local/dtc/bin/dtcd"]
+CMD ["/usr/local/dtc/bin/dtcd", "-d"]
