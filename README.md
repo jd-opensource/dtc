@@ -26,28 +26,21 @@ DTC系统由以下组件组成:
   - 多种数据结构模型，提高内存读写速度。
 
 ## 性能
-    单核CPU，单DTC实例情况下，可支持60,000 QPS的查询；
+    单核CPU，单DTC实例情况下，可支持90,000 QPS的查询；
     在真实的分布式场景中，DTC可支持超过3,000,000 QPS的查询服务，且命中率在99.9%以上。
 
 ## 构建
-* gcc/g++ 4.8
-* cmake >= 3.6.2
-* 安装gflags:<br />
-    gflags是google开源的一套命令行参数解析工具，支持从环境变量和配置文件读取参数<br />
-    `git clone https://github.com/gflags/gflags.git`<br />
-    `cd gflags`<br />
-    `git checkout -b 2.2 v2.2.2`<br />
-    `cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DBUILD_SHARED_LIBS=ON -DGFLAGS_NAMESPACE=google -G "Unix Makefiles" .`<br />
-    `make && sudo make install`<br />
-    `sudo ldconfig  `<br />
-    `sudo ln -s /usr/local/lib/libgflags.so.2.2 /lib64`<br />
-    ### CentOS
-    - 执行以下命令安装依赖：<br />
-    `sudo yum install -y make snappy snappy-devel zlib zlib-devel bzip2 bzip2-devel lz4-devel libasan openssl-devel cmake3 mysql-devel mxml-devel`<br />
-    ### Ubuntu
-    - 执行以下命令安装依赖：<br />
-    `sudo apt-get install make snappy libsnappy-dev zlib1g zlib1g-dev bzip2 liblz4-dev libasan0  openssl libmxml-dev`<br />
-* src目录下，执行make即可编译。
+  项目提供docker镜像，可快速启动和运行示例：
+  - 启动server镜像：<br/>
+  `docker pull dtc/server:latest`<br/>
+  `docker run -i -t -p localhost:20015:20015 dtc/server:latest /bin/bash`
+  - 启动SDK镜像：
+    - C++:<br/>
+    `docker pull dtc/sdk-cpp:latest`<br/>
+    `docker run -i -t dtc/sdk-cpp:latest /bin/bash`
+    - 后续计划SDK支持更多语言版本。
+
+  更多编译详情，请移步[buiding](docs/buiding.md).
 
 ## 第三方依赖
 * [cJson](https://github.com/DaveGamble/cJSON)
@@ -60,14 +53,14 @@ DTC系统由以下组件组成:
 * [twemproxy](https://github.com/twitter/twemproxy)
 
 ## 项目成员
-- 付学宝--项目发起者、导师、总设计师
-- [林金明](https://gitee.com/shrewdlin)--项目开发
-- [杨爽](https://gitee.com/kfysck)--项目开发
-- [仇路](https://gitee.com/qiuluAbel)--项目开发
-- [吴昕臻](https://gitee.com/wuxinzhen_1997)--项目开发
-- 曹沛--项目开发
-- [陈雨杰](https://gitee.com/chenyujie28)--项目开发
-- [朱林](https://gitee.com/leol3)--项目开发
+- 付学宝（项目发起者、导师、总设计师）
+- [林金明](https://gitee.com/shrewdlin)（项目开发）
+- [杨爽](https://gitee.com/kfysck)（项目开发）
+- [仇路](https://gitee.com/qiuluAbel)（项目开发）
+- [吴昕臻](https://gitee.com/wuxinzhen_1997)（项目开发）
+- 曹沛（项目开发）
+- [陈雨杰](https://gitee.com/chenyujie28)（项目开发）
+- [朱林](https://gitee.com/leol3)（项目开发）
 
 ## 许可证
 
