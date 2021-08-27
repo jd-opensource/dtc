@@ -34,7 +34,7 @@ script:
 - make
 
 after_success:
-- cd ../../
+- cd ../
 - cp conf/* dockerfiles/server/
 - cp src/core/dtcd dockerfiles/server/
 - cp src/devel/cpp/libdtc.2.so dockerfiles/sdk-cpp/
