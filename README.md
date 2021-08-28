@@ -4,6 +4,7 @@
 
 ## 概述
 DTC是一个分布式表级缓存系统，可为数据库提供热点数据缓存支持，减少数据库的访问压力。
+![DTC architecture](docs/architecture.png)
 
 DTC系统由以下组件组成:
 * **Agent** - 提供Key路由、命令请求的服务。
