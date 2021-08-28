@@ -24,20 +24,17 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-
-      # Runs a single command using the runners shell
-      - name: display env
-        run: |
-          echo "github.workspace is ${{github.workspace}}."
-          ls  ${{github.workspace}}
+      
+      - name: Install GCC
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: 4.8
 
       # Runs a set of commands using the runners shell
       - name: cmake project
         run: |
           cd ${{github.workspace}}
-          ls
           mkdir build
           cd build
-          cmake --version
-          cmake ..
+          cmake ../
           make
