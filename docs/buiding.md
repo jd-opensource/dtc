@@ -15,4 +15,7 @@
     ### Ubuntu
     - 执行以下命令安装依赖：<br />
     `sudo apt-get install make snappy libsnappy-dev zlib1g zlib1g-dev bzip2 liblz4-dev libasan0  openssl libmxml-dev`<br />
-* src目录下，执行make即可编译。
+* `mkdir build`
+* `cmake ../`
+* `make`
+* `make install`
