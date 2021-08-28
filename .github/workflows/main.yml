@@ -16,7 +16,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  ubuntu-18.04&gcc-4.8:
+  ubuntu18.04-gcc4.8:
     # The type of runner that the job will run on
     runs-on: ubuntu-18.04
 
@@ -43,7 +43,7 @@ jobs:
           cmake ../
           make
           
-  ubuntu-18.04&gcc-5:
+  ubuntu18.04-gcc5:
       # The type of runner that the job will run on
       runs-on: ubuntu-18.04
 
