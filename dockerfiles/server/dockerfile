@@ -10,7 +10,6 @@ RUN mkdir -p $basepath/stat
 RUN mkdir -p $confpath
 RUN mkdir -p $logpath
 
-COPY start.sh /root/start.sh
 COPY dtcd $basepath/bin/dtcd
 COPY table.yaml $confpath/table.yaml
 COPY cache.yaml $confpath/cache.yaml

@@ -3,10 +3,8 @@
 # This file can be validated on: http://lint.travis-ci.org/
 
 language: cpp
-sudo: required
 
 compiler:
-- gcc
 - g++
 os:
 - linux
@@ -17,7 +15,7 @@ addons:
 env:
 - DTC_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
 
-befor_install:
+before_install:
 - eval "${DTC_EVAL}"
 
 install:
@@ -29,17 +27,18 @@ install:
 - sudo apt-get install snappy libsnappy-dev zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
 
 script:
-- cd src/
 - mkdir build/
 - cd build/
 - cmake ../
 - make
 
 after_success:
-- cd ../../
+- cd ../
 - cp conf/* dockerfiles/server/
 - cp src/core/dtcd dockerfiles/server/
 - cp src/devel/cpp/libdtc.2.so dockerfiles/sdk-cpp/
+- cp test/* dockerfiles/sdk-cpp/
+- cp src/devel/cpp/dtcapi.h dockerfiles/sdk-cpp/
 - cd dockerfiles/server/
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 - docker build -t $DOCKER_USERNAME/server:latest .

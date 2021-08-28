@@ -11,8 +11,9 @@ RUN ln -sf /usr/lib/$sofile /usr/lib/libdtc.so.1 && \
 
 #cpp test
 RUN mkdir -p /usr/local/sdk-cpp
-COPY ../../tests/get.cc /usr/local/sdk-cpp/get.cc
-COPY ../../tests/insert.cc /usr/local/sdk-cpp/insert.cc
-COPY ../../tests/build.sh /usr/local/sdk-cpp/build.sh
+COPY dtcapi.h /usr/local/sdk-cpp/dtcapi.h
+COPY get.cc /usr/local/sdk-cpp/get.cc
+COPY insert.cc /usr/local/sdk-cpp/insert.cc
+COPY build.sh /usr/local/sdk-cpp/build.sh
 
 CMD ["/bin/bash", "/root/start.sh"]
