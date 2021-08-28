@@ -29,6 +29,10 @@ jobs:
         uses: egor-tensin/setup-gcc@v1
         with:
           version: 4.8
+      
+      - name: install dependency
+        run: |
+          sudo apt-get install make snappy libsnappy-dev zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
 
       # Runs a set of commands using the runners shell
       - name: cmake project
