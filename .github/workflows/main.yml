@@ -16,7 +16,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  ubuntu-18.04&gcc-4.8:
     # The type of runner that the job will run on
     runs-on: ubuntu-18.04
 
@@ -42,3 +42,30 @@ jobs:
           cd build
           cmake ../
           make
+          
+  ubuntu-18.04&gcc-5:
+      # The type of runner that the job will run on
+      runs-on: ubuntu-18.04
+
+      # Steps represent a sequence of tasks that will be executed as part of the job
+      steps:
+        # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+        - uses: actions/checkout@v2
+
+        - name: Install GCC
+          uses: egor-tensin/setup-gcc@v1
+          with:
+            version: 5
+
+        - name: install dependency
+          run: |
+            sudo apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
+
+        # Runs a set of commands using the runners shell
+        - name: cmake project
+          run: |
+            cd ${{github.workspace}}
+            mkdir build
+            cd build
+            cmake ../
+            make
