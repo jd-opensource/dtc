@@ -4,6 +4,7 @@
 
 ## 概述
 DTC是一个分布式表级缓存系统，可为数据库提供热点数据缓存支持，减少数据库的访问压力。
+![DTC architecture](docs/architecture.png)
 
 DTC系统由以下组件组成:
 * **Agent** - 提供Key路由、命令请求的服务。
@@ -33,7 +34,7 @@ DTC系统由以下组件组成:
   项目提供docker镜像，可快速启动和运行示例：
   - 启动server镜像：<br/>
   `docker pull dtc8/server:latest`<br/>
-  `docker run -i -t -p 127.0.0.1:20015:20015 dtc8/server:latest /bin/bash`
+  `docker run -i -t -p 127.0.0.1:20015:20015 dtc8/server:latest`
   - 启动SDK镜像：
     - C++:<br/>
     `docker pull dtc8/sdk-cpp:latest`<br/>
