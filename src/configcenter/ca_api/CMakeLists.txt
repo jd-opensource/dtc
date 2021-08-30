@@ -1,4 +1,5 @@
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/configcenter/ca_api)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/configcenter/ca_api)
 #添加头文件搜索路径，相当于gcc -I
 INCLUDE_DIRECTORIES(.)
     
