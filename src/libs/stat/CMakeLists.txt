@@ -1,4 +1,6 @@
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/libs/stat)
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/libs/stat)
+
 if(CMAKE_COMPILER_IS_GNUCXX)
     add_compile_options(-std=gnu++11)
 endif(CMAKE_COMPILER_IS_GNUCXX)
