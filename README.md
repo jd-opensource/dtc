@@ -57,7 +57,7 @@ DTC系统由以下组件组成:
 * [twemproxy](https://github.com/twitter/twemproxy)
 
 ## 项目成员
-- 付学宝（项目发起者、导师、总设计师）
+- [付学宝](https://gitee.com/fuxuebao)（项目发起者、导师、总设计师）
 - [林金明](https://gitee.com/shrewdlin)（项目开发）
 - [杨爽](https://gitee.com/kfysck)（项目开发）
 - [仇路](https://gitee.com/qiuluAbel)（项目开发）
@@ -65,6 +65,9 @@ DTC系统由以下组件组成:
 - [曹沛](https://gitee.com/warm-byte)（项目开发）
 - [陈雨杰](https://gitee.com/chenyujie28)（项目开发）
 - [朱林](https://gitee.com/leol3)（项目开发）
+
+## 特别感谢
+感谢京东副总裁王建宇博士给予项目的大力支持，多次参与指导提供建议和方向！
 
 ## 许可证
 
