@@ -1,5 +1,3 @@
-#设置库文件输出路径
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/agent)
 IF("${GPROF}" EQUAL 1)
     ADD_COMPILE_OPTIONS(-pg)
 ENDIF()
@@ -16,14 +14,12 @@ IF("${HAVE_ASSERT_LOG}" EQUAL 1)
     ADD_COMPILE_OPTIONS(-DHAVE_ASSERT_LOG=1)
 ENDIF()
 
-#把当前目录下的源文件列表存放到变量SRC_LIST1里
 FILE(GLOB SRC_LIST1 ./*.c)
 FILE(GLOB SRC_LIST2 ./common/*.c)
 FILE(GLOB SRC_LIST3 ./event/*.c)
 FILE(GLOB SRC_LIST4 ./hashkit/*.c)
 FILE(GLOB SRC_LIST5 ./proto/*.c)
 
-#添加头文件搜索路径，相当于gcc -I
 INCLUDE_DIRECTORIES(
     .
     ./common 
@@ -31,14 +27,11 @@ INCLUDE_DIRECTORIES(
     ./hashkit 
     ./proto)
 
-#链接目标库
 LINK_LIBRARIES(rt) 
 LINK_LIBRARIES(mxml)
 LINK_LIBRARIES(pthread)
 
-#编译参数
 ADD_DEFINITIONS ("-D_GNU_SOURCE")
 
-#编译为.so/.a
 ADD_EXECUTABLE(dtcagent ${SRC_LIST1} ${SRC_LIST2} ${SRC_LIST3} ${SRC_LIST4} ${SRC_LIST5})
 
