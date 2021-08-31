@@ -66,7 +66,7 @@ void select(DTC::Server server) {
     printf("uin[%u] data not exist.\n", uid);
 
   /* 读取结果的Key值 */
-  printf("result key: %d\n", result.int_key());
+  printf("result key: %lld\n", result.int_key());
 
   /* 输出结果的行数 */
   printf("NumRows:%d\n", result.get_num_row_size());
@@ -81,13 +81,13 @@ void select(DTC::Server server) {
     }
     /* 如果一切正确，则可以输出数据了 */
     /* 输出int类型的数据 */
-    printf("uid: %d\n", result.int_value("uid"));
+    printf("uid: %lld\n", result.int_value("uid"));
     /* 输出binary类型的数据 */
     printf("name: %s\n", result.binary_value("name"));
     /* 输出string类型的数据 */
     printf("city: %s\n", result.string_value("city"));
-    printf("age:%d\n", result.int_value("age"));
-    printf("sex:%d\n", result.int_value("sex"));
+    printf("age:%lld\n", result.int_value("age"));
+    printf("sex:%lld\n", result.int_value("sex"));
   }
 }
 
@@ -96,13 +96,13 @@ int main(int argc, char *argv[]) {
   DTC::Server server;
 
   /* 设置的dtc的ip和端口 */
-  server.set_address("127.0.0.1", "20015");
+  server.set_address("10.252.117.100", "20015");
   /* 设置网络超时时间,单次网络IO的超时,单位秒 */
   server.SetTimeout(5);
   /* 设置访问码 AccessToken，在申请dtc实例的时候网站端会生成 */
-  // server.set_accesskey("000022907e64e117fa92f892a85307782a68afc6");
+  // server.set_accesskey("000022859249515bcccac13ebaee2c399c67471e");
   /* 设置dtc的表名 */
-  server.set_table_name("dtc_opensource");
+  server.set_table_name("Table_Test");
   /* 声明key类型 */
   server.int_key();
 
