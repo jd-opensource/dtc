@@ -385,7 +385,7 @@ int main(int argc, char *argv[]) {
     select(server, (TypeSel)i);
   }
   for (int i = E_DELETE_EXISTENCE; i < E_TOTAL_NUM_DEL; i++) {
-    delet(server, (TypeDel)i);
+    delet(server, (TypeDel)i);;
   }
   return 0;
 }
