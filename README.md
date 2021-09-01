@@ -33,15 +33,10 @@ DTC系统由以下组件组成:
     在真实的分布式场景中，DTC可支持超过3,000,000 QPS的查询服务，且命中率在99.9%以上。
 
 ## 构建
-  项目提供docker镜像，可快速启动和运行示例：
+  项目提供docker镜像，可快速启动服务：
   - 启动server镜像：<br/>
   `docker pull dtc8/server:latest`<br/>
   `docker run -i -t -p 127.0.0.1:20015:20015 dtc8/server:latest`
-  - 启动SDK镜像：
-    - C++:<br/>
-    `docker pull dtc8/sdk-cpp:latest`<br/>
-    `docker run -i -t dtc8/sdk-cpp:latest /bin/bash`
-    - 后续计划SDK支持更多语言版本。
 
   更多编译详情，请移步[buiding](docs/buiding.md).
 
