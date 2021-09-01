@@ -38,6 +38,7 @@ after_success:
 - cp build/src/core/dtcd dockerfiles/server/
 - cp build/src/devel/cpp/libdtc.2.so dockerfiles/sdk-cpp/
 - cp build/test/* dockerfiles/sdk-cpp/
+- cp test/* dockerfiles/sdk-cpp/
 - cp src/devel/cpp/dtcapi.h dockerfiles/sdk-cpp/
 - cd dockerfiles/server/
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
