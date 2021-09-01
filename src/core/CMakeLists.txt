@@ -1,14 +1,8 @@
-#设置库文件输出路径
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/core)
-#设置可执行文件输出路径
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/core)
+# #设置库文件输出路径
+# SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/core)
+# #设置可执行文件输出路径
+# SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/src/core)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-    add_compile_options(-std=gnu++11)
-endif(CMAKE_COMPILER_IS_GNUCXX)
-
-
-#把当前目录下的源文件列表存放到变量SRC_LIST里
 FILE(GLOB_RECURSE SRC_LIST ./*.cc ./*.c)
 
 #添加头文件搜索路径，相当于gcc -I
@@ -31,9 +25,9 @@ LINK_DIRECTORIES(
     ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/libs
     ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/libs
     ${PROJECT_SOURCE_DIR}/src/libs/zlib/lib/
-    ${PROJECT_SOURCE_DIR}/src/libs/common
-    ${PROJECT_SOURCE_DIR}/src/libs/stat
-    ${PROJECT_SOURCE_DIR}/src/daemons)
+    ${PROJECT_SOURCE_DIR}/build/src/libs/common
+    ${PROJECT_SOURCE_DIR}/build/src/libs/stat
+    ${PROJECT_SOURCE_DIR}/build/src/daemons)
 
 #添加链接库，相当于gcc -l
 LINK_LIBRARIES(liblog4cplus.a) 
@@ -46,7 +40,7 @@ LINK_LIBRARIES(pthread)
 LINK_LIBRARIES(dl)
 
 #编译参数
-ADD_DEFINITIONS(" -g -rdynamic -fPIC -fpermissive -D_GLIBCXX_USE_CXX11_ABI=0 -export-dynamic -Wl,--version-script,dtcd.export.lst")
+ADD_DEFINITIONS(" -g -rdynamic -fPIC -fpermissive -std=gnu++11 -D_GLIBCXX_USE_CXX11_ABI=0 -export-dynamic -Wl,--version-script,dtcd.export.lst")
 
 #编译为.so/.a
 ADD_EXECUTABLE(dtcd ${SRC_LIST})

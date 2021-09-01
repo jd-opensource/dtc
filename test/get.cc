@@ -66,7 +66,7 @@ void select(DTC::Server server) {
     printf("uin[%u] data not exist.\n", uid);
 
   /* 读取结果的Key值 */
-  printf("result key: %d\n", result.int_key());
+  printf("result key: %lld\n", result.int_key());
 
   /* 输出结果的行数 */
   printf("NumRows:%d\n", result.get_num_row_size());
@@ -81,20 +81,19 @@ void select(DTC::Server server) {
     }
     /* 如果一切正确，则可以输出数据了 */
     /* 输出int类型的数据 */
-    printf("uid: %d\n", result.int_value("uid"));
+    printf("uid: %lld\n", result.int_value("uid"));
     /* 输出binary类型的数据 */
     printf("name: %s\n", result.binary_value("name"));
     /* 输出string类型的数据 */
     printf("city: %s\n", result.string_value("city"));
-    printf("age:%d\n", result.int_value("age"));
-    printf("sex:%d\n", result.int_value("sex"));
+    printf("age:%lld\n", result.int_value("age"));
+    printf("sex:%lld\n", result.int_value("sex"));
   }
 }
 
 int main(int argc, char *argv[]) {
   /* 只要server不析构，后台会保持长连接 */
   DTC::Server server;
-
   /* 设置的dtc的ip和端口 */
   server.set_address("127.0.0.1", "20015");
   /* 设置网络超时时间,单次网络IO的超时,单位秒 */
