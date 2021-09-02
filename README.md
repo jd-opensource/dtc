@@ -40,9 +40,9 @@ DTC系统由以下组件组成:
 
   更多编译详情，请移步[buiding](docs/buiding.md).
 
-## 互动
-  在使用过程中遇到问题，或有好的意见建议，请提交[Issues](issues)。<br/>
-  欢迎贡献代码，提交[Pull Requests](pulls)，
+## 社区
+  在使用过程中遇到问题，或有好的意见建议，请提交[Issues](https://gitee.com/jd-platform-opensource/dtc/issues)。<br/>
+  欢迎贡献代码，提交[Pull Requests](https://github.com/DTC8/DTC/pulls)。
 
 ## 第三方依赖
 * [cJson](https://github.com/DaveGamble/cJSON)
