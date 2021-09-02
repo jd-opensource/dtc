@@ -1,6 +1,9 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 PROJECT(dtc)
+
+#Use optional command `cmake -DCMAKE_TEST_OPTION=ON ..` to build test demo.
 option(CMAKE_TEST_OPTION "option for test_demo" OFF)
+
 ADD_SUBDIRECTORY(./src)
 
 #if you want to build the test_demo,you should use this command `cmake -DCMAKE_TEST_OPTION=ON ..`
