@@ -72,7 +72,7 @@ void select(DTC::Server server) {
   printf("NumRows:%d\n", result.get_num_row_size());
 
   /* 输出结果 */
-  for (int i = 0; i <= result.get_num_row_size(); ++i) {
+  for (int i = 0; i < result.get_num_row_size(); ++i) {
     /* 读取一行数据 */
     iRet = result.fetch_row();
     if (iRet < 0) {

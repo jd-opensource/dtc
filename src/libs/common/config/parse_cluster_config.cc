@@ -94,9 +94,7 @@ bool parse_cluster_config(std::string &strSelfName,
 			result->push_back(node);
 			xml.out_of_elem();
 		}
-		log4cplus_debug("*********No.11************");
 	}
-	log4cplus_debug("*********No.12************");
 	if (result->empty())
 		log4cplus_info(
 			"ClusterConfig is empty,dtc runing in normal mode");
