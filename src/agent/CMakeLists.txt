@@ -21,13 +21,19 @@ INCLUDE_DIRECTORIES(
     ./common 
     ./event 
     ./hashkit 
-    ./proto)
+    ./proto
+    ../libs/mxml/libs/include)
+
+LINK_DIRECTORIES(
+    ${PROJECT_SOURCE_DIR}/src/libs/mxml/libs
+)
 
 LINK_LIBRARIES(rt) 
-LINK_LIBRARIES(mxml)
+LINK_LIBRARIES(libmxml.a)
 LINK_LIBRARIES(pthread)
 
 ADD_DEFINITIONS ("-D_GNU_SOURCE")
 
 ADD_EXECUTABLE(dtcagent ${SRC_LIST})
 
+TARGET_LINK_LIBRARIES(dtcagent libmxml.a)

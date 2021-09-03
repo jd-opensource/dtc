@@ -42,10 +42,7 @@ after_success:
 - cp src/devel/cpp/dtcapi.h dockerfiles/sdk-cpp/
 - cp build/src/agent/dtcagent dockerfiles/agent
 - cp conf/agent.xml dockerfiles/agent/
-- cp libs/mxml/include/mxml.h dockerfiles/agent/
-- cp libs/mxml/libs/libmxml.so dockerfiles/agent/
-- cp libs/mxml/libs/libmxml.so.1 dockerfiles/agent/
-- cp libs/mxml/libs/libmxml.so.1.6 dockerfiles/agent/
+
 
 - cd dockerfiles/server/
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
