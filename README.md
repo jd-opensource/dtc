@@ -29,21 +29,20 @@ DTC系统由以下组件组成:
   - 支持分库分表，支持持久化存储的拓展。
 
 ## 性能
-    单核CPU，单DTC实例情况下，可支持90,000 QPS的查询；
-    在真实的分布式场景中，DTC可支持超过3,000,000 QPS的查询服务，且命中率在99.9%以上。
+    单核CPU，单DTC实例环境下，可支持90,000 QPS的查询请求量；
+    在真实的分布式场景中，DTC可提供超过3,000,000 QPS的查询服务，命中率在99.9%以上，且平均响应时长在200微秒(μs)以内。
 
 ## 构建
-  项目提供docker镜像，可快速启动和运行示例：
+  项目提供docker镜像，可快速启动服务：
   - 启动server镜像：<br/>
   `docker pull dtc8/server:latest`<br/>
   `docker run -i -t -p 127.0.0.1:20015:20015 dtc8/server:latest`
-  - 启动SDK镜像：
-    - C++:<br/>
-    `docker pull dtc8/sdk-cpp:latest`<br/>
-    `docker run -i -t dtc8/sdk-cpp:latest /bin/bash`
-    - 后续计划SDK支持更多语言版本。
 
   更多编译详情，请移步[buiding](docs/buiding.md).
+
+## 社区
+  在使用过程中遇到问题，或有好的意见建议，请提交[Issues](https://gitee.com/jd-platform-opensource/dtc/issues)。<br/>
+  欢迎贡献代码，提交[Pull Requests](https://github.com/DTC8/DTC/pulls)。
 
 ## 第三方依赖
 * [cJson](https://github.com/DaveGamble/cJSON)
