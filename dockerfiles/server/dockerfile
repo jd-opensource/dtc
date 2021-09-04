@@ -12,7 +12,24 @@ RUN mkdir -p $logpath
 
 COPY dtcd $basepath/bin/dtcd
 COPY table.yaml $confpath/table.yaml
-COPY cache.yaml $confpath/cache.yaml
+COPY dtc.yaml $confpath/dtc.yaml
 COPY log4cplus.conf $confpath/log4cplus.conf
+
+#install dependency lib.
+ARG sofile=libdtc.2.so
+COPY $sofile /usr/lib/$sofile
+RUN ln -sf /usr/lib/$sofile /usr/lib/libdtc.so.1 && \
+    ln -sf /usr/lib/libdtc.so.1 /usr/lib/libdtc.so && \
+    echo "/usr/lib" >> /etc/ld.so.conf && \
+    /sbin/ldconfig -v
+
+#cpp test
+RUN mkdir -p /usr/local/sdk-cpp
+COPY dtcapi.h /usr/local/sdk-cpp/dtcapi.h
+COPY get.cc /usr/local/sdk-cpp/get.cc
+COPY get /usr/local/sdk-cpp/get
+COPY insert.cc /usr/local/sdk-cpp/insert.cc
+COPY insert /usr/local/sdk-cpp/insert
+COPY build.sh /usr/local/sdk-cpp/build.sh
 
 CMD ["/usr/local/dtc/bin/dtcd", "-d"]
