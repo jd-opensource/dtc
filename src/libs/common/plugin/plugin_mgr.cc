@@ -248,15 +248,15 @@ int PluginManager::load_plugin_depend(int mode)
 	DLFUNC(dtcapi_handle, so_set_server_tablename, so_set_strings_t,
 	       "set_server_tablename");
 	if (so_set_server_tablename) {
-		if (!g_dtc_config->get_str_val("TABLE_DEFINE", "table_name")) {
+		if (!g_dtc_config->get_str_val("TABLE_CONF", "table_name")) {
 			log4cplus_error("can't find tablename in table.yaml");
 			return 0;
 		}
 		log4cplus_debug("set server tablename:%s",
-				g_dtc_config->get_str_val("TABLE_DEFINE",
+				g_dtc_config->get_str_val("TABLE_CONF",
 							  "table_name"));
-		so_set_server_tablename(g_dtc_config->get_str_val(
-			"TABLE_DEFINE", "table_name"));
+		so_set_server_tablename(
+			g_dtc_config->get_str_val("TABLE_CONF", "table_name"));
 	}
 
 	return 0;
