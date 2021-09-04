@@ -45,6 +45,6 @@ LINK_LIBRARIES(libstat.a)
 
 ADD_DEFINITIONS ("-g -fPIC -fpermissive -std=gnu++11 -DROCKSDB_COMPILER=1 -DOMN_PLATFORM_UNIX -Wl,--no-undefined -Xlinker -zmuldefs")
 
-ADD_LIBRARY (rocksdb_connector ${SRC_LIST})
+ADD_EXECUTABLE (rocksdb_connector ${SRC_LIST})
 
 TARGET_LINK_LIBRARIES(rocksdb_connector liblog4cplus.a libyaml-cpp.a  libz64.a lbdtcd.a libcommon.a libdaemons.a libstat.a)

@@ -3224,19 +3224,19 @@ void RocksdbProcess::set_title(const char *status)
 
 int RocksdbProcess::process_reload_config(DtcJob *Job)
 {
-	const char *keyStr = g_dtc_config->get_str_val("cache", "CacheShmKey");
+	const char *keyStr = g_dtc_config->get_str_val("cache", "DTCID");
 	int cache_key = 0;
 	if (keyStr == NULL) {
 		cache_key = 0;
-		log4cplus_info("CacheShmKey not set!");
+		log4cplus_info("DTCID not set!");
 		return -1;
 	} else if (!strcasecmp(keyStr, "none")) {
-		log4cplus_error("CacheShmKey set to NONE, Cache disabled");
+		log4cplus_error("DTCID set to NONE, Cache disabled");
 		return -1;
 	} else if (isdigit(keyStr[0])) {
 		cache_key = strtol(keyStr, NULL, 0);
 	} else {
-		log4cplus_error("Invalid CacheShmKey value \"%s\"", keyStr);
+		log4cplus_error("Invalid DTCID value \"%s\"", keyStr);
 		return -1;
 	}
 	BlockProperties stInfo;

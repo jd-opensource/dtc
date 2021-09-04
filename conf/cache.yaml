@@ -3,8 +3,8 @@ cache:
    BindAddr: '*:20015/tcp'
    IdleTimeout: 30
    HelperTimeout: 30
-   CacheShmKey: 20015
-   CacheMemorySize: 100
+   DTCID: 20015
+   MAX_USE_MEM_MB: 100
    CacheAverageDataSize: 50
    MaxFlushSpeed: 1
    MinDirtyNode: 40
@@ -12,11 +12,11 @@ cache:
    MinDirtyTime: 3600
    MaxDirtyTime: 43200
    DelayUpdate: 0
-   DisableDataSource: 1
+   DTC_MODE: 1
    OpenningFDAttrID: 41784
    EnableCoreDump: 1
-   RemoteLogAddr: 172.28.133.131
-   RemoteLogPort: 9876
+   RemoteLogAddr: 127.0.0.1
+   RemoteLogPort: 1234
    UseSingleThread: 1
    DisableLRUUpdate: 2
    MaxIncomingPollers@inc0: 10000
