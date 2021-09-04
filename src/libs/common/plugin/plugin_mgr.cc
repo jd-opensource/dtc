@@ -213,7 +213,7 @@ int PluginManager::load_plugin_depend(int mode)
 		plugin_log_name = (const char *)"plugin_";
 	}
 	int plugin_log_level = g_dtc_config->get_idx_val(
-		"cache", "LogLevel",
+		"cache", "LOG_LEVEL",
 		((const char *const[]){ "emerg", "alert", "crit", "error",
 					"warning", "notice", "info", "debug",
 					NULL }),
@@ -240,9 +240,10 @@ int PluginManager::load_plugin_depend(int mode)
 	       "set_server_address");
 	if (so_set_server_address) {
 		log4cplus_debug("set server address:%s",
-				g_dtc_config->get_str_val("cache", "BindAddr"));
+				g_dtc_config->get_str_val("cache",
+							  "BIND_ADDR"));
 		so_set_server_address(
-			g_dtc_config->get_str_val("cache", "BindAddr"));
+			g_dtc_config->get_str_val("cache", "BIND_ADDR"));
 	}
 	//set_server_tablename
 	DLFUNC(dtcapi_handle, so_set_server_tablename, so_set_strings_t,

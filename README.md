@@ -35,8 +35,10 @@ DTC系统由以下组件组成:
 ## 构建
   项目提供docker镜像，可快速启动服务：
   - 启动server镜像：<br/>
-  `docker pull dtc8/server:latest`<br/>
-  `docker run -i -t -p 127.0.0.1:20015:20015 dtc8/server:latest`
+  ```shell
+  docker pull dtc8/server:latest
+  docker run -i -t --name dtc-server -p 127.0.0.1:20015:20015 dtc8/server:latest
+  ```
 
   更多编译详情，请移步[buiding](docs/buiding.md).
 
@@ -57,12 +59,12 @@ DTC系统由以下组件组成:
 ## 项目成员
 - [付学宝](https://gitee.com/fuxuebao)（项目发起者、导师、总设计师）
 - [林金明](https://gitee.com/shrewdlin)（项目开发）
-- [杨爽](https://gitee.com/kfysck)（项目开发）
 - [仇路](https://gitee.com/qiuluAbel)（项目开发）
+- [杨爽](https://gitee.com/kfysck)（项目开发）
+- [朱林](https://gitee.com/leol3)（项目开发）
+- [陈雨杰](https://gitee.com/chenyujie28)（项目开发）
 - [吴昕臻](https://gitee.com/wuxinzhen_1997)（项目开发）
 - [曹沛](https://gitee.com/warm-byte)（项目开发）
-- [陈雨杰](https://gitee.com/chenyujie28)（项目开发）
-- [朱林](https://gitee.com/leol3)（项目开发）
 
 ## 特别感谢
 感谢京东副总裁王建宇博士给予项目的大力支持，多次参与指导提供建议和方向！

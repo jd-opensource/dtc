@@ -35,7 +35,6 @@ bool parse_cluster_config(std::string &strSelfName,
 			  std::vector<ClusterNode> *result, const char *buf,
 			  int len)
 {
-
 	log4cplus_debug("%.*s", len, buf);
 	//配置中不允许有相同servername的节点出现，本set用于检查重复servername
 
@@ -48,7 +47,6 @@ bool parse_cluster_config(std::string &strSelfName,
 	MarkupSTL xml;
 
 	if (!xml.set_doc(xmldoc.c_str())) {
-
 		log4cplus_error("parse config file error");
 
 		return false;
@@ -66,7 +64,6 @@ bool parse_cluster_config(std::string &strSelfName,
 	log4cplus_debug("strSelfName is %s", strSelfName.c_str());
 
 	while (xml.find_child_elem("server")) {
-
 		if (xml.into_elem()) {
 			struct ClusterNode node;
 			node.name = xml.get_attrib("name");
@@ -94,9 +91,7 @@ bool parse_cluster_config(std::string &strSelfName,
 			result->push_back(node);
 			xml.out_of_elem();
 		}
-		log4cplus_debug("*********No.11************");
 	}
-	log4cplus_debug("*********No.12************");
 	if (result->empty())
 		log4cplus_info(
 			"ClusterConfig is empty,dtc runing in normal mode");

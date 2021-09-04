@@ -83,10 +83,10 @@ int ListenerPool::do_bind(DTCConfig *gc, JobAskInterface<DTCJobOperation> *out)
 		int wbufsz;
 
 		if (i == 0) {
-			snprintf(bindStr, sizeof(bindStr), "BindAddr");
+			snprintf(bindStr, sizeof(bindStr), "BIND_ADDR");
 			snprintf(bindPort, sizeof(bindPort), "BindPort");
 		} else {
-			snprintf(bindStr, sizeof(bindStr), "BindAddr%d", i);
+			snprintf(bindStr, sizeof(bindStr), "BIND_ADDR%d", i);
 			snprintf(bindPort, sizeof(bindPort), "BindPort%d", i);
 		}
 
@@ -96,8 +96,8 @@ int ListenerPool::do_bind(DTCConfig *gc, JobAskInterface<DTCJobOperation> *out)
 		errmsg = sockaddr[i].set_address(
 			addrStr, gc->get_str_val("cache", bindPort));
 		if (errmsg) {
-			log4cplus_error("bad BindAddr%d/BindPort%d: %s\n", i, i,
-					errmsg);
+			log4cplus_error("bad BIND_ADDR%d/BindPort%d: %s\n", i,
+					i, errmsg);
 			continue;
 		}
 
@@ -130,7 +130,7 @@ int ListenerPool::do_bind(DTCConfig *gc, JobAskInterface<DTCJobOperation> *out)
 		hasBindAddr = true;
 	}
 	if (!hasBindAddr) {
-		log4cplus_error("Must has a BindAddr");
+		log4cplus_error("Must has a BIND_ADDR");
 		return -1;
 	}
 

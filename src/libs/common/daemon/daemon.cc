@@ -100,7 +100,7 @@ int load_entry_parameter(int argc, char **argv)
 	//init_log("dtcd");
 	log4cplus_info("%s v%s: starting....", project_name, version);
 	strcpy(table_file, "/etc/dtc/table.yaml");
-	strcpy(cache_file, "/etc/dtc/cache.yaml");
+	strcpy(cache_file, "/etc/dtc/dtc.yaml");
 	g_dtc_config = new DTCConfig;
 	//load config file and copy it to ../stat
 	if (g_dtc_config->parse_config(table_file, "DATABASE_CONF", true) == -1)

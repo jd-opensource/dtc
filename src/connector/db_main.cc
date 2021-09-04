@@ -436,7 +436,7 @@ int rocks_direct_access_proc()
 
 	std::string socketPath = g_rocks_direct_access_path;
 	std::string dtcDeployAddr =
-		dbConfig->cfgObj->get_str_val("cache", "BindAddr");
+		dbConfig->cfgObj->get_str_val("cache", "BIND_ADDR");
 
 	SocketAddress sockAddr;
 	const char *strRet = sockAddr.set_address(dtcDeployAddr.c_str());

@@ -312,8 +312,9 @@ void select(DTC::Server server, TypeSel type)
 	if (iRet == 0)
 		iRet = get_request.need("sex");
 	if (iRet != 0) {
-		printf("get-req need error: %d", iRet);
+		printf("get-req need error: %d\n", iRet);
 		fflush(stdout);
+		return;
 	}
 
 	/* 提交请求，执行结果存在Result对象里 */
@@ -370,8 +371,6 @@ int main(int argc, char *argv[])
 	server.set_address("127.0.0.1", "20015");
 	/* 设置网络超时时间,单次网络IO的超时,单位秒 */
 	server.SetTimeout(5);
-	/* 设置访问码 AccessToken，在申请dtc实例的时候网站端会生成 */
-	// server.set_accesskey("000022907e64e117fa92f892a85307782a68afc6");
 	/* 设置dtc的表名 */
 	server.set_table_name("dtc_opensource");
 	/* 声明key类型 */
