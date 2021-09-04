@@ -24,12 +24,12 @@ RUN ln -sf /usr/lib/$sofile /usr/lib/libdtc.so.1 && \
     /sbin/ldconfig -v
 
 #cpp test
-RUN mkdir -p /usr/local/sdk-cpp
-COPY dtcapi.h /usr/local/sdk-cpp/dtcapi.h
-COPY get.cc /usr/local/sdk-cpp/get.cc
-COPY get /usr/local/sdk-cpp/get
-COPY insert.cc /usr/local/sdk-cpp/insert.cc
-COPY insert /usr/local/sdk-cpp/insert
-COPY build.sh /usr/local/sdk-cpp/build.sh
+RUN mkdir -p /usr/local/demo
+COPY dtcapi.h /usr/local/demo/dtcapi.h
+COPY get.cc /usr/local/demo/get.cc
+COPY get /usr/local/demo/get
+COPY insert.cc /usr/local/demo/insert.cc
+COPY insert /usr/local/demo/insert
+COPY build.sh /usr/local/demo/build.sh
 
 CMD ["/usr/local/dtc/bin/dtcd", "-d"]
