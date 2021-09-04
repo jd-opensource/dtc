@@ -63,6 +63,6 @@ chmod +x insert
 chmod +x get
 ./get
 ```
-你也可以根据需要尝试修改示例中的代码，进行更多的测试。
+你也可以根据需要尝试修改示例中的代码或配置，进行更多的体验。配置文件请参考[Configure](dtc/tree/docs/configure.md)
 
-源码编译请参照[buiding](building.md)。
+源码编译请参照[buiding](dtc/tree/docs/building.md)。

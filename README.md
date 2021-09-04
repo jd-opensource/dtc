@@ -33,14 +33,15 @@ DTC系统由以下组件组成:
     在真实的分布式场景中，DTC可提供超过3,000,000 QPS的查询服务，命中率在99.9%以上，且平均响应时长在200微秒(μs)以内。
 
 ## 构建
-  项目提供docker镜像，可快速启动服务：
+  提供docker镜像，可快速启动服务：
   - 启动server镜像：<br/>
   ```shell
   docker pull dtc8/server:latest
   docker run -i -t --name dtc-server -p 127.0.0.1:20015:20015 dtc8/server:latest
   ```
 
-  更多编译详情，请移步[buiding](docs/buiding.md).
+  更多编译详情，请移步[Buiding](docs/buiding.md).<br/>
+  体验Demo，请移步[QuickStart](docs/queckstart.md).
 
 ## 社区
   在使用过程中遇到问题，或有好的意见建议，请提交[Issues](https://gitee.com/jd-platform-opensource/dtc/issues)。<br/>
