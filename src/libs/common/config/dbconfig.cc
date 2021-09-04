@@ -133,24 +133,25 @@ int DbConfig::load_key_hash(DTCConfig *raw)
 	keyHashConfig.keyHashRightBegin = 0;
 
 	/* not enable key-hash */
-	if (raw->get_int_val("DB_DEFINE", "EnableKeyHash", 0) == 0) {
+	if (raw->get_int_val("DATABASE_CONF", "enable_key_hash", 0) == 0) {
 		log4cplus_debug("key-hash plugin disable");
 		return 0;
 	}
 
-	/* read KeyHashSo */
-	const char *so = raw->get_str_val("DB_DEFINE", "KeyHashSo");
+	/* read key_hash_module */
+	const char *so = raw->get_str_val("DATABASE_CONF", "key_hash_module");
 	if (NULL == so || 0 == so[0]) {
 		log4cplus_info(
 			"not set key-hash plugin name, use default value");
 		so = (char *)DEFAULT_KEY_HASH_SO_NAME;
 	}
 
-	/* read KeyHashFunction */
-	const char *var = raw->get_str_val("DB_DEFINE", "KeyHashFunction");
+	/* read key_hash_function */
+	const char *var =
+		raw->get_str_val("DATABASE_CONF", "key_hash_function");
 	if (NULL == var || 0 == var[0]) {
 		log4cplus_error("not set key-hash plugin function name");
-		return -1;
+		var = (char *)DEFAULT_KEY_HASH_FUNCTION;
 	}
 
 	char *fun = 0;
@@ -244,16 +245,18 @@ bool DbConfig::Compare(DbConfig *config, bool compareMach)
 
 	if (depoly != config->depoly || keyFieldCnt != config->keyFieldCnt ||
 	    idxFieldCnt != config->idxFieldCnt ||
-	    fieldCnt != config->fieldCnt || dbMax != config->dbMax ||
+	    fieldCnt != config->fieldCnt ||
+	    database_max_count != config->database_max_count ||
 	    dbDiv != config->dbDiv || dbMod != config->dbMod ||
 	    tblMod != config->tblMod || tblDiv != config->tblDiv) {
 		log4cplus_error(
-			"before origin after param, depoly:[%d,%d],keyFieldCnt:[%d,%d],idxFieldCnt:[%d,%d],fieldCnt:[%d,%d],dbMax:[%d,%d],dbDiv:[%d,%d],dbMod:[%d,%d],tblMod:[%d,%d],tblDiv:[%d,%d]",
+			"before origin after param, depoly:[%d,%d],keyFieldCnt:[%d,%d],idxFieldCnt:[%d,%d],fieldCnt:[%d,%d],database_max_count:[%d,%d],dbDiv:[%d,%d],dbMod:[%d,%d],tblMod:[%d,%d],tblDiv:[%d,%d]",
 			depoly, config->depoly, keyFieldCnt,
 			config->keyFieldCnt, idxFieldCnt, config->idxFieldCnt,
-			fieldCnt, config->fieldCnt, dbMax, config->dbMax, dbDiv,
-			config->dbDiv, dbMod, config->dbMod, tblMod,
-			config->tblMod, tblDiv, config->tblDiv);
+			fieldCnt, config->fieldCnt, database_max_count,
+			config->database_max_count, dbDiv, config->dbDiv, dbMod,
+			config->dbMod, tblMod, config->tblMod, tblDiv,
+			config->tblDiv);
 		return false;
 	}
 
@@ -309,24 +312,24 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 	char *p;
 
 	//DB section
-	machineCnt = raw->get_int_val("DB_DEFINE", "MachineNum", 1);
+	machineCnt = raw->get_int_val("DATABASE_CONF", "server_count", 1);
 	if (machineCnt <= 0) {
-		log4cplus_error("%s", "invalid MachineNum");
+		log4cplus_error("%s", "invalid server_count");
 		return -1;
 	}
-	depoly = raw->get_int_val("DB_DEFINE", "Deploy", 0);
+	depoly = raw->get_int_val("DATABASE_CONF", "deploy", 0);
 
-	cp = raw->get_str_val("DB_DEFINE", "DbName");
+	cp = raw->get_str_val("DATABASE_CONF", "database_name");
 	if (cp == NULL || cp[0] == '\0') {
-		log4cplus_error("[DB_DEFINE].DbName not defined");
+		log4cplus_error("[DATABASE_CONF].database_name not defined");
 		return -1;
 	}
 
 	dbName = STRDUP(cp);
 
-	dstype = raw->get_int_val("DB_DEFINE", "DataSourceType", 0);
+	dstype = raw->get_int_val("DATABASE_CONF", "DataSourceType", 0);
 
-	checkTable = raw->get_int_val("DB_DEFINE", "CheckTableConfig", 1);
+	checkTable = raw->get_int_val("DATABASE_CONF", "CheckTableConfig", 1);
 
 	// key-hash dll
 	if (load_key_hash(raw) != 0)
@@ -335,7 +338,7 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 	if ((depoly & 1) == 0) {
 		if (strchr(dbName, '%') != NULL) {
 			log4cplus_error(
-				"Invalid [DB_DEFINE].DbName, cannot contain symbol '%%'");
+				"Invalid [DATABASE_CONF].database_name, cannot contain symbol '%%'");
 			return -1;
 		}
 
@@ -343,16 +346,18 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 		dbMod = 1;
 		dbFormat = dbName;
 	} else {
-		cp = raw->get_str_val("DB_DEFINE", "DbNum");
+		cp = raw->get_str_val("DATABASE_CONF", "database_number");
 		if (sscanf(cp ?: "", "(%u,%u)", &dbDiv, &dbMod) != 2 ||
 		    dbDiv == 0 || dbMod == 0) {
-			log4cplus_error("invalid [DB_DEFINE].DbNum = %s", cp);
+			log4cplus_error(
+				"invalid [DATABASE_CONF].database_number = %s",
+				cp);
 			return -1;
 		}
 
 		if (dbMod > 1000000) {
 			log4cplus_error(
-				"invalid [DB_DEFINE].DbMod = %s, mod value too large",
+				"invalid [DATABASE_CONF].DbMod = %s, mod value too large",
 				cp);
 			return -1;
 		}
@@ -376,9 +381,9 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 	}
 
 	//Table section
-	cp = raw->get_str_val("TABLE_DEFINE", "TableName");
+	cp = raw->get_str_val("TABLE_CONF", "table_name");
 	if (cp == NULL || cp[0] == '\0') {
-		log4cplus_error("[TABLE_DEFINE].TableName not defined");
+		log4cplus_error("[TABLE_CONF].table_name not defined");
 		return -1;
 	}
 	tblName = STRDUP(cp);
@@ -386,7 +391,7 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 	if ((depoly & 2) == 0) {
 		if (strchr(tblName, '%') != NULL) {
 			log4cplus_error(
-				"Invalid TableName, cannot contain symbol '%%'");
+				"Invalid table_name, cannot contain symbol '%%'");
 			return -1;
 		}
 
@@ -394,10 +399,10 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 		tblMod = 1;
 		tblFormat = tblName;
 	} else {
-		cp = raw->get_str_val("TABLE_DEFINE", "TableNum");
+		cp = raw->get_str_val("TABLE_CONF", "TableNum");
 		if (sscanf(cp ?: "", "(%u,%u)", &tblDiv, &tblMod) != 2 ||
 		    tblDiv == 0 || tblMod == 0) {
-			log4cplus_error("invalid [TABLE_DEFINE].TableNum = %s",
+			log4cplus_error("invalid [TABLE_CONF].TableNum = %s",
 					cp);
 			return -1;
 		}
@@ -413,42 +418,43 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 		}
 	}
 
-	dbMax = raw->get_int_val("DB_DEFINE", "dbMax", 1);
-	if (dbMax < 0 || dbMax > 10000) {
-		log4cplus_error("%s", "invalid [DB_DEFINE].DbMax");
+	database_max_count =
+		raw->get_int_val("DATABASE_CONF", "database_max_count", 1);
+	if (database_max_count < 0 || database_max_count > 10000) {
+		log4cplus_error("%s", "invalid [DATABASE_CONF].DbMax");
 		return -1;
 	}
-	if (dbMax < (int)dbMod) {
+	if (database_max_count < (int)dbMod) {
 		log4cplus_warning(
-			"invalid [TABLE_DEFINE].DbMax too small, increase to %d",
+			"invalid [TABLE_CONF].DbMax too small, increase to %d",
 			dbMod);
-		dbMax = dbMod;
+		database_max_count = dbMod;
 	}
 
-	fieldCnt = raw->get_int_val("TABLE_DEFINE", "FieldCount", 0);
+	fieldCnt = raw->get_int_val("TABLE_CONF", "field_count", 0);
 	if (fieldCnt <= 0 || fieldCnt > 240) {
-		log4cplus_error("invalid [TABLE_DEFINE].FieldCount");
+		log4cplus_error("invalid [TABLE_CONF].field_count");
 		return -1;
 	}
 
-	keyFieldCnt = raw->get_int_val("TABLE_DEFINE", "KeyFieldCount", 1);
+	keyFieldCnt = raw->get_int_val("TABLE_CONF", "key_count", 1);
 	if (keyFieldCnt <= 0 || keyFieldCnt > 32 || keyFieldCnt > fieldCnt) {
-		log4cplus_error("invalid [TABLE_DEFINE].KeyFieldCount");
+		log4cplus_error("invalid [TABLE_CONF].key_count");
 		return -1;
 	}
 
-	idxFieldCnt = raw->get_int_val("TABLE_DEFINE", "IndexFieldCount", 0);
+	idxFieldCnt = raw->get_int_val("TABLE_CONF", "IndexFieldCount", 0);
 	if (keyFieldCnt < 0 || keyFieldCnt + idxFieldCnt > fieldCnt) {
-		log4cplus_error("invalid [TABLE_DEFINE].IndexFieldCount");
+		log4cplus_error("invalid [TABLE_CONF].IndexFieldCount");
 		return -1;
 	}
 
-	cp = raw->get_str_val("TABLE_DEFINE", "ServerOrderBySQL");
+	cp = raw->get_str_val("TABLE_CONF", "ServerOrderBySQL");
 	if (cp && cp[0] != '\0') {
 		int n = strlen(cp) - 1;
 		if (cp[0] != '"' || cp[n] != '"') {
 			log4cplus_error(
-				"dbConfig error, [TABLE_DEFINE].ServerOrderBySQL must quoted");
+				"dbConfig error, [TABLE_CONF].ServerOrderBySQL must quoted");
 			return -1;
 		}
 		ordSql = (char *)MALLOC(n);
@@ -456,10 +462,10 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 		ordSql[n - 1] = '\0';
 	}
 	ordIns = raw->get_idx_val(
-		"TABLE_DEFINE", "ServerOrderInsert",
+		"TABLE_CONF", "ServerOrderInsert",
 		((const char *const[]){ "last", "first", "purge", NULL }), 0);
 	if (ordIns < 0) {
-		log4cplus_error("bad [TABLE_DEFINE].ServerOrderInsert");
+		log4cplus_error("bad [TABLE_CONF].ServerOrderInsert");
 		return -1;
 	}
 
@@ -484,12 +490,12 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 			m->role[0].addr = "DUMMY";
 		} else {
 			//master
-			m->role[0].addr =
-				raw->get_str_val(sectionStr, "DbAddr");
-			m->role[0].user =
-				raw->get_str_val(sectionStr, "DbUser");
-			m->role[0].pass =
-				raw->get_str_val(sectionStr, "DbPass");
+			m->role[0].addr = raw->get_str_val(sectionStr,
+							   "database_address");
+			m->role[0].user = raw->get_str_val(sectionStr,
+							   "database_username");
+			m->role[0].pass = raw->get_str_val(sectionStr,
+							   "database_password");
 			m->role[0].optfile =
 				raw->get_str_val(sectionStr, "MyCnf");
 
@@ -505,7 +511,7 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 
 			/* master DB settings */
 			if (m->role[0].addr == NULL) {
-				log4cplus_error("missing [%s].DbAddr",
+				log4cplus_error("missing [%s].database_address",
 						sectionStr);
 				return -1;
 			}
@@ -543,29 +549,29 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 			}
 		}
 
-		cp = raw->get_str_val(sectionStr, "DbIdx");
+		cp = raw->get_str_val(sectionStr, "database_index");
 		if (!cp || !cp[0])
 			cp = "[0-0]";
 
 		m->dbCnt = ParseDbLine(cp, m->dbIdx);
 
 		for (int j = 0; j < m->dbCnt; j++) {
-			if (m->dbIdx[j] >= dbMax) {
+			if (m->dbIdx[j] >= database_max_count) {
 				log4cplus_error(
-					"dbConfig error, dbMax=%d, machine[%d].dbIdx=%d",
-					dbMax, j + 1, m->dbIdx[j]);
+					"dbConfig error, database_max_count=%d, machine[%d].dbIdx=%d",
+					database_max_count, j + 1, m->dbIdx[j]);
 				return -1;
 			}
 		}
 
 		/* Helper number alter */
-		m->gprocs[0] = raw->get_int_val(sectionStr, "Procs", 0);
+		m->gprocs[0] = raw->get_int_val(sectionStr, "Procs", 10);
 		if (m->gprocs[0] < 1)
 			m->gprocs[0] = 0;
-		m->gprocs[1] = raw->get_int_val(sectionStr, "WriteProcs", 0);
+		m->gprocs[1] = raw->get_int_val(sectionStr, "WriteProcs", 10);
 		if (m->gprocs[1] < 1)
 			m->gprocs[1] = 0;
-		m->gprocs[2] = raw->get_int_val(sectionStr, "CommitProcs", 0);
+		m->gprocs[2] = raw->get_int_val(sectionStr, "CommitProcs", 10);
 		if (m->gprocs[2] < 1)
 			m->gprocs[2] = 0;
 
@@ -588,7 +594,7 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 		if (m->gqueues[2] <= 1000)
 			m->gqueues[2] = 1000;
 
-		if (m->dbCnt == 0) // DbIdx is NULL, no helper needed
+		if (m->dbCnt == 0) // database_index is NULL, no helper needed
 		{
 			m->gprocs[0] = 0;
 			m->gprocs[1] = 0;
@@ -605,7 +611,7 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 			m->gqueues[3] = m->gqueues[0];
 			if (slaveGuard == 0) {
 				slaveGuard = raw->get_int_val(
-					"DB_DEFINE", "SlaveGuardTime", 15);
+					"DATABASE_CONF", "SlaveGuardTime", 15);
 				if (slaveGuard < 5)
 					slaveGuard = 5;
 			}
@@ -636,16 +642,16 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 		struct FieldConfig *f = &field[i];
 
 		snprintf(sectionStr, sizeof(sectionStr), "FIELD%d", i + 1);
-		f->name = raw->get_str_val(sectionStr, "FieldName");
+		f->name = raw->get_str_val(sectionStr, "field_name");
 		if (f->name == NULL) {
 			log4cplus_error("field name missing for %s",
 					sectionStr);
 			return -1;
 		}
-		f->type = raw->get_int_val(sectionStr, "FieldType", -1);
+		f->type = raw->get_int_val(sectionStr, "field_type", -1);
 		if (f->type < 0) {
 			f->type = raw->get_idx_val(
-				sectionStr, "FieldType",
+				sectionStr, "field_type",
 				((const char *const[]){
 					"int", "signed", "unsigned", "float",
 					"string", "binary", NULL }),
@@ -654,11 +660,11 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 				f->type = 1;
 		}
 		if (f->type <= 0 || f->type > 5) {
-			log4cplus_error("Invalid value [%s].FieldType",
+			log4cplus_error("Invalid value [%s].field_type",
 					sectionStr);
 			return -1;
 		}
-		f->size = raw->get_int_val(sectionStr, "FieldSize", -1);
+		f->size = raw->get_int_val(sectionStr, "field_size", -1);
 		if (f->size == -1) {
 			log4cplus_error("field size missing for %s",
 					sectionStr);
@@ -690,7 +696,7 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 		if (i >= keyFieldCnt &&
 		    raw->get_int_val(sectionStr, "ReadOnly", 0) > 0)
 			f->flags |= DB_FIELD_FLAGS_READONLY;
-		if (raw->get_int_val(sectionStr, "UniqField", 0) > 0)
+		if (raw->get_int_val(sectionStr, "field_unique", 0) > 0)
 			f->flags |= DB_FIELD_FLAGS_UNIQ;
 		if (raw->get_int_val(sectionStr, "Volatile", 0) > 0) {
 			if (i < keyFieldCnt) {
@@ -781,7 +787,7 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 			}
 			if ((f->flags & DB_FIELD_FLAGS_UNIQ)) {
 				log4cplus_error(
-					"field%d: lastmod field byte can't be UniqField",
+					"field%d: lastmod field byte can't be field_unique",
 					i + 1);
 				return -1;
 			}
@@ -814,7 +820,7 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 			}
 			if ((f->flags & DB_FIELD_FLAGS_UNIQ)) {
 				log4cplus_error(
-					"field%d: lastcmod field byte can't be UniqField",
+					"field%d: lastcmod field byte can't be field_unique",
 					i + 1);
 				return -1;
 			}
@@ -847,7 +853,7 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 			}
 			if ((f->flags & DB_FIELD_FLAGS_UNIQ)) {
 				log4cplus_error(
-					"field%d: lastacc field byte can't be UniqField",
+					"field%d: lastacc field byte can't be field_unique",
 					i + 1);
 				return -1;
 			}
@@ -881,7 +887,7 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 			}
 			if ((f->flags & DB_FIELD_FLAGS_UNIQ)) {
 				log4cplus_error(
-					"field%d: compressflag field byte can't be UniqField",
+					"field%d: compressflag field byte can't be field_unique",
 					i + 1);
 				return -1;
 			}
@@ -1023,13 +1029,13 @@ int DbConfig::parse_db_config(DTCConfig *raw)
 		if (machineCnt != 1) {
 			log4cplus_error(
 				"%s",
-				"String/Binary/AutoInc key require MachineNum==1");
+				"String/Binary/AutoInc key require server_count==1");
 			return -1;
 		}
-		if (dbMax != 1) {
+		if (database_max_count != 1) {
 			log4cplus_error(
 				"%s",
-				"String/Binary/AutoInc key require dbMax==1");
+				"String/Binary/AutoInc key require database_max_count==1");
 			return -1;
 		}
 		if (depoly != 0) {
@@ -1203,9 +1209,9 @@ void dump_db_config(const struct DbConfig *cf)
 {
 	int i, j;
 
-	printf("DbName: %s\n", cf->dbName);
-	printf("DbNum: (%d,%d)\n", cf->dbDiv, cf->dbMod);
-	printf("MachineNum: %d\n", cf->machineCnt);
+	printf("database_name: %s\n", cf->dbName);
+	printf("database_number: (%d,%d)\n", cf->dbDiv, cf->dbMod);
+	printf("server_count: %d\n", cf->machineCnt);
 	for (i = 0; i < cf->machineCnt; i++) {
 		struct MachineConfig *mach = &cf->mach[i];
 		printf("\n");
@@ -1221,7 +1227,7 @@ void dump_db_config(const struct DbConfig *cf)
 	}
 	printf("\nTableName: %s\n", cf->tblName);
 	printf("TableNum: (%d,%d)\n", cf->tblDiv, cf->tblMod);
-	printf("FieldCount: %d key %d\n", cf->fieldCnt, cf->keyFieldCnt);
+	printf("field_count: %d key %d\n", cf->fieldCnt, cf->keyFieldCnt);
 	for (i = 0; i < cf->fieldCnt; i++)
 		printf("Field[%d].name: %s, size: %d, type: %d\n", i,
 		       cf->field[i].name, cf->field[i].size, cf->field[i].type);

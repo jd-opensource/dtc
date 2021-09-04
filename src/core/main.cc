@@ -120,8 +120,8 @@ static int init_thread(void *dummy)
 		new Thread("dtc-thread-root", Thread::ThreadTypeProcess);
 	if (root_thread != NULL)
 		root_thread->initialize_thread();
-	if (daemon_set_fd_limit(
-		    g_dtc_config->get_int_val("cache", "MaxFdCount", 0)) < 0)
+	if (daemon_set_fd_limit(g_dtc_config->get_int_val("cache", "MaxFdCount",
+							  10240)) < 0)
 		return DTC_CODE_FAILED;
 
 	//start statistic thread.
@@ -190,9 +190,9 @@ static int single_thread_mode_initiazation()
 	}
 
 	int max_barrier_count =
-		g_dtc_config->get_int_val("cache", "MaxBarrierCount", 1000);
+		g_dtc_config->get_int_val("cache", "MaxBarrierCount", 100000);
 	int max_key_count =
-		g_dtc_config->get_int_val("cache", "MaxKeyCount", 1000);
+		g_dtc_config->get_int_val("cache", "MaxKeyCount", 10000);
 
 	g_buffer_barrier_instance =
 		new BarrierAskAnswerChain(g_main_thread, max_barrier_count,
@@ -322,7 +322,7 @@ static int single_thread_mode_initiazation()
 
 	int open_cnt = stat_open_fd();
 	g_max_conn_cnt =
-		g_dtc_config->get_int_val("cache", "MaxFdCount", 1024) -
+		g_dtc_config->get_int_val("cache", "MaxFdCount", 10240) -
 		open_cnt - 10; // reserve 10 fds
 	if (g_max_conn_cnt < 0) {
 		log4cplus_error("MaxFdCount should large than %d",
@@ -360,9 +360,9 @@ static int multiple_thread_mode_initiazation()
 	}
 
 	int iMaxBarrierCount =
-		g_dtc_config->get_int_val("cache", "MaxBarrierCount", 1000);
+		g_dtc_config->get_int_val("cache", "MaxBarrierCount", 100000);
 	int iMaxKeyCount =
-		g_dtc_config->get_int_val("cache", "MaxKeyCount", 1000);
+		g_dtc_config->get_int_val("cache", "MaxKeyCount", 10000);
 
 	g_buffer_barrier_instance = new BarrierAskAnswerChain(
 		g_buffer_multi_thread ?: g_datasource_thread, iMaxBarrierCount,
@@ -475,7 +475,7 @@ static int multiple_thread_mode_initiazation()
 
 	int open_cnt = stat_open_fd();
 	g_max_conn_cnt =
-		g_dtc_config->get_int_val("cache", "MaxFdCount", 1024) -
+		g_dtc_config->get_int_val("cache", "MaxFdCount", 10240) -
 		open_cnt - 10; // reserve 10 fds
 	if (g_max_conn_cnt < 0) {
 		log4cplus_error("MaxFdCount should large than %d",

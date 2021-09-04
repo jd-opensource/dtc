@@ -343,13 +343,13 @@ int BufferProcessAskChain::set_insert_order(int o)
 {
 	if (dtc_mode_ == DTC_MODE_CACHE_ONLY && o == INSERT_ORDER_PURGE) {
 		log4cplus_error(
-			"NoDB server don't support TABLE_DEFINE.ServerOrderInsert = purge");
+			"NoDB server don't support TABLE_CONF.ServerOrderInsert = purge");
 		return -1;
 	}
 
 	if (cache_info_.sync_update == 0 && o == INSERT_ORDER_PURGE) {
 		log4cplus_error(
-			"AsyncUpdate server don't support TABLE_DEFINE.ServerOrderInsert = purge");
+			"AsyncUpdate server don't support TABLE_CONF.ServerOrderInsert = purge");
 		return -1;
 	}
 	insert_order_ = o;
@@ -362,7 +362,7 @@ int BufferProcessAskChain::enable_no_db_mode(void)
 {
 	if (insert_order_ == INSERT_ORDER_PURGE) {
 		log4cplus_error(
-			"NoDB server don't support TABLE_DEFINE.ServerOrderInsert = purge");
+			"NoDB server don't support TABLE_CONF.ServerOrderInsert = purge");
 		return DTC_CODE_FAILED;
 	}
 	if (table_define_infomation_->has_auto_increment()) {

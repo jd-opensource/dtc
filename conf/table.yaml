@@ -1,55 +1,42 @@
-DB_DEFINE:
-  DbName: dtc_opensource
-  DbNum: (1,1)
-  dbMax: 1
-  MachineNum: 1
-  Deploy: 0
-  EnableKeyHash: 0
-  KeyHashSo: ../lib/key-hash.so
-  KeyHashFunction: StringHash(1,128)
+DATABASE_CONF:
+  database_name: dtc_opensource
+  database_number: (1,1)
+  database_max_count: 1
+  server_count: 1
 
 MACHINE1:
-  Procs: 10
-  WriteProcs: 10
-  CommitProcs: 10
-  DbIdx: 0
-  DbAddr: 127.0.0.1:3306
-  DbUser: username
-  DbPass: password
+  database_index: 0
+  database_address: 127.0.0.1:3306
+  database_username: username
+  database_password: password
 
-TABLE_DEFINE:
-  TableName: dtc_opensource
-  FieldCount: 5
-  eyFieldCount: 1
+TABLE_CONF:
+  table_name: dtc_opensource
+  field_count: 5
+  key_count: 1
   TableNum: (1,100)
 
-# None=0, Signed=1, Unsigned=2, Float=3, String=4, Binary=5
 FIELD1:
-  FieldName: uid
-  FieldType: 1
-  FieldSize: 4
-  UniqField: 0
+  field_name: uid
+  field_type: 1
+  field_size: 4
 
 FIELD2:
-  FieldName: name
-  FieldType: 5
-  FieldSize: 50
-  UniqField: 0
+  field_name: name
+  field_type: 5
+  field_size: 50
         
 FIELD3:
-  FieldName: city
-  FieldType: 4
-  FieldSize: 50
-  UniqField: 0
-  
+  field_name: city
+  field_type: 4
+  field_size: 50
+
 FIELD4:
-  FieldName: sex
-  FieldType: 1
-  FieldSize: 4
-  UniqField: 0
+  field_name: sex
+  field_type: 1
+  field_size: 4
   
 FIELD5:
-  FieldName: age
-  FieldType: 1
-  FieldSize: 4
-  UniqField: 0
+  field_name: age
+  field_type: 1
+  field_size: 4
