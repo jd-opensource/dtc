@@ -42,93 +42,95 @@
 #define CONF_DEFAULT_SERVER_FAILURE_LIMIT 2
 #define CONF_DEFAULT_SERVER_CONNECTIONS 1
 #define CONF_DEFAULT_TOP_PERCENTILE_ENABLE 1
-#define CONF_DEFAULT_TOP_PERCENTILE_DOMAIN "10.187.152.196"
+#define CONF_DEFAULT_TOP_PERCENTILE_DOMAIN "127.0.0.1"
 #define CONF_DEFAULT_TOP_PERCENTILE_PORT 20020
-#define CONF_DEFAULT_LOG_SWITCH 0        /*1:on, 0:off*/
+#define CONF_DEFAULT_LOG_SWITCH 0 /*1:on, 0:off*/
 #define CONF_DEFAULT_REMOTE_LOG_SWITCH 1 /*1:on, 0:off*/
-#define CONF_DEFAULT_REMOTE_LOG_IP "10.187.152.196"
+#define CONF_DEFAULT_REMOTE_LOG_IP "127.0.0.1"
 #define CONF_DEFAULT_REMOTE_LOG_PORT 9997
 
 struct conf_listen {
-  struct string pname;  /* listen: as "name:port" */
-  struct string name;   /* name */
-  int port;             /* port */
-  struct sockinfo info; /* listen socket info */
-  unsigned valid : 1;   /* valid? */
+	struct string pname; /* listen: as "name:port" */
+	struct string name; /* name */
+	int port; /* port */
+	struct sockinfo info; /* listen socket info */
+	unsigned valid : 1; /* valid? */
 };
 
 struct conf_server {
-  struct string name;    /* name */
-  struct array instance; /* instance */
-  int replica_enable;
-  struct string idc;
-  unsigned valid : 1; /* valid? */
+	struct string name; /* name */
+	struct array instance; /* instance */
+	int replica_enable;
+	struct string idc;
+	unsigned valid : 1; /* valid? */
 };
 
 struct conf_instance {
-  struct string addr;   /* server: as "name:port:weight" */
-  int port;             /* port */
-  int weight;           /* weight */
-  struct sockinfo info; /* connect socket info */
-  struct string idc;    /* idc */
-  struct string role;   /* role */
-  unsigned valid : 1;   /* valid? */
-  int enable;           /* Enable */
+	struct string addr; /* server: as "name:port:weight" */
+	int port; /* port */
+	int weight; /* weight */
+	struct sockinfo info; /* connect socket info */
+	struct string idc; /* idc */
+	struct string role; /* role */
+	unsigned valid : 1; /* valid? */
+	int enable; /* Enable */
 };
 
 struct conf_pool {
-  int mid;
-  struct string name; /* pool name (root node) */
-  struct string accesskey;
-  struct conf_listen listen; /* listen: */
-  hash_type_t hash;          /* hash: */
-  int timeout;               /* timeout: */
-  int backlog;               /* backlog: */
-  int client_connections;    /* client_connections: */
-  int preconnect;            /* preconnect: */
-  int server_connections;    /* server_connections: */
-  struct array server;       /* servers: conf_server[] */
-  struct string idc;         /* idc*/
-  int replica_enable;        /* ReplicaEnable*/
-  int main_report;
-  int instance_report;
-  int auto_remove_replica;
+	int mid;
+	struct string name; /* pool name (root node) */
+	struct string accesskey;
+	struct conf_listen listen; /* listen: */
+	hash_type_t hash; /* hash: */
+	int timeout; /* timeout: */
+	int backlog; /* backlog: */
+	int client_connections; /* client_connections: */
+	int preconnect; /* preconnect: */
+	int server_connections; /* server_connections: */
+	struct array server; /* servers: conf_server[] */
+	struct string idc; /* idc*/
+	int replica_enable; /* ReplicaEnable*/
+	int main_report;
+	int instance_report;
+	int auto_remove_replica;
 
-  int top_percentile_enable;           /*tp99 性能指标开启状态*/
-  struct string top_percentile_domain; /*tp99 性能指标上报服务器地址*/
-  int top_percentile_port; /*tp99 性能指标上报服务器端口*/
+	int top_percentile_enable; /*tp99 性能指标开启状态*/
+	struct string top_percentile_domain; /*tp99 性能指标上报服务器地址*/
+	int top_percentile_port; /*tp99 性能指标上报服务器端口*/
 
-  char localip[16];   /*本地IP，放在此位置*/
-  unsigned valid : 1; /* valid? */
+	char localip[16]; /*本地IP，放在此位置*/
+	unsigned valid : 1; /* valid? */
 };
 
 struct conf_log {
-  int log_switch;
-  int remote_log_switch;
-  struct string remote_log_ip;
-  int remote_log_port;
+	int log_switch;
+	int remote_log_switch;
+	struct string remote_log_ip;
+	int remote_log_port;
 };
 
 struct conf {
-  char *fname;       /* file name (ref in argv[]) */
-  FILE *fh;          /* file handle */
-  struct string arg; /* string[] (parsed {key, value} pairs) */
-  struct array pool; /* conf_pool[] (parsed pools) */
-  mxml_node_t *tree;
-  char localip[16];
-  struct conf_log stCL;
-  unsigned parsed : 1; /* parsed? */
-  unsigned valid : 1;  /* valid? */
+	char *fname; /* file name (ref in argv[]) */
+	FILE *fh; /* file handle */
+	struct string arg; /* string[] (parsed {key, value} pairs) */
+	struct array pool; /* conf_pool[] (parsed pools) */
+	mxml_node_t *tree;
+	char localip[16];
+	struct conf_log stCL;
+	unsigned parsed : 1; /* parsed? */
+	unsigned valid : 1; /* valid? */
 };
 
 struct command {
-  struct string name;
-  char *(*set)(struct conf *cf, struct command *cmd, void *data);
-  int offset;
+	struct string name;
+	char *(*set)(struct conf *cf, struct command *cmd, void *data);
+	int offset;
 };
 
 #define null_command                                                           \
-  { null_string, NULL, 0 }
+	{                                                                      \
+		null_string, NULL, 0                                           \
+	}
 
 int conf_server_each_transform(void *elem, void *data);
 int conf_pool_each_transform(void *elem, void *data);

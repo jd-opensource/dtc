@@ -33,12 +33,15 @@ DTC系统由以下组件组成:
     在真实的分布式场景中，DTC可提供超过3,000,000 QPS的查询服务，命中率在99.9%以上，且平均响应时长在200微秒(μs)以内。
 
 ## 构建
-  项目提供docker镜像，可快速启动服务：
+  提供docker镜像，可快速启动服务：
   - 启动server镜像：<br/>
-  `docker pull dtc8/server:latest`<br/>
-  `docker run -i -t -p 127.0.0.1:20015:20015 dtc8/server:latest`
+  ```shell
+  docker pull dtc8/server:latest
+  docker run -i -t --name dtc-server -p 127.0.0.1:20015:20015 dtc8/server:latest
+  ```
 
-  更多编译详情，请移步[buiding](docs/buiding.md).
+  更多编译详情，请移步[Buiding](docs/buiding.md).<br/>
+  体验Demo，请移步[QuickStart](docs/quickstart.md).
 
 ## 社区
   在使用过程中遇到问题，或有好的意见建议，请提交[Issues](https://gitee.com/jd-platform-opensource/dtc/issues)。<br/>
@@ -57,12 +60,12 @@ DTC系统由以下组件组成:
 ## 项目成员
 - [付学宝](https://gitee.com/fuxuebao)（项目发起者、导师、总设计师）
 - [林金明](https://gitee.com/shrewdlin)（项目开发）
-- [杨爽](https://gitee.com/kfysck)（项目开发）
 - [仇路](https://gitee.com/qiuluAbel)（项目开发）
+- [杨爽](https://gitee.com/kfysck)（项目开发）
+- [朱林](https://gitee.com/leol3)（项目开发）
+- [陈雨杰](https://gitee.com/chenyujie28)（项目开发）
 - [吴昕臻](https://gitee.com/wuxinzhen_1997)（项目开发）
 - [曹沛](https://gitee.com/warm-byte)（项目开发）
-- [陈雨杰](https://gitee.com/chenyujie28)（项目开发）
-- [朱林](https://gitee.com/leol3)（项目开发）
 
 ## 特别感谢
 感谢京东副总裁王建宇博士给予项目的大力支持，多次参与指导提供建议和方向！
@@ -72,4 +75,4 @@ DTC系统由以下组件组成:
 京东集团 版权所有 © Copyright 2021 [JD.com](https://www.jd.com), Inc.
 
 
-许可证遵循 [Apache 2.0 协议](http://www.apache.org/licenses/LICENSE-2.0). 更多细节请访问 [LICENSE](https://gitee.com/jd-platform-opensource/dtc/blob/master/LICENSE).
+许可证遵循 [Apache 2.0 协议](http://www.apache.org/licenses/LICENSE-2.0). 更多细节请访问 [LICENSE](./LICENSE).

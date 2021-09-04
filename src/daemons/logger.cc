@@ -38,7 +38,7 @@ static void set_ld_preload()
 		} else {
 			char *concat = NULL;
 			int unused = 0;
-			if(unused == 0)
+			if (unused == 0)
 				unused = asprintf(&concat, "%s:%s", p, preload);
 			setenv("LD_PRELOAD", concat, 1);
 		}
@@ -57,34 +57,35 @@ int start_fault_logger(WatchDog *watchdog)
 	 * 4 -- xterm
 	 */
 	/* default protect */
-	int mode = 2; 
+	int mode = 2;
 	const char *display;
 
 	display = g_dtc_config->get_str_val("cache", "FaultLoggerMode");
 	if (display == NULL || !display[0]) {
 		/* protect */
-		mode = 2; 
+		mode = 0;
 	} else if (!strcmp(display, "log")) {
 		/* log */
-		mode = 1; 
+		mode = 1;
 	} else if (!strcmp(display, "dump")) {
 		/* log */
-		mode = 1; 
+		mode = 1;
 	} else if (!strcmp(display, "protect")) {
 		/* protect */
-		mode = 2; 
+		mode = 2;
 	} else if (!strcmp(display, "screen")) {
 		/* screen */
-		mode = 3; 
+		mode = 3;
 	} else if (!strcmp(display, "xterm")) {
 		if (getenv("DISPLAY")) {
 			/* xterm */
-			mode = 4; 
+			mode = 4;
 			display = NULL;
 		} else {
-			log4cplus_warning("FaultLoggerTarget set to \"xterm\", but no DISPLAY found");
+			log4cplus_warning(
+				"FaultLoggerTarget set to \"xterm\", but no DISPLAY found");
 			/* screen */
-			mode = 2; 
+			mode = 2;
 		}
 	} else if (!strncmp(display, "xterm:", 6)) {
 		mode = 4; // xterm
@@ -96,7 +97,9 @@ int start_fault_logger(WatchDog *watchdog)
 	} else {
 		log4cplus_warning("unknown FaultLoggerMode \"%s\"", display);
 	}
-	log4cplus_info("FaultLoggerMode is %s\n", ((const char *[]){"disable", "log", "protect", "screen", "xterm"})[mode]);
+	log4cplus_info("FaultLoggerMode is %s\n",
+		       ((const char *[]){ "disable", "log", "protect", "screen",
+					  "xterm" })[mode]);
 	if (mode == 0)
 		return 0;
 	int pid = fork();
@@ -104,7 +107,8 @@ int start_fault_logger(WatchDog *watchdog)
 		return -1;
 	if (pid == 0) {
 		set_proc_title("FaultLogger");
-		Thread *loggerThread = new Thread("faultlogger", Thread::ThreadTypeProcess);
+		Thread *loggerThread =
+			new Thread("faultlogger", Thread::ThreadTypeProcess);
 		loggerThread->initialize_thread();
 		gdb_server(mode >= 3, display);
 		exit(0);

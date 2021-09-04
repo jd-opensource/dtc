@@ -36,6 +36,7 @@
 
 /* 默认key-hash so文件名及路径 */
 #define DEFAULT_KEY_HASH_SO_NAME "../lib/key-hash.so"
+#define DEFAULT_KEY_HASH_FUNCTION "StringHash(1,128)"
 /* key-hash接口函数 */
 typedef uint64_t (*key_hash_interface)(const char *key, int len, int left,
 				       int right);
@@ -107,7 +108,7 @@ struct DbConfig {
 	int idxFieldCnt;
 	int machineCnt;
 	int procs; //all machine procs total
-	int dbMax; //max db index
+	int database_max_count; //max db index
 	char depoly; //0:none 1:multiple db 2:multiple table 3:both
 
 	struct KeyHash keyHashConfig;

@@ -1,45 +1,45 @@
 /*
-* Copyright [2021] JD.com, Inc.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-* 
-*/
+ * Copyright [2021] JD.com, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+#include "../daemons/daemon_listener.h"
+//#include "dtcutils.h"
+#include "table/table_def_manager.h"
+#include <assert.h>
+#include <config/config.h>
+#include <daemon/daemon.h>
+#include <dtc_global.h>
+#include <fcntl.h>
+#include <listener/listener.h>
+#include <log/log.h>
+#include <proc_title.h>
+#include <sched.h>
+#include <socket/socket_addr.h>
+#include <socket/unix_socket.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
 #include <sys/wait.h>
-#include <fcntl.h>
-#include <sched.h>
-#include <assert.h>
 #include <thread>
-#include <dtc_global.h>
+#include <unistd.h>
 #include <version.h>
-#include <proc_title.h>
-#include <log/log.h>
-#include <config/config.h>
-#include "table/table_def_manager.h"
-#include <daemon/daemon.h>
-#include <listener/listener.h>
-#include <socket/socket_addr.h>
-#include <socket/unix_socket.h>
-#include "../daemons/daemon_listener.h"
-#include "dtcutils.h"
 
-#include "rocksdb_conn.h"
 #include "db_process_rocks.h"
+#include "rocksdb_conn.h"
 #include "rocksdb_direct_process.h"
 
 const char progname_t[] = "rocksdb_connector";
@@ -276,7 +276,6 @@ static int helper_proc_run_rocks(struct ConnectorInfo args)
 	// helper_proc->init_ping_timeout();
 	alarm(0);
 
-
 	hash_changing = g_dtc_config->get_int_val("cache", "HashChanging", 0);
 	target_new_hash =
 		g_dtc_config->get_int_val("cache", "TargetNewHash", 0);
@@ -437,7 +436,7 @@ int rocks_direct_access_proc()
 
 	std::string socketPath = g_rocks_direct_access_path;
 	std::string dtcDeployAddr =
-		dbConfig->cfgObj->get_str_val("cache", "BindAddr");
+		dbConfig->cfgObj->get_str_val("cache", "BIND_ADDR");
 
 	SocketAddress sockAddr;
 	const char *strRet = sockAddr.set_address(dtcDeployAddr.c_str());
@@ -533,12 +532,11 @@ int main(int argc, char **argv)
 	if (!strcmp(addr, "-"))
 		fd = 0;
 	else {
-		if (strcasecmp(
-			    g_dtc_config->get_str_val("cache", "CacheShmKey") ?:
-				    "",
-			    "none") != 0) {
+		if (strcasecmp(g_dtc_config->get_str_val("cache", "DTCID") ?:
+				       "",
+			       "none") != 0) {
 			log4cplus_warning(
-				"standalone %s need CacheShmKey set to NONE",
+				"standalone %s need DTCID set to NONE",
 				progname_t);
 			return -1;
 		}
@@ -565,15 +563,18 @@ int main(int argc, char **argv)
 
 	log4cplus_debug(
 		"If you want to simulate db busy,"
-		"you can set \"ENABLE_SIMULATE_DTC_HELPER_DELAY_SECOND=second\" before dtc startup");
+		"you can set \"ENABLE_SIMULATE_DTC_HELPER_DELAY_SECOND=second\" before "
+		"dtc startup");
 
 	init_daemon();
 
+	log4cplus_debug("dbConfig->dstype:%d", dbConfig->dstype);
 	// create helper instance base on database type
 	switch (dbConfig->dstype) {
 	default:
 	case 2: {
 		// rocksdb
+		log4cplus_debug("rocksdb mode entry");
 		g_rocksdb_conn = RocksDBConn::instance();
 		helper_proc = new RocksdbProcess(g_rocksdb_conn);
 		assert(helper_proc);
@@ -605,6 +606,7 @@ int main(int argc, char **argv)
 		break;
 	}
 	}
+	log4cplus_debug("switch end");
 
 	if (usematch)
 		helper_proc->use_matched_rows();
@@ -630,6 +632,8 @@ int main(int argc, char **argv)
 		log4cplus_info("fork child helper! fd:%d", helperArgs.netfd);
 
 		if (dbConfig->dstype != 2) {
+			// mysql
+			log4cplus_debug("dstype 2, watch_dog_fork");
 			watch_dog_fork(buf, (int (*)(void *))helper_proc_run,
 				       (void *)&helperArgs);
 			close(helperArgs.netfd);

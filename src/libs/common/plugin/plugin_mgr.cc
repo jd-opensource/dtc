@@ -213,7 +213,7 @@ int PluginManager::load_plugin_depend(int mode)
 		plugin_log_name = (const char *)"plugin_";
 	}
 	int plugin_log_level = g_dtc_config->get_idx_val(
-		"cache", "LogLevel",
+		"cache", "LOG_LEVEL",
 		((const char *const[]){ "emerg", "alert", "crit", "error",
 					"warning", "notice", "info", "debug",
 					NULL }),
@@ -240,23 +240,24 @@ int PluginManager::load_plugin_depend(int mode)
 	       "set_server_address");
 	if (so_set_server_address) {
 		log4cplus_debug("set server address:%s",
-				g_dtc_config->get_str_val("cache", "BindAddr"));
+				g_dtc_config->get_str_val("cache",
+							  "BIND_ADDR"));
 		so_set_server_address(
-			g_dtc_config->get_str_val("cache", "BindAddr"));
+			g_dtc_config->get_str_val("cache", "BIND_ADDR"));
 	}
 	//set_server_tablename
 	DLFUNC(dtcapi_handle, so_set_server_tablename, so_set_strings_t,
 	       "set_server_tablename");
 	if (so_set_server_tablename) {
-		if (!g_dtc_config->get_str_val("TABLE_DEFINE", "table_name")) {
+		if (!g_dtc_config->get_str_val("TABLE_CONF", "table_name")) {
 			log4cplus_error("can't find tablename in table.yaml");
 			return 0;
 		}
 		log4cplus_debug("set server tablename:%s",
-				g_dtc_config->get_str_val("TABLE_DEFINE",
+				g_dtc_config->get_str_val("TABLE_CONF",
 							  "table_name"));
-		so_set_server_tablename(g_dtc_config->get_str_val(
-			"TABLE_DEFINE", "table_name"));
+		so_set_server_tablename(
+			g_dtc_config->get_str_val("TABLE_CONF", "table_name"));
 	}
 
 	return 0;

@@ -84,7 +84,7 @@ function update_conf(){
 			:
 		else
 			#添加TP99配置项
-			sed -i "s/<MODULE/<MODULE TopPercentileEnable=\"true\" TopPercentileDomain=\"10.187.152.196\" TopPercentilePort=\"20020\"/g" $agent_root/$file
+			sed -i "s/<MODULE/<MODULE TopPercentileEnable=\"true\" TopPercentileDomain=\"127.0.0.1\" TopPercentilePort=\"20020\"/g" $agent_root/$file
 		fi
 
 		if cat $agent_root/$file | grep LOG_MODULE > /dev/null
@@ -92,7 +92,7 @@ function update_conf(){
 			:
 		else
 			#添加日志配置项
-			sed -i "/<VERSION/a\\    <LOG_MODULE LogSwitch=\"0\" RemoteLogSwitch=\"1\" RemoteLogIP=\"10.187.152.196\" RemoteLogPort=\"9997\" \/>" $agent_root/$file
+			sed -i "/<VERSION/a\\    <LOG_MODULE LogSwitch=\"0\" RemoteLogSwitch=\"1\" RemoteLogIP=\"127.0.0.1\" RemoteLogPort=\"9997\" \/>" $agent_root/$file
 		fi
 		
     done

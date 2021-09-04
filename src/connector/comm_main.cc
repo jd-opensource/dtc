@@ -57,7 +57,7 @@ class HelperMain {
 
 	void attach(DtcJob *job)
 	{
-		h->attach((void *)job);
+		h->do_attach((void *)job);
 	}
 	void init_title(int group, int role)
 	{
@@ -340,11 +340,11 @@ int main(int argc, char **argv)
 		fd = 0;
 	else {
 		if (strcasecmp(
-			    g_dtc_config->get_str_val("cache", "CacheShmKey") ?:
+			    g_dtc_config->get_str_val("cache", "DTCID") ?:
 				    "",
 			    "none") != 0) {
 			log4cplus_warning(
-				"standalone %s need CacheShmKey set to NONE",
+				"standalone %s need DTCID set to NONE",
 				project_name);
 			return -1;
 		}
