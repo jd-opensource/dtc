@@ -41,7 +41,7 @@ DTC系统由以下组件组成:
   ```
 
   更多编译详情，请移步[Buiding](docs/buiding.md).<br/>
-  体验Demo，请移步[QuickStart](docs/queckstart.md).
+  体验Demo，请移步[QuickStart](docs/quickstart.md).
 
 ## 社区
   在使用过程中遇到问题，或有好的意见建议，请提交[Issues](https://gitee.com/jd-platform-opensource/dtc/issues)。<br/>
@@ -75,4 +75,4 @@ DTC系统由以下组件组成:
 京东集团 版权所有 © Copyright 2021 [JD.com](https://www.jd.com), Inc.
 
 
-许可证遵循 [Apache 2.0 协议](http://www.apache.org/licenses/LICENSE-2.0). 更多细节请访问 [LICENSE](https://gitee.com/jd-platform-opensource/dtc/blob/master/LICENSE).
+许可证遵循 [Apache 2.0 协议](http://www.apache.org/licenses/LICENSE-2.0). 更多细节请访问 [LICENSE](./LICENSE).
