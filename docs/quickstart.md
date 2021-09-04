@@ -29,6 +29,10 @@ demo中定义的表名为dtc_opensource, <br/>
   docker pull dtc8/server:latest
   docker run -i -t --name dtc-server -p 127.0.0.1:20015:20015 dtc8/server:latest
   ```
+如非首次运行容器，则有可能会提示容器已存在，删除旧容器即可：
+  ```shell
+  docker rm dtc-server
+  ```
 
 ## 运行Client测试示例
 client测试示例在server容器当中，进入容器：
