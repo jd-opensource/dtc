@@ -37,15 +37,14 @@ after_success:
 - cp conf/* dockerfiles/server/
 - cp build/src/core/dtcd dockerfiles/server/
 - cp build/src/devel/cpp/libdtc.2.so dockerfiles/server/
-- cp build/src/agent/dtcagent dockerfiles/agent
-- cp conf/agent.xml dockerfiles/agent/
-
-
+- cp build/test/* dockerfiles/server/
+- cp test/* dockerfiles/server/
+- cp src/devel/cpp/dtcapi.h dockerfiles/server/
 - cd dockerfiles/server/
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
 - docker build -t $DOCKER_USERNAME/server:latest .
 - docker push $DOCKER_USERNAME/server:latest
-
 - cd ../agent/
 - docker build -t $DOCKER_USERNAME/agent:latest .
 - docker push $DOCKER_USERNAME/agent:latest
