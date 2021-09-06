@@ -5,6 +5,7 @@
   <BUSINESS_MODULE>
     <MODULE Mid="1319" Name="test1" AccessToken="000013192869b7fcc3f362a97f72c0908a92cb6d" ListenOn="0.0.0.0:12001" Backlog="500" Client_Connections="900"
         Preconnect="true" Server_Connections="1" Hash="chash" Timeout="3000" ReplicaEnable="true" ModuleIDC="LF" MainReport="false" InstanceReport="false" AutoRemoveReplica="true" TopPercentileEnable="false" TopPercentileDomain="127.0.0.1" TopPercentilePort="20020">
+
       <CACHESHARDING  Sid="293" ShardingReplicaEnable="true" ShardingName="choulu_test293">
         <INSTANCE idc="LF" Role="replica" Enable="false" Addr="192.168.144.124:20289:1"/>
         <INSTANCE idc="LF" Role="master" Enable="true" Addr="10.252.117.100:20015:1"/>

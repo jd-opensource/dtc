@@ -59,9 +59,9 @@ int AgentListenPool::register_entrance_chain_multi_thread(
 
 	for (int i = 0; i < MAX_AGENT_LISTENER; i++) {
 		if (i == 0)
-			snprintf(bindstr, sizeof(bindstr), "BindAddr");
+			snprintf(bindstr, sizeof(bindstr), "BIND_ADDR");
 		else
-			snprintf(bindstr, sizeof(bindstr), "BindAddr%d", i);
+			snprintf(bindstr, sizeof(bindstr), "BIND_ADDR%d", i);
 
 		bindaddr = gc->get_str_val("cache", bindstr);
 		if (NULL == bindaddr)
@@ -129,11 +129,11 @@ int AgentListenPool::register_entrance_chain(
 	checktime = gc->get_int_val("cache", "AgentRcvBufCheck", 5);
 	blog = gc->get_int_val("cache", "AgentListenBlog", 256);
 
-	snprintf(bindstr, sizeof(bindstr), "BindAddr");
+	snprintf(bindstr, sizeof(bindstr), "BIND_ADDR");
 
 	bindaddr = gc->get_str_val("cache", bindstr);
 	if (bindaddr == NULL) {
-		log4cplus_error("get cache BindAddr configure failed");
+		log4cplus_error("get cache BIND_ADDR configure failed");
 		return -1;
 	}
 

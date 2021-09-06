@@ -279,12 +279,13 @@ int DataConnectorAskChain::build_master_group_mapping(int idx)
 		log4cplus_error("groupMap[%d] exist", idx);
 		return -1;
 	}
-	groupMap[idx] = (short *)MALLOC(sizeof(short) * dbConfig[idx]->dbMax);
+	groupMap[idx] = (short *)MALLOC(sizeof(short) *
+					dbConfig[idx]->database_max_count);
 	if (groupMap[idx] == NULL) {
 		log4cplus_error("malloc error for groupMap[%d]", idx);
 		return -1;
 	}
-	for (int i = 0; i < dbConfig[idx]->dbMax; i++)
+	for (int i = 0; i < dbConfig[idx]->database_max_count; i++)
 		groupMap[idx][i] = GMAP_NONE;
 
 	/* build master group mapping */
@@ -307,7 +308,7 @@ int DataConnectorAskChain::build_master_group_mapping(int idx)
 			groupMap[idx][db] = gm_id;
 		}
 	}
-	for (int i = 0; i < dbConfig[idx]->dbMax; ++i) {
+	for (int i = 0; i < dbConfig[idx]->database_max_count; ++i) {
 		if (groupMap[idx][i] == GMAP_NONE) {
 			log4cplus_error(
 				"db completeness check error, db %d not found",
@@ -335,7 +336,8 @@ DbConfig *DataConnectorAskChain::get_db_config(DTCJobOperation *job)
 			strlen(row[3].bin.ptr), row[3].bin.ptr);
 	char *buf = row[3].bin.ptr;
 	config = new DTCConfig();
-	if (config->parse_buffered_config(buf, NULL, "DB_DEFINE", false) != 0) {
+	if (config->parse_buffered_config(buf, NULL, "DATABASE_CONF", false) !=
+	    0) {
 		log4cplus_error(
 			"table.yaml illeagl when migrate db, parse error");
 		job->set_error(-EC_ERR_MIGRATEDB_ILLEGAL, "group collect",

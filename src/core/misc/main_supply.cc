@@ -87,8 +87,8 @@ int stat_open_fd()
 
 int init_cache_mode()
 {
-	g_datasource_mode = g_dtc_config->get_int_val(
-		"cache", "DisableDataSource", DTC_MODE_CACHE_ONLY);
+	g_datasource_mode = g_dtc_config->get_int_val("cache", "DTC_MODE",
+						      DTC_MODE_CACHE_ONLY);
 	switch (g_datasource_mode) {
 	case DTC_MODE_DATABASE_ADDITION:
 		log4cplus_info("dtc datasource mode: %s(%d)",
@@ -114,29 +114,28 @@ int init_cache_mode()
 		return DTC_CODE_FAILED;
 	}
 
-	const char *keyStr = g_dtc_config->get_str_val("cache", "CacheShmKey");
+	const char *keyStr = g_dtc_config->get_str_val("cache", "DTCID");
 	if (keyStr == NULL) {
 		cache_key = 0;
 	} else if (!strcasecmp(keyStr, "none") &&
 		   g_datasource_mode != DTC_MODE_DATABASE_ONLY) {
 		log4cplus_error(
-			"Can not set DisableDataSource=(DTC_MODE_CACHE_ONLY|DTC_MODE_DATABASE_ADDITION) and CacheShmKey=NONE together.");
+			"Can not set DTC_MODE=(DTC_MODE_CACHE_ONLY|DTC_MODE_DATABASE_ADDITION) and DTCID=NONE together.");
 		return DTC_CODE_FAILED;
 	} else if (isdigit(keyStr[0])) {
 		cache_key = strtol(keyStr, NULL, 0);
 	} else {
-		log4cplus_error("Invalid CacheShmKey value \"%s\"", keyStr);
+		log4cplus_error("Invalid DTCID value \"%s\"", keyStr);
 		return DTC_CODE_FAILED;
 	}
 
 	if (g_datasource_mode == DTC_MODE_DATABASE_ONLY && async_update) {
-		log4cplus_error(
-			"can't DelayUpdate when CacheShmKey set to NONE");
+		log4cplus_error("can't DelayUpdate when DTCID set to NONE");
 		return DTC_CODE_FAILED;
 	}
 
 	if (g_datasource_mode != DTC_MODE_DATABASE_ONLY && cache_key == 0)
-		log4cplus_info("CacheShmKey not set, cache data is volatile");
+		log4cplus_info("DTCID not set, cache data is volatile");
 
 	if (g_datasource_mode == DTC_MODE_CACHE_ONLY)
 		log4cplus_info("disable data source, cache data is volatile");
@@ -205,13 +204,13 @@ int init_buffer_process_ask_chain_thread()
 	}
 
 	unsigned long long cache_size =
-		g_dtc_config->get_size_val("cache", "CacheMemorySize", 0, 'M');
+		g_dtc_config->get_size_val("cache", "MAX_USE_MEM_MB", 0, 'M');
 	if (cache_size <= (50ULL << 20)) // 50M
 	{
-		log4cplus_error("CacheMemorySize too small");
+		log4cplus_error("MAX_USE_MEM_MB too small");
 		return DTC_CODE_FAILED;
 	} else if (sizeof(long) == 4 && cache_size >= 4000000000ULL) {
-		log4cplus_error("CacheMemorySize %lld too large", cache_size);
+		log4cplus_error("MAX_USE_MEM_MB %lld too large", cache_size);
 	} else if (g_buffer_process_ask_instance->set_buffer_size_and_version(
 			   cache_size,
 			   g_dtc_config->get_int_val("cache", "CacheShmVersion",
@@ -438,13 +437,13 @@ int init_buffer_process_ask_chain(PollerBase *thread)
 		g_dtc_config->get_int_val("cache", "LimitEmptyNodes", 0));
 
 	unsigned long long cache_size =
-		g_dtc_config->get_size_val("cache", "CacheMemorySize", 0, 'M');
+		g_dtc_config->get_size_val("cache", "MAX_USE_MEM_MB", 0, 'M');
 	if (cache_size <= (50ULL << 20)) // 50M
 	{
-		log4cplus_error("CacheMemorySize too small");
+		log4cplus_error("MAX_USE_MEM_MB too small");
 		return DTC_CODE_FAILED;
 	} else if (sizeof(long) == 4 && cache_size >= 4000000000ULL) {
-		log4cplus_error("CacheMemorySize %lld too large", cache_size);
+		log4cplus_error("MAX_USE_MEM_MB %lld too large", cache_size);
 	} else if (g_buffer_process_ask_instance->set_buffer_size_and_version(
 			   cache_size,
 			   g_dtc_config->get_int_val("cache", "CacheShmVersion",
