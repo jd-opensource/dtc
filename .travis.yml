@@ -46,5 +46,7 @@ after_success:
 - docker build -t $DOCKER_USERNAME/server:latest .
 - docker push $DOCKER_USERNAME/server:latest
 - cd ../agent/
+- cp build/src/agent/dtcagent dockerfiles/agent/
+- cp conf/agent.xml dockerfiles/agent/
 - docker build -t $DOCKER_USERNAME/agent:latest .
 - docker push $DOCKER_USERNAME/agent:latest
