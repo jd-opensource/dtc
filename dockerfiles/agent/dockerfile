@@ -7,9 +7,5 @@ RUN mkdir -p $basepath/conf
 
 COPY dtcagent $basepath/bin/dtcagent
 COPY agent.xml $basepath/conf/agent.xml
-COPY mxml.h /lib64
-COPY libmxml.so /lib64
-COPY libmxml.so.1 /lib64
-COPY libmxml.so.1.6 /lib64
 
 CMD ["/usr/local/dtc/bin/dtcagent"]
