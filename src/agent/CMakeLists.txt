@@ -14,24 +14,26 @@ IF("${HAVE_ASSERT_LOG}" EQUAL 1)
     ADD_COMPILE_OPTIONS(-DHAVE_ASSERT_LOG=1)
 ENDIF()
 
-FILE(GLOB SRC_LIST1 ./*.c)
-FILE(GLOB SRC_LIST2 ./common/*.c)
-FILE(GLOB SRC_LIST3 ./event/*.c)
-FILE(GLOB SRC_LIST4 ./hashkit/*.c)
-FILE(GLOB SRC_LIST5 ./proto/*.c)
+FILE(GLOB_RECURSE  SRC_LIST ./*.c)
 
 INCLUDE_DIRECTORIES(
     .
     ./common 
     ./event 
     ./hashkit 
-    ./proto)
+    ./proto
+    ../libs/mxml/libs/include)
+
+LINK_DIRECTORIES(
+    ${PROJECT_SOURCE_DIR}/src/libs/mxml/libs
+)
 
 LINK_LIBRARIES(rt) 
-LINK_LIBRARIES(mxml)
+LINK_LIBRARIES(libmxml.a)
 LINK_LIBRARIES(pthread)
 
 ADD_DEFINITIONS ("-D_GNU_SOURCE")
 
-ADD_EXECUTABLE(dtcagent ${SRC_LIST1} ${SRC_LIST2} ${SRC_LIST3} ${SRC_LIST4} ${SRC_LIST5})
+ADD_EXECUTABLE(dtcagent ${SRC_LIST})
 
+TARGET_LINK_LIBRARIES(dtcagent libmxml.a)

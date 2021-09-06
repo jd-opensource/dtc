@@ -1,0 +1,11 @@
+FROM centos:centos8
+
+ARG basepath=/usr/local/dtc
+
+RUN mkdir -p $basepath/bin
+RUN mkdir -p $basepath/conf
+
+COPY dtcagent $basepath/bin/dtcagent
+COPY agent.xml $basepath/conf/agent.xml
+
+CMD ["/usr/local/dtc/bin/dtcagent"]
