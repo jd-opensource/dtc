@@ -6,8 +6,8 @@ DATABASE_CONF:
 
 MACHINE1:
   database_index: 0
-  database_address: 127.0.0.1:3306
-  database_username: username
+  database_address: mysql-instance:3306
+  database_username: root
   database_password: password
 
 TABLE_CONF:

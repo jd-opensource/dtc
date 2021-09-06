@@ -44,3 +44,6 @@ after_success:
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 - docker build -t $DOCKER_USERNAME/server:latest .
 - docker push $DOCKER_USERNAME/server:latest
+- cp ../../conf/dtc-dbcache.yaml ./dtc.yaml
+- docker build -t $DOCKER_USERNAME/dtc-dbcache-demo:latest .
+- docker push $DOCKER_USERNAME/dtc-dbcache-demo:latest

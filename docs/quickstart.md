@@ -9,8 +9,6 @@ DTC分为两种数据模式：CACHE ONLY模式和DB CACHE模式。
 - CACHE ONLY模式的DTC当做缓存使用，不连接数据库。
 - DB CACHE模式需要连接数据库，目前支持连接Mysql。此模式下DTC作为数据库的缓存代理，将热点数据缓存在DTC中。
   
-Demo使用的是CACHE ONLY模式演示。
-
 ## 表结构
 表结构文件在conf/table.yaml中。<br/>
 demo中定义的表名为dtc_opensource, <br/>
@@ -23,7 +21,9 @@ demo中定义的表名为dtc_opensource, <br/>
 | sex    | 整型                   | 4 Byte  |
 | age    | 整型                   | 4 Byte  |
 
-## 启动Server端
+## CACHE ONLY模式演示
+
+### 启动DTC Server端
 为了省去配置环境的麻烦，Demo中提供docker镜像，直接运行即可启动服务端：<br/>
   ```shell
   docker pull dtc8/server:latest
@@ -34,7 +34,7 @@ demo中定义的表名为dtc_opensource, <br/>
   docker rm dtc-server
   ```
 
-## 运行Client测试示例
+### 运行Client测试示例
 client测试示例在server容器当中，进入容器：
   ```shell
   docker exec -it dtc-server /bin/bash
@@ -66,3 +66,20 @@ chmod +x get
 你也可以根据需要尝试修改示例中的代码或配置，进行更多的体验。配置文件请参考[Configure](./configure.md)。
 
 源码编译请参照[buiding](./building.md)。
+
+## DB CACHE 模式
+
+### 启动mysql容器
+```shell
+docker run -p 3306:3306 --name mysql-instance -e MYSQL_ROOT_PASSWORD=password -d mysql:5.7
+```
+### 初始化表
+运行[init_demo.sql](../script/init_demo.sql)文件里的语句完成初始化表结构操作。
+
+### 启动DTC Demo镜像
+```shell
+docker pull dtc8/dtc-dbcache-demo:latest
+docker run -i -t --name dtc-server --link mysql-instance:mysql-instance -p 127.0.0.1:20015:20015 dtc8/dtc-dbcache-demo:latest
+```
+### 运行Client测试示例
+同CACHE ONLY模式。
