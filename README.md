@@ -1,6 +1,7 @@
 ![DTC](http://storage.360buyimg.com/bq-install/release/dtc_logo.png)
 # DTC - Distributed Table Cache 分布式表缓存
 [![Build Status](https://app.travis-ci.com/DTC8/DTC.svg?branch=master)](https://app.travis-ci.com/github/DTC8/DTC)
+![example workflow](https://github.com/DTC8/DTC/actions/workflows/main.yaml/badge.svg)
 
 ## 概述
 DTC是一个分布式表级缓存系统，可为数据库提供热点数据缓存支持，减少数据库的访问压力。
