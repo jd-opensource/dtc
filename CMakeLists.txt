@@ -14,6 +14,3 @@ ENDIF(CMAKE_TEST_OPTION)
 
 #if you want to uninstall libraries, you should enter "build" folder, and use this command
 # cat install_manifest.txt | sudo xargs rm
-
-#if you want to build the test_demo,you should use this command
-#cmake -DCMAKE_TEST_OPTION=ON ..
