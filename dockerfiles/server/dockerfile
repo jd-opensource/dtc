@@ -11,6 +11,7 @@ RUN mkdir -p $confpath
 RUN mkdir -p $logpath
 
 COPY dtcd $basepath/bin/dtcd
+COPY connector $basepath/bin/connector
 COPY table.yaml $confpath/table.yaml
 COPY dtc.yaml $confpath/dtc.yaml
 COPY log4cplus.conf $confpath/log4cplus.conf

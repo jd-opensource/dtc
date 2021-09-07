@@ -36,6 +36,7 @@ after_success:
 - cd ../
 - cp conf/* dockerfiles/server/
 - cp build/src/core/dtcd dockerfiles/server/
+- cp build/src/connector/connector dockerfiles/server/
 - cp build/src/devel/cpp/libdtc.2.so dockerfiles/server/
 - cp build/test/* dockerfiles/server/
 - cp test/* dockerfiles/server/

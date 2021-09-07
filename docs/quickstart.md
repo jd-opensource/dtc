@@ -79,7 +79,7 @@ docker run -p 3306:3306 --name mysql-instance -e MYSQL_ROOT_PASSWORD=password -d
 ### 启动DTC Demo镜像
 ```shell
 docker pull dtc8/dtc-dbcache-demo:latest
-docker run -i -t --name dtc-server --link mysql-instance:mysql-instance -p 127.0.0.1:20015:20015 dtc8/dtc-dbcache-demo:latest
+docker run -i -t --name dtc-dbcache-demo --link mysql-instance:mysql-instance -p 127.0.0.1:20015:20015 dtc8/dtc-dbcache-demo:latest
 ```
 ### 运行Client测试示例
 同CACHE ONLY模式。

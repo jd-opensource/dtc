@@ -1,4 +1,4 @@
-FILE(GLOB_RECURSE SRC_LIST ./*.cc)
+SET(SRC_LIST ./database_connection.cc ./connector.cc ./mysql_operation.cc)
 
 INCLUDE_DIRECTORIES (
     .
@@ -19,14 +19,14 @@ INCLUDE_DIRECTORIES (
     ../libs/yaml-cpp/include/)
 
 LINK_DIRECTORIES (
-    ${PROJECT_SOURCE_DIR}/libs/rocksdb/lib
-    ${PROJECT_SOURCE_DIR}/libs/common
-    ${PROJECT_SOURCE_DIR}/core
-    ${PROJECT_SOURCE_DIR}/libs/zlib/lib/libz64.a
-    ${PROJECT_SOURCE_DIR}/libs/log4cplus/libs
-    ${PROJECT_SOURCE_DIR}/libs/yaml-cpp/libs
-    ${PROJECT_SOURCE_DIR}/daemons
-    ${PROJECT_SOURCE_DIR}/libs/stat
+    ${PROJECT_SOURCE_DIR}/src/libs/rocksdb/lib
+    ${PROJECT_SOURCE_DIR}/src/libs/common
+    ${PROJECT_SOURCE_DIR}/src/core
+    ${PROJECT_SOURCE_DIR}/src/libs/zlib/lib/libz64.a
+    ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/libs
+    ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/libs
+    ${PROJECT_SOURCE_DIR}/src/daemons
+    ${PROJECT_SOURCE_DIR}/src/libs/stat
 )
 
 LINK_LIBRARIES(liblog4cplus.a) 
@@ -45,6 +45,6 @@ LINK_LIBRARIES(libstat.a)
 
 ADD_DEFINITIONS ("-g -fPIC -fpermissive -std=gnu++11 -DROCKSDB_COMPILER=1 -DOMN_PLATFORM_UNIX -Wl,--no-undefined -Xlinker -zmuldefs")
 
-ADD_EXECUTABLE (rocksdb_connector ${SRC_LIST})
+ADD_EXECUTABLE (connector ${SRC_LIST})
 
-TARGET_LINK_LIBRARIES(rocksdb_connector liblog4cplus.a libyaml-cpp.a  libz64.a lbdtcd.a libcommon.a libdaemons.a libstat.a)
+TARGET_LINK_LIBRARIES(connector liblog4cplus.a libyaml-cpp.a  libz64.a lbdtcd.a libcommon.a libdaemons.a libstat.a)
