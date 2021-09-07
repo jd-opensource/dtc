@@ -19,14 +19,14 @@ INCLUDE_DIRECTORIES (
     ../libs/yaml-cpp/include/)
 
 LINK_DIRECTORIES (
-    ${PROJECT_SOURCE_DIR}/libs/rocksdb/lib
-    ${PROJECT_SOURCE_DIR}/libs/common
-    ${PROJECT_SOURCE_DIR}/core
-    ${PROJECT_SOURCE_DIR}/libs/zlib/lib/libz64.a
-    ${PROJECT_SOURCE_DIR}/libs/log4cplus/libs
-    ${PROJECT_SOURCE_DIR}/libs/yaml-cpp/libs
-    ${PROJECT_SOURCE_DIR}/daemons
-    ${PROJECT_SOURCE_DIR}/libs/stat
+    ${PROJECT_SOURCE_DIR}/src/libs/rocksdb/lib
+    ${PROJECT_SOURCE_DIR}/src/libs/common
+    ${PROJECT_SOURCE_DIR}/src/core
+    ${PROJECT_SOURCE_DIR}/src/libs/zlib/lib/libz64.a
+    ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/libs
+    ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/libs
+    ${PROJECT_SOURCE_DIR}/src/daemons
+    ${PROJECT_SOURCE_DIR}/src/libs/stat
 )
 
 LINK_LIBRARIES(liblog4cplus.a) 
