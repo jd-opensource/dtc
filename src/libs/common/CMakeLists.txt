@@ -2,7 +2,7 @@ FILE(GLOB_RECURSE SRC_LIST ./*.cc ./*.c)
 
 INCLUDE_DIRECTORIES (
     .
-    ../../devel/cpp
+    ../../libs/dep
     ../../daemons
     ../stat
     ../log4cplus/include/
