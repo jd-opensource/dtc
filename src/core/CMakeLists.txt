@@ -12,7 +12,6 @@ INCLUDE_DIRECTORIES(
     ./misc ./node ./nodegroup ./raw
     ./task ./time ./tree  
     ../libs/common
-    ../devel/cpp
     ../daemons
     ../libs/stat
     ../connector
