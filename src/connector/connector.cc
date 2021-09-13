@@ -13,7 +13,7 @@
 #include <log.h>
 #include <config.h>
 #include "mysql_operation.h"
-#include "buffer/buffer_pond.h"
+#include "buffer_pond.h"
 #include <daemon.h>
 #include <listener.h>
 #include <socket/socket_addr.h>
@@ -22,7 +22,6 @@
 #include "dtcutils.h"
 extern void _set_remote_log_config_(const char *addr, int port, int businessid);
 const char progname[] = "mysql-helper";
-const char usage_argv[] = "machId addr [port]";
 char cacheFile[256] = CACHE_CONF_NAME;
 char tableFile[256] = TABLE_CONF_NAME;
 
