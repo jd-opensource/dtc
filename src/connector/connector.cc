@@ -274,12 +274,14 @@ int main(int argc, char **argv)
 		return -1;
 	printf("***********2***********\n");
 	check_db_version();
+	printf("0.argc = %d\n", argc);
+	printf("optind = %d\n", optind);
 	argc -= optind;
 	argv += optind;
 
 	struct THelperProcParameter helperArgs = { 0, 0, 0 };
 	char *addr = NULL;
-
+	printf("1.argc = %d\n", argc);
 	if (argc > 0) {
 		char *p;
 		helperArgs.gid = strtol(argv[0], &p, 0);
@@ -292,12 +294,12 @@ int main(int argc, char **argv)
 			return -1;
 		}
 	}
-
+	printf("2.argc = %d\n", argc);
 	if (argc != 2 && argc != 3) {
 		show_usage();
 		return -1;
 	}
-
+	printf("***********10***********\n");
 	int usematch = g_dtc_config->get_int_val("cache",
 						 "UseMatchedAsAffectedRows", 1);
 	int backlog = g_dtc_config->get_int_val("cache", "MaxListenCount", 256);
