@@ -17,9 +17,9 @@
 #define _DTC_GLOBAL_H_
 #include "algorithm/non_copyable.h"
 
-#define TABLE_CONF_NAME "../conf/table.yaml"
-#define CACHE_CONF_NAME "../conf/dtc.yaml"
-#define ALARM_CONF_FILE "../conf/dtcalarm.conf"
+#define TABLE_CONF_NAME "/etc/dtc/table.yaml"
+#define CACHE_CONF_NAME "/etc/dtc/dtc.yaml"
+#define ALARM_CONF_FILE "/etc/dtc/dtcalarm.conf"
 class DTCGlobal : private noncopyable {
     public:
 	DTCGlobal(void);

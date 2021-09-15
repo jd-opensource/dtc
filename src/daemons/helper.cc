@@ -82,7 +82,7 @@ void WatchDogHelper::exec()
 	argv[argc++] = watchdog_object_name_ + 6;
 	argv[argc++] = (char *)"-";
 	argv[argc++] = NULL;
-
+	printf("argv = %s\n", argv);
 	Thread *helperThread =
 		new Thread(watchdog_object_name_, Thread::ThreadTypeProcess);
 	helperThread->initialize_thread();
