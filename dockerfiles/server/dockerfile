@@ -16,13 +16,4 @@ COPY table.yaml $confpath/table.yaml
 COPY dtc.yaml $confpath/dtc.yaml
 COPY log4cplus.conf $confpath/log4cplus.conf
 
-#cpp test
-RUN mkdir -p /usr/local/dem
-COPY dtcapi.h /usr/local/demo/dtcapi.h
-COPY get.cc /usr/local/demo/get.cc
-COPY get /usr/local/demo/get
-COPY insert.cc /usr/local/demo/insert.cc
-COPY insert /usr/local/demo/insert
-COPY build.sh /usr/local/demo/build.sh
-
 CMD ["/usr/local/dtc/bin/dtcd", "-d"]
