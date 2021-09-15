@@ -16,7 +16,7 @@
 #include "buffer_pond.h"
 #include <daemon.h>
 #include <listener.h>
-#include <socket/socket_addr.h>
+#include <socket_addr.h>
 #include <unix_socket.h>
 #include "daemon_listener.h"
 #include "dtcutils.h"
@@ -96,7 +96,7 @@ static int AcceptConnection(int fd)
 			return newfd;
 		}
 		if (newfd < 0 && errno == EINVAL) {
-			if (getppid() == (pid_t)1) { // ¸¸½ø³ÌÒÑ¾­ÍË³ö
+			if (getppid() == (pid_t)1) { // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½Ë³ï¿½
 				log4cplus_error(
 					"ttc father process not exist. helper[%d] exit now.",
 					getpid());

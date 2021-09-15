@@ -11,9 +11,11 @@ RUN mkdir -p $confpath
 RUN mkdir -p $logpath
 
 COPY dtcd $basepath/bin/dtcd
+COPY connector $basepath/bin/dtcd
 COPY table.yaml $confpath/table.yaml
 COPY dtc.yaml $confpath/dtc.yaml
 COPY log4cplus.conf $confpath/log4cplus.conf
+
 
 #install dependency lib.
 ARG sofile=libdtc.2.so
