@@ -269,9 +269,10 @@ int check_db_table(int gid, int role)
 int main(int argc, char **argv)
 {
 	init_proc_title(argc, argv);
+	printf("***********1***********\n");
 	if (load_entry_parameter(argc, argv) < 0)
 		return -1;
-
+	printf("***********2***********\n");
 	check_db_version();
 	argc -= optind;
 	argv += optind;
