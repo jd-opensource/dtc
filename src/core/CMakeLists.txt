@@ -15,7 +15,6 @@ INCLUDE_DIRECTORIES(
     ../devel/cpp
     ../daemons
     ../libs/stat
-    ../connector
     ../libs/log4cplus/include
     ../libs/zlib/include64
     ../libs/yaml-cpp/include)               
@@ -40,7 +39,7 @@ LINK_LIBRARIES(pthread)
 LINK_LIBRARIES(dl)
 
 #编译参数
-ADD_DEFINITIONS(" -g -rdynamic -fPIC -fpermissive -std=gnu++11 -D_GLIBCXX_USE_CXX11_ABI=0 -export-dynamic -Wl,--version-script,dtcd.export.lst")
+ADD_DEFINITIONS("-g -rdynamic -DCORE_ -fPIC -fpermissive -std=gnu++11 -D_GLIBCXX_USE_CXX11_ABI=0 -export-dynamic -Wl,--version-script,dtcd.export.lst")
 
 #编译为.so/.a
 ADD_EXECUTABLE(dtcd ${SRC_LIST})
@@ -50,9 +49,9 @@ ADD_LIBRARY(dtcd_static  ${SRC_LIST})
 TARGET_LINK_LIBRARIES(dtcd libdaemons.a libstat.a libcommon.a libyaml-cpp.a liblog4cplus.a libz64.a)
 TARGET_LINK_LIBRARIES(dtcd_static libdaemons.a libstat.a libcommon.a libyaml-cpp.a liblog4cplus.a libz64.a)
 
-SET_TARGET_PROPERTIES (dtcd_static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
-SET_TARGET_PROPERTIES (dtcd PROPERTIES CLEAN_DIRECT_OUTPUT 1)
-SET_TARGET_PROPERTIES(dtcd_static PROPERTIES OUTPUT_NAME "dtcd")
+#SET_TARGET_PROPERTIES (dtcd_static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+#SET_TARGET_PROPERTIES (dtcd PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+#SET_TARGET_PROPERTIES(dtcd_static PROPERTIES OUTPUT_NAME "dtcd")
 
 #设置make install 安装路径
 INSTALL(TARGETS dtcd RUNTIME DESTINATION /usr/local/dtc/bin)

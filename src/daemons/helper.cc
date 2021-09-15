@@ -25,7 +25,9 @@
 #include "dtc_global.h"
 #include <sstream>
 
-WatchDogHelper::WatchDogHelper(WatchDog *watchdog, int sec, const char *path, int machine_conf, int role, int backlog, int type, int conf, int num)
+WatchDogHelper::WatchDogHelper(WatchDog *watchdog, int sec, const char *path,
+			       int machine_conf, int role, int backlog,
+			       int type, int conf, int num)
 	: WatchDogDaemon(watchdog, sec)
 {
 	std::stringstream oss;
@@ -42,13 +44,8 @@ WatchDogHelper::~WatchDogHelper(void)
 {
 }
 
-const char *HelperName[] =
-{
-		NULL,
-		NULL,
-		"rocksdb_connector",
-		"tdb_connector",
-		"custom_connector",
+const char *HelperName[] = {
+	NULL, NULL, "rocksdb_connector", "custom_connector", "custom_connector",
 };
 
 void WatchDogHelper::exec()
@@ -77,7 +74,8 @@ void WatchDogHelper::exec()
 		char tableName[64];
 		snprintf(tableName, 64, "../conf/table%d.conf", num_);
 		argv[argc++] = tableName;
-	} else if (conf_ == DBHELPER_TABLE_ORIGIN && strcmp(table_file, TABLE_CONF_NAME)) {
+	} else if (conf_ == DBHELPER_TABLE_ORIGIN &&
+		   strcmp(table_file, TABLE_CONF_NAME)) {
 		argv[argc++] = (char *)"-t";
 		argv[argc++] = table_file;
 	}
@@ -85,7 +83,8 @@ void WatchDogHelper::exec()
 	argv[argc++] = (char *)"-";
 	argv[argc++] = NULL;
 
-	Thread *helperThread = new Thread(watchdog_object_name_, Thread::ThreadTypeProcess);
+	Thread *helperThread =
+		new Thread(watchdog_object_name_, Thread::ThreadTypeProcess);
 	helperThread->initialize_thread();
 	argv[0] = (char *)HelperName[type_];
 	execv(argv[0], argv);

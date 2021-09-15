@@ -25,7 +25,7 @@
 #include "protocol.h"
 #include "version.h"
 #include "packet.h"
-#include "../../devel/cpp/dtcint.h"
+#include "../../libs/dep/dtcint.h"
 #include "../table/table_def.h"
 #include "../decode/decode.h"
 
@@ -44,9 +44,10 @@ int Templateencode_request(NCRequest &rq, const DTCValue *kptr, T *tgt)
 
 	header.version = 1;
 	header.scts = 8;
-	header.flags = rq.table_definition_ ? DRequest::Flag::KeepAlive :
-				 DRequest::Flag::KeepAlive +
-					 DRequest::Flag::NeedTableDefinition;
+	header.flags = rq.table_definition_ ?
+			       DRequest::Flag::KeepAlive :
+			       DRequest::Flag::KeepAlive +
+				       DRequest::Flag::NeedTableDefinition;
 	header.flags |= (rq.flags &
 			 (DRequest::Flag::no_cache | DRequest::Flag::NoResult |
 			  DRequest::Flag::no_next_server |
@@ -83,7 +84,8 @@ int Templateencode_request(NCRequest &rq, const DTCValue *kptr, T *tgt)
 	Array kv(0, NULL);
 	int isbatch = 0;
 	if (rq.flags & DRequest::Flag::MultiKeyValue) {
-		if (sv->simple_batch_key() && rq.key_value_list_.KeyCount() == 1) {
+		if (sv->simple_batch_key() &&
+		    rq.key_value_list_.KeyCount() == 1) {
 			/* single field single key batch, convert to normal */
 			kptr = rq.key_value_list_.val;
 			header.flags &= ~DRequest::Flag::MultiKeyValue;
