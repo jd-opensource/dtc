@@ -79,10 +79,10 @@ void WatchDogHelper::exec()
 		argv[argc++] = (char *)"-t";
 		argv[argc++] = table_file;
 	}
+	printf("watchdog_object_name_ = %s\n", watchdog_object_name_);
 	argv[argc++] = watchdog_object_name_ + 6;
 	argv[argc++] = (char *)"-";
 	argv[argc++] = NULL;
-	printf("argv = %s\n", &argv[1]);
 	Thread *helperThread =
 		new Thread(watchdog_object_name_, Thread::ThreadTypeProcess);
 	helperThread->initialize_thread();
