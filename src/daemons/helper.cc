@@ -82,11 +82,16 @@ void WatchDogHelper::exec()
 	argv[argc++] = watchdog_object_name_ + 6;
 	argv[argc++] = (char *)"-";
 	argv[argc++] = NULL;
-	printf("argv = %s\n", argv);
+	printf("argv = %s\n", &argv[1]);
 	Thread *helperThread =
 		new Thread(watchdog_object_name_, Thread::ThreadTypeProcess);
 	helperThread->initialize_thread();
 	argv[0] = (char *)HelperName[type_];
+	printf("argv[0] = %s\n", argv[0]);
+	for(int i = 0; i< 9; ++i)
+	{
+		printf("argv = %s\n", argv[i]);
+	}
 	execv(argv[0], argv);
 	log4cplus_error("helper[%s] execv error: %m", argv[0]);
 }

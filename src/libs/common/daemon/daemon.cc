@@ -68,31 +68,26 @@ void show_usage()
 int load_entry_parameter(int argc, char **argv)
 {
 	int c;
-	printf("***********3***********\n");
+
 	while ((c = getopt(argc, argv, "df:t:hvV")) != -1) {
 		switch (c) {
 		case 'd':
 			background = 0;
 			break;
 		case 'f':
-			printf("***********4***********\n");
 			strncpy(cache_file, optarg, sizeof(cache_file) - 1);
 			break;
 		case 't':
-			printf("***********5***********\n");
 			strncpy(table_file, optarg, sizeof(table_file) - 1);
 			break;
 		case 'h':
-			printf("***********6***********\n");
 			show_usage();
 			exit(0);
 		case 'v':
-			printf("***********7***********\n");
 			show_version_detail();
 			show_comp_date();
 			exit(0);
 		case 'V':
-			printf("***********8***********\n");
 			show_version_detail();
 			show_comp_date();
 			exit(0);
