@@ -53,7 +53,7 @@ void WatchDogHelper::exec()
 	struct sockaddr_un unaddr;
 	int len = init_unix_socket_address(&unaddr, path_);
 	printf("wuxz_debug:15\n");
-	
+
 	int listenfd = socket(unaddr.sun_family, SOCK_STREAM, 0);
 	printf("wuxz_debug:14\n");
 	bind(listenfd, (sockaddr *)&unaddr, len);
@@ -95,6 +95,7 @@ void WatchDogHelper::exec()
 	{
 		printf("argv = %s\n", argv[i]);
 	}
+	argv[0] = "/usr/local/dtc/bin/connector";
 	execv(argv[0], argv);
 	log4cplus_error("helper[%s] execv error: %m", argv[0]);
 }
