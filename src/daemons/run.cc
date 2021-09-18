@@ -53,16 +53,19 @@ int start_watch_dog(int (*entry)(void *), void *args)
 		}
 	}
 	if (g_dtc_config->get_int_val("cache", "DTC_MODE", 0) == 0) {
+		printf("wuxz_debug : 3\n");
 		int nh = 0;
 		/* starting master helper */
 		for (int g = 0; g < dbConfig->machineCnt; ++g) {
 			for (int r = 0; r < ROLES_PER_MACHINE; ++r) {
+				printf("wuxz_debug : 4\n");
 				HELPERTYPE t = dbConfig->mach[g].helperType;
 				log4cplus_debug("helper type = %d", t);
 				/* check helper type is dtc */
 				if (DTC_HELPER >= t)
 					break;
 				int i, n = 0;
+				printf("wuxz_debug : 5\n");
 				for (i = 0; i < GROUPS_PER_ROLE &&
 					    (r * GROUPS_PER_ROLE + i) <
 						    GROUPS_PER_MACHINE;
@@ -72,17 +75,20 @@ int start_watch_dog(int (*entry)(void *), void *args)
 				}
 				if (n <= 0)
 					continue;
+				printf("wuxz_debug : 6\n");
 				WatchDogHelper *h = NULL;
 				NEW(WatchDogHelper(
 					    wdog, delay,
 					    dbConfig->mach[g].role[r].path, g,
 					    r, n + 1, t),
 				    h);
+				printf("wuxz_debug : 7\n");
 				if (NULL == h) {
 					log4cplus_error(
 						"create WatchDogHelper object failed, msg:%m");
 					return -1;
 				}
+				printf("wuxz_debug : 8\n");
 				if (h->dtc_fork() < 0 || h->verify() < 0)
 					return -1;
 				nh++;
