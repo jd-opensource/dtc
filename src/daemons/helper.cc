@@ -100,7 +100,7 @@ int WatchDogHelper::verify()
 {
 	struct sockaddr_un unaddr;
 	int len = init_unix_socket_address(&unaddr, path_);
-	printf("unaddr.sun_path = %s, path_ = %s", unaddr.sun_path(), path_);
+	printf("unaddr.sun_path = %s, path_ = %s", unaddr.sun_path, path_);
 	/* delay 100ms and verify socket */
 	usleep(100 * 1000);
 	printf("wuxz_debug : 1\n");
