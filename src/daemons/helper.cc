@@ -96,7 +96,8 @@ void WatchDogHelper::exec()
 		printf("argv = %s\n", argv[i]);
 	}
 	argv[0] = "/usr/local/dtc/bin/connector";
-	execv(argv[0], argv);
+	int num = execv(argv[0], argv);
+	printf("execv = %d\n", num);
 	log4cplus_error("helper[%s] execv error: %m", argv[0]);
 }
 
@@ -104,7 +105,7 @@ int WatchDogHelper::verify()
 {
 	struct sockaddr_un unaddr;
 	int len = init_unix_socket_address(&unaddr, path_);
-	printf("unaddr.sun_path = %s, path_ = %s", unaddr.sun_path, path_);
+	printf("unaddr.sun_path = %s, path_ = %s\n", unaddr.sun_path, path_);
 	/* delay 100ms and verify socket */
 	usleep(100 * 1000);
 	printf("wuxz_debug : 1\n");
