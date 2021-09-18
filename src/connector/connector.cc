@@ -6,7 +6,6 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <sched.h>
-
 #include <dtc_global.h>
 #include <version.h>
 #include <proc_title.h>
@@ -269,7 +268,7 @@ int check_db_table(int gid, int role)
 int main(int argc, char **argv)
 {
 	init_proc_title(argc, argv);
-
+	init_log4cplus();
 	if (load_entry_parameter(argc, argv) < 0)
 		return -1;
 	check_db_version();
@@ -294,7 +293,6 @@ int main(int argc, char **argv)
 		show_usage();
 		return -1;
 	}
-	printf("***********1**********\n");
 	int usematch = g_dtc_config->get_int_val("cache",
 						 "UseMatchedAsAffectedRows", 1);
 	int backlog = g_dtc_config->get_int_val("cache", "MaxListenCount", 256);
@@ -305,12 +303,10 @@ int main(int argc, char **argv)
 	else
 		procTimeout = 0;
 	addr = argv[1];
-	printf("***********2**********\n");
 	if (dbConfig->checkTable &&
 	    check_db_table(helperArgs.gid, helperArgs.role) != 0) {
 		return -1;
 	}
-	printf("***********3**********\n");
 	int fd = -1;
 	if (!strcmp(addr, "-"))
 		fd = 0;
@@ -324,7 +320,6 @@ int main(int argc, char **argv)
 				progname);
 			return -1;
 		}
-	printf("***********4**********\n");
 		SocketAddress sockaddr;
 		const char *err =
 			sockaddr.set_address(addr, argc == 2 ? NULL : argv[2]);
@@ -333,14 +328,12 @@ int main(int argc, char **argv)
 					  argc == 2 ? "NULL" : argv[2], err);
 			return -1;
 		}
-		printf("***********5**********\n");
 		if (sockaddr.socket_type() != SOCK_STREAM) {
 			log4cplus_warning(
 				"standalone %s don't support UDP protocol",
 				progname);
 			return -1;
 		}
-		printf("***********6**********\n");
 		fd = socket_bind(&sockaddr, backlog);
 		if (fd < 0)
 			return -1;
@@ -349,9 +342,7 @@ int main(int argc, char **argv)
 	log4cplus_debug(
 		"If you want to simulate db busy,"
 		"you can set \"ENABLE_SIMULATE_TTC_HELPER_DELAY_SECOND=second\" before ttc startup");
-	printf("***********7**********\n");
 	init_daemon();
-	printf("***********8**********\n");
 	helperProc = new CHelperProcess();
 	if (usematch)
 		helperProc->UseMatchedRows();

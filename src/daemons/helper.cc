@@ -45,7 +45,7 @@ WatchDogHelper::~WatchDogHelper(void)
 }
 
 const char *HelperName[] = {
-	NULL, NULL, "rocksdb_connector", "custom_connector", "custom_connector",
+	NULL, NULL, "connector", "custom_connector", "custom_connector",
 };
 
 void WatchDogHelper::exec()
@@ -103,7 +103,9 @@ int WatchDogHelper::verify()
 
 	/* delay 100ms and verify socket */
 	usleep(100 * 1000);
+	printf("wuxz_debug : 1\n");
 	int s = socket(unaddr.sun_family, SOCK_STREAM, 0);
+	printf("wuxz_debug : 2\n");
 	if (connect(s, (sockaddr *)&unaddr, len) < 0) {
 		close(s);
 		log4cplus_error("verify connect: %m");
