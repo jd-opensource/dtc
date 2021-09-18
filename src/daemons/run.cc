@@ -88,7 +88,7 @@ int start_watch_dog(int (*entry)(void *), void *args)
 						"create WatchDogHelper object failed, msg:%m");
 					return -1;
 				}
-				printf("wuxz_debug : 8\n");`
+				printf("wuxz_debug : 8\n");
 				if (h->dtc_fork() < 0 || h->verify() < 0)
 					return -1;
 				nh++;
