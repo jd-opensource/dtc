@@ -170,7 +170,7 @@ class SocketAddress {
 		printf("wuxz_debug: addr_sun_path = %s\n", addr->sun_path);
 		socklen_t addrlen = SUN_LEN(addr);
 		printf("wuxz_debug:16\n");
-		printf("wuxz_debug: path")
+		printf("wuxz_debug: path");
 		if (path[0] == '@')
 			addr->sun_path[0] = '\0';
 		return addrlen;
