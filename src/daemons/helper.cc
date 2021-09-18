@@ -52,10 +52,13 @@ void WatchDogHelper::exec()
 {
 	struct sockaddr_un unaddr;
 	int len = init_unix_socket_address(&unaddr, path_);
+	printf("wuxz_debug:15\n");
+	
 	int listenfd = socket(unaddr.sun_family, SOCK_STREAM, 0);
+	printf("wuxz_debug:14\n");
 	bind(listenfd, (sockaddr *)&unaddr, len);
 	listen(listenfd, backlog_);
-
+	printf("wuxz_debug:13\n");
 	/* relocate listenfd to stdin */
 	dup2(listenfd, 0);
 	close(listenfd);

@@ -54,6 +54,7 @@ WatchDogEntry::~WatchDogEntry(void)
 int WatchDogEntry::dtc_fork(int enCoreDump)
 {
 	if ((watchdog_object_pid_ = fork()) == 0) {
+		printf("wuxz_debug:9\n");
 		if (enCoreDump)
 			init_core_dump();
 		exit(entry(args_));
@@ -61,7 +62,9 @@ int WatchDogEntry::dtc_fork(int enCoreDump)
     /* cann't fork main process */
 	if (watchdog_object_pid_ < 0)
 		return -1; 
+	printf("wuxz_debug:10\n");
 	attach_watch_dog();
+	printf("wuxz_debug:11\n");
 	return watchdog_object_pid_;
 }
 

@@ -167,7 +167,10 @@ class SocketAddress {
 		bzero(addr, sizeof(struct sockaddr_un));
 		addr->sun_family = AF_LOCAL;
 		strncpy(addr->sun_path, path, sizeof(addr->sun_path) - 1);
+		printf("wuxz_debug: addr_sun_path = %s\n", addr->sun_path)
 		socklen_t addrlen = SUN_LEN(addr);
+		printf("wuxz_debug:16\n");
+		printf("wuxz_debug: path")
 		if (path[0] == '@')
 			addr->sun_path[0] = '\0';
 		return addrlen;
