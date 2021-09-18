@@ -91,13 +91,12 @@ void WatchDogHelper::exec()
 	helperThread->initialize_thread();
 	argv[0] = (char *)HelperName[type_];
 	printf("argv[0] = %s\n", argv[0]);
-	for(int i = 0; i< 9; ++i)
+	for(int i = 0; i< 7; ++i)
 	{
 		printf("argv = %s\n", argv[i]);
 	}
 	argv[0] = "/usr/local/dtc/bin/connector";
-	int num = execv(argv[0], argv);
-	printf("execv = %d\n", num);
+	execv(argv[0], argv);
 	log4cplus_error("helper[%s] execv error: %m", argv[0]);
 }
 
