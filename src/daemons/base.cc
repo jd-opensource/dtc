@@ -44,16 +44,13 @@ int WatchDogDaemon::dtc_fork()
 	unused = pipe(fd);
 	/* fork child process */
 	watchdog_object_pid_ = fork();
-	printf("wuxz_debug: watchdog_object_pid_ = %d\n", watchdog_object_pid_);
 	if (watchdog_object_pid_ == -1)
 		return watchdog_object_pid_;
 	if (watchdog_object_pid_ == 0) {
 		/* close pipe if exec succ */
 		close(fd[0]);
 		fcntl(fd[1], F_SETFD, FD_CLOEXEC);
-		printf("wuxz_debug:12\n");
 		exec();
-		printf("wuxz_debug:13\n");
 		err = errno;
 		log4cplus_error("%s: exec(): %m", watchdog_object_name_);
 		unused = write(fd[1], &err, sizeof(err));

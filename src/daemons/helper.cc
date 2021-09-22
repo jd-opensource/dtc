@@ -52,13 +52,10 @@ void WatchDogHelper::exec()
 {
 	struct sockaddr_un unaddr;
 	int len = init_unix_socket_address(&unaddr, path_);
-	printf("wuxz_debug:15\n");
 
 	int listenfd = socket(unaddr.sun_family, SOCK_STREAM, 0);
-	printf("wuxz_debug:14\n");
 	bind(listenfd, (sockaddr *)&unaddr, len);
 	listen(listenfd, backlog_);
-	printf("wuxz_debug:13\n");
 	/* relocate listenfd to stdin */
 	dup2(listenfd, 0);
 	close(listenfd);
@@ -82,7 +79,6 @@ void WatchDogHelper::exec()
 		argv[argc++] = (char *)"-t";
 		argv[argc++] = table_file;
 	}
-	printf("watchdog_object_name_ = %s\n", watchdog_object_name_);
 	argv[argc++] = watchdog_object_name_ + 6;
 	argv[argc++] = (char *)"-";
 	argv[argc++] = NULL;
@@ -90,11 +86,6 @@ void WatchDogHelper::exec()
 		new Thread(watchdog_object_name_, Thread::ThreadTypeProcess);
 	helperThread->initialize_thread();
 	argv[0] = (char *)HelperName[type_];
-	printf("argv[0] = %s\n", argv[0]);
-	for(int i = 0; i< 7; ++i)
-	{
-		printf("argv = %s\n", argv[i]);
-	}
 	argv[0] = "/usr/local/dtc/bin/connector";
 	execv(argv[0], argv);
 	log4cplus_error("helper[%s] execv error: %m", argv[0]);
@@ -104,12 +95,9 @@ int WatchDogHelper::verify()
 {
 	struct sockaddr_un unaddr;
 	int len = init_unix_socket_address(&unaddr, path_);
-	printf("unaddr.sun_path = %s, path_ = %s\n", unaddr.sun_path, path_);
 	/* delay 100ms and verify socket */
 	usleep(100 * 1000);
-	printf("wuxz_debug : 1\n");
 	int s = socket(unaddr.sun_family, SOCK_STREAM, 0);
-	printf("wuxz_debug : 2\n");
 	if (connect(s, (sockaddr *)&unaddr, len) < 0) {
 		close(s);
 		log4cplus_error("verify connect: %m");

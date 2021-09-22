@@ -267,9 +267,7 @@ int check_db_table(int gid, int role)
 
 int main(int argc, char **argv)
 {
-	printf("wuxz_debug: start connector\n");
 	init_proc_title(argc, argv);
-	init_log4cplus();
 	if (load_entry_parameter(argc, argv) < 0)
 		return -1;
 	check_db_version();
@@ -290,12 +288,10 @@ int main(int argc, char **argv)
 			return -1;
 		}
 	}
-	printf("wuxz_debug:16\n");
 	if (argc != 2 && argc != 3) {
 		show_usage();
 		return -1;
 	}
-	printf("wuxz_debug:17\n");
 	int usematch = g_dtc_config->get_int_val("cache",
 						 "UseMatchedAsAffectedRows", 1);
 	int backlog = g_dtc_config->get_int_val("cache", "MaxListenCount", 256);
