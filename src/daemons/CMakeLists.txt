@@ -2,6 +2,7 @@ INCLUDE_DIRECTORIES(
     ${PROJECT_SOURCE_DIR}/src/daemons
     ${PROJECT_SOURCE_DIR}/src/libs/common
     ${PROJECT_SOURCE_DIR}/src/libs/stat
+    ${PROJECT_SOURCE_DIR}/src/core
     ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/include
     ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/include)
     

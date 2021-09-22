@@ -19,10 +19,8 @@ LINK_LIBRARIES(dl)
 
 ADD_DEFINITIONS("-g -fPIC -fpermissive -std=gnu++11")
 
-ADD_EXECUTABLE(stattool ${SRC_LIST1})
 ADD_LIBRARY(stat ${SRC_LIST1})
 
-TARGET_LINK_LIBRARIES(stattool libcommon.a libyaml-cpp.a liblog4cplus.a)
 TARGET_LINK_LIBRARIES(stat liblog4cplus.a libyaml-cpp.a libcommon.a)
 
 

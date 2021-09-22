@@ -79,6 +79,7 @@ static int init_thread(void *dummy);
 static int single_thread_mode_initiazation();
 static int multiple_thread_mode_initiazation();
 
+#ifdef _CORE_
 int main(int argc, char *argv[])
 {
 	init_proc_title(argc, argv);
@@ -110,7 +111,7 @@ int main(int argc, char *argv[])
 	Logger::shutdown();
 	return DTC_CODE_SUCCESS;
 }
-
+#endif
 //main thread initialization.
 static int init_thread(void *dummy)
 {

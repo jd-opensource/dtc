@@ -25,7 +25,9 @@
 #include "dtc_global.h"
 #include <sstream>
 
-WatchDogHelper::WatchDogHelper(WatchDog *watchdog, int sec, const char *path, int machine_conf, int role, int backlog, int type, int conf, int num)
+WatchDogHelper::WatchDogHelper(WatchDog *watchdog, int sec, const char *path,
+			       int machine_conf, int role, int backlog,
+			       int type, int conf, int num)
 	: WatchDogDaemon(watchdog, sec)
 {
 	std::stringstream oss;
@@ -42,23 +44,18 @@ WatchDogHelper::~WatchDogHelper(void)
 {
 }
 
-const char *HelperName[] =
-{
-		NULL,
-		NULL,
-		"rocksdb_connector",
-		"tdb_connector",
-		"custom_connector",
+const char *connector_name[] = {
+	NULL, NULL, "connector", "custom_connector", "custom_connector",
 };
 
 void WatchDogHelper::exec()
 {
 	struct sockaddr_un unaddr;
 	int len = init_unix_socket_address(&unaddr, path_);
+
 	int listenfd = socket(unaddr.sun_family, SOCK_STREAM, 0);
 	bind(listenfd, (sockaddr *)&unaddr, len);
 	listen(listenfd, backlog_);
-
 	/* relocate listenfd to stdin */
 	dup2(listenfd, 0);
 	close(listenfd);
@@ -75,19 +72,20 @@ void WatchDogHelper::exec()
 	if (conf_ == DBHELPER_TABLE_NEW) {
 		argv[argc++] = (char *)"-t";
 		char tableName[64];
-		snprintf(tableName, 64, "../conf/table%d.conf", num_);
+		snprintf(tableName, 64, "../conf/table%d.yaml", num_);
 		argv[argc++] = tableName;
-	} else if (conf_ == DBHELPER_TABLE_ORIGIN && strcmp(table_file, TABLE_CONF_NAME)) {
+	} else if (conf_ == DBHELPER_TABLE_ORIGIN &&
+		   strcmp(table_file, TABLE_CONF_NAME)) {
 		argv[argc++] = (char *)"-t";
 		argv[argc++] = table_file;
 	}
 	argv[argc++] = watchdog_object_name_ + 6;
 	argv[argc++] = (char *)"-";
 	argv[argc++] = NULL;
-
-	Thread *helperThread = new Thread(watchdog_object_name_, Thread::ThreadTypeProcess);
+	Thread *helperThread =
+		new Thread(watchdog_object_name_, Thread::ThreadTypeProcess);
 	helperThread->initialize_thread();
-	argv[0] = (char *)HelperName[type_];
+	argv[0] = (char *)connector_name[type_];
 	execv(argv[0], argv);
 	log4cplus_error("helper[%s] execv error: %m", argv[0]);
 }
@@ -96,7 +94,6 @@ int WatchDogHelper::verify()
 {
 	struct sockaddr_un unaddr;
 	int len = init_unix_socket_address(&unaddr, path_);
-
 	/* delay 100ms and verify socket */
 	usleep(100 * 1000);
 	int s = socket(unaddr.sun_family, SOCK_STREAM, 0);
