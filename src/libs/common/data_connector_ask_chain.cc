@@ -29,7 +29,7 @@
 #include "helper.h"
 #include "socket/unix_socket.h"
 
-extern const char *HelperName[];
+extern const char *connector_name[];
 
 class GuardNotify : public JobAnswerInterface<DTCJobOperation> {
     public:

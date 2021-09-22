@@ -365,7 +365,7 @@ void ConnectorGroup::job_ask_procedure(DTCJobOperation *job)
 
 void ConnectorGroup::dump_state(void)
 {
-	log4cplus_info("ConnectorGroup %s count %d/%d", Name(), helperCount,
+	log4cplus_info("ConnectorGroup %s count %d/%d", get_name(), helperCount,
 		       helperMax);
 	int i;
 	for (i = 0; i < helperMax; i++) {
@@ -411,5 +411,5 @@ void ConnectorGroup::process_reload_config(DTCJobOperation *job)
 
 	log4cplus_error(
 		"helpergroup [%s] notify work helper reload config finished!",
-		Name());
+		get_name());
 }

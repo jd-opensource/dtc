@@ -82,7 +82,7 @@ class ConnectorGroup : private TimerObject,
 	void flush_task(uint64_t time);
 	/* process a job, must has free helper */
 	void process_task(DTCJobOperation *t);
-	const char *Name() const
+	const char *get_name() const
 	{
 		return name;
 	}

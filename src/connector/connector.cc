@@ -1,3 +1,20 @@
+/*
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+* 
+*/
+
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -19,18 +36,16 @@
 #include <unix_socket.h>
 #include "daemon_listener.h"
 #include "dtcutils.h"
-extern void _set_remote_log_config_(const char *addr, int port, int businessid);
-const char progname[] = "mysql-helper";
-char cacheFile[256] = CACHE_CONF_NAME;
-char tableFile[256] = TABLE_CONF_NAME;
 
-static CHelperProcess *helperProc;
-static unsigned int procTimeout;
+const char progname[] = "connector";
 
-int targetNewHash;
-int hashChanging;
+static ConnectorProcess *conn_proc;
+static unsigned int proc_timeout;
 
-static int SyncDecode(DtcJob *task, int netfd, CHelperProcess *helperProc)
+int target_new_hash;
+int hash_changing;
+
+static int sync_decode(DtcJob *task, int netfd, ConnectorProcess *conn_proc)
 {
 	SimpleReceiver receiver(netfd);
 	int code;
@@ -51,7 +66,7 @@ static int SyncDecode(DtcJob *task, int netfd, CHelperProcess *helperProc)
 				       task->result_code());
 			return -1;
 		}
-		helperProc->SetTitle("Receiving...");
+		conn_proc->set_title("Receiving...");
 	} while (!stop && code != DecodeDone);
 
 	if (task->result_code() < 0) {
@@ -62,7 +77,7 @@ static int SyncDecode(DtcJob *task, int netfd, CHelperProcess *helperProc)
 	return 0;
 }
 
-static int SyncSend(Packet *reply, int netfd)
+static int sync_send(Packet *reply, int netfd)
 {
 	int code;
 	do {
@@ -83,9 +98,9 @@ static void alarm_handler(int signo)
 	alarm(10);
 }
 
-static int AcceptConnection(int fd)
+static int accept_connection(int fd)
 {
-	helperProc->SetTitle("listener");
+	conn_proc->set_title("listener");
 	signal(SIGALRM, alarm_handler);
 	while (!stop) {
 		alarm(10);
@@ -95,9 +110,9 @@ static int AcceptConnection(int fd)
 			return newfd;
 		}
 		if (newfd < 0 && errno == EINVAL) {
-			if (getppid() == (pid_t)1) { // �������Ѿ��˳�
+			if (getppid() == (pid_t)1) {
 				log4cplus_error(
-					"ttc father process not exist. helper[%d] exit now.",
+					"dtc parent process not exist. helper[%d] exit now.",
 					getpid());
 				exit(0);
 			}
@@ -111,20 +126,20 @@ static void proc_timeout_handler(int signo)
 {
 	log4cplus_error(
 		"mysql process timeout(more than %u seconds), helper[pid: %d] exit now.",
-		procTimeout, getpid());
+		proc_timeout, getpid());
 	exit(-1);
 }
 
 #ifdef __DEBUG__
 static void inline simulate_helper_delay(void)
 {
-	char *env = getenv("ENABLE_SIMULATE_TTC_HELPER_DELAY_SECOND");
+	char *env = getenv("ENABLE_SIMULATE_DTC_HELPER_DELAY_SECOND");
 	if (env && env[0] != 0) {
 		unsigned delay_sec = atoi(env);
 		if (delay_sec > 5)
 			delay_sec = 5;
 
-		log4cplus_debug("simulate ttc helper delay second[%d s]",
+		log4cplus_debug("simulate dtc helper delay second[%d s]",
 				delay_sec);
 		sleep(delay_sec);
 	}
@@ -132,25 +147,25 @@ static void inline simulate_helper_delay(void)
 }
 #endif
 
-struct THelperProcParameter {
+struct HelperParameter {
 	int netfd;
 	int gid;
 	int role;
 };
 
-static int HelperProcRun(struct THelperProcParameter *args)
+static int helper_proc_run(struct HelperParameter *args)
 {
 	// close listen fd
 	close(0);
 	open("/dev/null", O_RDONLY);
 
-	helperProc->SetTitle("Initializing...");
+	conn_proc->set_title("Initializing...");
 
-	if (procTimeout > 0)
+	if (proc_timeout > 0)
 		signal(SIGALRM, proc_timeout_handler);
 
-	alarm(procTimeout);
-	if (helperProc->Init(
+	alarm(proc_timeout);
+	if (conn_proc->do_init(
 		    args->gid, dbConfig,
 		    TableDefinitionManager::instance()->get_cur_table_def(),
 		    args->role) != 0) {
@@ -158,19 +173,20 @@ static int HelperProcRun(struct THelperProcParameter *args)
 		exit(-1);
 	}
 
-	helperProc->InitPingTimeout();
+	conn_proc->init_ping_timeout();
 	alarm(0);
 
-	hashChanging = g_dtc_config->get_int_val("cache", "HashChanging", 0);
-	targetNewHash = g_dtc_config->get_int_val("cache", "TargetNewHash", 0);
+	hash_changing = g_dtc_config->get_int_val("cache", "HashChanging", 0);
+	target_new_hash =
+		g_dtc_config->get_int_val("cache", "TargetNewHash", 0);
 
 	unsigned int timeout;
 
 	while (!stop) {
-		helperProc->SetTitle("Waiting...");
+		conn_proc->set_title("Waiting...");
 		DtcJob *task = new DtcJob(
 			TableDefinitionManager::instance()->get_cur_table_def());
-		if (SyncDecode(task, args->netfd, helperProc) < 0) {
+		if (sync_decode(task, args->netfd, conn_proc) < 0) {
 			delete task;
 			break;
 		}
@@ -182,23 +198,23 @@ static int HelperProcRun(struct THelperProcParameter *args)
 			case DRequest::Delete:
 			case DRequest::Replace:
 			case DRequest::ReloadConfig:
-				timeout = 2 * procTimeout;
+				timeout = 2 * proc_timeout;
 			default:
-				timeout = procTimeout;
+				timeout = proc_timeout;
 			}
 			alarm(timeout);
 #ifdef __DEBUG__
 			simulate_helper_delay();
 #endif
-			helperProc->ProcessTask(task);
+			conn_proc->do_process(task);
 			alarm(0);
 		}
 
-		helperProc->SetTitle("Sending...");
+		conn_proc->set_title("Sending...");
 		Packet *reply = new Packet;
 		reply->encode_result(task);
 
-		if (SyncSend(reply, args->netfd) < 0) {
+		if (sync_send(reply, args->netfd) < 0) {
 			delete reply;
 			delete task;
 			break;
@@ -207,9 +223,9 @@ static int HelperProcRun(struct THelperProcParameter *args)
 		delete task;
 	}
 	close(args->netfd);
-	helperProc->SetTitle("Exiting...");
+	conn_proc->set_title("Exiting...");
 
-	delete helperProc;
+	delete conn_proc;
 	daemon_cleanup();
 #if MEMCHECK
 	log4cplus_info("%s v%s: stopped", progname, version);
@@ -223,7 +239,7 @@ static int HelperProcRun(struct THelperProcParameter *args)
 
 int check_db_version(void)
 {
-	int ver = CDBConn::ClientVersion();
+	int ver = CDBConn::get_client_version();
 	if (ver == MYSQL_VERSION_ID)
 		return 0;
 	log4cplus_warning(
@@ -236,24 +252,25 @@ int check_db_version(void)
 
 int check_db_table(int gid, int role)
 {
-	CHelperProcess *helper = new CHelperProcess();
+	ConnectorProcess *helper = new ConnectorProcess();
 
-	if (procTimeout > 1) {
-		helper->SetProcTimeout(procTimeout - 1);
+	if (proc_timeout > 1) {
+		helper->set_proc_timeout(proc_timeout - 1);
 		signal(SIGALRM, proc_timeout_handler);
 	}
 
-	alarm(procTimeout);
-	if (helper->Init(gid, dbConfig,
-			 TableDefinitionManager::instance()->get_cur_table_def(),
-			 role) != 0) {
+	alarm(proc_timeout);
+	if (helper->do_init(
+		    gid, dbConfig,
+		    TableDefinitionManager::instance()->get_cur_table_def(),
+		    role) != 0) {
 		log4cplus_error("%s", "helper process init failed");
 		delete helper;
 		alarm(0);
 		return (-1);
 	}
 
-	if (helper->CheckTable() != 0) {
+	if (helper->check_table() != 0) {
 		delete helper;
 		alarm(0);
 		return (-2);
@@ -274,7 +291,7 @@ int main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
-	struct THelperProcParameter helperArgs = { 0, 0, 0 };
+	struct HelperParameter helperArgs = { 0, 0, 0 };
 	char *addr = NULL;
 	if (argc > 0) {
 		char *p;
@@ -298,9 +315,9 @@ int main(int argc, char **argv)
 	int helperTimeout =
 		g_dtc_config->get_int_val("cache", "HelperTimeout", 30);
 	if (helperTimeout > 1)
-		procTimeout = helperTimeout - 1;
+		proc_timeout = helperTimeout - 1;
 	else
-		procTimeout = 0;
+		proc_timeout = 0;
 	addr = argv[1];
 	if (dbConfig->checkTable &&
 	    check_db_table(helperArgs.gid, helperArgs.role) != 0) {
@@ -310,12 +327,11 @@ int main(int argc, char **argv)
 	if (!strcmp(addr, "-"))
 		fd = 0;
 	else {
-		if (strcasecmp(
-			    g_dtc_config->get_str_val("cache", "CacheShmKey") ?:
-				    "",
-			    "none") != 0) {
+		if (strcasecmp(g_dtc_config->get_str_val("cache", "DTCID") ?:
+				       "",
+			       "none") != 0) {
 			log4cplus_warning(
-				"standalone %s need CacheShmKey set to NONE",
+				"standalone %s need DTCID set to NONE",
 				progname);
 			return -1;
 		}
@@ -340,29 +356,29 @@ int main(int argc, char **argv)
 
 	log4cplus_debug(
 		"If you want to simulate db busy,"
-		"you can set \"ENABLE_SIMULATE_TTC_HELPER_DELAY_SECOND=second\" before ttc startup");
+		"you can set \"ENABLE_SIMULATE_DTC_HELPER_DELAY_SECOND=second\" before dtc startup");
 	init_daemon();
-	helperProc = new CHelperProcess();
+	conn_proc = new ConnectorProcess();
 	if (usematch)
-		helperProc->UseMatchedRows();
+		conn_proc->use_matched_rows();
 #if HAS_LOGAPI
-	helperProc->logapi.Init(
+	conn_proc->logapi.do_init(
 		g_dtc_config->get_int_val("LogApi", "MessageId", 0),
 		g_dtc_config->get_int_val("LogApi", "CallerId", 0),
 		g_dtc_config->get_int_val("LogApi", "TargetId", 0),
 		g_dtc_config->get_int_val("LogApi", "InterfaceId", 0));
 #endif
 
-	helperProc->InitTitle(helperArgs.gid, helperArgs.role);
-	if (procTimeout > 1)
-		helperProc->SetProcTimeout(procTimeout - 1);
+	conn_proc->init_title(helperArgs.gid, helperArgs.role);
+	if (proc_timeout > 1)
+		conn_proc->set_proc_timeout(proc_timeout - 1);
 	while (!stop) {
-		helperArgs.netfd = AcceptConnection(fd);
+		helperArgs.netfd = accept_connection(fd);
 		char buf[16];
 		memset(buf, 0, 16);
 		buf[0] = WATCHDOG_INPUT_OBJECT;
-		snprintf(buf + 1, 15, "%s", helperProc->Name());
-		watch_dog_fork(buf, (int (*)(void *))HelperProcRun,
+		snprintf(buf + 1, 15, "%s", conn_proc->get_name());
+		watch_dog_fork(buf, (int (*)(void *))helper_proc_run,
 			       (void *)&helperArgs);
 
 		close(helperArgs.netfd);

@@ -1,3 +1,20 @@
+/*
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+* 
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -21,29 +38,29 @@
 CDBConn::CDBConn()
 {
 	Connected = 0;
-	NeedFree = 0;
+	need_free = 0;
 	memset(achErr, 0, sizeof(achErr));
-	dberr = 0;
+	db_err = 0;
 	memset(&DBConfig, 0, sizeof(DBConfig));
-	useMatched = 0;
+	use_matched = 0;
 
 	if (mysql_init(&Mysql) == NULL) {
-		dberr = mysql_errno(&Mysql);
+		db_err = mysql_errno(&Mysql);
 		snprintf(achErr, sizeof(achErr) - 1, "mysql init error: %s",
 			 mysql_error(&Mysql));
 	}
 }
 
-void CDBConn::UseMatchedRows()
+void CDBConn::use_matched_rows()
 {
-	useMatched = 1;
+	use_matched = 1;
 }
 
 CDBConn::CDBConn(const DBHost *Host)
 {
 	Connected = 0;
-	NeedFree = 0;
-	dberr = 0;
+	need_free = 0;
+	db_err = 0;
 	memset(achErr, 0, sizeof(achErr));
 	memset(&DBConfig, 0, sizeof(DBConfig));
 	STRCPY(DBConfig.Host, Host->Host);
@@ -54,18 +71,18 @@ CDBConn::CDBConn(const DBHost *Host)
 	STRCPY(DBConfig.OptionFile, Host->OptionFile);
 
 	if (mysql_init(&Mysql) == NULL) {
-		dberr = mysql_errno(&Mysql);
+		db_err = mysql_errno(&Mysql);
 		snprintf(achErr, sizeof(achErr) - 1, "mysql init error: %s",
 			 mysql_error(&Mysql));
 	}
 }
 
-void CDBConn::Config(const DBHost *Host)
+void CDBConn::do_config(const DBHost *Host)
 {
 	Close();
 
 	Connected = 0;
-	dberr = 0;
+	db_err = 0;
 	memset(achErr, 0, sizeof(achErr));
 	memset(&DBConfig, 0, sizeof(DBConfig));
 	STRCPY(DBConfig.Host, Host->Host);
@@ -76,40 +93,41 @@ void CDBConn::Config(const DBHost *Host)
 	STRCPY(DBConfig.OptionFile, Host->OptionFile);
 }
 
-int CDBConn::ClientVersion(void)
+int CDBConn::get_client_version(void)
 {
 	return mysql_get_client_version();
 }
 
-int CDBConn::GetErrNo()
+int CDBConn::get_err_no()
 {
-	if (dberr >= 2000)
-		return -(dberr - 100);
-	return -dberr;
+	if (db_err >= 2000)
+		return -(db_err - 100);
+	return -db_err;
 }
 
-int CDBConn::GetRawErrNo()
+int CDBConn::get_raw_err_no()
 {
-	return dberr;
+	return db_err;
 }
 
-const char *CDBConn::GetErrMsg()
+const char *CDBConn::get_err_msg()
 {
 	return achErr;
 }
 
-int64_t CDBConn::GetVariable(const char *var)
+int64_t CDBConn::get_variable(const char *var)
 {
 	int64_t ret = -1;
 	char buf[100];
 	snprintf(buf, sizeof(buf), "SHOW VARIABLES LIKE '%s'", var);
 
-	if (Query(buf) == 0 && UseResult() == 0) { // query succ and got result
-		if (FetchRow() == 0 &&
+	if (do_query(buf) == 0 &&
+	    use_result() == 0) { // query succ and got result
+		if (fetch_row() == 0 &&
 		    !strcasecmp(Row[0], var)) { // got one row and var is match
 			ret = atoll(Row[1]);
 		}
-		FreeResult();
+		free_result();
 	}
 
 	return ret;
@@ -119,7 +137,7 @@ int CDBConn::Connect(const char *DBName)
 {
 	if (!Connected) {
 		if (mysql_init(&Mysql) == NULL) {
-			dberr = mysql_errno(&Mysql);
+			db_err = mysql_errno(&Mysql);
 			snprintf(achErr, sizeof(achErr) - 1,
 				 "mysql init error: %s", mysql_error(&Mysql));
 			return (-1);
@@ -132,7 +150,7 @@ int CDBConn::Connect(const char *DBName)
 		if (DBConfig.OptionFile[0] != '\0' &&
 		    mysql_options(&Mysql, MYSQL_READ_DEFAULT_FILE,
 				  DBConfig.OptionFile) != 0) {
-			dberr = mysql_errno(&Mysql);
+			db_err = mysql_errno(&Mysql);
 			snprintf(achErr, sizeof(achErr) - 1,
 				 "mysql_options error: %s",
 				 mysql_error(&Mysql));
@@ -143,9 +161,9 @@ int CDBConn::Connect(const char *DBName)
 				       DBConfig.User, DBConfig.Password, NULL,
 				       isunix ? 0 : DBConfig.Port,
 				       isunix ? DBConfig.Host : NULL,
-				       useMatched ? CLIENT_FOUND_ROWS : 0) ==
+				       use_matched ? CLIENT_FOUND_ROWS : 0) ==
 		    NULL) {
-			dberr = mysql_errno(&Mysql);
+			db_err = mysql_errno(&Mysql);
 			snprintf(achErr, sizeof(achErr) - 1,
 				 "mysql connect error: %s",
 				 mysql_error(&Mysql));
@@ -157,7 +175,7 @@ int CDBConn::Connect(const char *DBName)
 
 	if (DBName != NULL && DBName[0] != '\0') {
 		if (mysql_select_db(&Mysql, DBName) != 0) {
-			dberr = mysql_errno(&Mysql);
+			db_err = mysql_errno(&Mysql);
 			snprintf(achErr, sizeof(achErr) - 1,
 				 "mysql select_db error: %s",
 				 mysql_error(&Mysql));
@@ -174,8 +192,8 @@ int CDBConn::Open(const char *DBName)
 	int iRet;
 
 	iRet = Connect(DBName);
-	if (iRet != 0 && (GetErrNo() == -CR_SERVER_GONE_ERROR ||
-			  GetErrNo() == -CR_SERVER_LOST)) {
+	if (iRet != 0 && (get_err_no() == -CR_SERVER_GONE_ERROR ||
+			  get_err_no() == -CR_SERVER_LOST)) {
 		iRet = Connect(DBName);
 	}
 
@@ -197,7 +215,7 @@ int CDBConn::Close()
 	return (0);
 }
 
-int CDBConn::Ping(void)
+int CDBConn::do_ping(void)
 {
 	int iRet;
 
@@ -207,7 +225,7 @@ int CDBConn::Ping(void)
 
 	iRet = mysql_ping(&Mysql);
 	if (iRet != 0) {
-		dberr = mysql_errno(&Mysql);
+		db_err = mysql_errno(&Mysql);
 		snprintf(achErr, sizeof(achErr) - 1, "mysql ping error: %s",
 			 mysql_error(&Mysql));
 		Close();
@@ -217,7 +235,7 @@ int CDBConn::Ping(void)
 	return (0);
 }
 
-int CDBConn::Query(const char *SQL)
+int CDBConn::do_query(const char *SQL)
 {
 	int iRet;
 
@@ -226,7 +244,7 @@ int CDBConn::Query(const char *SQL)
 		return (iRet);
 
 	if (mysql_real_query(&Mysql, SQL, strlen(SQL)) != 0) {
-		dberr = mysql_errno(&Mysql);
+		db_err = mysql_errno(&Mysql);
 		snprintf(achErr, sizeof(achErr) - 1, "mysql query error: %s",
 			 mysql_error(&Mysql));
 		Close();
@@ -236,7 +254,7 @@ int CDBConn::Query(const char *SQL)
 	return (0);
 }
 
-int CDBConn::Query(const char *DBName, const char *SQL)
+int CDBConn::do_query(const char *DBName, const char *SQL)
 {
 	int iRet;
 
@@ -245,7 +263,7 @@ int CDBConn::Query(const char *DBName, const char *SQL)
 		return (iRet);
 
 	if (mysql_real_query(&Mysql, SQL, strlen(SQL)) != 0) {
-		dberr = mysql_errno(&Mysql);
+		db_err = mysql_errno(&Mysql);
 		snprintf(achErr, sizeof(achErr) - 1, "mysql query error: %s",
 			 mysql_error(&Mysql));
 		Close();
@@ -255,19 +273,19 @@ int CDBConn::Query(const char *DBName, const char *SQL)
 	return (0);
 }
 
-int CDBConn::BeginWork()
+int CDBConn::begin_work()
 {
-	return Query("BEGIN WORK");
+	return do_query("BEGIN WORK");
 }
 
-int CDBConn::Commit()
+int CDBConn::do_commit()
 {
-	return Query("COMMIT");
+	return do_query("COMMIT");
 }
 
-int CDBConn::RollBack()
+int CDBConn::roll_back()
 {
-	return Query("ROLLBACK");
+	return do_query("ROLLBACK");
 }
 
 int64_t CDBConn::affected_rows()
@@ -276,7 +294,7 @@ int64_t CDBConn::affected_rows()
 
 	RowNum = mysql_affected_rows(&Mysql);
 	if (RowNum < 0) {
-		dberr = mysql_errno(&Mysql);
+		db_err = mysql_errno(&Mysql);
 		snprintf(achErr, sizeof(achErr) - 1,
 			 "mysql affected rows error: %s", mysql_error(&Mysql));
 		Close();
@@ -286,12 +304,12 @@ int64_t CDBConn::affected_rows()
 	return ((int64_t)RowNum);
 }
 
-const char *CDBConn::ResultInfo()
+const char *CDBConn::result_info()
 {
 	return mysql_info(&Mysql);
 }
 
-uint64_t CDBConn::InsertID()
+uint64_t CDBConn::insert_id()
 {
 	my_ulonglong id;
 
@@ -299,45 +317,45 @@ uint64_t CDBConn::InsertID()
 	return (uint64_t)id;
 }
 
-int CDBConn::UseResult()
+int CDBConn::use_result()
 {
 	Res = mysql_store_result(&Mysql);
 	if (Res == NULL) {
 		if (mysql_errno(&Mysql) != 0) {
-			dberr = mysql_errno(&Mysql);
+			db_err = mysql_errno(&Mysql);
 			snprintf(achErr, sizeof(achErr) - 1,
 				 "mysql store result error: %s",
 				 mysql_error(&Mysql));
 			Close();
 			return (-1);
 		} else {
-			ResNum = 0;
+			res_num = 0;
 			return (-1);
 		}
 	}
 
-	ResNum = mysql_num_rows(Res);
-	if (ResNum < 0) {
-		dberr = mysql_errno(&Mysql);
+	res_num = mysql_num_rows(Res);
+	if (res_num < 0) {
+		db_err = mysql_errno(&Mysql);
 		snprintf(achErr, sizeof(achErr) - 1, "mysql num rows error: %s",
 			 mysql_error(&Mysql));
 		mysql_free_result(Res);
 		Close();
 		return (-1);
 	}
-	NeedFree = 1;
+	need_free = 1;
 
 	return (0);
 }
 
-int CDBConn::FetchRow()
+int CDBConn::fetch_row()
 {
 	Row = mysql_fetch_row(Res);
 	if (Row == NULL) {
-		dberr = mysql_errno(&Mysql);
+		db_err = mysql_errno(&Mysql);
 		snprintf(achErr, sizeof(achErr) - 1,
 			 "mysql fetch rows error: %s", mysql_error(&Mysql));
-		FreeResult();
+		free_result();
 		Close();
 		return (-1);
 	}
@@ -345,29 +363,29 @@ int CDBConn::FetchRow()
 	return (0);
 }
 
-int CDBConn::FreeResult()
+int CDBConn::free_result()
 {
-	if (NeedFree) {
+	if (need_free) {
 		mysql_free_result(Res);
-		NeedFree = 0;
+		need_free = 0;
 	}
 	return (0);
 }
 
-uint32_t CDBConn::EscapeString(char To[], const char *From)
+uint32_t CDBConn::escape_string(char To[], const char *From)
 {
 	return mysql_real_escape_string(&Mysql, To, From, strlen(From));
 }
 
-uint32_t CDBConn::EscapeString(char To[], const char *From, int Len)
+uint32_t CDBConn::escape_string(char To[], const char *From, int Len)
 {
 	return mysql_real_escape_string(&Mysql, To, From, Len);
 }
 
 CDBConn::~CDBConn()
 {
-	if (NeedFree)
-		FreeResult();
+	if (need_free)
+		free_result();
 
 	Close();
 }

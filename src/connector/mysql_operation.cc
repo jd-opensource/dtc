@@ -1,3 +1,19 @@
+/*
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+* 
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,41 +40,41 @@
 
 #define MIN(x, y) ((x) <= (y) ? (x) : (y))
 
-CHelperProcess::CHelperProcess() : _lengths(0)
+ConnectorProcess::ConnectorProcess() : _lengths(0)
 {
-	ErrorNo = 0;
+	error_no = 0;
 
-	LeftQuote = '`';
-	RightQuote = '`';
+	left_quote = '`';
+	right_quote = '`';
 
-	titlePrefixSize = 0;
-	time(&lastAccess);
-	pingTimeout = 9;
-	procTimeout = 0;
+	title_prefix_size = 0;
+	time(&last_access);
+	ping_timeout = 9;
+	proc_timeout = 0;
 	strncpy(name, "helper", 6);
 }
 
-void CHelperProcess::TryPing(void)
+void ConnectorProcess::try_ping(void)
 {
 	time_t now;
 	time(&now);
-	if ((int)(now - lastAccess) >= pingTimeout)
-		DBConn.Ping();
-	lastAccess = now;
+	if ((int)(now - last_access) >= ping_timeout)
+		db_conn.do_ping();
+	last_access = now;
 }
 
-void CHelperProcess::InitPingTimeout(void)
+void ConnectorProcess::init_ping_timeout(void)
 {
-	int64_t to = DBConn.GetVariable("wait_timeout");
+	int64_t to = db_conn.get_variable("wait_timeout");
 	log4cplus_debug("Server idle timeout %lld", (long long)to);
 	if (to < 10)
 		to = 10;
 	else if (to > 600)
 		to = 600;
-	pingTimeout = to * 9 / 10;
+	ping_timeout = to * 9 / 10;
 }
 
-int CHelperProcess::ConfigDBByStruct(const DbConfig *cf)
+int ConnectorProcess::config_db_by_struct(const DbConfig *cf)
 {
 	if (cf == NULL)
 		return -1;
@@ -67,7 +83,8 @@ int CHelperProcess::ConfigDBByStruct(const DbConfig *cf)
 }
 
 #define DIM(a) (sizeof(a) / sizeof(a[0]))
-static int GetFieldType(const char *szType, int &iType, unsigned int &uiSize)
+static int get_field_type(const char *szType, int &i_type,
+			  unsigned int &ui_size)
 {
 	unsigned int i;
 	int iTmp;
@@ -107,27 +124,27 @@ static int GetFieldType(const char *szType, int &iType, unsigned int &uiSize)
 	for (i = 0; i < DIM(astField); i++) {
 		if (strncasecmp(szType, astField[i].m_szName,
 				strlen(astField[i].m_szName)) == 0) {
-			iType = astField[i].m_iType;
-			uiSize = astField[i].m_uiSize;
+			i_type = astField[i].m_iType;
+			ui_size = astField[i].m_uiSize;
 			if (strncasecmp(szType, "varchar", 7) == 0) {
 				if (sscanf(szType + 8, "%d", &iTmp) == 1)
-					uiSize = iTmp;
+					ui_size = iTmp;
 			} else if (strncasecmp(szType, "char", 4) == 0) {
 				if (sscanf(szType + 5, "%d", &iTmp) == 1)
-					uiSize = iTmp;
+					ui_size = iTmp;
 			} else if (strncasecmp(szType, "varbinary", 9) == 0) {
 				if (sscanf(szType + 10, "%d", &iTmp) == 1)
-					uiSize = iTmp;
+					ui_size = iTmp;
 			} else if (strncasecmp(szType, "binary", 6) == 0) {
 				if (sscanf(szType + 7, "%d", &iTmp) == 1)
-					uiSize = iTmp;
+					ui_size = iTmp;
 			}
-			if (iType == 1 && strstr(szType, "unsigned") != NULL)
-				iType = 2;
+			if (i_type == 1 && strstr(szType, "unsigned") != NULL)
+				i_type = 2;
 
-			if (iType == 3 && strstr(szType, "unsigned") != NULL)
+			if (i_type == 3 && strstr(szType, "unsigned") != NULL)
 				fprintf(stderr,
-					"#warning: ttc not support unsigned double!\n");
+					"#warning: dtc not support unsigned double!\n");
 
 			break;
 		}
@@ -136,151 +153,154 @@ static int GetFieldType(const char *szType, int &iType, unsigned int &uiSize)
 	return (0);
 }
 
-int CHelperProcess::CheckTable()
+int ConnectorProcess::check_table()
 {
 	int Ret;
 	int i;
-	int iFieldNum;
-	char achFieldName[256][256];
+	int i_field_num;
+	char ach_field_name[256][256];
 
 	snprintf(DBName, sizeof(DBName), dbConfig->dbFormat,
-		 dbConfig->mach[SelfGroupID].dbIdx[0]);
-	snprintf(TableName, sizeof(TableName), dbConfig->tblFormat, 0);
+		 dbConfig->mach[self_group_id].dbIdx[0]);
+	snprintf(table_name, sizeof(table_name), dbConfig->tblFormat, 0);
 
-	InitSQLBuffer();
-	SQLAppendConst("show columns from `");
-	SQLAppendString(TableName);
-	SQLAppendConst("`");
+	init_sql_buffer();
+	sql_append_const("show columns from `");
+	sql_append_string(table_name);
+	sql_append_const("`");
 
 	log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
-	Ret = DBConn.Query(DBName, sql.c_str());
-	log4cplus_debug("SELECT %d %s", Ret, DBConn.GetRawErrNo());
+	Ret = db_conn.do_query(DBName, sql.c_str());
+	log4cplus_debug("SELECT %d %s", Ret, db_conn.get_raw_err_no());
 	if (Ret != 0) {
 		log4cplus_warning("db query error: %s, pid: %d, group-id: %d",
-				  DBConn.GetErrMsg(), getpid(), SelfGroupID);
+				  db_conn.get_err_msg(), getpid(),
+				  self_group_id);
 		return (-1);
 	}
 
-	Ret = DBConn.UseResult();
+	Ret = db_conn.use_result();
 	if (Ret != 0) {
 		log4cplus_warning("db user result error: %s",
-				  DBConn.GetErrMsg());
+				  db_conn.get_err_msg());
 		return (-2);
 	}
 
 	// 获取返回结果的各列位置
-	int iNameIdx = 0, iTypeIdx = 0;
-	int iNullIdx = 0, iKeyIdx = 0;
-	int iDefaultIdx = 0, iExtraIdx = 0;
-	unsigned int uiNumFields = mysql_num_fields(DBConn.Res);
-	MYSQL_FIELD *pstFields = mysql_fetch_fields(DBConn.Res);
-	for (i = 0; i < (int)uiNumFields; i++) {
-		if (strcasecmp("Field", pstFields[i].name) == 0)
-			iNameIdx = i;
-		else if (strcasecmp("Type", pstFields[i].name) == 0)
-			iTypeIdx = i;
-		else if (strcasecmp("Null", pstFields[i].name) == 0)
-			iNullIdx = i;
-		else if (strcasecmp("Key", pstFields[i].name) == 0)
-			iKeyIdx = i;
-		else if (strcasecmp("Default", pstFields[i].name) == 0)
-			iDefaultIdx = i;
-		else if (strcasecmp("Extra", pstFields[i].name) == 0)
-			iExtraIdx = i;
+	int i_name_idx = 0, i_type_idx = 0;
+	int i_null_idx = 0, i_key_idx = 0;
+	int i_default_idx = 0, i_extra_idx = 0;
+	unsigned int ui_num_fields = mysql_num_fields(db_conn.Res);
+	MYSQL_FIELD *pst_fields = mysql_fetch_fields(db_conn.Res);
+	for (i = 0; i < (int)ui_num_fields; i++) {
+		if (strcasecmp("Field", pst_fields[i].name) == 0)
+			i_name_idx = i;
+		else if (strcasecmp("Type", pst_fields[i].name) == 0)
+			i_type_idx = i;
+		else if (strcasecmp("Null", pst_fields[i].name) == 0)
+			i_null_idx = i;
+		else if (strcasecmp("Key", pst_fields[i].name) == 0)
+			i_key_idx = i;
+		else if (strcasecmp("Default", pst_fields[i].name) == 0)
+			i_default_idx = i;
+		else if (strcasecmp("Extra", pst_fields[i].name) == 0)
+			i_extra_idx = i;
 	}
 
 	int iFid;
-	iFieldNum = 0;
-	memset(achFieldName, 0, sizeof(achFieldName));
+	i_field_num = 0;
+	memset(ach_field_name, 0, sizeof(ach_field_name));
 
-	int uniq_fields_cnt_table = TableDef->uniq_fields();
-	for (i = 0; i < DBConn.ResNum; i++) {
-		Ret = DBConn.FetchRow();
+	int uniq_fields_cnt_table = table_def->uniq_fields();
+	for (i = 0; i < db_conn.res_num; i++) {
+		Ret = db_conn.fetch_row();
 
 		if (Ret != 0) {
-			DBConn.FreeResult();
+			db_conn.free_result();
 			log4cplus_warning("db fetch row error: %s",
-					  DBConn.GetErrMsg());
+					  db_conn.get_err_msg());
 			return (-3);
 		}
 
-		strncpy(achFieldName[iFieldNum], DBConn.Row[iNameIdx], 255);
-		iFieldNum++;
+		strncpy(ach_field_name[i_field_num], db_conn.Row[i_name_idx],
+			255);
+		i_field_num++;
 
-		iFid = TableDef->field_id(DBConn.Row[iNameIdx]);
+		iFid = table_def->field_id(db_conn.Row[i_name_idx]);
 		if (iFid == -1) {
-			log4cplus_debug("field[%s] not found in table.conf",
-					DBConn.Row[iNameIdx]);
+			log4cplus_debug("field[%s] not found in table.yaml",
+					db_conn.Row[i_name_idx]);
 			continue;
 		}
 
-		if (TableDef->is_volatile(iFid)) {
+		if (table_def->is_volatile(iFid)) {
 			log4cplus_error(
-				"field[name: `%s`] found in table.conf and DB both, can't be Volatile",
-				DBConn.Row[iNameIdx]);
-			DBConn.FreeResult();
+				"field[name: `%s`] found in table.yaml and DB both, can't be Volatile",
+				db_conn.Row[i_name_idx]);
+			db_conn.free_result();
 			return (-4);
 		}
 
-		if (TableDef->is_timestamp(iFid)) {
+		if (table_def->is_timestamp(iFid)) {
 			log4cplus_error(
-				"in table.conf, Field[name: `%s`]'s is timestamp, not support in DB mode",
-				DBConn.Row[iNameIdx]);
-			DBConn.FreeResult();
+				"in table.yaml, Field[name: `%s`]'s is timestamp, not support in DB mode",
+				db_conn.Row[i_name_idx]);
+			db_conn.free_result();
 			return (-4);
 		}
 
 		//field type & size
-		int iType = -1;
-		unsigned uiSize = 0;
-		GetFieldType(DBConn.Row[iTypeIdx], iType, uiSize);
-		if (iType != TableDef->field_type(iFid)) {
+		int i_type = -1;
+		unsigned ui_size = 0;
+		get_field_type(db_conn.Row[i_type_idx], i_type, ui_size);
+		if (i_type != table_def->field_type(iFid)) {
 			log4cplus_error(
-				"in table.conf, Field[name: `%s`]'s type incorrect. conf: %d, mysql:%d",
-				DBConn.Row[iNameIdx],
-				TableDef->field_type(iFid), iType);
-			DBConn.FreeResult();
+				"in table.yaml, Field[name: `%s`]'s type incorrect. conf: %d, mysql:%d",
+				db_conn.Row[i_name_idx],
+				table_def->field_type(iFid), i_type);
+			db_conn.free_result();
 			return (-4);
 		}
 
-		if ((int)uiSize != TableDef->field_size(iFid) &&
-		    !(uiSize >= (64 << 20) &&
-		      TableDef->field_size(iFid) >= (64 << 20))) {
+		if ((int)ui_size != table_def->field_size(iFid) &&
+		    !(ui_size >= (64 << 20) &&
+		      table_def->field_size(iFid) >= (64 << 20))) {
 			log4cplus_error(
-				"in table.conf, Field[name: `%s`]'s size incorrect. conf: %d, mysql:%u",
-				DBConn.Row[iNameIdx],
-				TableDef->field_size(iFid), uiSize);
-			DBConn.FreeResult();
+				"in table.yaml, Field[name: `%s`]'s size incorrect. conf: %d, mysql:%u",
+				db_conn.Row[i_name_idx],
+				table_def->field_size(iFid), ui_size);
+			db_conn.free_result();
 			return (-4);
 		}
 
-		if (DBConn.Row[iExtraIdx] != NULL &&
-		    strcasecmp("auto_increment", DBConn.Row[iExtraIdx]) == 0) {
-			if (TableDef->auto_increment_field_id() != iFid) {
+		if (db_conn.Row[i_extra_idx] != NULL &&
+		    strcasecmp("auto_increment", db_conn.Row[i_extra_idx]) ==
+			    0) {
+			if (table_def->auto_increment_field_id() != iFid) {
 				log4cplus_error(
-					"in table.conf, Field[name: `%s`]'s default-value incorrect. conf: non-auto_increment, mysql:auto_increment",
-					DBConn.Row[iNameIdx]);
-				DBConn.FreeResult();
+					"in table.yaml, Field[name: `%s`]'s default-value incorrect. conf: non-auto_increment, mysql:auto_increment",
+					db_conn.Row[i_name_idx]);
+				db_conn.free_result();
 				return (-4);
 			}
 		}
 
-		/*field should be uniq in table.conf if configed primary in db -- by newman*/
-		uint8_t *uniq_fields = TableDef->uniq_fields_list();
-		if (DBConn.Row[iKeyIdx] != NULL &&
-		    (strcasecmp("PRI", DBConn.Row[iKeyIdx]) == 0 ||
-		     strcasecmp("UNI", DBConn.Row[iKeyIdx]) == 0)) {
+		/*field should be uniq in table.yaml if configed primary in db */
+		uint8_t *uniq_fields = table_def->uniq_fields_list();
+		if (db_conn.Row[i_key_idx] != NULL &&
+		    (strcasecmp("PRI", db_conn.Row[i_key_idx]) == 0 ||
+		     strcasecmp("UNI", db_conn.Row[i_key_idx]) == 0)) {
 			int j = 0;
-			for (j = 0; j < TableDef->uniq_fields(); j++) {
+			for (j = 0; j < table_def->uniq_fields(); j++) {
 				if (uniq_fields[j] == iFid)
 					break;
 			}
 
-			if (j >= TableDef->uniq_fields()) {
+			if (j >= table_def->uniq_fields()) {
 				log4cplus_error(
-					"in table.conf, Field[name: `%s`] is primary in db, but not uniq in ttc",
-					DBConn.Row[iNameIdx]);
+					"in table.yaml, Field[name: `%s`] is primary in db, but not uniq in dtc",
+					db_conn.Row[i_name_idx]);
 				return -4;
 			}
 
@@ -288,43 +308,43 @@ int CHelperProcess::CheckTable()
 		}
 	}
 
-	/*field should be primary in db if configed uniq in table.conf -- by newman*/
+	/*field should be primary in db if configed uniq in table.yaml*/
 	if (uniq_fields_cnt_table != 0) {
 		log4cplus_error(
-			"table.conf have more uniq fields that not configed as primary in db");
+			"table.yaml have more uniq fields that not configed as primary in db");
 		return -4;
 	}
 
-	for (int i = 0; i <= TableDef->num_fields(); i++) {
+	for (int i = 0; i <= table_def->num_fields(); i++) {
 		//bug fix volatile不在db中
-		if (TableDef->is_volatile(i))
+		if (table_def->is_volatile(i))
 			continue;
 
-		const char *name = TableDef->field_name(i);
+		const char *name = table_def->field_name(i);
 		int j;
-		for (j = 0; j < iFieldNum; j++) {
-			if (strcmp(achFieldName[j], name) == 0)
+		for (j = 0; j < i_field_num; j++) {
+			if (strcmp(ach_field_name[j], name) == 0)
 				break;
 		}
-		if (j >= iFieldNum) {
+		if (j >= i_field_num) {
 			log4cplus_error(
-				"in table.conf, Field[name: `%s`] not found in mysql",
+				"in table.yaml, Field[name: `%s`] not found in mysql",
 				name);
-			DBConn.FreeResult();
+			db_conn.free_result();
 			return (-4);
 		}
 	}
 
 	log4cplus_debug(
 		"pid: %d, group-id: %d check table success, db: %s, sql: %s",
-		getpid(), SelfGroupID, DBName, sql.c_str());
+		getpid(), self_group_id, DBName, sql.c_str());
 
-	DBConn.FreeResult();
+	db_conn.free_result();
 
 	return (0);
 }
 
-int CHelperProcess::InternalInit(int GroupID, int r)
+int ConnectorProcess::internal_init(int GroupID, int r)
 {
 	const char *p;
 
@@ -339,53 +359,54 @@ int CHelperProcess::InternalInit(int GroupID, int r)
 	typeof(&dbConfig->mach[0].role[0]) role =
 		&dbConfig->mach[GroupID].role[r];
 
-	memset(&DBHostConf, 0, sizeof(DBHost));
+	memset(&db_host_conf, 0, sizeof(DBHost));
 	p = strrchr(role->addr, ':');
 	if (p == NULL) {
-		strncpy(DBHostConf.Host, role->addr,
-			sizeof(DBHostConf.Host) - 1);
-		DBHostConf.Port = 0;
+		strncpy(db_host_conf.Host, role->addr,
+			sizeof(db_host_conf.Host) - 1);
+		db_host_conf.Port = 0;
 	} else {
-		strncpy(DBHostConf.Host, role->addr,
-			MIN(p - role->addr, (int)sizeof(DBHostConf.Host) - 1));
-		DBHostConf.Port = atoi(p + 1);
+		strncpy(db_host_conf.Host, role->addr,
+			MIN(p - role->addr,
+			    (int)sizeof(db_host_conf.Host) - 1));
+		db_host_conf.Port = atoi(p + 1);
 	}
-	strncpy(DBHostConf.User, role->user, sizeof(DBHostConf.User) - 1);
-	strncpy(DBHostConf.Password, role->pass,
-		sizeof(DBHostConf.Password) - 1);
-	DBHostConf.ConnTimeout = procTimeout;
-	strncpy(DBHostConf.OptionFile, role->optfile,
-		sizeof(DBHostConf.OptionFile) - 1);
+	strncpy(db_host_conf.User, role->user, sizeof(db_host_conf.User) - 1);
+	strncpy(db_host_conf.Password, role->pass,
+		sizeof(db_host_conf.Password) - 1);
+	db_host_conf.ConnTimeout = proc_timeout;
+	strncpy(db_host_conf.OptionFile, role->optfile,
+		sizeof(db_host_conf.OptionFile) - 1);
 
-	DBConn.Config(&DBHostConf);
+	db_conn.do_config(&db_host_conf);
 
-	if (DBConn.Open() != 0) {
-		log4cplus_warning("connect db[%s] error: %s", DBHostConf.Host,
-				  DBConn.GetErrMsg());
+	if (db_conn.Open() != 0) {
+		log4cplus_warning("connect db[%s] error: %s", db_host_conf.Host,
+				  db_conn.get_err_msg());
 		return (-6);
 	}
 
 	log4cplus_debug("group-id: %d, pid: %d, db: %s, user: %s, pwd: %s",
-			SelfGroupID, getpid(), DBHostConf.Host, DBHostConf.User,
-			DBHostConf.Password);
+			self_group_id, getpid(), db_host_conf.Host,
+			db_host_conf.User, db_host_conf.Password);
 
 	return (0);
 }
 
-int CHelperProcess::Init(int GroupID, const DbConfig *Config,
-			 DTCTableDefinition *tdef, int slave)
+int ConnectorProcess::do_init(int GroupID, const DbConfig *do_config,
+			      DTCTableDefinition *tdef, int slave)
 {
 	int Ret;
 
-	SelfGroupID = GroupID;
-	TableDef = tdef;
+	self_group_id = GroupID;
+	table_def = tdef;
 
-	Ret = ConfigDBByStruct(Config);
+	Ret = config_db_by_struct(do_config);
 	if (Ret != 0) {
 		return (-1);
 	}
 
-	Ret = InternalInit(GroupID, slave);
+	Ret = internal_init(GroupID, slave);
 	if (Ret != 0) {
 		return (-2);
 	}
@@ -393,24 +414,24 @@ int CHelperProcess::Init(int GroupID, const DbConfig *Config,
 	return (0);
 }
 
-void CHelperProcess::InitSQLBuffer(void)
+void ConnectorProcess::init_sql_buffer(void)
 {
 	sql.clear();
-	ErrorNo = 0;
+	error_no = 0;
 }
 
-void CHelperProcess::SQLAppendString(const char *str, int len)
+void ConnectorProcess::sql_append_string(const char *str, int len)
 {
 	if (len == 0)
 		len = strlen(str);
 	if (sql.append(str, len) < 0) {
-		ErrorNo = -1;
+		error_no = -1;
 		log4cplus_error("sql.append() error: %d, %m", sql.needed());
 	}
 }
 
 /* 将字符串printf在原来字符串的后面，如果buffer不够大会自动重新分配buffer */
-void CHelperProcess::SQLPrintf(const char *Format, ...)
+void ConnectorProcess::sql_printf(const char *Format, ...)
 {
 	va_list Arg;
 	int Len;
@@ -419,38 +440,38 @@ void CHelperProcess::SQLPrintf(const char *Format, ...)
 	Len = sql.vbprintf(Format, Arg);
 	va_end(Arg);
 	if (Len < 0) {
-		ErrorNo = -1;
+		error_no = -1;
 		log4cplus_error("vsnprintf error: %d, %m", Len);
 	}
 }
 
-void CHelperProcess::SQLAppendTable(void)
+void ConnectorProcess::sql_append_table(void)
 {
-	SQLAppendString(&LeftQuote, 1);
-	SQLAppendString(TableName);
-	SQLAppendString(&RightQuote, 1);
+	sql_append_string(&left_quote, 1);
+	sql_append_string(table_name);
+	sql_append_string(&right_quote, 1);
 }
 
-void CHelperProcess::SQLAppendField(int fid)
+void ConnectorProcess::sql_append_field(int fid)
 {
-	SQLAppendString(&LeftQuote, 1);
-	SQLAppendString(TableDef->field_name(fid));
-	SQLAppendString(&RightQuote, 1);
+	sql_append_string(&left_quote, 1);
+	sql_append_string(table_def->field_name(fid));
+	sql_append_string(&right_quote, 1);
 }
 
-void CHelperProcess::SQLAppendComparator(uint8_t op)
+void ConnectorProcess::sql_append_comparator(uint8_t op)
 {
 	// order is important
 	static const char *const CompStr[] = { "=", "!=", "<", "<=", ">", ">=" };
 	if (op >= DField::TotalComparison) {
-		ErrorNo = -1;
+		error_no = -1;
 		log4cplus_error("unknow op: %d", op);
 	} else {
-		SQLAppendString(CompStr[op]);
+		sql_append_string(CompStr[op]);
 	}
 }
 
-void CHelperProcess::InitTableName(const DTCValue *Key, int field_type)
+void ConnectorProcess::init_table_name(const DTCValue *Key, int field_type)
 {
 	int dbid = 0, tableid = 0;
 	uint64_t n;
@@ -537,39 +558,39 @@ void CHelperProcess::InitTableName(const DTCValue *Key, int field_type)
 	}
 
 	snprintf(DBName, sizeof(DBName), dbConfig->dbFormat, dbid);
-	snprintf(TableName, sizeof(TableName), dbConfig->tblFormat, tableid);
+	snprintf(table_name, sizeof(table_name), dbConfig->tblFormat, tableid);
 }
 
-int CHelperProcess::SelectFieldConcate(const DTCFieldSet *fs)
+int ConnectorProcess::select_field_concate(const DTCFieldSet *fs)
 {
 	if (fs == NULL) {
-		SQLAppendConst("COUNT(*)");
+		sql_append_const("COUNT(*)");
 	} else {
 		int i = 0;
 		uint8_t mask[32];
 
 		FIELD_ZERO(mask);
 		fs->build_field_mask(mask);
-		SQLAppendField(0); // key
+		sql_append_field(0); // key
 
-		for (i = 1; i < TableDef->num_fields() + 1; i++) {
-			SQLAppendConst(",");
+		for (i = 1; i < table_def->num_fields() + 1; i++) {
+			sql_append_const(",");
 			if (FIELD_ISSET(i, mask) == 0) {
 				/* Missing field as 0 */
-				SQLAppendConst("0");
-			} else if (TableDef->is_volatile(i) == 0) {
-				SQLAppendField(i);
+				sql_append_const("0");
+			} else if (table_def->is_volatile(i) == 0) {
+				sql_append_field(i);
 			} else {
 				// volatile field initialized as default value
-				Value2Str(TableDef->default_value(i),
-					  TableDef->field_type(i));
+				format_sql_value(table_def->default_value(i),
+						 table_def->field_type(i));
 			}
 		}
 	}
 	return 0;
 }
 
-std::string CHelperProcess::ValueToStr(const DTCValue *v, int fieldType)
+std::string ConnectorProcess::value_to_str(const DTCValue *v, int fieldType)
 {
 	if (v == NULL)
 		return "NULL";
@@ -591,66 +612,67 @@ std::string CHelperProcess::ValueToStr(const DTCValue *v, int fieldType)
 	case DField::Binary:
 		esc.clear();
 		if (esc.expand(v->str.len * 2 + 1) < 0) {
-			ErrorNo = -1;
+			error_no = -1;
 			log4cplus_error("realloc (size: %u) error: %m",
 					v->str.len * 2 + 1);
 			return "NULL";
 		}
-		DBConn.EscapeString(esc.c_str(), v->str.ptr,
-				    v->str.len); // 先对字符串进行escape
+		db_conn.escape_string(esc.c_str(), v->str.ptr,
+				      v->str.len); // 先对字符串进行escape
 		ret = '\'';
 		ret += esc.c_str();
 		ret += "\'";
 		return ret;
 	default:
-		ErrorNo = -1;
+		error_no = -1;
 		log4cplus_error("unknown field type: %d", fieldType);
 		return "UNKNOWN";
 	}
 }
 
-inline int CHelperProcess::Value2Str(const DTCValue *Value, int iFieldType)
+inline int ConnectorProcess::format_sql_value(const DTCValue *Value,
+					      int iFieldType)
 {
-	log4cplus_debug("Value2Str iFieldType[%d]", iFieldType);
+	log4cplus_debug("format_sql_value iFieldType[%d]", iFieldType);
 
 	if (Value == NULL) {
-		SQLAppendConst("NULL");
+		sql_append_const("NULL");
 	} else
 		switch (iFieldType) {
 		case DField::Signed:
-			SQLPrintf("%lld", (long long)Value->s64);
+			sql_printf("%lld", (long long)Value->s64);
 			break;
 
 		case DField::Unsigned:
-			SQLPrintf("%llu", (unsigned long long)Value->u64);
+			sql_printf("%llu", (unsigned long long)Value->u64);
 			break;
 
 		case DField::Float:
-			SQLPrintf("'%f'", Value->flt);
+			sql_printf("'%f'", Value->flt);
 			break;
 
 		case DField::String:
 		case DField::Binary:
 			if (sql.append('\'') < 0)
-				ErrorNo = -1;
+				error_no = -1;
 			if (!Value->str.is_empty()) {
 				esc.clear();
 				if (esc.expand(Value->str.len * 2 + 1) < 0) {
-					ErrorNo = -1;
+					error_no = -1;
 					log4cplus_error(
 						"realloc (size: %u) error: %m",
 						Value->str.len * 2 + 1);
 					//return(-1);
 					return (0);
 				}
-				DBConn.EscapeString(
+				db_conn.escape_string(
 					esc.c_str(), Value->str.ptr,
 					Value->str.len); // 先对字符串进行escape
 				if (sql.append(esc.c_str()) < 0)
-					ErrorNo = -1;
+					error_no = -1;
 			}
 			if (sql.append('\'') < 0)
-				ErrorNo = -1;
+				error_no = -1;
 			break;
 
 		default:;
@@ -659,7 +681,7 @@ inline int CHelperProcess::Value2Str(const DTCValue *Value, int iFieldType)
 	return 0;
 }
 
-int CHelperProcess::ConditionConcate(const DTCFieldValue *Condition)
+int ConnectorProcess::condition_concate(const DTCFieldValue *Condition)
 {
 	int i;
 
@@ -667,18 +689,19 @@ int CHelperProcess::ConditionConcate(const DTCFieldValue *Condition)
 		return (0);
 
 	for (i = 0; i < Condition->num_fields(); i++) {
-		if (TableDef->is_volatile(i))
+		if (table_def->is_volatile(i))
 			return -1;
-		SQLAppendConst(" AND ");
-		SQLAppendField(Condition->field_id(i));
-		SQLAppendComparator(Condition->field_operation(i));
-		Value2Str(Condition->field_value(i), Condition->field_type(i));
+		sql_append_const(" AND ");
+		sql_append_field(Condition->field_id(i));
+		sql_append_comparator(Condition->field_operation(i));
+		format_sql_value(Condition->field_value(i),
+				 Condition->field_type(i));
 	}
 
 	return 0;
 }
 
-inline int CHelperProcess::SetDefaultValue(int field_type, DTCValue &Value)
+inline int ConnectorProcess::set_default_value(int field_type, DTCValue &Value)
 {
 	switch (field_type) {
 	case DField::Signed:
@@ -710,14 +733,14 @@ inline int CHelperProcess::SetDefaultValue(int field_type, DTCValue &Value)
 	return (0);
 }
 
-inline int CHelperProcess::Str2Value(char *Str, int fieldid, int field_type,
-				     DTCValue &Value)
+inline int ConnectorProcess::str_to_value(char *Str, int fieldid,
+					  int field_type, DTCValue &Value)
 {
 	if (Str == NULL) {
 		log4cplus_debug(
 			"Str is NULL, field_type: %d. Check mysql table definition.",
 			field_type);
-		SetDefaultValue(field_type, Value);
+		set_default_value(field_type, Value);
 		return (0);
 	}
 
@@ -763,23 +786,23 @@ inline int CHelperProcess::Str2Value(char *Str, int fieldid, int field_type,
 	return (0);
 }
 
-int CHelperProcess::SaveRow(RowValue *Row, DtcJob *Task)
+int ConnectorProcess::save_row(RowValue *Row, DtcJob *Task)
 {
 	int i, Ret;
 
-	if (TableDef->num_fields() < 0)
+	if (table_def->num_fields() < 0)
 		return (-1);
 
-	for (i = 1; i <= TableDef->num_fields(); i++) {
-		//DBConn.Row[0]是key的值，TableDef->Field[0]也是key，
+	for (i = 1; i <= table_def->num_fields(); i++) {
+		//db_conn.Row[0]是key的值，table_def->Field[0]也是key，
 		//因此从1开始。而结果Row是从0开始的(不包括key)
-		Ret = Str2Value(DBConn.Row[i], i, TableDef->field_type(i),
-				(*Row)[i]);
+		Ret = str_to_value(db_conn.Row[i], i, table_def->field_type(i),
+				   (*Row)[i]);
 
 		if (Ret != 0) {
 			log4cplus_error(
 				"string[%s] conver to value[%d] error: %d, %m",
-				DBConn.Row[i], TableDef->field_type(i), Ret);
+				db_conn.Row[i], table_def->field_type(i), Ret);
 			return (-2);
 		}
 	}
@@ -794,7 +817,7 @@ int CHelperProcess::SaveRow(RowValue *Row, DtcJob *Task)
 	return (0);
 }
 
-int CHelperProcess::ProcessSelect(DtcJob *Task)
+int ConnectorProcess::process_select(DtcJob *Task)
 {
 	int Ret, i;
 	RowValue *Row = NULL;
@@ -803,44 +826,44 @@ int CHelperProcess::ProcessSelect(DtcJob *Task)
 		!Task->count_only() && (Task->requestInfo.limit_start() ||
 					Task->requestInfo.limit_count());
 
-	SetTitle("SELECT...");
-	InitSQLBuffer();
-	InitTableName(Task->request_key(), TableDef->field_type(0));
+	set_title("SELECT...");
+	init_sql_buffer();
+	init_table_name(Task->request_key(), table_def->field_type(0));
 
 	if (haslimit)
-		SQLAppendConst("SELECT SQL_CALC_FOUND_ROWS ");
+		sql_append_const("SELECT SQL_CALC_FOUND_ROWS ");
 	else
-		SQLAppendConst("SELECT ");
-	SelectFieldConcate(Task->request_fields()); // 总是SELECT所有字段
-	SQLAppendConst(" FROM ");
-	SQLAppendTable();
+		sql_append_const("SELECT ");
+	select_field_concate(Task->request_fields()); // 总是SELECT所有字段
+	sql_append_const(" FROM ");
+	sql_append_table();
 
 	// condition
-	SQLAppendConst(" WHERE ");
-	SQLAppendField(0);
-	SQLAppendConst("=");
-	Value2Str(Task->request_key(), TableDef->field_type(0));
+	sql_append_const(" WHERE ");
+	sql_append_field(0);
+	sql_append_const("=");
+	format_sql_value(Task->request_key(), table_def->field_type(0));
 
-	if (ConditionConcate(Task->request_condition()) != 0) {
+	if (condition_concate(Task->request_condition()) != 0) {
 		Task->set_error(-EC_BAD_COMMAND, __FUNCTION__,
 				"Volatile condition not allowed");
 		return (-7);
 	}
 
 	if (dbConfig->ordSql) {
-		SQLAppendConst(" ");
-		SQLAppendString(dbConfig->ordSql);
+		sql_append_const(" ");
+		sql_append_string(dbConfig->ordSql);
 	}
 
 	if (Task->requestInfo.limit_count() > 0) {
-		SQLPrintf(" LIMIT %u, %u", Task->requestInfo.limit_start(),
-			  Task->requestInfo.limit_count());
+		sql_printf(" LIMIT %u, %u", Task->requestInfo.limit_start(),
+			   Task->requestInfo.limit_count());
 	}
 
-	if (ErrorNo !=
+	if (error_no !=
 	    0) { // 主要检查PrintfAppend是否发生过错误，这里统一检查一次
 		Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
-		log4cplus_error("error occur: %d", ErrorNo);
+		log4cplus_error("error occur: %d", error_no);
 		return (-1);
 	}
 
@@ -854,7 +877,7 @@ int CHelperProcess::ProcessSelect(DtcJob *Task)
 	}
 
 	if (!Task->count_only()) {
-		Row = new RowValue(TableDef);
+		Row = new RowValue(table_def);
 		if (Row == NULL) {
 			Task->set_error(-ENOMEM, __FUNCTION__, "new row error");
 			log4cplus_error("%s new RowValue error: %m", "");
@@ -864,64 +887,65 @@ int CHelperProcess::ProcessSelect(DtcJob *Task)
 
 	log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
-	Ret = DBConn.Query(DBName, sql.c_str());
-	log4cplus_debug("SELECT %d %s", Ret, DBConn.GetRawErrNo());
+	Ret = db_conn.do_query(DBName, sql.c_str());
+	log4cplus_debug("SELECT %d %s", Ret, db_conn.get_raw_err_no());
 	if (Ret != 0) {
 		delete Row;
-		Task->set_error_dup(DBConn.GetErrNo(), __FUNCTION__,
-				    DBConn.GetErrMsg());
+		Task->set_error_dup(db_conn.get_err_no(), __FUNCTION__,
+				    db_conn.get_err_msg());
 		log4cplus_warning("db query error: %s, pid: %d, group-id: %d",
-				  DBConn.GetErrMsg(), getpid(), SelfGroupID);
+				  db_conn.get_err_msg(), getpid(),
+				  self_group_id);
 		return (-4);
 	}
 
-	Ret = DBConn.UseResult();
+	Ret = db_conn.use_result();
 	if (Ret != 0) {
 		delete Row;
-		Task->set_error_dup(DBConn.GetErrNo(), __FUNCTION__,
-				    DBConn.GetErrMsg());
+		Task->set_error_dup(db_conn.get_err_no(), __FUNCTION__,
+				    db_conn.get_err_msg());
 		log4cplus_warning("db user result error: %s",
-				  DBConn.GetErrMsg());
+				  db_conn.get_err_msg());
 		return (-5);
 	}
 
-	nRows = DBConn.ResNum;
-	for (i = 0; i < DBConn.ResNum; i++) {
-		Ret = DBConn.FetchRow();
+	nRows = db_conn.res_num;
+	for (i = 0; i < db_conn.res_num; i++) {
+		Ret = db_conn.fetch_row();
 
 		if (Ret != 0) {
 			delete Row;
-			DBConn.FreeResult();
-			Task->set_error_dup(DBConn.GetErrNo(), __FUNCTION__,
-					    DBConn.GetErrMsg());
+			db_conn.free_result();
+			Task->set_error_dup(db_conn.get_err_no(), __FUNCTION__,
+					    db_conn.get_err_msg());
 			log4cplus_warning("db fetch row error: %s",
-					  DBConn.GetErrMsg());
+					  db_conn.get_err_msg());
 			return (-6);
 		}
 
 		//get field value length for the row
 		_lengths = 0;
-		_lengths = DBConn.getLengths();
+		_lengths = db_conn.get_lengths();
 
 		if (0 == _lengths) {
 			delete Row;
-			DBConn.FreeResult();
-			Task->set_error_dup(DBConn.GetErrNo(), __FUNCTION__,
-					    DBConn.GetErrMsg());
+			db_conn.free_result();
+			Task->set_error_dup(db_conn.get_err_no(), __FUNCTION__,
+					    db_conn.get_err_msg());
 			log4cplus_warning("db fetch row length error: %s",
-					  DBConn.GetErrMsg());
+					  db_conn.get_err_msg());
 			return (-6);
 		}
 
 		// 将结果转换，并保存到task的result里
 		if (Task->count_only()) {
-			nRows = atoi(DBConn.Row[0]);
+			nRows = atoi(db_conn.Row[0]);
 			//bug fixed return count *
 			Task->set_total_rows(nRows);
 			break;
-		} else if ((Ret = SaveRow(Row, Task)) != 0) {
+		} else if ((Ret = save_row(Row, Task)) != 0) {
 			delete Row;
-			DBConn.FreeResult();
+			db_conn.free_result();
 			Task->set_error(-EC_ERROR_BASE, __FUNCTION__,
 					"task append row error");
 			log4cplus_error("task append row error: %d", Ret);
@@ -931,50 +955,50 @@ int CHelperProcess::ProcessSelect(DtcJob *Task)
 
 	log4cplus_debug(
 		"pid: %d, group-id: %d, result: %d row, db: %s, sql: %s",
-		getpid(), SelfGroupID, nRows, DBName, sql.c_str());
+		getpid(), self_group_id, nRows, DBName, sql.c_str());
 
 	delete Row;
-	DBConn.FreeResult();
+	db_conn.free_result();
 
 	//bug fixed确认客户端带Limit限制
 	if (haslimit) { // 获取总行数
-		InitSQLBuffer();
-		SQLAppendConst("SELECT FOUND_ROWS() ");
+		init_sql_buffer();
+		sql_append_const("SELECT FOUND_ROWS() ");
 
 		log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
-		Ret = DBConn.Query(DBName, sql.c_str());
-		log4cplus_debug("SELECT %d %s", Ret, DBConn.GetRawErrNo());
+		Ret = db_conn.do_query(DBName, sql.c_str());
+		log4cplus_debug("SELECT %d %s", Ret, db_conn.get_raw_err_no());
 		if (Ret != 0) {
-			Task->set_error_dup(DBConn.GetErrNo(), __FUNCTION__,
-					    DBConn.GetErrMsg());
+			Task->set_error_dup(db_conn.get_err_no(), __FUNCTION__,
+					    db_conn.get_err_msg());
 			log4cplus_warning(
 				"db query error: %s, pid: %d, group-id: %d",
-				DBConn.GetErrMsg(), getpid(), SelfGroupID);
+				db_conn.get_err_msg(), getpid(), self_group_id);
 			return (-4);
 		}
 
-		Ret = DBConn.UseResult();
+		Ret = db_conn.use_result();
 		if (Ret != 0) {
-			Task->set_error_dup(DBConn.GetErrNo(), __FUNCTION__,
-					    DBConn.GetErrMsg());
+			Task->set_error_dup(db_conn.get_err_no(), __FUNCTION__,
+					    db_conn.get_err_msg());
 			log4cplus_warning("db user result error: %s",
-					  DBConn.GetErrMsg());
+					  db_conn.get_err_msg());
 			return (-5);
 		}
 
-		Ret = DBConn.FetchRow();
+		Ret = db_conn.fetch_row();
 
 		if (Ret != 0) {
-			DBConn.FreeResult();
-			Task->set_error_dup(DBConn.GetErrNo(), __FUNCTION__,
-					    DBConn.GetErrMsg());
+			db_conn.free_result();
+			Task->set_error_dup(db_conn.get_err_no(), __FUNCTION__,
+					    db_conn.get_err_msg());
 			log4cplus_warning("db fetch row error: %s",
-					  DBConn.GetErrMsg());
+					  db_conn.get_err_msg());
 			return (-6);
 		}
 
-		unsigned long totalRows = strtoul(DBConn.Row[0], NULL, 0);
+		unsigned long totalRows = strtoul(db_conn.Row[0], NULL, 0);
 		if (totalRows == 0) {
 			if (nRows != 0)
 				totalRows =
@@ -987,13 +1011,13 @@ int CHelperProcess::ProcessSelect(DtcJob *Task)
 
 		log4cplus_debug("db: total-rows: %lu, ret: %d", totalRows, Ret);
 
-		DBConn.FreeResult();
+		db_conn.free_result();
 	}
 
 	return (0);
 }
 
-int CHelperProcess::UpdateFieldConcate(const DTCFieldValue *UpdateInfo)
+int ConnectorProcess::update_field_concate(const DTCFieldValue *UpdateInfo)
 {
 	int i;
 
@@ -1003,39 +1027,29 @@ int CHelperProcess::UpdateFieldConcate(const DTCFieldValue *UpdateInfo)
 	for (i = 0; i < UpdateInfo->num_fields(); i++) {
 		const int fid = UpdateInfo->field_id(i);
 
-		if (TableDef->is_volatile(fid))
+		if (table_def->is_volatile(fid))
 			continue;
 
 		switch (UpdateInfo->field_operation(i)) {
 		case DField::Set:
 			if (i > 0)
-				SQLAppendConst(",");
-			SQLAppendField(fid);
-			SQLAppendConst("=");
-			Value2Str(UpdateInfo->field_value(i),
-				  UpdateInfo->field_type(i));
+				sql_append_const(",");
+			sql_append_field(fid);
+			sql_append_const("=");
+			format_sql_value(UpdateInfo->field_value(i),
+					 UpdateInfo->field_type(i));
 			break;
 
 		case DField::Add:
 			if (i > 0)
-				SQLAppendConst(",");
-			SQLAppendField(fid);
-			SQLAppendConst("=");
-			SQLAppendField(fid);
-			SQLAppendConst("+");
-			Value2Str(UpdateInfo->field_value(i),
-				  UpdateInfo->field_type(i));
+				sql_append_const(",");
+			sql_append_field(fid);
+			sql_append_const("=");
+			sql_append_field(fid);
+			sql_append_const("+");
+			format_sql_value(UpdateInfo->field_value(i),
+					 UpdateInfo->field_type(i));
 			break;
-
-#if 0
-			case DField::Subtract:
-				if(i>0) SQLAppendConst(",");
-				SQLAppendField(fid);
-				SQLAppendConst("=");
-				SQLAppendField(fid);
-				SQLAppendConst("-");
-				Value2Str(UpdateInfo->field_value(i), UpdateInfo->field_type(i));
-#endif
 
 		default:
 			break;
@@ -1045,7 +1059,7 @@ int CHelperProcess::UpdateFieldConcate(const DTCFieldValue *UpdateInfo)
 	return 0;
 }
 
-int CHelperProcess::DefaultValueConcate(const DTCFieldValue *UpdateInfo)
+int ConnectorProcess::default_value_concate(const DTCFieldValue *UpdateInfo)
 {
 	int i;
 	uint8_t mask[32];
@@ -1053,108 +1067,105 @@ int CHelperProcess::DefaultValueConcate(const DTCFieldValue *UpdateInfo)
 	FIELD_ZERO(mask);
 	if (UpdateInfo)
 		UpdateInfo->build_field_mask(mask);
-#if 0 // Allow AutoIncrement Field Insert
-	if(TableDef->auto_increment_field_id() > 0)
-		FIELD_CLR(TableDef->auto_increment_field_id(), mask);
-#endif
 
-	for (i = 1; i <= TableDef->num_fields(); i++) {
-		if (FIELD_ISSET(i, mask) || TableDef->is_volatile(i))
+	for (i = 1; i <= table_def->num_fields(); i++) {
+		if (FIELD_ISSET(i, mask) || table_def->is_volatile(i))
 			continue;
-		SQLAppendConst(",");
-		SQLAppendField(i);
-		SQLAppendConst("=");
-		Value2Str(TableDef->default_value(i), TableDef->field_type(i));
+		sql_append_const(",");
+		sql_append_field(i);
+		sql_append_const("=");
+		format_sql_value(table_def->default_value(i),
+				 table_def->field_type(i));
 	}
 
 	return 0;
 }
 
-int CHelperProcess::ProcessInsert(DtcJob *Task)
+int ConnectorProcess::process_insert(DtcJob *Task)
 {
 	int Ret;
 
-	SetTitle("INSERT...");
-	InitSQLBuffer();
-	InitTableName(Task->request_key(), TableDef->field_type(0));
+	set_title("INSERT...");
+	init_sql_buffer();
+	init_table_name(Task->request_key(), table_def->field_type(0));
 
-	SQLAppendConst("INSERT INTO ");
-	SQLAppendTable();
-	SQLAppendConst(" SET ");
+	sql_append_const("INSERT INTO ");
+	sql_append_table();
+	sql_append_const(" SET ");
 
 	std::map<std::string, std::string> fieldValues;
 	if (Task->request_key()) {
-		fieldValues[TableDef->field_name(0)] = ValueToStr(
-			Task->request_key(), TableDef->field_type(0));
+		fieldValues[table_def->field_name(0)] = value_to_str(
+			Task->request_key(), table_def->field_type(0));
 	}
 
 	if (Task->request_operation()) {
 		const DTCFieldValue *updateInfo = Task->request_operation();
 		for (int i = 0; i < updateInfo->num_fields(); ++i) {
 			int fid = updateInfo->field_id(i);
-			if (TableDef->is_volatile(fid))
+			if (table_def->is_volatile(fid))
 				continue;
-			fieldValues[TableDef->field_name(fid)] =
-				ValueToStr(updateInfo->field_value(i),
-					   updateInfo->field_type(i));
+			fieldValues[table_def->field_name(fid)] =
+				value_to_str(updateInfo->field_value(i),
+					     updateInfo->field_type(i));
 		}
 	}
 
-	for (int i = 1; i <= TableDef->num_fields(); ++i) {
-		if (TableDef->is_volatile(i))
+	for (int i = 1; i <= table_def->num_fields(); ++i) {
+		if (table_def->is_volatile(i))
 			continue;
-		if (fieldValues.find(TableDef->field_name(i)) !=
+		if (fieldValues.find(table_def->field_name(i)) !=
 		    fieldValues.end())
 			continue;
-		fieldValues[TableDef->field_name(i)] = ValueToStr(
-			TableDef->default_value(i), TableDef->field_type(i));
+		fieldValues[table_def->field_name(i)] = value_to_str(
+			table_def->default_value(i), table_def->field_type(i));
 	}
 
 	for (std::map<std::string, std::string>::iterator iter =
 		     fieldValues.begin();
 	     iter != fieldValues.end(); ++iter) {
-		SQLAppendString(&LeftQuote, 1);
-		SQLAppendString(iter->first.c_str(), iter->first.length());
-		SQLAppendString(&RightQuote, 1);
-		SQLAppendConst("=");
-		SQLAppendString(iter->second.c_str(), iter->second.length());
-		SQLAppendConst(",");
+		sql_append_string(&left_quote, 1);
+		sql_append_string(iter->first.c_str(), iter->first.length());
+		sql_append_string(&right_quote, 1);
+		sql_append_const("=");
+		sql_append_string(iter->second.c_str(), iter->second.length());
+		sql_append_const(",");
 	}
 
 	if (sql.at(-1) == ',')
 		sql.trunc(-1);
 
-	if (ErrorNo != 0) { // 主要检查PrintfAppend是否发生过错误
+	if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
 		Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
-		log4cplus_error("error occur: %d", ErrorNo);
+		log4cplus_error("error occur: %d", error_no);
 		return (-1);
 	}
 
 	log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
-	Ret = DBConn.Query(DBName, sql.c_str());
-	log4cplus_debug("INSERT %d %s", Ret, DBConn.GetRawErrNo());
+	Ret = db_conn.do_query(DBName, sql.c_str());
+	log4cplus_debug("INSERT %d %s", Ret, db_conn.get_raw_err_no());
 
 	if (Ret != 0) {
-		int err = DBConn.GetErrNo();
-		Task->set_error_dup(err, __FUNCTION__, DBConn.GetErrMsg());
+		int err = db_conn.get_err_no();
+		Task->set_error_dup(err, __FUNCTION__, db_conn.get_err_msg());
 		if (err != -ER_DUP_ENTRY)
 			log4cplus_warning("db query error: %s",
-					  DBConn.GetErrMsg());
+					  db_conn.get_err_msg());
 		else
 			log4cplus_info("db query error: %s",
-				       DBConn.GetErrMsg());
+				       db_conn.get_err_msg());
 		return (-1);
 	}
 
-	Task->resultInfo.set_affected_rows(DBConn.affected_rows());
+	Task->resultInfo.set_affected_rows(db_conn.affected_rows());
 	log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
-	if (TableDef->has_auto_increment()) {
-		uint64_t id = DBConn.InsertID();
+	if (table_def->has_auto_increment()) {
+		uint64_t id = db_conn.insert_id();
 		if (id) {
 			Task->resultInfo.set_insert_id(id);
-			if (TableDef->key_auto_increment())
+			if (table_def->key_auto_increment())
 				Task->resultInfo.set_key(id);
 		}
 	}
@@ -1162,7 +1173,7 @@ int CHelperProcess::ProcessInsert(DtcJob *Task)
 	return (0);
 }
 
-int CHelperProcess::ProcessUpdate(DtcJob *Task)
+int ConnectorProcess::process_update(DtcJob *Task)
 {
 	int Ret;
 
@@ -1177,112 +1188,112 @@ int CHelperProcess::ProcessUpdate(DtcJob *Task)
 		return (0);
 	}
 
-	SetTitle("UPDATE...");
-	InitSQLBuffer();
-	InitTableName(Task->request_key(), TableDef->field_type(0));
+	set_title("UPDATE...");
+	init_sql_buffer();
+	init_table_name(Task->request_key(), table_def->field_type(0));
 
-	SQLAppendConst("UPDATE ");
-	SQLAppendTable();
-	SQLAppendConst(" SET ");
-	UpdateFieldConcate(Task->request_operation());
+	sql_append_const("UPDATE ");
+	sql_append_table();
+	sql_append_const(" SET ");
+	update_field_concate(Task->request_operation());
 
 	// key
-	SQLAppendConst(" WHERE ");
-	SQLAppendField(0);
-	SQLAppendConst("=");
-	Value2Str(Task->request_key(), TableDef->field_type(0));
+	sql_append_const(" WHERE ");
+	sql_append_field(0);
+	sql_append_const("=");
+	format_sql_value(Task->request_key(), table_def->field_type(0));
 
 	// condition
-	if (ConditionConcate(Task->request_condition()) != 0) {
+	if (condition_concate(Task->request_condition()) != 0) {
 		Task->set_error(-EC_BAD_COMMAND, __FUNCTION__,
 				"Volatile condition not allowed");
 		return (-7);
 	}
 
-	if (ErrorNo != 0) { // 主要检查PrintfAppend是否发生过错误
+	if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
 		Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
-		log4cplus_error("error occur: %d", ErrorNo);
+		log4cplus_error("error occur: %d", error_no);
 		return (-1);
 	}
 
 	log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
-	Ret = DBConn.Query(DBName, sql.c_str());
-	log4cplus_debug("UPDATE %d %s", Ret, DBConn.GetRawErrNo());
+	Ret = db_conn.do_query(DBName, sql.c_str());
+	log4cplus_debug("UPDATE %d %s", Ret, db_conn.get_raw_err_no());
 	if (Ret != 0) {
-		int err = DBConn.GetErrNo();
-		Task->set_error_dup(err, __FUNCTION__, DBConn.GetErrMsg());
+		int err = db_conn.get_err_no();
+		Task->set_error_dup(err, __FUNCTION__, db_conn.get_err_msg());
 		if (err != -ER_DUP_ENTRY)
 			log4cplus_warning("db query error: %s",
-					  DBConn.GetErrMsg());
+					  db_conn.get_err_msg());
 		else
 			log4cplus_info("db query error: %s",
-				       DBConn.GetErrMsg());
+				       db_conn.get_err_msg());
 		return -1;
 	}
 
-	Task->resultInfo.set_affected_rows(DBConn.affected_rows());
+	Task->resultInfo.set_affected_rows(db_conn.affected_rows());
 	log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
 	return (0);
 }
 
-int CHelperProcess::ProcessDelete(DtcJob *Task)
+int ConnectorProcess::process_delete(DtcJob *Task)
 {
 	int Ret;
 
-	SetTitle("DELETE...");
-	InitSQLBuffer();
-	InitTableName(Task->request_key(), TableDef->field_type(0));
+	set_title("DELETE...");
+	init_sql_buffer();
+	init_table_name(Task->request_key(), table_def->field_type(0));
 
-	SQLAppendConst("DELETE FROM ");
-	SQLAppendTable();
+	sql_append_const("DELETE FROM ");
+	sql_append_table();
 
 	// key
-	SQLAppendConst(" WHERE ");
-	SQLAppendField(0);
-	SQLAppendConst("=");
-	Value2Str(Task->request_key(), TableDef->field_type(0));
+	sql_append_const(" WHERE ");
+	sql_append_field(0);
+	sql_append_const("=");
+	format_sql_value(Task->request_key(), table_def->field_type(0));
 
 	// condition
-	if (ConditionConcate(Task->request_condition()) != 0) {
+	if (condition_concate(Task->request_condition()) != 0) {
 		Task->set_error(-EC_BAD_COMMAND, __FUNCTION__,
 				"Volatile condition not allowed");
 		return (-7);
 	}
 
-	if (ErrorNo !=
+	if (error_no !=
 	    0) { // 主要检查PrintfAppend是否发生过错误，这里统一检查一次
 		Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
-		log4cplus_error("error occur: %d", ErrorNo);
+		log4cplus_error("error occur: %d", error_no);
 		return (-1);
 	}
 
 	log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
-	Ret = DBConn.Query(DBName, sql.c_str());
-	log4cplus_debug("DELETE %d %s", Ret, DBConn.GetRawErrNo());
+	Ret = db_conn.do_query(DBName, sql.c_str());
+	log4cplus_debug("DELETE %d %s", Ret, db_conn.get_raw_err_no());
 	if (Ret != 0) {
-		Task->set_error_dup(DBConn.GetErrNo(), __FUNCTION__,
-				    DBConn.GetErrMsg());
-		log4cplus_warning("db query error: %s", DBConn.GetErrMsg());
+		Task->set_error_dup(db_conn.get_err_no(), __FUNCTION__,
+				    db_conn.get_err_msg());
+		log4cplus_warning("db query error: %s", db_conn.get_err_msg());
 		return (-1);
 	}
 
-	Task->resultInfo.set_affected_rows(DBConn.affected_rows());
+	Task->resultInfo.set_affected_rows(db_conn.affected_rows());
 	log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
 	return (0);
 }
 
-int CHelperProcess::ProcessTask(DtcJob *Task)
+int ConnectorProcess::do_process(DtcJob *Task)
 {
 	if (Task == NULL) {
 		log4cplus_error("Task is NULL!%s", "");
 		return (-1);
 	}
 
-	TableDef = TableDefinitionManager::instance()->get_cur_table_def();
+	table_def = TableDefinitionManager::instance()->get_cur_table_def();
 
 	switch (Task->request_code()) {
 	case DRequest::TYPE_PASS:
@@ -1291,22 +1302,22 @@ int CHelperProcess::ProcessTask(DtcJob *Task)
 		return 0;
 
 	case DRequest::Get:
-		return ProcessSelect(Task);
+		return process_select(Task);
 
 	case DRequest::Insert:
-		return ProcessInsert(Task);
+		return process_insert(Task);
 
 	case DRequest::Update:
-		return ProcessUpdate(Task);
+		return process_update(Task);
 
 	case DRequest::Delete:
-		return ProcessDelete(Task);
+		return process_delete(Task);
 
 	case DRequest::Replace:
-		return ProcessReplace(Task);
+		return process_replace(Task);
 
 	case DRequest::ReloadConfig:
-		return ProcessReloadConfig(Task);
+		return process_reload_config(Task);
 
 	default:
 		Task->set_error(-EC_BAD_COMMAND, __FUNCTION__,
@@ -1315,99 +1326,98 @@ int CHelperProcess::ProcessTask(DtcJob *Task)
 	}
 }
 
-//add by frankyang 处理更新过的交易日志
-int CHelperProcess::ProcessReplace(DtcJob *Task)
+int ConnectorProcess::process_replace(DtcJob *Task)
 {
 	int Ret;
 
-	SetTitle("REPLACE...");
-	InitSQLBuffer();
-	InitTableName(Task->request_key(), TableDef->field_type(0));
+	set_title("REPLACE...");
+	init_sql_buffer();
+	init_table_name(Task->request_key(), table_def->field_type(0));
 
-	SQLAppendConst("REPLACE INTO ");
-	SQLAppendTable();
-	SQLAppendConst(" SET ");
-	SQLAppendField(0);
-	SQLAppendConst("=");
-	Value2Str(Task->request_key(), TableDef->field_type(0));
-	SQLAppendConst(",");
+	sql_append_const("REPLACE INTO ");
+	sql_append_table();
+	sql_append_const(" SET ");
+	sql_append_field(0);
+	sql_append_const("=");
+	format_sql_value(Task->request_key(), table_def->field_type(0));
+	sql_append_const(",");
 
 	/* 补全缺失的默认值 */
 	if (Task->request_operation())
-		UpdateFieldConcate(Task->request_operation());
+		update_field_concate(Task->request_operation());
 	else if (sql.at(-1) == ',') {
 		sql.trunc(-1);
 	}
-	DefaultValueConcate(Task->request_operation());
+	default_value_concate(Task->request_operation());
 
-	if (ErrorNo != 0) { // 主要检查PrintfAppend是否发生过错误
+	if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
 		Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
-		log4cplus_error("error occur: %d", ErrorNo);
+		log4cplus_error("error occur: %d", error_no);
 		return (-1);
 	}
-	if (ErrorNo != 0) { // 主要检查PrintfAppend是否发生过错误
+	if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
 		Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
-		log4cplus_error("error occur: %d", ErrorNo);
+		log4cplus_error("error occur: %d", error_no);
 		return (-1);
 	}
 
 	log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
-	Ret = DBConn.Query(DBName, sql.c_str());
-	log4cplus_debug("REPLACE %d %s", Ret, DBConn.GetRawErrNo());
+	Ret = db_conn.do_query(DBName, sql.c_str());
+	log4cplus_debug("REPLACE %d %s", Ret, db_conn.get_raw_err_no());
 
 	if (Ret != 0) {
-		Task->set_error_dup(DBConn.GetErrNo(), __FUNCTION__,
-				    DBConn.GetErrMsg());
-		log4cplus_warning("db query error: %s", DBConn.GetErrMsg());
+		Task->set_error_dup(db_conn.get_err_no(), __FUNCTION__,
+				    db_conn.get_err_msg());
+		log4cplus_warning("db query error: %s", db_conn.get_err_msg());
 		return (-1);
 	}
 
-	Task->resultInfo.set_affected_rows(DBConn.affected_rows());
+	Task->resultInfo.set_affected_rows(db_conn.affected_rows());
 
 	log4cplus_debug("%s",
-			"CHelperProcess::ProcessReplaceTask() successful.");
+			"ConnectorProcess::ProcessReplaceTask() successful.");
 
 	return 0;
 }
 
-CHelperProcess::~CHelperProcess()
+ConnectorProcess::~ConnectorProcess()
 {
 }
 
-void CHelperProcess::InitTitle(int group, int role)
+void ConnectorProcess::init_title(int group, int role)
 {
-	titlePrefixSize = snprintf(name, sizeof(name), "helper%d%c", group,
-				   MACHINEROLESTRING[role]);
-	memcpy(title, name, titlePrefixSize);
-	title[titlePrefixSize++] = ':';
-	title[titlePrefixSize++] = ' ';
-	title[titlePrefixSize] = '\0';
+	title_prefix_size = snprintf(name, sizeof(name), "connector%d%c", group,
+				     MACHINEROLESTRING[role]);
+	memcpy(title, name, title_prefix_size);
+	title[title_prefix_size++] = ':';
+	title[title_prefix_size++] = ' ';
+	title[title_prefix_size] = '\0';
 	title[sizeof(title) - 1] = '\0';
 }
 
-void CHelperProcess::SetTitle(const char *status)
+void ConnectorProcess::set_title(const char *status)
 {
-	strncpy(title + titlePrefixSize, status,
-		sizeof(title) - 1 - titlePrefixSize);
+	strncpy(title + title_prefix_size, status,
+		sizeof(title) - 1 - title_prefix_size);
 	set_proc_title(title);
 }
 
-int CHelperProcess::ProcessReloadConfig(DtcJob *Task)
+int ConnectorProcess::process_reload_config(DtcJob *Task)
 {
-	const char *keyStr = g_dtc_config->get_str_val("cache", "CacheShmKey");
+	const char *keyStr = g_dtc_config->get_str_val("cache", "DTCID");
 	int cacheKey = 0;
 	if (keyStr == NULL) {
 		cacheKey = 0;
-		log4cplus_info("CacheShmKey not set!");
+		log4cplus_info("DTCID not set!");
 		return -1;
 	} else if (!strcasecmp(keyStr, "none")) {
-		log4cplus_warning("CacheShmKey set to NONE, Cache disabled");
+		log4cplus_warning("DTCID set to NONE, Cache disabled");
 		return -1;
 	} else if (isdigit(keyStr[0])) {
 		cacheKey = strtol(keyStr, NULL, 0);
 	} else {
-		log4cplus_warning("Invalid CacheShmKey value \"%s\"", keyStr);
+		log4cplus_warning("Invalid DTCID value \"%s\"", keyStr);
 		return -1;
 	}
 	BlockProperties stInfo;

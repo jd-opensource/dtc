@@ -44,7 +44,7 @@ WatchDogHelper::~WatchDogHelper(void)
 {
 }
 
-const char *HelperName[] = {
+const char *connector_name[] = {
 	NULL, NULL, "connector", "custom_connector", "custom_connector",
 };
 
@@ -72,7 +72,7 @@ void WatchDogHelper::exec()
 	if (conf_ == DBHELPER_TABLE_NEW) {
 		argv[argc++] = (char *)"-t";
 		char tableName[64];
-		snprintf(tableName, 64, "../conf/table%d.conf", num_);
+		snprintf(tableName, 64, "../conf/table%d.yaml", num_);
 		argv[argc++] = tableName;
 	} else if (conf_ == DBHELPER_TABLE_ORIGIN &&
 		   strcmp(table_file, TABLE_CONF_NAME)) {
@@ -85,8 +85,7 @@ void WatchDogHelper::exec()
 	Thread *helperThread =
 		new Thread(watchdog_object_name_, Thread::ThreadTypeProcess);
 	helperThread->initialize_thread();
-	argv[0] = (char *)HelperName[type_];
-	argv[0] = "/usr/local/dtc/bin/connector";
+	argv[0] = (char *)connector_name[type_];
 	execv(argv[0], argv);
 	log4cplus_error("helper[%s] execv error: %m", argv[0]);
 }

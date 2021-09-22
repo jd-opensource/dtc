@@ -1,3 +1,19 @@
+/*
+* Copyright [2021] JD.com, Inc.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+* 
+*/
 #ifndef __HELPER_PROCESS_H__
 #define __HELPER_PROCESS_H__
 
@@ -11,98 +27,97 @@
 #include <dbconfig.h>
 #include <buffer.h>
 
-class CHelperProcess {
+class ConnectorProcess {
     private:
-	int ErrorNo;
-	CDBConn DBConn;
+	int error_no;
+	CDBConn db_conn;
 
 	class buffer sql;
 	class buffer esc;
 
-	char LeftQuote;
-	char RightQuote;
+	char left_quote;
+	char right_quote;
 	char DBName[40];
-	char TableName[40];
+	char table_name[40];
 
 	char name[16];
 	char title[80];
-	int titlePrefixSize;
+	int title_prefix_size;
 
-	DTCTableDefinition *TableDef;
-	int SelfGroupID;
+	DTCTableDefinition *table_def;
+	int self_group_id;
 	const DbConfig *dbConfig;
-	DBHost DBHostConf;
+	DBHost db_host_conf;
 
-	//add by frankyang field value lengths
 	unsigned long *_lengths;
-	time_t lastAccess;
-	int pingTimeout;
-	unsigned int procTimeout;
+	time_t last_access;
+	int ping_timeout;
+	unsigned int proc_timeout;
 
     protected:
 	/* 将字符串printf在原来字符串的后面，如果buffer不够大会自动重新分配buffer */
 
-	void InitTableName(const DTCValue *key, int field_type);
-	void InitSQLBuffer(void);
-	void SQLPrintf(const char *Format, ...)
+	void init_table_name(const DTCValue *key, int field_type);
+	void init_sql_buffer(void);
+	void sql_printf(const char *Format, ...)
 		__attribute__((format(printf, 2, 3)));
-	void SQLAppendString(const char *str, int len = 0);
-#define SQLAppendConst(x) SQLAppendString(x, sizeof(x) - 1)
-	void SQLAppendTable(void);
-	void SQLAppendField(int fid);
-	void SQLAppendComparator(uint8_t op);
+	void sql_append_string(const char *str, int len = 0);
+#define sql_append_const(x) sql_append_string(x, sizeof(x) - 1)
+	void sql_append_table(void);
+	void sql_append_field(int fid);
+	void sql_append_comparator(uint8_t op);
 
-	int ConfigDBByStruct(const DbConfig *Config);
-	int InternalInit(int GroupID, int bSlave);
+	int config_db_by_struct(const DbConfig *do_config);
+	int internal_init(int GroupID, int bSlave);
 
-	int SelectFieldConcate(const DTCFieldSet *Needed);
-	inline int Value2Str(const DTCValue *Value, int iFieldType);
-	inline int SetDefaultValue(int field_type, DTCValue &Value);
-	inline int Str2Value(char *Str, int fieldid, int field_type,
-			     DTCValue &Value);
-	std::string ValueToStr(const DTCValue *value, int fieldType);
-	int ConditionConcate(const DTCFieldValue *Condition);
-	int UpdateFieldConcate(const DTCFieldValue *UpdateInfo);
-	int DefaultValueConcate(const DTCFieldValue *UpdateInfo);
-	int SaveRow(RowValue *Row, DtcJob *Task);
+	int select_field_concate(const DTCFieldSet *Needed);
+	inline int format_sql_value(const DTCValue *Value, int iFieldType);
+	inline int set_default_value(int field_type, DTCValue &Value);
+	inline int str_to_value(char *Str, int fieldid, int field_type,
+				DTCValue &Value);
+	std::string value_to_str(const DTCValue *value, int fieldType);
+	int condition_concate(const DTCFieldValue *Condition);
+	int update_field_concate(const DTCFieldValue *UpdateInfo);
+	int default_value_concate(const DTCFieldValue *UpdateInfo);
+	int save_row(RowValue *Row, DtcJob *Task);
 
-	void TryPing(void);
-	int ProcessSelect(DtcJob *Task);
-	int ProcessInsert(DtcJob *Task);
-	int ProcessInsertRB(DtcJob *Task);
-	int ProcessUpdate(DtcJob *Task);
-	int ProcessUpdateRB(DtcJob *Task);
-	int ProcessDelete(DtcJob *Task);
-	int ProcessDeleteRB(DtcJob *Task);
-	int ProcessReplace(DtcJob *Task);
-	int ProcessReloadConfig(DtcJob *Task);
+	void try_ping(void);
+	int process_select(DtcJob *Task);
+	int process_insert(DtcJob *Task);
+	int process_insert_rb(DtcJob *Task);
+	int process_update(DtcJob *Task);
+	int process_update_rb(DtcJob *Task);
+	int process_delete(DtcJob *Task);
+	int process_delete_rb(DtcJob *Task);
+	int process_replace(DtcJob *Task);
+	int process_reload_config(DtcJob *Task);
 
     public:
-	CHelperProcess();
+	ConnectorProcess();
 
-	void UseMatchedRows(void)
+	void use_matched_rows(void)
 	{
-		DBConn.UseMatchedRows();
+		db_conn.use_matched_rows();
 	}
-	int Init(int GroupID, const DbConfig *Config, DTCTableDefinition *tdef,
-		 int slave);
-	void InitPingTimeout(void);
-	int CheckTable();
+	int do_init(int GroupID, const DbConfig *do_config,
+		    DTCTableDefinition *tdef, int slave);
+	void init_ping_timeout(void);
+	int check_table();
 
-	int ProcessTask(DtcJob *Task);
+	int do_process(DtcJob *Task);
 
-	void InitTitle(int m, int t);
-	void SetTitle(const char *status);
-	const char *Name(void)
+	void init_title(int m, int t);
+	void set_title(const char *status);
+	const char *get_name(void)
 	{
 		return name;
 	}
-	void SetProcTimeout(unsigned int Seconds)
+	void set_proc_timeout(unsigned int secs)
 	{
-		procTimeout = Seconds;
+		proc_timeout = secs;
 	}
 
-	~CHelperProcess();
+	~ConnectorProcess();
 };
 
 #endif
