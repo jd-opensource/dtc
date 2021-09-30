@@ -47,3 +47,6 @@ after_success:
 - cd ../agent/
 - docker build -t $DOCKER_USERNAME/agent:latest .
 - docker push $DOCKER_USERNAME/agent:latest
+- cd ../bucket/
+- docker build -t $DOCKER_USERNAME/bucket:latest .
+- docker push $DOCKER_USERNAME/bucket:latest
