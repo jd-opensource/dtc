@@ -7,6 +7,7 @@ PROCESS_DAEMON(){
     done
 }
 
+
 /usr/local/dtc/bin/dtcagent &
 /usr/local/dtc/bin/dtcd &
 PROCESS_DAEMON
