@@ -47,7 +47,7 @@
 	DA_VERSION_STR" built at: "__DATE__" "__TIME__
 
 #define DA_CONF_PATH "/etc/dtc/agent.xml"
-#define DA_LOG_DIR "/usr/local/dtc/dtclog/"
+#define DA_LOG_DIR "/var/log/dtc"
 
 #define DA_LOG_DEFAULT  3
 #define DA_MBUF_SIZE DEF_MBUF_SIZE
