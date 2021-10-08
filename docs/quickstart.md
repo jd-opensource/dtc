@@ -23,7 +23,7 @@ demo中定义的表名为dtc_opensource, <br/>
 | sex    | 整型                   | 4 Byte  |
 | age    | 整型                   | 4 Byte  |
 
-## 启动Server端
+## 启动DTC Server端
 为了省去配置环境的麻烦，Demo中提供docker镜像，直接运行即可启动服务端：<br/>
   ```shell
   docker pull dtc8/server:latest
@@ -34,6 +34,16 @@ demo中定义的表名为dtc_opensource, <br/>
   docker rm dtc-server
   ```
 
+## 启动Agent端
+  在docker环境中，agent和dtc-server需要在同一个网络环境中才能相互通信，故在启动时使用--network=container参数。
+  ```shell
+  docker pull dtc8/agent:latest
+  run -i -t --name agent --network=container:dtc-server dtc8/agent:latest
+  ```
+如非首次运行容器，则有可能会提示容器已存在，删除旧容器即可：
+  ```shell
+  docker rm agent
+  ```
 ## 运行Client测试示例
 client测试示例在server容器当中，进入容器：
   ```shell
