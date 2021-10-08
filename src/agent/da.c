@@ -441,6 +441,10 @@ static void da_print_run(struct instance *dai) {
 		log_alert("dtcagent-%s started on pid %d", DA_VERSION_DETAIL, dai->pid);
 	} else {
 		log_alert("222222222222");
+		log_debug("222222222 debug dtc agent start da_pre_run.");
+		log_info("222222222 info dtc agent start da_pre_run.");
+		log_alert("222222222 alert dtc agent start da_pre_run.");
+		log_error("222222222 error dtc agent start da_pre_run.");
 		log_alert("dtcagent-%s built for %s %s %s started on pid %d",
 				DA_VERSION_DETAIL, name.sysname, name.release, name.machine,
 				dai->pid);
