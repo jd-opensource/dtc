@@ -646,6 +646,10 @@ int main(int argc, char **argv) {
 		}
 		exit(0);
 	}
+	log_debug("debug dtc agent start main.");
+	log_info("info dtc agent start main.");
+	log_alert("alert dtc agent start main.");
+
 	status = da_pre_run(&dai);
 	if (status < 0) {
 		da_post_run(&dai);
