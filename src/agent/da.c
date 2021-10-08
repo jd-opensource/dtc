@@ -474,6 +474,11 @@ static int da_pre_run(struct instance *dai) {
 	tv_update_date(-1, -1);
 	//init log
 	da_log_init(dai);
+
+	log_debug("debug dtc agent start da_pre_run.");
+	log_info("info dtc agent start da_pre_run.");
+	log_alert("alert dtc agent start da_pre_run.");
+
 	if (daemonize) {
 		status = da_daemonize(1);
 		if (status != 0) {
@@ -648,9 +653,6 @@ int main(int argc, char **argv) {
 		}
 		exit(0);
 	}
-	log_debug("debug dtc agent start main.");
-	log_info("info dtc agent start main.");
-	log_alert("alert dtc agent start main.");
 
 	status = da_pre_run(&dai);
 	if (status < 0) {
