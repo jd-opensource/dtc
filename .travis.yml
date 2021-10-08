@@ -40,11 +40,6 @@ after_success:
 - cp conf/agent.xml dockerfiles/agent/
 - cp build/src/connector/connector dockerfiles/server/
 
-- cp conf/* dockerfiles/bucket/
-- cp build/src/core/dtcd dockerfiles/bucket/
-- cp build/src/agent/dtcagent dockerfiles/bucket/
-- cp build/src/connector/connector dockerfiles/bucket/
-
 - cd dockerfiles/server/
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
@@ -53,6 +48,3 @@ after_success:
 - cd ../agent/
 - docker build -t $DOCKER_USERNAME/agent:latest .
 - docker push $DOCKER_USERNAME/agent:latest
-- cd ../bucket/
-- docker build -t $DOCKER_USERNAME/bucket:latest .
-- docker push $DOCKER_USERNAME/bucket:latest
