@@ -437,8 +437,10 @@ static void da_print_run(struct instance *dai) {
 
 	status = uname(&name);
 	if (status < 0) {
+		log_alert("111111111111");
 		log_alert("dtcagent-%s started on pid %d", DA_VERSION_DETAIL, dai->pid);
 	} else {
+		log_alert("222222222222");
 		log_alert("dtcagent-%s built for %s %s %s started on pid %d",
 				DA_VERSION_DETAIL, name.sysname, name.release, name.machine,
 				dai->pid);
