@@ -38,7 +38,7 @@ demo中定义的表名为dtc_opensource, <br/>
   在docker环境中，agent和dtc-server需要在同一个网络环境中才能相互通信，故在启动时使用--network=container参数。
   ```shell
   docker pull dtc8/agent:latest
-  run -i -t --name agent --network=container:dtc-server dtc8/agent:latest
+  docker run -i -t --name agent --network=container:dtc-server dtc8/agent:latest
   ```
 如非首次运行容器，则有可能会提示容器已存在，删除旧容器即可：
   ```shell
