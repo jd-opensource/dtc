@@ -439,6 +439,10 @@ static void da_print_run(struct instance *dai) {
 	if (status < 0) {
 		log_alert("dtcagent-%s started on pid %d", DA_VERSION_DETAIL, dai->pid);
 	} else {
+			log_debug("DTC AGENT init.");
+	log_info("111111111111");
+	log_error("222222222222");
+	log_alert("33333333333333");
 		log_alert("dtcagent-%s built for %s %s %s started on pid %d",
 				DA_VERSION_DETAIL, name.sysname, name.release, name.machine,
 				dai->pid);
@@ -474,6 +478,9 @@ static int da_pre_run(struct instance *dai) {
 	da_log_init(dai);
 
 	log_debug("DTC AGENT init.");
+	log_info("111111111111");
+	log_error("222222222222");
+	log_alert("33333333333333");
 
 	if (daemonize) {
 		status = da_daemonize(1);
