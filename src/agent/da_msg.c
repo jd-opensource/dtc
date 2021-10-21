@@ -560,6 +560,7 @@ static int msg_send_chain(struct context *ctx, struct conn *conn,
 
 	limit = SSIZE_MAX;
 	for (;;) {
+		// msg is ths message which will be sent.
 		TAILQ_INSERT_TAIL(&send_msgq, msg, o_tqe);
 		msg->sending = 1;
 
@@ -587,6 +588,8 @@ static int msg_send_chain(struct context *ctx, struct conn *conn,
 		if (array_n(&sendv) >= NC_IOV_MAX || nsend >= limit) {
 			break;
 		}
+
+		// build msg which will be sent by next loop.
 		msg = conn->send_next(ctx, conn);
 		if (msg == NULL) {
 			break;
