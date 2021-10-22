@@ -22,6 +22,7 @@
 #include "da_server.h"
 #include "da_time.h"
 #include "da_protocal.h"
+#include "da_mysql_protocol.h"
 #include "da_core.h"
 #include "limits.h"
 #include "da_conn.h"
@@ -225,7 +226,7 @@ struct msg *msg_get(struct conn *conn, bool request) {
 	msg->request = request ? 1 : 0;
 
 	if (msg->request) {
-		msg->parser = dtc_parse_req;
+		msg->parser = mysql_parse_req;
 
 	} else {
 		msg->parser = dtc_parse_rsp;
@@ -701,7 +702,8 @@ struct msg *msg_get_error(struct msg *smsg) {
 	dmsg->affectrows=0;
 	dmsg->serialnr=smsg->serialnr;
 
-	status=dtc_error_reply(smsg,dmsg);
+	//status=dtc_error_reply(smsg,dmsg);
+	status=my_ok_reply(smsg,dmsg);
 	if(status<0)
 	{
 		msg_put(dmsg);

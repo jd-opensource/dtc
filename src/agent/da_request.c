@@ -378,12 +378,6 @@ static void req_recv_done_stats(struct context *ctx, struct server_pool *pool,
 {
 	stats_pool_incr(ctx, pool, pool_requests);
 	stats_pool_incr_by(ctx, pool, pool_request_bytes, msg->mlen);
-	/*
-	if(msg->cmd == MSG_REQ_GET)
-	{
-		stats_pool_incr(ctx, pool, pool_requests_get);
-	}
-	*/
 }
 
 void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
@@ -412,14 +406,6 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 
 	pool = (struct server_pool *) conn->owner;
 
-	/* invalid access token */
-	if (conn->isvalid == 0
-			&& string_compare(&pool->accesskey, &msg->accesskey) != 0) {
-		log_error("invalid accesstoken");
-		conn->error = 1;
-		conn->err = CONN_NOT_VALID;
-		return;
-	}
 	conn->isvalid = 1;
 
 	req_recv_done_stats(ctx, pool, msg);
@@ -438,7 +424,8 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	}
 	/* if no fragment happened */
 	if (TAILQ_EMPTY(&frag_msgq)) {
-		req_forward(ctx, conn, msg);
+		req_make_error(ctx, conn, msg, 6);
+		//req_forward(ctx, conn, msg);
 		return;
 	}
 

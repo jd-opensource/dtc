@@ -22,6 +22,7 @@
 #include "da_core.h"
 #include "da_event.h"
 #include "da_stats.h"
+#include "da_msg.h"
 
 void listener_ref(struct conn *l, void *owner) {
 
@@ -131,19 +132,7 @@ static int listener_listen(struct context *ctx, struct conn *l) {
 				pool->addrstr.len, pool->addrstr.data, strerror(errno));
 		return -1;
 	}
-//	event_add_conn(ctx->evb, l);
-//	if (status < 0) {
-//		log_error("event add conn p %d on addr '%.*s' failed: %s", l->fd,
-//				pool->addrstr.len, pool->addrstr.data, strerror(errno));
-//		return -1;
-//	}
-//
-//	status = event_del_out(ctx->evb, l);
-//	if (status < 0) {
-//		log_error("event del out p %d on addr '%.*s' failed: %s", l->fd,
-//				pool->addrstr.len, pool->addrstr.data, strerror(errno));
-//		return -1;
-//	}
+
 	return 0;
 }
 
@@ -344,6 +333,36 @@ static int listener_accept(struct context *ctx, struct conn *l) {
 	c->connected = 1;
 
 	log_debug("accepted client %d on listener %d", c->fd, l->fd);
+
+	/* send mysql server welcome info after tcp connected. */
+	struct msg *dmsg;
+	if(c->writecached == 0 && c->connected == 1)
+	{
+		dmsg=msg_get(c, false);
+		if(dmsg == NULL)
+		{
+			return NULL;
+		}
+		status = my_server_greeting_reply(NULL, dmsg);
+		if(status<0)
+		{
+			msg_put(dmsg);
+			return -1;
+		}
+
+		if(dmsg==NULL)
+		{
+			c->error = 1;
+			c->err = CONN_MSG_GET_ERR;
+			return -1;
+		}
+
+		dmsg->peer=dmsg;
+		dmsg->peerid = dmsg->id;
+		cache_send_event(c);
+	}
+	c->enqueue_outq(ctx, c, dmsg);
+
 	return 0;
 }
 
