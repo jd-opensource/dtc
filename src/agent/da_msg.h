@@ -139,6 +139,8 @@ struct msg {
   uint8_t *pos;    /* parser position marker */
   uint8_t *token;  /* token marker */
 
+  uint8_t pkt_nr; /* mysql sequence id */
+
   int err;              /* errno on error? */
   unsigned error : 1;   /* error? */
   unsigned ferror : 1;  /* error? */

@@ -338,12 +338,13 @@ static int listener_accept(struct context *ctx, struct conn *l) {
 	struct msg *dmsg;
 	if(c->writecached == 0 && c->connected == 1)
 	{
+		c->stage = CONN_STAGE_LOGGING_IN;
 		dmsg=msg_get(c, false);
 		if(dmsg == NULL)
 		{
 			return NULL;
 		}
-		status = my_server_greeting_reply(NULL, dmsg);
+		status = net_send_server_greeting(NULL, dmsg);
 		if(status<0)
 		{
 			msg_put(dmsg);

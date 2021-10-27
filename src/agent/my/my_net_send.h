@@ -14,38 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef DA_PROTOCAL_H_
-#define DA_PROTOCAL_H_
+#ifndef _MY_NET_SEND_H_
+#define _MY_NET_SEND_H_
 #include "da_string.h"
 #include <stdint.h>
 #include <stdlib.h>
 
-#define MYSQL_ERRMSG_SIZE 512
-
 struct msg;
 struct msg_tqh;
 
-struct CPacketHeader {
-	uint8_t version;
-	uint8_t scts;
-	uint8_t flags;
-	uint8_t cmd;
-	uint32_t len[8];
-};
+/*
+MYSQL Protocol Definition, See more detail: 
+  https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_packets.html#sect_protocol_basic_packets_packet
+*/
 
-typedef union CValue {
-	// member
-	int64_t s64;
-	uint64_t u64;
-	double flt;
-	struct string str;
+int net_send_ok(struct msg *smsg, struct conn *c_conn);
+int net_send_error(struct msg *smsg, struct msg *dmsg);
+int net_send_server_greeting(struct msg *smsg, struct msg *dmsg);
 
-} CValue;
-
-void dtc_parse_req(struct msg *r);
-void dtc_parse_rsp(struct msg *r);
-int dtc_coalesce(struct msg *r);
-int dtc_fragment(struct msg *r, uint32_t ncontinuum, struct msg_tqh *frag_msgq);
-int dtc_error_reply(struct msg *smsg, struct msg *dmsg);
-
-#endif /* DA_PROTOCAL_H_ */
+#endif /* _MY_NET_SEND_H_ */

@@ -60,6 +60,14 @@ typedef void (*conn_msgq_t)(struct context *, struct conn *, struct msg *);
 
 typedef void (*conn_msgtree_t)(struct context *, struct conn *, struct msg *);
 
+typedef enum conn_stage{
+  CONN_STAGE_UNLOGIN = 0,
+  CONN_STAGE_LOGGING_IN,
+  CONN_STAGE_LOGGED_IN,
+  
+  CONN_STAGE_DEFAULT
+}conn_stage_t;
+
 struct conn {
   TAILQ_ENTRY(conn) conn_tqe; /*list linked in server or server pool*/
   void *owner;                /*owner server server_pool*/
@@ -72,6 +80,7 @@ struct conn {
   uint32_t type;   /*front conn,back conn,or listener*/
   uint32_t events; /*the event need process*/
   uint32_t flag;   /*epool flag*/
+  conn_stage_t stage;
 
   struct rbtree msg_tree; /*tree for message search*/
   struct rbnode msg_rbs;  /*sentinel for msg_tree	*/

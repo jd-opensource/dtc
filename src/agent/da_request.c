@@ -281,11 +281,66 @@ static void req_forward_stats(struct context *ctx, struct cache_instance *ci, st
     stats_server_incr_by(ctx, ci, server_request_bytes, msg->mlen);
 }
 
+/*
+ * msg not in any queue ,can reply client
+ */
+static void req_make_loopback(struct context *ctx, struct conn *conn,
+		struct msg *msg) {
+
+	ASSERT((conn->type & FRONTWORK) && !(conn->type & LISTENER));
+
+	log_debug(
+			"loopback req %"PRIu64" len %"PRIu32" type %d from " "c %d failed",
+			msg->id, msg->mlen, msg->cmd, conn->fd);
+
+	msg->done = 1;
+
+	if (conn->writecached == 0 && conn->connected == 1) {
+			cache_send_event(conn);
+	}
+	//insert msg into client out msg queue
+	conn->enqueue_outq(ctx, conn, msg);
+	return;
+}
+
+void req_process(struct context *ctx, struct conn *c_conn,
+		struct msg *msg) 
+{
+	if(c_conn->stage == CONN_STAGE_LOGGING_IN)	/* this request is a login authentication */
+	{
+		c_conn->stage == CONN_STAGE_LOGGED_IN;
+		if(net_send_ok(msg, c_conn) < 0)  /* default resp login success. */
+			return ;
+		req_make_loopback(ctx, c_conn, msg);
+
+		return ;
+	}
+#if 0
+	if(!c_conn->logged_in) /* not logged in yet, resp error */
+	{
+		log_error("log in auth occur something wrong.");
+		net_send_error();
+		return ;
+	}
+	
+	if(!check_forward_key())
+	{
+		log_error("check forward key occure something wrong.");
+		net_send_error();
+		return ;
+	}
+
+	req_forward(ctx, c_conn, msg);
+#endif
+	return;
+}
+
 static void req_forward(struct context *ctx, struct conn *c_conn,
 		struct msg *msg) {
 	struct conn *s_conn;
 	struct server_pool *pool;
 	struct cache_instance *ci;
+	log_debug("req_forward entry");
 
 	/*insert msg to client imsgq，waiting for
 	 *the response,first add to backworker's queue
@@ -295,6 +350,7 @@ static void req_forward(struct context *ctx, struct conn *c_conn,
 	pool = c_conn->owner;
 	s_conn = server_pool_conn(ctx, (struct server_pool *) c_conn->owner, msg);
 	if (s_conn == NULL) {
+		log_debug("s_conn null");
 		//client connection is still exist,no swallow
 		msg->done = 1;
 		msg->error = 1;
@@ -422,10 +478,12 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 		req_make_error(ctx, conn, msg, msg->err);
 		return;
 	}
+
+	ASSERT(TAILQ_EMPTY(&frag_msgq));
+
 	/* if no fragment happened */
 	if (TAILQ_EMPTY(&frag_msgq)) {
-		req_make_error(ctx, conn, msg, 6);
-		//req_forward(ctx, conn, msg);
+		req_process(ctx, conn, msg);
 		return;
 	}
 
@@ -441,7 +499,6 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 		log_debug("req forward msg %"PRIu64"", sub_msg->id);
 		TAILQ_REMOVE(&frag_msgq, sub_msg, o_tqe);
 		req_forward(ctx, conn, sub_msg);
-		
 	}
 
 	
