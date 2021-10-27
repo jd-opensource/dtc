@@ -342,8 +342,8 @@ struct msg *rsp_send_next(struct context *ctx, struct conn *conn)
 	//msg with error
 	if(pmsg->error ==1)
 	{
-		log_debug("error:%d",pmsg->err);
 		msg=msg_get_error(pmsg);
+		log_debug("error:%d %p %p",pmsg->err, pmsg, msg);
 		if(msg==NULL)
 		{
 			conn->error = 1;

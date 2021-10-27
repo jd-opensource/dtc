@@ -416,35 +416,6 @@ void dtc_parse_req(struct msg *r) {
 					state = ST_ID;
 					break;
 				}
-					//级联灰度版本特别的地方
-//				case 17: {
-//					if (b->last - p < r->cur_parse_lenth) {
-//						log_debug(
-//								"parse version info agentid id:%d,len:%d,not in one buff!",
-//								r->cur_parse_id, r->cur_parse_lenth);
-//						p = b->last;
-//						break;
-//					}
-//					ret = dtc_decode_value(r->cur_parse_type,
-//							r->cur_parse_lenth, p, &tempval);
-//					if (ret < 0) {
-//						log_error(
-//								"decode version info agentid id:%d,length:%d error",
-//								r->cur_parse_id, r->cur_parse_lenth);
-//						goto error;
-//					}
-//					r->id = tempval.u64;
-//
-//					log_debug(
-//							"parse version info id:%d success,agentid %"PRIu64"",
-//							r->cur_parse_id, r->id);
-//					p += r->cur_parse_lenth;
-//					r->sec_parsed_len += r->cur_parse_lenth;
-//					r->parsed_len += r->cur_parse_lenth;
-//					r->token = NULL;
-//					state = ST_ID;
-//					break;
-//				}
 				default: {
 					if (b->last - p < r->cur_parse_lenth) {
 						r->cur_parse_lenth -= b->last - p;

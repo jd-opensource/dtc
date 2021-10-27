@@ -22,6 +22,7 @@
 #include "da_server.h"
 #include "da_time.h"
 #include "da_protocal.h"
+#include "my/my_parse.h"
 #include "da_core.h"
 #include "limits.h"
 #include "da_conn.h"
@@ -211,6 +212,8 @@ static struct msg *_msg_get() {
 	m->hitflag = 0;
 	m->sending = 0;
 
+	m->pkt_nr = 0;
+
 	return m;
 }
 
@@ -225,7 +228,7 @@ struct msg *msg_get(struct conn *conn, bool request) {
 	msg->request = request ? 1 : 0;
 
 	if (msg->request) {
-		msg->parser = dtc_parse_req;
+		msg->parser = my_parse_req;
 
 	} else {
 		msg->parser = dtc_parse_rsp;
@@ -560,6 +563,7 @@ static int msg_send_chain(struct context *ctx, struct conn *conn,
 
 	limit = SSIZE_MAX;
 	for (;;) {
+		// msg is ths message which will be sent.
 		TAILQ_INSERT_TAIL(&send_msgq, msg, o_tqe);
 		msg->sending = 1;
 
@@ -587,6 +591,8 @@ static int msg_send_chain(struct context *ctx, struct conn *conn,
 		if (array_n(&sendv) >= NC_IOV_MAX || nsend >= limit) {
 			break;
 		}
+
+		// build msg which will be sent by next loop.
 		msg = conn->send_next(ctx, conn);
 		if (msg == NULL) {
 			break;
