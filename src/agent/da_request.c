@@ -303,6 +303,22 @@ static void req_make_loopback(struct context *ctx, struct conn *conn,
 	return;
 }
 
+
+//parsed the sql and return the key 
+int check_forward_key()
+{
+	char* query = "select uid,name,city,age,sex from Table_Test where uid=3 and age=2 and sex=1;";
+	//char* query = "insert into table_name (uid,age) values (111,2);";
+	//char* query = "delete from table_name where uid = 3;";
+	//char* query = "update table_name set age=2,sex=1 where uid =10";
+
+	int value = my_da_sql_parsed(query);
+
+	printf("key = %d\n",value);
+	return value;
+}
+
+
 void req_process(struct context *ctx, struct conn *c_conn,
 		struct msg *msg) 
 {
