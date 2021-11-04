@@ -22,18 +22,20 @@ INCLUDE_DIRECTORIES(
     ./event 
     ./hashkit 
     ./proto
-    ../libs/mxml/libs/include)
+    ../libs/mxml/include)
 
 LINK_DIRECTORIES(
     ${PROJECT_SOURCE_DIR}/src/libs/mxml/libs
+    ${PROJECT_SOURCE_DIR}/src/libs/hsql/libs
 )
 
 LINK_LIBRARIES(rt) 
 LINK_LIBRARIES(libmxml.a)
+LINK_LIBRARIES(libsqlparser.so)
 LINK_LIBRARIES(pthread)
 
-ADD_DEFINITIONS ("-D_GNU_SOURCE")
+ADD_DEFINITIONS ("-D_GNU_SOURCE -Wall")
 
 ADD_EXECUTABLE(dtcagent ${SRC_LIST})
 
-TARGET_LINK_LIBRARIES(dtcagent libmxml.a)
+TARGET_LINK_LIBRARIES(dtcagent libmxml.a libsqlparser.so)
