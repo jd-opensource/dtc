@@ -31,11 +31,11 @@ LINK_DIRECTORIES(
 
 LINK_LIBRARIES(rt) 
 LINK_LIBRARIES(libmxml.a)
-LINK_LIBRARIES(libsqlparser.so)
+LINK_LIBRARIES(libmysqlparser.so)
 LINK_LIBRARIES(pthread)
 
 ADD_DEFINITIONS ("-D_GNU_SOURCE -Wall")
 
 ADD_EXECUTABLE(dtcagent ${SRC_LIST})
 
-TARGET_LINK_LIBRARIES(dtcagent libmxml.a libsqlparser.so)
+TARGET_LINK_LIBRARIES(dtcagent libmxml.a libmysqlparser.so)
