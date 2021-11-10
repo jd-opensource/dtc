@@ -46,4 +46,7 @@ void req_server_de_msgtree(struct context *ctx, struct conn *conn,
 void req_server_en_msgtree(struct context *ctx, struct conn *conn,
                            struct msg *msg);
 bool req_error(struct conn *conn, struct msg *msg);
+
+static void req_forward(struct context *ctx, struct conn *c_conn,
+		struct msg *msg);
 #endif /* DA_REQUEST_H_ */

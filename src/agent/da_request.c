@@ -26,6 +26,7 @@
 #include "da_errno.h"
 #include "da_stats.h"
 #include "da_time.h"
+#include "my/my_comm.h"
 
 void req_put(struct msg *msg) {
 	struct msg *pmsg; /* peer message (response) */
@@ -290,7 +291,7 @@ static void req_make_loopback(struct context *ctx, struct conn *conn,
 	ASSERT((conn->type & FRONTWORK) && !(conn->type & LISTENER));
 
 	log_debug(
-			"loopback req %"PRIu64" len %"PRIu32" type %d from " "c %d failed",
+			"loopback req %"PRIu64" len %"PRIu32" type %d from " "c %d",
 			msg->id, msg->mlen, msg->cmd, conn->fd);
 
 	msg->done = 1;
@@ -303,12 +304,39 @@ static void req_make_loopback(struct context *ctx, struct conn *conn,
 	return;
 }
 
+int _req_header_add(struct msg* msg)
+{
+	struct DTC_HEADER dtc_header = {0};
+
+	struct mbuf* mbuf = STAILQ_LAST(&msg->buf_q, mbuf, next);
+	if(!mbuf)
+		return -1;
+
+	struct mbuf* new_buf = mbuf_get();
+	if(new_buf == NULL)
+		return -2;
+
+	dtc_header.version = DA_PROTOCOL_VERSION;
+	dtc_header.id = msg->id;
+	mbuf_copy(new_buf, &dtc_header, sizeof(dtc_header));
+	mbuf_copy(new_buf, mbuf->start, mbuf_length(mbuf));
+
+	mbuf_remove(&msg->buf_q, mbuf);
+	mbuf_put(mbuf);
+	mbuf_insert(&msg->buf_q, new_buf);
+
+	msg->mlen = mbuf_length(new_buf);
+	log_debug("msg->mlen:%d sizeof(dtc_header):%d mbuf_length(mbuf):%d", msg->mlen, sizeof(dtc_header), mbuf_length(mbuf));
+
+	return 0;
+}
+
 void req_process(struct context *ctx, struct conn *c_conn,
 		struct msg *msg) 
 {
 	if(c_conn->stage == CONN_STAGE_LOGGING_IN)	/* this request is a login authentication */
 	{
-		c_conn->stage == CONN_STAGE_LOGGED_IN;
+		c_conn->stage = CONN_STAGE_LOGGED_IN;
 		if(net_send_ok(msg, c_conn) < 0)  /* default resp login success. */
 			return ;
 		req_make_loopback(ctx, c_conn, msg);
@@ -329,9 +357,11 @@ void req_process(struct context *ctx, struct conn *c_conn,
 		net_send_error();
 		return ;
 	}
-
-	req_forward(ctx, c_conn, msg);
 #endif
+	_req_header_add(msg);
+	log_debug("req process will forward to dtc. msg len: %d, msg id: %d", msg->mlen, msg->id);
+	req_forward(ctx, c_conn, msg);
+
 	return;
 }
 
@@ -419,8 +449,8 @@ static void req_make_error(struct context *ctx, struct conn *conn,
 
 static bool req_filter_empty(struct context *ctx, struct conn *conn,
 		struct msg *msg) {
-	ASSERT(conn->client && !conn->proxy);
-	if (msg_empty(msg)) {
+		ASSERT(conn->client && !conn->proxy);
+		if (msg_empty(msg)) {
 		ASSERT(conn->rmsg == NULL);
 		log_debug("filter empty req %"PRIu64" from c %d", msg->id, conn->fd);
 		req_put(msg);		
@@ -444,6 +474,8 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	struct msg_tqh frag_msgq;
 	struct msg *sub_msg;
 	struct msg *tmsg; /* tmp next message */
+
+	log_debug("req_recv_done entry.");
 
 	ASSERT((conn->type & FRONTWORK) && !(conn->type & LISTENER));
 	ASSERT(msg->request);
@@ -503,6 +535,8 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 
 	
 	ASSERT(TAILQ_EMPTY(&frag_msgq));
+
+	log_debug("req_recv_done leave.");
 	return;
 }
 

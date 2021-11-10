@@ -1915,9 +1915,7 @@ int dtc_fragment(struct msg *r, uint32_t ncontinuum, struct msg_tqh *frag_msgq) 
 	{
 		uint64_t randomkey=randomHashSeed++;
 		r->idx = msg_backend_idx(r, (uint8_t *)&randomkey,sizeof(uint64_t));
-		//级联灰度版本特别的地方
-		status = dtc_encode_agentid(r);
-		return status;
+		return 0;
 	}
 	else
 	{

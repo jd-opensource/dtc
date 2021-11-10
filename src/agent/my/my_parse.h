@@ -29,5 +29,6 @@ MYSQL Protocol Definition, See more detail:
 */
 
 void my_parse_req(struct msg *r);
+void my_parse_rsp(struct msg *r);
 
 #endif /* _MY_PARSE_H_ */

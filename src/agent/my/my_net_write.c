@@ -30,17 +30,18 @@
 int net_write(struct msg *dmsg, uint8_t* buf, size_t len, uint8_t pkt_nr) 
 {
 	struct mbuf *start_buf, *end_buf;
-	uint8_t header[HEADER_SIZE] = {0};
+	uint8_t header[MY_HEADER_SIZE] = {0};
 
 	ASSERT(len < MAX_PACKET_LENGTH);
 
 	int3store(header, (uint)len);
 	header[3] = pkt_nr;
+	log_debug("net_write header:0x%x 0x%x 0x%x 0x%x", header[0], header[1], header[2], header[3]);
 
 	start_buf = mbuf_get();
 	mbuf_insert(&dmsg->buf_q, start_buf);
 
-	mbuf_copy(start_buf, header, HEADER_SIZE);
+	mbuf_copy(start_buf, header, MY_HEADER_SIZE);
 	mbuf_copy(start_buf, buf, len);
 	return 0;
 }

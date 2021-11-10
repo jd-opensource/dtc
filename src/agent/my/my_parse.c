@@ -25,8 +25,9 @@
 #include "../da_errno.h"
 #include "../da_time.h"
 #include "../da_core.h"
+#include "my_comm.h"
 
-#define HEADER_SIZE 4
+#define MY_HEADER_SIZE 4
 #define MAXPACKETSIZE	(64<<20)
 #define MultiKeyValue 32
 #define __FLTFMT__	"%LA"
@@ -73,12 +74,14 @@ void my_parse_req(struct msg *r) {
 	field = r->field;
 	state = r->state;
 
+	log_debug("my_parse_req entry.");
+
 	b = STAILQ_LAST(&r->buf_q, mbuf, next);
 	p = r->pos;
 
 	while (p < b->last) {
 		r->token = p;
-		if (b->last - p < HEADER_SIZE) {
+		if (b->last - p < MY_HEADER_SIZE) {
 			log_debug("receive size small than package header!");
 			p = b->last;
 			break;
@@ -86,7 +89,7 @@ void my_parse_req(struct msg *r) {
 		
 		r->pkt_nr = (uint8_t)(p[3]);	// mysql sequence id
 		log_debug("pkt_nr:%d", r->pkt_nr);
-		p = p + HEADER_SIZE;
+		p = p + MY_HEADER_SIZE;
 
 		if(r->owner->stage == CONN_STAGE_LOGGED_IN)
 		{
@@ -113,7 +116,7 @@ void my_parse_req(struct msg *r) {
 	}
 	return;
 success:
-	log_debug("paese msg:%"PRIu64" success!", r->id);
+	log_debug("parse msg:%"PRIu64" success!", r->id);
 	r->pos = p;
 	r->state = ST_ID;
 	r->field = FD_VERSION;
@@ -121,11 +124,83 @@ success:
 	r->parse_res = MSG_PARSE_OK;
 	return;
 	error:
-	log_debug("paese msg:%"PRIu64" error!", r->id);
+	log_debug("parse msg:%"PRIu64" error!", r->id);
 	r->parse_res = MSG_PARSE_ERROR;
 	r->state = state;
 	r->field = field;
 	r->token = NULL;
 	errno = EINVAL;
+
+	log_debug("my_parse_req leave.");
 	return;
+}
+
+void my_parse_rsp(struct msg *r) {
+	struct mbuf *b;
+	uint8_t *p;
+	int ret;
+
+	int state;
+	int field;
+
+	field = r->field;
+	state = r->state;
+
+	log_debug("my_parse_rsp entry.");
+
+	b = STAILQ_LAST(&r->buf_q, mbuf, next);
+	p = r->pos;
+
+	while (p < b->last) {
+		r->token = p;
+		if (b->last - p < sizeof(struct DTC_HEADER) + MY_HEADER_SIZE) {
+			log_debug("receive size small than package header!");
+			p = b->last;
+			break;
+		}
+		r->peerid = ((struct DTC_HEADER*)p)->id;
+		p = p + sizeof(struct DTC_HEADER);
+		
+		r->pkt_nr = (uint8_t)(p[3]);	// mysql sequence id
+		log_debug("pkt_nr:%d, peerid:%d", r->pkt_nr, r->peerid);
+		p = p + MY_HEADER_SIZE;
+
+		p = b->last;
+		goto success;
+	}
+
+	ASSERT(p == b->last);
+	if (r->token != NULL) {
+		r->pos = r->token;
+	} else {
+		r->pos = p;
+	}
+	r->state = state;
+	r->field = field;
+	r->token = NULL;
+	if (b->last == b->end) {
+		r->parse_res = MSG_PARSE_REPAIR;
+	} else {
+		r->parse_res = MSG_PARSE_AGAIN;
+	}
+	return;
+	success:
+	log_debug("parse msg:%"PRIu64" success!", r->id);
+	r->pos = p;
+	r->state = ST_ID;
+	r->field = FD_VERSION;
+	r->token = NULL;
+	r->parse_res = MSG_PARSE_OK;
+	return;
+	error:
+	log_debug("parse msg:%"PRIu64" error!", r->id);
+	r->parse_res = MSG_PARSE_ERROR;
+	r->state = state;
+	r->field = field;
+	r->token = NULL;
+	errno = EINVAL;
+
+	log_debug("my_parse_rsp leave.");
+	return;
+
 }

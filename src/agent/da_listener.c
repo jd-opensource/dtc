@@ -335,34 +335,35 @@ static int listener_accept(struct context *ctx, struct conn *l) {
 	log_debug("accepted client %d on listener %d", c->fd, l->fd);
 
 	/* send mysql server welcome info after tcp connected. */
-	struct msg *dmsg;
+	struct msg *smsg;
 	if(c->writecached == 0 && c->connected == 1)
 	{
 		c->stage = CONN_STAGE_LOGGING_IN;
-		dmsg=msg_get(c, false);
-		if(dmsg == NULL)
-		{
-			return NULL;
-		}
-		status = net_send_server_greeting(NULL, dmsg);
-		if(status<0)
-		{
-			msg_put(dmsg);
-			return -1;
-		}
-
-		if(dmsg==NULL)
+		
+		smsg=msg_get(c, false);
+		if(smsg == NULL)
 		{
 			c->error = 1;
 			c->err = CONN_MSG_GET_ERR;
 			return -1;
 		}
+		status = net_send_server_greeting(c, smsg);
+		if(status < 0)
+		{
+			log_error("server greeting info build error:%d", status);
+			c->error = 1;
+			c->err = CONN_MSG_GET_ERR;
+			msg_put(smsg);
+			return -1;
+		}
 
-		dmsg->peer=dmsg;
-		dmsg->peerid = dmsg->id;
-		cache_send_event(c);
+		if(c->writecached == 0 && c->connected == 1)
+		{
+			log_debug("writecached & connected");
+			cache_send_event(c);
+		}
 	}
-	c->enqueue_outq(ctx, c, dmsg);
+	c->enqueue_outq(ctx, c, smsg);
 
 	return 0;
 }
