@@ -49,4 +49,5 @@ bool req_error(struct conn *conn, struct msg *msg);
 
 static void req_forward(struct context *ctx, struct conn *c_conn,
 		struct msg *msg);
+int check_forward_key();
 #endif /* DA_REQUEST_H_ */
