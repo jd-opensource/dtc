@@ -32,9 +32,9 @@
 #include <sys/utsname.h>
 #include <sched.h>
 
-#define DA_VERSION_MAJOR	1
-#define DA_VERSION_MINOR	3
-#define DA_VERSION_BUILD	4
+#define DA_VERSION_MAJOR	2
+#define DA_VERSION_MINOR	0
+#define DA_VERSION_BUILD	0
 
 #define DA_STRING_HELPER(str)	#str
 #define DA_STRING(x)			DA_STRING_HELPER(x)

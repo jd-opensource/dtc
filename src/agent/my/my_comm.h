@@ -28,8 +28,14 @@ MYSQL Protocol Definition, See more detail:
   https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_packets.html#sect_protocol_basic_packets_packet
 */
 
-#define HEADER_SIZE 4
+#define MY_HEADER_SIZE 4
 #define MAX_PACKET_LENGTH (256L * 256L * 256L - 1)
+#define DA_PROTOCOL_VERSION 2
+
+struct DTC_HEADER {
+	uint8_t version;
+  uint64_t id;
+};
 
 /**
   int3store

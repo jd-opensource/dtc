@@ -27,6 +27,7 @@
 #include "da_stats.h"
 #include "da_time.h"
 #include "da_top_percentile.h"
+#include "my/my_comm.h"
 
 void rsp_put(struct msg *msg) {
 	ASSERT(!msg->request);
@@ -133,9 +134,32 @@ static void rsp_recv_done_stats(struct context *ctx, struct cache_instance *ci, 
     stats_server_incr_by(ctx, ci, server_response_bytes, msg->mlen);
 }
 
+
+int _rsp_header_remove(struct msg* msg)
+{
+	struct mbuf* mbuf = STAILQ_LAST(&msg->buf_q, mbuf, next);
+	if(!mbuf)
+		return -1;
+
+	struct mbuf* new_buf = mbuf_get();
+	if(new_buf == NULL)
+		return -2;
+
+	mbuf_copy(new_buf, mbuf->start + sizeof(struct DTC_HEADER), mbuf_length(mbuf) - sizeof(struct DTC_HEADER));
+
+	mbuf_remove(&msg->buf_q, mbuf);
+	mbuf_put(mbuf);
+	mbuf_insert(&msg->buf_q, new_buf);
+
+	msg->mlen = mbuf_length(new_buf);
+	log_debug("msg->mlen:%d mbuf_length(mbuf):%d", msg->mlen, mbuf_length(mbuf));
+
+	return 0;
+}
+
 void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 		struct msg *nmsg) {
-
+	log_debug("rsp_recv_done entry.");
 	ASSERT(conn->type & BACKWORK);
 	ASSERT(msg != NULL && conn->rmsg == msg);
 	ASSERT(!msg->request && msg->peerid > 0);
@@ -218,8 +242,11 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	}
 	if (req_done(c_conn, req)) {
 		log_debug("msg is done , rsp forword msg %"PRIu64"",req->id);
+		_rsp_header_remove(msg);
 		rsp_forward(ctx, c_conn, req);
 	}
+
+	log_debug("rsp_recv_done leave.");
 	return;
 }
 
