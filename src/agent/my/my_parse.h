@@ -31,4 +31,6 @@ MYSQL Protocol Definition, See more detail:
 void my_parse_req(struct msg *r);
 void my_parse_rsp(struct msg *r);
 
+int my_do_command(struct context *ctx, struct conn *c_conn, struct msg *msg);
+
 #endif /* _MY_PARSE_H_ */

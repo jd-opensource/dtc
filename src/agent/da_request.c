@@ -333,6 +333,7 @@ int _req_header_add(struct msg* msg)
 
 
 //parsed the sql and return the key 
+#if 0
 int check_forward_key()
 {
 	char* query = "select uid,name,city,age,sex from Table_Test where uid=3 and age=2 and sex=1;";
@@ -345,6 +346,7 @@ int check_forward_key()
 	printf("key = %d\n",value);
 	return value;
 }
+#endif
 
 
 void req_process(struct context *ctx, struct conn *c_conn,
@@ -374,9 +376,28 @@ void req_process(struct context *ctx, struct conn *c_conn,
 		return ;
 	}
 #endif
-	_req_header_add(msg);
-	log_debug("req process will forward to dtc. msg len: %d, msg id: %d", msg->mlen, msg->id);
-	req_forward(ctx, c_conn, msg);
+
+	int oper = my_do_command(msg);
+	switch(oper)
+	{
+		case NEXT_FORWARD:
+			_req_header_add(msg);
+			log_debug("req process will forward to dtc. msg len: %d, msg id: %d", msg->mlen, msg->id);
+			req_forward(ctx, c_conn, msg);
+			break;
+		case NEXT_RSP_OK:
+			if(net_send_ok(msg, c_conn) < 0)  /* default resp login success. */
+				return ;
+			req_make_loopback(ctx, c_conn, msg);
+			break;
+		case NEXT_RSP_ERROR:
+			if(net_send_error(msg, c_conn) < 0)  /* default resp login success. */
+				return ;
+			req_make_loopback(ctx, c_conn, msg);
+			break;
+		default:
+			log_error("my_do_command operation error:%d", oper);
+	}
 
 	return;
 }
@@ -532,9 +553,11 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	/* if no fragment happened */
 	if (TAILQ_EMPTY(&frag_msgq)) {
 		req_process(ctx, conn, msg);
+		log_debug("req_recv_done leave.");
 		return;
 	}
 
+#if 0 // Not be supported multi req now.
 	/*
 	 * insert msg into client in queue,it can
 	 * be free when client close connection,set done
@@ -552,6 +575,7 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	
 	ASSERT(TAILQ_EMPTY(&frag_msgq));
 
+#endif 
 	log_debug("req_recv_done leave.");
 	return;
 }

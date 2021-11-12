@@ -26,6 +26,7 @@
 #include "../da_time.h"
 #include "../da_core.h"
 #include "my_comm.h"
+#include "my_command.h"
 
 #define MY_HEADER_SIZE 4
 #define MAXPACKETSIZE	(64<<20)
@@ -66,71 +67,63 @@ enum codestate {
 void my_parse_req(struct msg *r) {
 	struct mbuf *b;
 	uint8_t *p;
-	int ret;
-
-	int state;
-	int field;
-
-	field = r->field;
-	state = r->state;
+	uint32_t input_packet_length = 0;
+	enum enum_server_command command;
+	int rc;
 
 	log_debug("my_parse_req entry.");
 
 	b = STAILQ_LAST(&r->buf_q, mbuf, next);
 	p = r->pos;
 
-	while (p < b->last) {
-		r->token = p;
+	if (p < b->last) 
+	{
 		if (b->last - p < MY_HEADER_SIZE) {
-			log_debug("receive size small than package header!");
-			p = b->last;
-			break;
+			log_error("receive size small than package header. id:%d", r->id);
+			goto error;
 		}
 		
-		r->pkt_nr = (uint8_t)(p[3]);	// mysql sequence id
-		log_debug("pkt_nr:%d", r->pkt_nr);
-		p = p + MY_HEADER_SIZE;
+		input_packet_length = uint3korr(p);
+		p += 3;
+		r->pkt_nr = (uint8_t)(*p);	// mysql sequence id
+		p++;
+		log_debug("pkt_nr:%d, packet len:%d", r->pkt_nr, input_packet_length);
+
+		if(p + input_packet_length > b->last)
+			goto error;
 
 		if(r->owner->stage == CONN_STAGE_LOGGED_IN)
 		{
-			;
+			rc = my_get_command(p, input_packet_length, r->data, &command);
+			if(rc)
+			{
+				if (rc < 0) 
+				{
+					log_error("parse command error:%d", rc);
+					goto error;
+				}
+
+				r->command = command;
+			}
 		}
 
-		p = b->last;
+		p += input_packet_length;
+		r->pos = p;
+		
 		goto success;
 	}
 
-	ASSERT(p == b->last);
-	if (r->token != NULL) {
-		r->pos = r->token;
-	} else {
-		r->pos = p;
-	}
-	r->state = state;
-	r->field = field;
-	r->token = NULL;
-	if (b->last == b->end) {
-		r->parse_res = MSG_PARSE_REPAIR;
-	} else {
-		r->parse_res = MSG_PARSE_AGAIN;
-	}
-	return;
-success:
-	log_debug("parse msg:%"PRIu64" success!", r->id);
-	r->pos = p;
-	r->state = ST_ID;
-	r->field = FD_VERSION;
-	r->token = NULL;
-	r->parse_res = MSG_PARSE_OK;
-	return;
-	error:
-	log_debug("parse msg:%"PRIu64" error!", r->id);
+error:
+	r->pos = b->last;
 	r->parse_res = MSG_PARSE_ERROR;
-	r->state = state;
-	r->field = field;
-	r->token = NULL;
+	log_debug("parse msg:%"PRIu64" error!", r->id);
 	errno = EINVAL;
+	log_debug("my_parse_req leave.");
+	return;
 
+success:
+	r->parse_res = MSG_PARSE_OK;
+	log_debug("parse msg:%"PRIu64" success!", r->id);
 	log_debug("my_parse_req leave.");
 	return;
 }
@@ -140,23 +133,20 @@ void my_parse_rsp(struct msg *r) {
 	uint8_t *p;
 	int ret;
 
-	int state;
-	int field;
-
-	field = r->field;
-	state = r->state;
-
 	log_debug("my_parse_rsp entry.");
 
 	b = STAILQ_LAST(&r->buf_q, mbuf, next);
 	p = r->pos;
+	r->token = NULL;
 
-	while (p < b->last) {
-		r->token = p;
+	if (p < b->last) 
+	{
 		if (b->last - p < sizeof(struct DTC_HEADER) + MY_HEADER_SIZE) {
-			log_debug("receive size small than package header!");
+			log_error("receive size small than package header. id:%d", r->id);
 			p = b->last;
-			break;
+			r->parse_res = MSG_PARSE_ERROR;
+			errno = EINVAL;
+			return ;
 		}
 		r->peerid = ((struct DTC_HEADER*)p)->id;
 		p = p + sizeof(struct DTC_HEADER);
@@ -166,41 +156,91 @@ void my_parse_rsp(struct msg *r) {
 		p = p + MY_HEADER_SIZE;
 
 		p = b->last;
-		goto success;
-	}
-
-	ASSERT(p == b->last);
-	if (r->token != NULL) {
-		r->pos = r->token;
-	} else {
 		r->pos = p;
+		r->parse_res = MSG_PARSE_OK;
+		log_debug("parse msg:%"PRIu64" success!", r->id);
 	}
-	r->state = state;
-	r->field = field;
-	r->token = NULL;
-	if (b->last == b->end) {
-		r->parse_res = MSG_PARSE_REPAIR;
-	} else {
-		r->parse_res = MSG_PARSE_AGAIN;
+	else
+	{
+		r->parse_res = MSG_PARSE_ERROR;
+		log_debug("parse msg:%"PRIu64" error!", r->id);
+		errno = EINVAL;
 	}
-	return;
-	success:
-	log_debug("parse msg:%"PRIu64" success!", r->id);
-	r->pos = p;
-	r->state = ST_ID;
-	r->field = FD_VERSION;
-	r->token = NULL;
-	r->parse_res = MSG_PARSE_OK;
-	return;
-	error:
-	log_debug("parse msg:%"PRIu64" error!", r->id);
-	r->parse_res = MSG_PARSE_ERROR;
-	r->state = state;
-	r->field = field;
-	r->token = NULL;
-	errno = EINVAL;
 
 	log_debug("my_parse_rsp leave.");
 	return;
+}
 
+int my_get_command(uint8_t *input_raw_packet, uint32_t input_packet_length, union COM_DATA* data, enum enum_server_command* cmd)
+{
+	*cmd = (enum enum_server_command)(uchar)input_raw_packet[0];
+
+	if (*cmd >= COM_END) *cmd = COM_END;  // Wrong command
+
+	if(parse_packet(input_raw_packet, input_packet_length, data, *cmd))
+		return 1;
+
+	return -1;
+}
+
+int my_do_command(struct msg *msg)
+{
+	int rc = NEXT_RSP_ERROR;
+
+	switch (msg->command) {
+    case COM_INIT_DB:
+    case COM_REGISTER_SLAVE: 
+    case COM_RESET_CONNECTION:
+    case COM_CLONE: 
+    case COM_CHANGE_USER: {
+      rc = NEXT_RSP_OK;
+      break;
+    }
+    case COM_STMT_EXECUTE: {
+      rc = NEXT_FORWARD;
+      break;
+    }
+    case COM_STMT_FETCH: {
+      rc = NEXT_FORWARD;
+      break;
+    }
+    case COM_STMT_SEND_LONG_DATA: {
+      rc = NEXT_RSP_ERROR;
+      break;
+    }
+    case COM_STMT_PREPARE: 
+    case COM_STMT_CLOSE: 
+    case COM_STMT_RESET: {
+      rc = NEXT_RSP_ERROR;
+      break;
+    }
+    case COM_QUERY: {
+      rc = NEXT_FORWARD;
+      break;
+    }
+    case COM_FIELD_LIST:  // This isn't actually needed
+    case COM_QUIT:
+    case COM_BINLOG_DUMP_GTID:
+    case COM_BINLOG_DUMP:
+    case COM_REFRESH: 
+    case COM_STATISTICS: 
+    case COM_PING:
+    case COM_PROCESS_INFO:
+    case COM_PROCESS_KILL:
+    case COM_SET_OPTION:
+    case COM_DEBUG:
+      rc = NEXT_RSP_OK;
+      break;
+    case COM_SLEEP:
+    case COM_CONNECT:         // Impossible here
+    case COM_TIME:            // Impossible from client
+    case COM_DELAYED_INSERT:  // INSERT DELAYED has been removed.
+    case COM_END:
+    default:
+      log_error("error command:%d", msg->command);
+	  rc = NEXT_RSP_ERROR;
+      break;
+  }
+
+	return rc;
 }

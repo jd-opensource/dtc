@@ -98,3 +98,46 @@ int net_send_ok(struct msg *smsg, struct conn *c_conn) {
 
 	return 0;
 }
+
+
+int net_send_error(struct msg *smsg, struct conn *c_conn) {
+	uint8_t buf[MYSQL_ERRMSG_SIZE+10] = {0xff, 0x0, 0x0, 0x30, 0x30, 0x30, 0x30, 0x30, 0x20};
+	uint8_t *pos, *start;
+	struct msg* dmsg = NULL;
+	uint8_t pkt_nr = smsg->pkt_nr;
+	dmsg = msg_get(c_conn, false);
+	if(dmsg == NULL)
+	{
+		log_error("get new msg error.");
+		c_conn->error = 1;
+		c_conn->err = CONN_MSG_GET_ERR;
+		return -1;
+	}
+
+	start = buf;
+	pos = buf;
+
+	pos += 9;
+
+	const char* err_info = "DTC does not support this command.";
+	memcpy(pos, err_info, strlen(err_info));
+	pos += strlen(err_info);
+	
+	log_debug("net_send_ok pkt nr:%d", pkt_nr);
+	if(net_write(dmsg, buf, (size_t)(pos - start), ++pkt_nr))
+	{
+		msg_put(dmsg);
+		c_conn->error = 1;
+		c_conn->err = CONN_MSG_GET_ERR;
+		return -2;
+	}
+
+	dmsg->pkt_nr = pkt_nr;
+	dmsg->mlen = (size_t)(pos - start) + MY_HEADER_SIZE;
+	
+	log_debug("dmsg len:%d", dmsg->mlen);
+	dmsg->peer = smsg;
+	smsg->peer = dmsg;
+
+	return 0;
+}
