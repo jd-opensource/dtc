@@ -61,6 +61,9 @@ enum codestate {
 	ST_ID = 0, ST_LENTH = 1, ST_VALUE = 2,
 };
 
+char dtc_key[50] = {0};
+int dtc_key_type = 0;
+
 /*
  * parse request msg
  */
@@ -94,16 +97,20 @@ void my_parse_req(struct msg *r) {
 
 		if(r->owner->stage == CONN_STAGE_LOGGED_IN)
 		{
-			rc = my_get_command(p, input_packet_length, r->data, &command);
+			r->keytype = dtc_key_type;
+
+			rc = my_get_command(p, input_packet_length, r, &command);
 			if(rc)
 			{
 				if (rc < 0) 
 				{
-					log_error("parse command error:%d", rc);
+					log_error("parse command error:%d\n", rc);
 					goto error;
 				}
 
 				r->command = command;
+				r->keyCount = 1;
+				r->cmd = MSG_REQ_SVRADMIN;
 			}
 		}
 
@@ -171,13 +178,13 @@ void my_parse_rsp(struct msg *r) {
 	return;
 }
 
-int my_get_command(uint8_t *input_raw_packet, uint32_t input_packet_length, union COM_DATA* data, enum enum_server_command* cmd)
+int my_get_command(uint8_t *input_raw_packet, uint32_t input_packet_length, struct msg* r, enum enum_server_command* cmd)
 {
 	*cmd = (enum enum_server_command)(uchar)input_raw_packet[0];
 
 	if (*cmd >= COM_END) *cmd = COM_END;  // Wrong command
 
-	if(parse_packet(input_raw_packet, input_packet_length, data, *cmd))
+	if(parse_packet(input_raw_packet, input_packet_length, r, *cmd))
 		return 1;
 
 	return -1;
@@ -243,4 +250,223 @@ int my_do_command(struct msg *msg)
   }
 
 	return rc;
+}
+
+static int dtc_decode_value(enum fieldtype type, int lenth, uint8_t *p,
+		CValue *val) {
+	uint8_t *q;
+	switch (type) {
+	case None:
+		break;
+	case Signed:
+	case Unsigned:
+		if (lenth == 0 || lenth > 8) {
+			goto decode_value_error;
+		}
+		q = (uint8_t *) p + 1;
+		int64_t s64;
+		s64 = *(int8_t *) p;
+		switch (lenth) {
+		case 8:
+			s64 = (s64 << 8) | *q++;
+		case 7:
+			s64 = (s64 << 8) | *q++;
+		case 6:
+			s64 = (s64 << 8) | *q++;
+		case 5:
+			s64 = (s64 << 8) | *q++;
+		case 4:
+			s64 = (s64 << 8) | *q++;
+		case 3:
+			s64 = (s64 << 8) | *q++;
+		case 2:
+			s64 = (s64 << 8) | *q++;
+		}
+		val->s64 = s64;
+		break;
+	case Float:
+		if (lenth < 3)
+			goto decode_value_error;
+		if (p[lenth - 1] != '\0')
+			goto decode_value_error;
+		if (!strcmp((char *) p, "NAN"))
+			val->flt = NAN;
+		else if (!strcmp((char *) p, "INF"))
+			val->flt = INFINITY;
+		else if (!strcmp((char *) p, "-INF"))
+			val->flt = -INFINITY;
+		else {
+			long double ldf;
+			if (sscanf((char *) p, __FLTFMT__, &ldf) != 1)
+				goto decode_value_error;
+			val->flt = ldf;
+		}
+		break;
+	case String:
+	case Binary:
+		if (lenth == 0) {
+#if CONVERT_NULL_TO_EMPTY_STRING
+			val->str.data = p;
+			val->str.len = 0;
+#else
+			val->str.data=NULL;
+			val->str.len=0;
+#endif
+		} else {
+			if (p[lenth - 1] != '\0')
+				goto decode_value_error;
+			val->str.data = p;
+			val->str.len = lenth - 1;
+		}
+
+		break;
+	default:
+		goto decode_value_error;
+	}
+	return 0;
+	decode_value_error: return -1;
+}
+
+static uint64_t randomHashSeed = 1;
+
+int my_fragment(struct msg *r, uint32_t ncontinuum, struct msg_tqh *frag_msgq) {
+	int status,i;
+	struct keypos *temp_kpos;
+	CValue val;
+	log_debug("key count:%d, cmd:%d", r->keyCount, r->cmd);
+
+	if(r->cmd == MSG_NOP)
+	{
+		uint64_t randomkey=randomHashSeed++;
+		r->idx = msg_backend_idx(r, (uint8_t *)&randomkey,sizeof(uint64_t));
+		return 0;
+	}
+	else
+	{
+		if(r->keyCount == 0)
+		{
+			log_error(" request msg id: %"PRIu64" request without key",r->id);
+			r->err= MSG_NOKEY_ERR;
+			r->error = 1;
+			return -1;
+		}
+		else if(r->keyCount == 1)
+		{
+			temp_kpos = &r->keys[0];
+			switch (r->keytype)
+			{
+				case Signed:
+				case Unsigned:
+				{
+					status=dtc_decode_value(Unsigned,temp_kpos->end - temp_kpos->start, temp_kpos->start,&val);
+					if(status < 0)
+					{
+						log_error("decode value:%d", status);
+						return -1;
+					}
+					log_debug("val.u64:%d", val.u64);
+					r->idx = msg_backend_idx(r,(uint8_t *)&val.u64, sizeof(uint64_t));
+					log_debug("r->idx:%d", r->idx);
+					break;
+				}
+				case String:
+				{
+					int len = temp_kpos->end - temp_kpos->start;
+					char temp[len+1];
+					*temp = len;
+					for(i=1; i<len+1; i++)
+					{
+						temp[i] = lower((char)(temp_kpos->start)[i-1]);
+					}
+					r->idx = msg_backend_idx(r, (uint8_t *)temp,len+1);
+					log_debug("debug,len :%d the packet key is %u   '%s' the hash key(r->idx): %d ",len,*temp,temp+1,r->idx);
+					break;
+				}
+				case Binary:
+				{
+					int len = temp_kpos->end - temp_kpos->start;
+					char temp[len+1];
+					*temp = len;
+					memcpy(temp+1, temp_kpos->start,len);
+					r->idx = msg_backend_idx(r, (uint8_t *)temp,len+1);
+					log_debug("debug,len :%d the packet key is %u   '%s' the hash key(r->idx): %d ",len,*temp,temp+1,r->idx);
+					break;
+				}
+			}
+
+			log_debug("return status:%d", status);
+			return status;
+		}
+		else
+		{
+			if(r->cmd == MSG_REQ_GET) {
+				//status = dtc_fragment_get(r, ncontinuum, frag_msgq);
+				//GET is not supported
+				status = -1;
+			}
+			else if(r->cmd == MSG_REQ_UPDATE) {
+				//MSET is not supported
+				status = -1;
+			}
+			else if(r->cmd == MSG_REQ_DELETE) {
+				//MDEL is not supported
+				status = -1;
+			} else {
+				//other multi operation is not supported
+				status = -1;
+			}
+			return status;
+		}
+	}
+}
+
+int my_get_key_value(uint8_t* sql, int sql_len, int* start_offset, int* end_offset)
+{	
+	int i = 0;
+	int dtc_key_len = strlen(dtc_key);
+	for(i = 0; i < sql_len; i++)
+	{
+		if(sql_len - i >= dtc_key_len)
+		{
+			if(strncmp(sql+i, dtc_key, dtc_key_len) == 0)
+			{
+				int j;
+				for(j = i + dtc_key_len; j < sql_len; j++)
+				{
+					if(sql[j] == '=')
+					{
+						j++;
+						//strip space.
+						while(j < sql_len && sql[j] == ' ')
+						{
+							j++;
+						}
+
+						if(j < sql_len)
+						{
+							*start_offset = j;
+
+							int k = 0;
+							for(k = j; k < sql_len; k++)
+							{
+								if(sql[k+1] == ' ' || sql[k+1] == ';' || k + 1 == sql_len)
+								{
+									*end_offset = k+1;
+									return 0;
+								}
+							}
+
+							return -4;
+						}
+						else
+							return -1;
+					}
+				}
+
+				return -2;
+			}
+		}
+	}
+
+	return -3;
 }

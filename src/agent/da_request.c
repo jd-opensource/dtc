@@ -361,14 +361,16 @@ void req_process(struct context *ctx, struct conn *c_conn,
 
 		return ;
 	}
-#if 0
-	if(!c_conn->logged_in) /* not logged in yet, resp error */
+
+	if(c_conn->stage != CONN_STAGE_LOGGED_IN) /* not logged in yet, resp error */
 	{
 		log_error("log in auth occur something wrong.");
-		net_send_error();
+		if(net_send_error(msg, c_conn) < 0)  /* default resp login success. */
+				return ;
+		req_make_loopback(ctx, c_conn, msg);
 		return ;
 	}
-	
+#if 0	
 	if(!check_forward_key())
 	{
 		log_error("check forward key occure something wrong.");

@@ -1,4 +1,5 @@
 #include "my_protocol_classic.h"
+#include "my_com_data.h"
 
 static inline char *strend(char *s) {
   while (*s++)
@@ -6,8 +7,10 @@ static inline char *strend(char *s) {
   return s - 1;
 }
 
-bool parse_packet(uchar* input_raw_packet, int input_packet_length, union COM_DATA *data, enum enum_server_command cmd) 
+bool parse_packet(uchar* input_raw_packet, int input_packet_length, struct msg* r, enum enum_server_command cmd) 
 {
+  union COM_DATA *data = &(r->data);
+  log_debug("input_raw_packet:%p, input_packet_length:%d, cmd:%d", input_raw_packet, input_packet_length, cmd);
   switch (cmd) {
     case COM_INIT_DB: {
       data->com_init_db.db_name =
@@ -69,8 +72,17 @@ bool parse_packet(uchar* input_raw_packet, int input_packet_length, union COM_DA
       break;
     }
     case COM_QUERY: {
-      uchar *read_pos = input_raw_packet;
-      size_t packet_left = input_packet_length;
+      int start_offset, end_offset;
+      int ret = my_get_key_value(input_raw_packet, input_packet_length, &start_offset, &end_offset);
+      if(ret < 0)
+      {
+        log_error("my_get_key_value return value:%d", ret);
+        return false;
+      }
+
+      log_debug("my_get_key_value parse success. %d, %d", start_offset, end_offset);
+      r->keys[0].start = input_raw_packet + start_offset;
+      r->keys[0].end = input_raw_packet + end_offset;
 
       break;
     }

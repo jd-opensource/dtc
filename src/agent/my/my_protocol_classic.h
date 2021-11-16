@@ -1,6 +1,5 @@
 #include "my_command.h"
 #include "my_comm.h"
-#include "my_com_data.h"
+#include "../da_msg.h"
 
-bool parse_packet(uint8_t *input_raw_packet, int32_t input_packet_length,
-		  union COM_DATA *data, enum enum_server_command cmd);
+bool parse_packet(uchar* input_raw_packet, int input_packet_length, struct msg* r, enum enum_server_command cmd);

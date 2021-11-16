@@ -233,7 +233,7 @@ struct msg *msg_get(struct conn *conn, bool request) {
 	} else {
 		msg->parser = my_parse_rsp;
 	}
-	msg->fragment = dtc_fragment;
+	msg->fragment = my_fragment;
 	msg->coalesce = dtc_coalesce;
 	msg->start_ts = now_us;
 
@@ -365,6 +365,7 @@ static int msg_parse(struct context *ctx, struct conn *conn, struct msg *msg) {
 		break;
 
 	default:
+		log_error("parser get some trouble:%d", msg->parse_res);
 		status = -1;
 		conn->error=1;
 		conn->err=CONN_MSG_PARSE_ERR;
