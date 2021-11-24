@@ -29,6 +29,9 @@
 #include "da_top_percentile.h"
 #include "my/my_comm.h"
 
+extern char g_dtc_key[50];
+extern int g_dtc_key_type;
+
 void rsp_put(struct msg *msg) {
 	ASSERT(!msg->request);
 	ASSERT(msg->peer == NULL);
@@ -135,7 +138,7 @@ static void rsp_recv_done_stats(struct context *ctx, struct cache_instance *ci, 
 }
 
 
-int _rsp_header_remove(struct msg* msg)
+int dtc_header_remove(struct msg* msg)
 {
 	struct mbuf* mbuf = STAILQ_LAST(&msg->buf_q, mbuf, next);
 	if(!mbuf)
@@ -157,6 +160,28 @@ int _rsp_header_remove(struct msg* msg)
 	return 0;
 }
 
+int key_define_handle(struct msg* msg)
+{
+	struct mbuf* mbuf = STAILQ_LAST(&msg->buf_q, mbuf, next);
+	if(!mbuf)
+		return -1;
+	uint8_t* pos = mbuf->start + sizeof(struct DTC_HEADER);
+	uint8_t type = *pos;
+	uint8_t key_len;
+	int i = 0;
+	g_dtc_key_type = type;
+	pos++;
+
+	key_len = *pos;
+	pos++;
+	memcpy(g_dtc_key, pos, key_len);
+
+	for(i = 0; i < key_len; i++)
+		upper(g_dtc_key[i]);
+
+	return 0;
+}
+
 void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 		struct msg *nmsg) {
 	log_debug("rsp_recv_done entry.");
@@ -165,7 +190,7 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	ASSERT(!msg->request && msg->peerid > 0);
 	ASSERT(msg->owner == conn);
 	ASSERT(nmsg == NULL || !nmsg->request);
-	ASSERT(msg->peerid>0);
+	ASSERT(msg->peerid > 0);
 
 	struct rbnode *tarnode;
 	struct msg *req;
@@ -185,7 +210,7 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 
 	struct rbnode tnode;
 	tnode.key = msg->peerid; //peer msg_id for search,get from package
-	log_debug("peerid :%"PRIu64"",tnode.key);
+	log_debug("rbtree node key: %"PRIu64", id:%d, peerid:%d",tnode.key, msg->id, msg->peerid);
 	tarnode = rbtree_search(&conn->msg_tree, &tnode);
 	if (tarnode == NULL) { //node has been deleted by timeout
 		log_debug("rsp msg id: %"PRIu64" peerid :%"PRIu64" search peer msg error,msg is not in the tree",
@@ -193,7 +218,6 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 		rsp_put(msg);
 		return;
 	}
-
 	log_debug("rsp msg id: %"PRIu64" peerid :%"PRIu64" search peer msg success,msg is in the tree",
 					msg->id, msg->peerid);
 	//set req and rsp
@@ -240,10 +264,25 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	if (req->frag_owner != NULL) {
 		req->frag_owner->nfrag_done++;
 	}
+
 	if (req_done(c_conn, req)) {
 		log_debug("msg is done , rsp forword msg %"PRIu64"",req->id);
-		_rsp_header_remove(msg);
-		rsp_forward(ctx, c_conn, req);
+		
+		switch(msg->admin)
+		{
+			case CMD_NOP:
+				dtc_header_remove(msg);
+				rsp_forward(ctx, c_conn, req);
+				break;
+			case CMD_KEY_DEFINE:
+				key_define_handle(msg);
+				c_conn->dequeue_inq(ctx, c_conn, req);
+				req_put(req);
+				break;
+			default:
+				log_error("msg admin error:%d", msg->admin);
+		}
+			
 	}
 
 	log_debug("rsp_recv_done leave.");

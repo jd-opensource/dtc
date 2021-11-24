@@ -360,7 +360,7 @@ static int listener_accept(struct context *ctx, struct conn *l)
 	if (c->writecached == 0 && c->connected == 1) {
 		c->stage = CONN_STAGE_LOGGING_IN;
 
-		smsg = msg_get(c, false);
+		smsg = msg_get(c, true);
 		if (smsg == NULL) {
 			c->error = 1;
 			c->err = CONN_MSG_GET_ERR;
@@ -383,6 +383,8 @@ static int listener_accept(struct context *ctx, struct conn *l)
 	}
 	c->enqueue_outq(ctx, c, smsg);
 
+	//init dtc key info
+	request_dtc_key_define(ctx, c);
 	return 0;
 }
 

@@ -32,4 +32,6 @@ int net_send_ok(struct msg *smsg, struct conn *c_conn);
 int net_send_error(struct msg *smsg, struct msg *dmsg);
 int net_send_server_greeting(struct msg *smsg, struct msg *dmsg);
 
+struct msg *net_send_desc_dtctable(struct conn *c_conn);
+
 #endif /* _MY_NET_SEND_H_ */

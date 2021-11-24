@@ -303,6 +303,7 @@ static int msg_parsed(struct context *ctx, struct conn *conn, struct msg *msg) {
 		return -1;
 	}
 
+	log_debug("msg request:%d", msg->request);
 	nmsg = msg_get(msg->owner, msg->request);
 	if (nmsg == NULL) {
 		log_error("msg split error,because of get a new msg error");
@@ -350,7 +351,7 @@ static int msg_parse(struct context *ctx, struct conn *conn, struct msg *msg) {
 	msg->parser(msg);
 	switch (msg->parse_res) {
 	case MSG_PARSE_OK:
-		log_debug("msg id:%"PRIu64"parsed ok!",msg->id);
+		log_debug("msg id:%"PRIu64" parsed ok!",msg->id);
 		status = msg_parsed(ctx, conn, msg);
 		break;
 
@@ -366,9 +367,8 @@ static int msg_parse(struct context *ctx, struct conn *conn, struct msg *msg) {
 
 	default:
 		log_error("parser get some trouble:%d", msg->parse_res);
-		status = -1;
-		conn->error=1;
-		conn->err=CONN_MSG_PARSE_ERR;
+		status = 0;
+		error_reply(msg, conn, ctx);
 		break;
 	}
 

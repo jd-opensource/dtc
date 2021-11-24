@@ -34,6 +34,7 @@ void my_parse_rsp(struct msg *r);
 int my_do_command(struct context *ctx, struct conn *c_conn, struct msg *msg);
 int my_fragment(struct msg *r, uint32_t ncontinuum, struct msg_tqh *frag_msgq);
 
-int my_get_key_value(uint8_t* sql, int sql_len, int* start_offset, int* end_offset);
+int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
+		     int *end_offset);
 
 #endif /* _MY_PARSE_H_ */

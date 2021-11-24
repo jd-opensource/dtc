@@ -28,7 +28,7 @@
 #include "my_comm.h"
 #include "my_command.h"
 
-#define MY_HEADER_SIZE 4
+#define MYSQL_HEADER_SIZE 4
 #define MAXPACKETSIZE	(64<<20)
 #define MultiKeyValue 32
 #define __FLTFMT__	"%LA"
@@ -61,8 +61,8 @@ enum codestate {
 	ST_ID = 0, ST_LENTH = 1, ST_VALUE = 2,
 };
 
-char dtc_key[50] = {0};
-int dtc_key_type = 0;
+char g_dtc_key[50] = {0};
+int g_dtc_key_type = -1;
 
 /*
  * parse request msg
@@ -81,23 +81,26 @@ void my_parse_req(struct msg *r) {
 
 	if (p < b->last) 
 	{
-		if (b->last - p < MY_HEADER_SIZE) {
+		if (b->last - p < MYSQL_HEADER_SIZE) {
 			log_error("receive size small than package header. id:%d", r->id);
-			goto error;
+			p = b->last;
+			goto end;
 		}
 		
 		input_packet_length = uint3korr(p);
+		log_debug("uint3korr:0x%x 0x%x 0x%x, len:%d", p[0], p[1], p[2], input_packet_length);
 		p += 3;
 		r->pkt_nr = (uint8_t)(*p);	// mysql sequence id
 		p++;
 		log_debug("pkt_nr:%d, packet len:%d", r->pkt_nr, input_packet_length);
 
 		if(p + input_packet_length > b->last)
-			goto error;
+			p = b->last;
+			goto end;
 
 		if(r->owner->stage == CONN_STAGE_LOGGED_IN)
 		{
-			r->keytype = dtc_key_type;
+			r->keytype = g_dtc_key_type;
 
 			rc = my_get_command(p, input_packet_length, r, &command);
 			if(rc)
@@ -115,10 +118,19 @@ void my_parse_req(struct msg *r) {
 		}
 
 		p += input_packet_length;
-		r->pos = p;
 		
 		goto success;
 	}
+
+end:
+	ASSERT(p == b->last);
+	r->pos = p;
+	if (b->last == b->end) {
+		r->parse_res = MSG_PARSE_REPAIR;
+	} else {
+		r->parse_res = MSG_PARSE_AGAIN;
+	}
+	return ;
 
 error:
 	r->pos = b->last;
@@ -129,6 +141,7 @@ error:
 	return;
 
 success:
+	r->pos = p;
 	r->parse_res = MSG_PARSE_OK;
 	log_debug("parse msg:%"PRIu64" success!", r->id);
 	log_debug("my_parse_req leave.");
@@ -148,7 +161,7 @@ void my_parse_rsp(struct msg *r) {
 
 	if (p < b->last) 
 	{
-		if (b->last - p < sizeof(struct DTC_HEADER) + MY_HEADER_SIZE) {
+		if (b->last - p < sizeof(struct DTC_HEADER) + MYSQL_HEADER_SIZE) {
 			log_error("receive size small than package header. id:%d", r->id);
 			p = b->last;
 			r->parse_res = MSG_PARSE_ERROR;
@@ -156,11 +169,15 @@ void my_parse_rsp(struct msg *r) {
 			return ;
 		}
 		r->peerid = ((struct DTC_HEADER*)p)->id;
+		r->admin = ((struct DTC_HEADER*)p)->admin;
+		log_debug("%x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x ",
+			p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15], p[16], p[17], p[18], p[19]);
 		p = p + sizeof(struct DTC_HEADER);
 		
 		r->pkt_nr = (uint8_t)(p[3]);	// mysql sequence id
-		log_debug("pkt_nr:%d, peerid:%d", r->pkt_nr, r->peerid);
-		p = p + MY_HEADER_SIZE;
+		log_debug("pkt_nr:%d, peerid:%d, id:%d, admin:%d", r->pkt_nr, r->peerid, r->id, r->admin);
+
+		p = p + MYSQL_HEADER_SIZE;
 
 		p = b->last;
 		r->pos = p;
@@ -184,7 +201,7 @@ int my_get_command(uint8_t *input_raw_packet, uint32_t input_packet_length, stru
 
 	if (*cmd >= COM_END) *cmd = COM_END;  // Wrong command
 
-	if(parse_packet(input_raw_packet, input_packet_length, r, *cmd))
+	if(parse_packet(input_raw_packet + 2 , input_packet_length - 2, r, *cmd))
 		return 1;
 
 	return -1;
@@ -203,18 +220,9 @@ int my_do_command(struct msg *msg)
       rc = NEXT_RSP_OK;
       break;
     }
-    case COM_STMT_EXECUTE: {
-      rc = NEXT_FORWARD;
-      break;
-    }
-    case COM_STMT_FETCH: {
-      rc = NEXT_FORWARD;
-      break;
-    }
-    case COM_STMT_SEND_LONG_DATA: {
-      rc = NEXT_RSP_ERROR;
-      break;
-    }
+    case COM_STMT_EXECUTE:
+    case COM_STMT_FETCH:
+    case COM_STMT_SEND_LONG_DATA:
     case COM_STMT_PREPARE: 
     case COM_STMT_CLOSE: 
     case COM_STMT_RESET: {
@@ -420,53 +428,100 @@ int my_fragment(struct msg *r, uint32_t ncontinuum, struct msg_tqh *frag_msgq) {
 	}
 }
 
-int my_get_key_value(uint8_t* sql, int sql_len, int* start_offset, int* end_offset)
+int _check_condition(struct string* str)
+{
+	int i;
+	char* condition = " WHERE ";
+	if(string_empty(str))
+		return -1;
+
+	for(i = 0; i < str->len; i++)
+	{
+		if(da_strncmp(str->data+i, condition, da_strlen(condition)) == 0 && i + da_strlen(condition) < str->len)
+			return i + da_strlen(condition);
+	}
+
+	return -2;
+}
+
+int my_get_route_key(uint8_t* sql, int sql_len, int* start_offset, int* end_offset)
 {	
 	int i = 0;
-	int dtc_key_len = strlen(dtc_key);
-	for(i = 0; i < sql_len; i++)
+	int dtc_key_len = da_strlen(g_dtc_key);
+	struct string str;
+	int ret = 0;
+	string_init(&str);
+	string_copy(&str, sql, sql_len);
+
+	if(string_empty(&str))
+		return -1;
+
+	if(!string_upper(&str))
+		return -9;
+
+	i = _check_condition(&str);
+	if( i < 0)
 	{
-		if(sql_len - i >= dtc_key_len)
+		ret = -2;
+		log_error("check condition error code:%d", i);
+		goto done;
+	}
+
+	for(; i < str.len; i++)
+	{
+		if(str.len - i >= dtc_key_len)
 		{
-			if(strncmp(sql+i, dtc_key, dtc_key_len) == 0)
+			log_debug("str.len:%d i:%d dtc_key_len:%d str.data + i:%s g_dtc_key:%c", str.len, i, dtc_key_len, str.data + i, g_dtc_key);
+			if(da_strncmp(str.data + i, g_dtc_key, dtc_key_len) == 0)
 			{
 				int j;
-				for(j = i + dtc_key_len; j < sql_len; j++)
+				for(j = i + dtc_key_len; j < str.len; j++)
 				{
-					if(sql[j] == '=')
+					if(str.data[j] == '=')
 					{
 						j++;
 						//strip space.
-						while(j < sql_len && sql[j] == ' ')
+						while(j < str.len && str.data[j] == ' ')
 						{
 							j++;
 						}
 
-						if(j < sql_len)
+						if(j < str.len)
 						{
 							*start_offset = j;
 
 							int k = 0;
-							for(k = j; k < sql_len; k++)
+							for(k = j; k < str.len; k++)
 							{
-								if(sql[k+1] == ' ' || sql[k+1] == ';' || k + 1 == sql_len)
+								if(sql[k+1] == ' ' || sql[k+1] == ';' || k + 1 == str.len)
 								{
-									*end_offset = k+1;
-									return 0;
+									*end_offset = k + 1;
+									ret = 0;
+									goto done;
 								}
 							}
 
-							return -4;
+							ret = -4;
+							goto done;
 						}
 						else
-							return -1;
+						{
+							ret = -5;
+							goto done;	
+						}
 					}
 				}
 
-				return -2;
+				ret = -2;
+				goto done;
 			}
 		}
 	}
 
-	return -3;
+	ret = -3;
+	goto done;
+
+done:
+	string_deinit(&str);
+	return ret;
 }

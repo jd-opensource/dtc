@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include "my/my_com_data.h"
 #include "my/my_command.h"
+#include "my/my_comm.h"
 
 struct msg;
 struct conn;
@@ -144,6 +145,7 @@ struct msg {
 
 	uint8_t pkt_nr; /* mysql sequence id */
 	enum enum_server_command command; /* mysql request command type */
+	enum enum_agent_admin admin;
 	union COM_DATA data;
 
 	int err; /* errno on error? */

@@ -28,20 +28,19 @@ MYSQL Protocol Definition, See more detail:
   https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_packets.html#sect_protocol_basic_packets_packet
 */
 
-#define MY_HEADER_SIZE 4
+#define MYSQL_HEADER_SIZE 4
 #define MAX_PACKET_LENGTH (256L * 256L * 256L - 1)
 #define DA_PROTOCOL_VERSION 2
 
+enum enum_agent_admin { CMD_NOP = 0, CMD_KEY_DEFINE };
+
 struct DTC_HEADER {
 	uint8_t version;
+	uint8_t admin;
 	uint64_t id;
 };
 
-enum AGENT_NEXT_OPERATION{
-	NEXT_FORWARD = 0,
-  NEXT_RSP_OK,
-  NEXT_RSP_ERROR 
-};
+enum AGENT_NEXT_OPERATION { NEXT_FORWARD = 0, NEXT_RSP_OK, NEXT_RSP_ERROR };
 
 static inline int32 sint3korr(const uchar *A)
 {
