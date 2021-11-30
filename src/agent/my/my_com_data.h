@@ -31,6 +31,8 @@
 #define MYSQL_STMT_HEADER 4
 #define MYSQL_LONG_DATA_HEADER 6
 
+#define DTC_KEY_MAX 255
+
 #define HOSTNAME_LENGTH 60
 #define SYSTEM_CHARSET_MBMAXLEN 3
 #define NAME_CHAR_LEN 64 /* Field/table name length */

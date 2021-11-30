@@ -61,7 +61,7 @@ enum codestate {
 	ST_ID = 0, ST_LENTH = 1, ST_VALUE = 2,
 };
 
-char g_dtc_key[50] = {0};
+char g_dtc_key[DTC_KEY_MAX] = {0};
 int g_dtc_key_type = -1;
 
 /*
@@ -95,8 +95,10 @@ void my_parse_req(struct msg *r) {
 		log_debug("pkt_nr:%d, packet len:%d", r->pkt_nr, input_packet_length);
 
 		if(p + input_packet_length > b->last)
+		{
 			p = b->last;
 			goto end;
+		}
 
 		if(r->owner->stage == CONN_STAGE_LOGGED_IN)
 		{

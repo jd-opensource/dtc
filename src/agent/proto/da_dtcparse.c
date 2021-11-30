@@ -2076,7 +2076,7 @@ static int dtc_coalesce_get(struct msg *r) {
 			break;
 		} else {
 			if (peermsg->numrows > 0) {
-				log_debug("aaa cmsg frag_id:%"PRIu64"numrow:%"PRIu64"",
+				log_debug("cmsg frag_id:%"PRIu64"numrow:%"PRIu64"",
 						cmsg->frag_id, peermsg->numrows);
 				totaltotalrows += peermsg->totalrows;
 				totalnumrows += peermsg->numrows;

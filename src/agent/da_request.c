@@ -29,7 +29,7 @@
 #include "da_time.h"
 #include "my/my_comm.h"
 
-extern char g_dtc_key[50];
+extern char g_dtc_key[DTC_KEY_MAX];
 extern int g_dtc_key_type;
 
 void req_put(struct msg *msg) {
@@ -242,10 +242,6 @@ void req_server_en_msgtree(struct context *ctx, struct conn *conn,
 	node = &msg->msg_rbe;
 	node->key = msg->id;
 	node->data = msg;
-	log_debug("msg id:%"PRIu64", node key:%"PRIu64" into search tree", msg->id,
-			node->key);
-	log_debug("src node:%p", node);
-
 	rbtree_insert(&conn->msg_tree, node);
 	msg->sev_msgtree = 1;
 	//TODO
@@ -726,7 +722,7 @@ void request_dtc_key_define(struct context *ctx, struct conn *c)
 
 void error_reply(struct msg* msg, struct conn* conn, struct context* ctx)
 {
-	if(net_send_error(msg, conn) < 0)  /* default resp login success. */
+	if(net_send_error(msg, conn) < 0)
 		return ;
 	req_make_loopback(ctx, conn, msg);
 }

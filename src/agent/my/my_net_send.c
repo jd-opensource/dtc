@@ -125,7 +125,7 @@ int net_send_error(struct msg *smsg, struct conn *c_conn) {
 	memcpy(pos, err_info, strlen(err_info));
 	pos += strlen(err_info);
 	
-	log_debug("net_send_ok pkt nr:%d", pkt_nr);
+	log_debug("net send error pkt nr:%d", pkt_nr);
 	if(net_write(dmsg, buf, (size_t)(pos - start), ++pkt_nr))
 	{
 		msg_put(dmsg);
@@ -140,6 +140,8 @@ int net_send_error(struct msg *smsg, struct conn *c_conn) {
 	log_debug("dmsg len:%d", dmsg->mlen);
 	dmsg->peer = smsg;
 	smsg->peer = dmsg;
+
+	c_conn->rmsg = NULL;
 
 	return 0;
 }

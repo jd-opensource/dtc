@@ -356,12 +356,12 @@ static int msg_parse(struct context *ctx, struct conn *conn, struct msg *msg) {
 		break;
 
 	case MSG_PARSE_REPAIR:
-		log_debug("msg id:%"PRIu64"need repair!",msg->id);
+		log_debug("msg id:%"PRIu64" need repair!",msg->id);
 		status = msg_repair(ctx, conn, msg);
 		break;
 
 	case MSG_PARSE_AGAIN:
-		log_debug("msg id:%"PRIu64"need parse again!",msg->id);
+		log_debug("msg id:%"PRIu64" need parse again!",msg->id);
 		status = 0;
 		break;
 
