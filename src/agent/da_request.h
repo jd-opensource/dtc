@@ -25,29 +25,33 @@ struct conn;
 void req_put(struct msg *msg);
 struct msg *req_recv_next(struct context *ctx, struct conn *conn, bool alloc);
 void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
-                   struct msg *nmsg);
+		   struct msg *nmsg);
 void req_client_enqueue_omsgq(struct context *ctx, struct conn *conn,
-                              struct msg *msg);
+			      struct msg *msg);
 void req_client_dequeue_omsgq(struct context *ctx, struct conn *conn,
-                              struct msg *msg);
+			      struct msg *msg);
 void req_client_enqueue_imsgq(struct context *ctx, struct conn *conn,
-                              struct msg *msg);
+			      struct msg *msg);
 void req_client_dequeue_imsgq(struct context *ctx, struct conn *conn,
-                              struct msg *msg);
+			      struct msg *msg);
 bool req_done(struct conn *c, struct msg *msg);
 void req_server_enqueue_imsgq(struct context *ctx, struct conn *conn,
-                              struct msg *msg);
+			      struct msg *msg);
 void req_server_dequeue_imsgq(struct context *ctx, struct conn *conn,
-                              struct msg *msg);
+			      struct msg *msg);
 struct msg *req_send_next(struct context *ctx, struct conn *conn);
 void req_send_done(struct context *ctx, struct conn *conn, struct msg *msg);
 void req_server_de_msgtree(struct context *ctx, struct conn *conn,
-                           struct msg *msg);
+			   struct msg *msg);
 void req_server_en_msgtree(struct context *ctx, struct conn *conn,
-                           struct msg *msg);
+			   struct msg *msg);
 bool req_error(struct conn *conn, struct msg *msg);
 
 static void req_forward(struct context *ctx, struct conn *c_conn,
-		struct msg *msg);
-int check_forward_key();
+			struct msg *msg);
+
+void error_reply(struct msg *msg, struct conn *conn, struct context *ctx);
+
+void request_dtc_key_define(struct context *ctx, struct conn *c);
+
 #endif /* DA_REQUEST_H_ */

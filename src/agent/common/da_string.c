@@ -71,6 +71,34 @@ int string_duplicate(struct string *dst, const struct string *src)
     return 0;
 }
 
+bool string_lower(struct string* str)
+{
+	int i = 0;
+	if(string_empty(str))
+		return false;
+
+	for(i = 0; i < str->len; i++)
+	{
+		str->data[i] = lower(str->data[i]);
+	}
+
+	return true;
+}
+
+bool string_upper(struct string* str)
+{
+	int i = 0;
+	if(string_empty(str))
+		return false;
+
+	for(i = 0; i < str->len; i++)
+	{
+		str->data[i] = upper(str->data[i]);
+	}
+
+	return true;
+}
+
 int string_copy(struct string *dst, const uint8_t *src, uint32_t srclen)
 {
     ASSERT(dst->len == 0 && dst->data == NULL);

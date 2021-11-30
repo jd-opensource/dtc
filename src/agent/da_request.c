@@ -15,6 +15,7 @@
 */
 
 #include <inttypes.h>
+#include <byteswap.h>
 #include "da_request.h"
 #include "da_msg.h"
 #include "da_util.h"
@@ -27,6 +28,9 @@
 #include "da_stats.h"
 #include "da_time.h"
 #include "my/my_comm.h"
+
+extern char g_dtc_key[DTC_KEY_MAX];
+extern int g_dtc_key_type;
 
 void req_put(struct msg *msg) {
 	struct msg *pmsg; /* peer message (response) */
@@ -238,10 +242,6 @@ void req_server_en_msgtree(struct context *ctx, struct conn *conn,
 	node = &msg->msg_rbe;
 	node->key = msg->id;
 	node->data = msg;
-	log_debug("msg id:%"PRIu64"node key:%"PRIu64"into search tree", msg->id,
-			node->key);
-	log_debug("src node:%p", node);
-
 	rbtree_insert(&conn->msg_tree, node);
 	msg->sev_msgtree = 1;
 	//TODO
@@ -304,7 +304,7 @@ static void req_make_loopback(struct context *ctx, struct conn *conn,
 	return;
 }
 
-int _req_header_add(struct msg* msg)
+int dtc_header_add(struct msg* msg, enum enum_agent_admin admin)
 {
 	struct DTC_HEADER dtc_header = {0};
 
@@ -317,6 +317,12 @@ int _req_header_add(struct msg* msg)
 		return -2;
 
 	dtc_header.version = DA_PROTOCOL_VERSION;
+	dtc_header.admin = admin;
+#if __BYTE_ORDER == __BIG_ENDIAN
+		dtc_header.id = bswap_64(msg->id);
+#else
+		dtc_header.id = msg->id;
+#endif
 	dtc_header.id = msg->id;
 	mbuf_copy(new_buf, &dtc_header, sizeof(dtc_header));
 	mbuf_copy(new_buf, mbuf->start, mbuf_length(mbuf));
@@ -331,22 +337,6 @@ int _req_header_add(struct msg* msg)
 	return 0;
 }
 
-
-//parsed the sql and return the key 
-int check_forward_key()
-{
-	char* query = "select uid,name,city,age,sex from Table_Test where uid=3 and age=2 and sex=1;";
-	//char* query = "insert into table_name (uid,age) values (111,2);";
-	//char* query = "delete from table_name where uid = 3;";
-	//char* query = "update table_name set age=2,sex=1 where uid =10";
-
-	int value = my_da_sql_parsed(query);
-
-	printf("key = %d\n",value);
-	return value;
-}
-
-
 void req_process(struct context *ctx, struct conn *c_conn,
 		struct msg *msg) 
 {
@@ -359,24 +349,37 @@ void req_process(struct context *ctx, struct conn *c_conn,
 
 		return ;
 	}
-#if 0
-	if(!c_conn->logged_in) /* not logged in yet, resp error */
+
+	if(c_conn->stage != CONN_STAGE_LOGGED_IN) /* not logged in yet, resp error */
 	{
 		log_error("log in auth occur something wrong.");
-		net_send_error();
+		if(net_send_error(msg, c_conn) < 0)  /* default resp login success. */
+				return ;
+		req_make_loopback(ctx, c_conn, msg);
 		return ;
 	}
-	
-	if(!check_forward_key())
+
+	int oper = my_do_command(msg);
+	switch(oper)
 	{
-		log_error("check forward key occure something wrong.");
-		net_send_error();
-		return ;
+		case NEXT_FORWARD:
+			dtc_header_add(msg, CMD_NOP);
+			log_debug("req process will forward to dtc. msg len: %d, msg id: %d", msg->mlen, msg->id);
+			req_forward(ctx, c_conn, msg);
+			break;
+		case NEXT_RSP_OK:
+			if(net_send_ok(msg, c_conn) < 0)  /* default resp login success. */
+				return ;
+			req_make_loopback(ctx, c_conn, msg);
+			break;
+		case NEXT_RSP_ERROR:
+			if(net_send_error(msg, c_conn) < 0)  /* default resp login success. */
+				return ;
+			req_make_loopback(ctx, c_conn, msg);
+			break;
+		default:
+			log_error("my_do_command operation error:%d", oper);
 	}
-#endif
-	_req_header_add(msg);
-	log_debug("req process will forward to dtc. msg len: %d, msg id: %d", msg->mlen, msg->id);
-	req_forward(ctx, c_conn, msg);
 
 	return;
 }
@@ -532,9 +535,11 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	/* if no fragment happened */
 	if (TAILQ_EMPTY(&frag_msgq)) {
 		req_process(ctx, conn, msg);
+		log_debug("req_recv_done leave.");
 		return;
 	}
 
+#if 0 // Not be supported multi req now.
 	/*
 	 * insert msg into client in queue,it can
 	 * be free when client close connection,set done
@@ -552,6 +557,7 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	
 	ASSERT(TAILQ_EMPTY(&frag_msgq));
 
+#endif 
 	log_debug("req_recv_done leave.");
 	return;
 }
@@ -686,4 +692,37 @@ bool req_error(struct conn *conn, struct msg *msg) {
 			conn->fd, id, nfragment);
 
 	return true;
+}
+
+void request_dtc_key_define(struct context *ctx, struct conn *c)
+{
+	struct msg *msg = NULL;
+	int ret = 0;
+	if(g_dtc_key_type != -1)
+		return;
+
+	msg = net_send_desc_dtctable(c);
+	if(msg == NULL)
+	{
+		log_error("error code:%d", ret);
+		return;
+	}
+	ret = dtc_header_add(msg, CMD_KEY_DEFINE);
+	if(ret)
+	{
+		log_error("error code:%d %p", ret, msg);
+		return;
+	}
+
+	uint64_t rkey=1;
+	msg->idx = msg_backend_idx(msg, (uint8_t *)&rkey,sizeof(uint64_t));
+	log_debug("request process will forward to dtc. msg len: %d, msg id: %d, ret:%d, idx:%d", msg->mlen, msg->id, ret, msg->idx);
+	req_forward(ctx, c, msg);
+}
+
+void error_reply(struct msg* msg, struct conn* conn, struct context* ctx)
+{
+	if(net_send_error(msg, conn) < 0)
+		return ;
+	req_make_loopback(ctx, conn, msg);
 }

@@ -233,7 +233,7 @@ struct msg *msg_get(struct conn *conn, bool request) {
 	} else {
 		msg->parser = my_parse_rsp;
 	}
-	msg->fragment = dtc_fragment;
+	msg->fragment = my_fragment;
 	msg->coalesce = dtc_coalesce;
 	msg->start_ts = now_us;
 
@@ -303,6 +303,7 @@ static int msg_parsed(struct context *ctx, struct conn *conn, struct msg *msg) {
 		return -1;
 	}
 
+	log_debug("msg request:%d", msg->request);
 	nmsg = msg_get(msg->owner, msg->request);
 	if (nmsg == NULL) {
 		log_error("msg split error,because of get a new msg error");
@@ -350,24 +351,24 @@ static int msg_parse(struct context *ctx, struct conn *conn, struct msg *msg) {
 	msg->parser(msg);
 	switch (msg->parse_res) {
 	case MSG_PARSE_OK:
-		log_debug("msg id:%"PRIu64"parsed ok!",msg->id);
+		log_debug("msg id:%"PRIu64" parsed ok!",msg->id);
 		status = msg_parsed(ctx, conn, msg);
 		break;
 
 	case MSG_PARSE_REPAIR:
-		log_debug("msg id:%"PRIu64"need repair!",msg->id);
+		log_debug("msg id:%"PRIu64" need repair!",msg->id);
 		status = msg_repair(ctx, conn, msg);
 		break;
 
 	case MSG_PARSE_AGAIN:
-		log_debug("msg id:%"PRIu64"need parse again!",msg->id);
+		log_debug("msg id:%"PRIu64" need parse again!",msg->id);
 		status = 0;
 		break;
 
 	default:
-		status = -1;
-		conn->error=1;
-		conn->err=CONN_MSG_PARSE_ERR;
+		log_error("parser get some trouble:%d", msg->parse_res);
+		status = 0;
+		error_reply(msg, conn, ctx);
 		break;
 	}
 

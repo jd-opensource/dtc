@@ -424,6 +424,7 @@ struct conn *server_pool_conn(struct context *ctx, struct server_pool *pool,
 		}
 		status = instance_connect(ctx, server->master, conn);
 		if (status != 0) {
+			log_error("instance connect failed, close server.");
 			server_close(ctx, conn);
 			return NULL;
 		}
@@ -446,6 +447,7 @@ struct conn *server_pool_conn(struct context *ctx, struct server_pool *pool,
 		}
 		status = instance_connect(ctx, ci, conn);
 		if (status != 0) {
+			log_error("instance connect failed, close server.");
 			server_close(ctx, conn);
 			return NULL;
 		}

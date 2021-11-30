@@ -29,6 +29,9 @@
 #include "da_top_percentile.h"
 #include "my/my_comm.h"
 
+extern char g_dtc_key[DTC_KEY_MAX];
+extern int g_dtc_key_type;
+
 void rsp_put(struct msg *msg) {
 	ASSERT(!msg->request);
 	ASSERT(msg->peer == NULL);
@@ -135,7 +138,7 @@ static void rsp_recv_done_stats(struct context *ctx, struct cache_instance *ci, 
 }
 
 
-int _rsp_header_remove(struct msg* msg)
+int dtc_header_remove(struct msg* msg)
 {
 	struct mbuf* mbuf = STAILQ_LAST(&msg->buf_q, mbuf, next);
 	if(!mbuf)
@@ -157,6 +160,43 @@ int _rsp_header_remove(struct msg* msg)
 	return 0;
 }
 
+int key_define_handle(struct msg* msg)
+{
+	struct mbuf* mbuf = STAILQ_LAST(&msg->buf_q, mbuf, next);
+	int buf_len = 0;
+
+	if(!mbuf)
+		return -1;
+
+	buf_len = mbuf->last - mbuf->start;
+	if(buf_len < sizeof(struct DTC_HEADER))
+		return -3;
+
+	uint8_t* pos = mbuf->start + sizeof(struct DTC_HEADER);
+	uint8_t type = *pos;
+	uint8_t key_len;
+	int i = 0;
+	g_dtc_key_type = type;
+	pos++;
+
+	key_len = *pos;
+	pos++;
+	if(key_len > DTC_KEY_MAX || key_len <= 0)
+		return -2;
+	
+	if(mbuf->last - pos < key_len)
+	{
+		return -4;
+	}
+
+	memcpy(g_dtc_key, pos, key_len);
+
+	for(i = 0; i < key_len; i++)
+		g_dtc_key[i] = upper(g_dtc_key[i]);
+
+	return 0;
+}
+
 void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 		struct msg *nmsg) {
 	log_debug("rsp_recv_done entry.");
@@ -165,11 +205,12 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	ASSERT(!msg->request && msg->peerid > 0);
 	ASSERT(msg->owner == conn);
 	ASSERT(nmsg == NULL || !nmsg->request);
-	ASSERT(msg->peerid>0);
+	ASSERT(msg->peerid > 0);
 
 	struct rbnode *tarnode;
 	struct msg *req;
 	struct conn *c_conn;
+	int ret = 0;
 
 	/* enqueue next message (response), if any */
 	conn->rmsg = nmsg;
@@ -185,7 +226,7 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 
 	struct rbnode tnode;
 	tnode.key = msg->peerid; //peer msg_id for search,get from package
-	log_debug("peerid :%"PRIu64"",tnode.key);
+	log_debug("rbtree node key: %"PRIu64", id:%d, peerid:%d, tree:%p %d %d",tnode.key, msg->id, msg->peerid, &conn->msg_tree, conn->msg_tree.root->key, conn->msg_tree.sentinel->key);
 	tarnode = rbtree_search(&conn->msg_tree, &tnode);
 	if (tarnode == NULL) { //node has been deleted by timeout
 		log_debug("rsp msg id: %"PRIu64" peerid :%"PRIu64" search peer msg error,msg is not in the tree",
@@ -193,7 +234,6 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 		rsp_put(msg);
 		return;
 	}
-
 	log_debug("rsp msg id: %"PRIu64" peerid :%"PRIu64" search peer msg success,msg is in the tree",
 					msg->id, msg->peerid);
 	//set req and rsp
@@ -240,10 +280,29 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	if (req->frag_owner != NULL) {
 		req->frag_owner->nfrag_done++;
 	}
+
 	if (req_done(c_conn, req)) {
 		log_debug("msg is done , rsp forword msg %"PRIu64"",req->id);
-		_rsp_header_remove(msg);
-		rsp_forward(ctx, c_conn, req);
+		
+		switch(msg->admin)
+		{
+			case CMD_NOP:
+				dtc_header_remove(msg);
+				rsp_forward(ctx, c_conn, req);
+				break;
+			case CMD_KEY_DEFINE:
+				ret = key_define_handle(msg);
+				if(ret < 0)
+				{
+					log_error("get dtc key error:%d", ret);
+				}
+				c_conn->dequeue_inq(ctx, c_conn, req);
+				req_put(req);
+				break;
+			default:
+				log_error("msg admin error:%d", msg->admin);
+		}
+			
 	}
 
 	log_debug("rsp_recv_done leave.");
@@ -417,7 +476,7 @@ void rsp_send_done(struct context *ctx, struct conn *conn, struct msg *msg)
 	 stats_pool_incr_by(ctx, conn->owner, pool_elaspe_time, elaspe_time);
 	 top_percentile_report(ctx, conn->owner, elaspe_time, msg->resultcode, RT_SHARDING);
 	 top_percentile_report(ctx, conn->owner, elaspe_time, msg->resultcode, RT_ALL);
-	 log_debug("send rsp %"PRIu64" len %"PRIu32" type %d on " "c %d success use %"PRIu64"us",
-	 				msg->id, msg->mlen, msg->cmd, conn->fd,now_us - pmsg->start_ts);
+	 log_debug("send rsp %"PRIu64", peer id: %"PRIu64", len %"PRIu32", len %"PRIu32", type %d on " "c %d success use %"PRIu64"us",
+	 				msg->id, pmsg->id, msg->mlen, pmsg->mlen, msg->cmd, conn->fd,now_us - pmsg->start_ts);
 	 req_put(pmsg);
 }
