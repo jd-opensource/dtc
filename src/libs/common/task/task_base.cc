@@ -153,11 +153,50 @@ void DtcJob::decode_stream(SimpleReceiver &receiver)
 	return;
 }
 
+int8_t DtcJob::select_version(char *packetIn, int packetLen)
+{
+	int8_t ver = 0;
+
+	switch (stage) {
+	default:
+		break;
+	case DecodeStageFatalError:
+	case DecodeStageDataError:
+	case DecodeStageDone:
+		return -1;
+	}
+
+	if (packetLen <= 1) {
+		stage = DecodeStageFatalError;
+		return -2;
+	}
+
+	ver = (int8_t)(packetIn[0]);
+
+	if (ver != 1 && ver != 2) {
+		log4cplus_error("dtc packet version error:%d, pkt len:%d", ver,
+				packetLen);
+		stage = DecodeStageFatalError;
+		return -3;
+	}
+
+	return ver;
+}
+
 // Decode data from packet
 //     type 0: clone packet
 //     type 1: eat(keep&free) packet
 //     type 2: use external packet
-void DtcJob::decode_packet(char *packetIn, int packetLen, int type)
+void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
+{
+	return;
+}
+
+// Decode data from packet
+//     type 0: clone packet
+//     type 1: eat(keep&free) packet
+//     type 2: use external packet
+void DtcJob::decode_packet_v1(char *packetIn, int packetLen, int type)
 {
 	PacketHeader header;
 #if __BYTE_ORDER == __BIG_ENDIAN

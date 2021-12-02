@@ -199,6 +199,9 @@ class DtcJob : public TableReference {
 	int decode_field_set(char *d, int l);
 	int decode_result_set(char *d, int l);
 
+    private:
+	int8_t select_version(char *packetIn, int packetLen);
+
     public:
 	DtcJob(DTCTableDefinition *tdef = NULL, TaskRole r = TaskRoleServer,
 	       int final = 0)
@@ -394,16 +397,28 @@ class DtcJob : public TableReference {
 	//     type 0: clone packet
 	//     type 1: eat(keep&free) packet
 	//     type 2: use external packet
-	void decode_packet(char *packetIn, int packetLen, int type);
+	void decode_packet_v1(char *packetIn, int packetLen, int type);
+	void decode_packet_v2(char *packetIn, int packetLen, int type);
+
 	DecodeResult do_decode(char *packetIn, int packetLen, int type)
 	{
-		decode_packet(packetIn, packetLen, type);
+		int8_t ver = select_version(packetIn, packetLen);
+		if (ver == 1)
+			decode_packet_v1(packetIn, packetLen, type);
+		else if (ver == 2)
+			decode_packet_v2(packetIn, packetLen, type);
+
 		return get_decode_result();
 	}
 
 	DecodeResult do_decode(const char *packetIn, int packetLen)
 	{
-		decode_packet((char *)packetIn, packetLen, 0);
+		int8_t ver = select_version(packetIn, packetLen);
+		if (ver == 1)
+			decode_packet_v1((char *)packetIn, packetLen, 0);
+		else if (ver == 2)
+			decode_packet_v2((char *)packetIn, packetLen, 0);
+
 		return get_decode_result();
 	};
 
