@@ -87,9 +87,9 @@ class Packet {
 		return sendedVecCount == nv;
 	}
 
-	static int encode_header(PacketHeader &header);
+	static int encode_header_v1(PacketHeaderV1 &header);
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-	static int encode_header(const PacketHeader &header);
+	static int encode_header_v1(const PacketHeaderV1 &header);
 #endif
 	int encode_forward_request(DTCJobOperation &);
 	int encode_pass_thru(DtcJob &);

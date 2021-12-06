@@ -31,8 +31,8 @@
 
 int DtcJob::check_packet_size(const char *buf, int len)
 {
-	const PacketHeader *header = (PacketHeader *)buf;
-	if (len < (int)sizeof(PacketHeader))
+	const PacketHeaderV1 *header = (PacketHeaderV1 *)buf;
+	if (len < (int)sizeof(PacketHeaderV1))
 		return 0;
 
 	if (header->version != 1) { // version not supported
@@ -57,7 +57,7 @@ int DtcJob::check_packet_size(const char *buf, int len)
 		return -4;
 	}
 
-	return (int)n + sizeof(PacketHeader);
+	return (int)n + sizeof(PacketHeaderV1);
 }
 
 void DtcJob::decode_stream(SimpleReceiver &receiver)
@@ -99,8 +99,8 @@ void DtcJob::decode_stream(SimpleReceiver &receiver)
 			return;
 		}
 
-		if ((rv = decode_header(receiver.header(),
-					&receiver.header())) < 0) {
+		if ((rv = decode_header_v1(receiver.header(),
+					   &receiver.header())) < 0) {
 			return;
 		}
 
@@ -147,7 +147,7 @@ void DtcJob::decode_stream(SimpleReceiver &receiver)
 	}
 
 	if (receiver.remain() <= 0) {
-		decode_request(receiver.header(), receiver.c_str());
+		decode_request_v1(receiver.header(), receiver.c_str());
 	}
 
 	return;
@@ -198,11 +198,11 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 //     type 2: use external packet
 void DtcJob::decode_packet_v1(char *packetIn, int packetLen, int type)
 {
-	PacketHeader header;
+	PacketHeaderV1 header;
 #if __BYTE_ORDER == __BIG_ENDIAN
-	PacketHeader out[1];
+	PacketHeaderV1 out[1];
 #else
-	PacketHeader *const out = &header;
+	PacketHeaderV1 *const out = &header;
 #endif
 
 	switch (stage) {
@@ -214,24 +214,24 @@ void DtcJob::decode_packet_v1(char *packetIn, int packetLen, int type)
 		return;
 	}
 
-	if (packetLen < (int)sizeof(PacketHeader)) {
+	if (packetLen < (int)sizeof(PacketHeaderV1)) {
 		stage = DecodeStageFatalError;
 		return;
 	}
 
 	memcpy((char *)&header, packetIn, sizeof(header));
 
-	int rv = decode_header(header, out);
+	int rv = decode_header_v1(header, out);
 	if (rv < 0) {
 		return;
 	}
 
-	if ((int)(sizeof(PacketHeader) + rv) > packetLen) {
+	if ((int)(sizeof(PacketHeaderV1) + rv) > packetLen) {
 		stage = DecodeStageFatalError;
 		return;
 	}
 
-	char *buf = (char *)packetIn + sizeof(PacketHeader);
+	char *buf = (char *)packetIn + sizeof(PacketHeaderV1);
 	switch (type) {
 	default:
 	case 0:
@@ -251,11 +251,11 @@ void DtcJob::decode_packet_v1(char *packetIn, int packetLen, int type)
 		break;
 	}
 
-	decode_request(*out, buf);
+	decode_request_v1(*out, buf);
 	return;
 }
 
-int DtcJob::decode_header(const PacketHeader &header, PacketHeader *out)
+int DtcJob::decode_header_v1(const PacketHeaderV1 &header, PacketHeaderV1 *out)
 {
 	if (header.version != 1) { // version not supported
 		stage = DecodeStageFatalError;
@@ -306,7 +306,7 @@ int DtcJob::decode_header(const PacketHeader &header, PacketHeader *out)
 	return (int)n;
 }
 
-int DtcJob::validate_section(PacketHeader &header)
+int DtcJob::validate_section(PacketHeaderV1 &header)
 {
 	int i;
 	int m;
@@ -336,7 +336,7 @@ int DtcJob::validate_section(PacketHeader &header)
 	return 0;
 }
 
-void DtcJob::decode_request(PacketHeader &header, char *p)
+void DtcJob::decode_request_v1(PacketHeaderV1 &header, char *p)
 {
 #if !CLIENTAPI
 	if (DRequest::ReloadConfig == requestCode &&
@@ -854,7 +854,7 @@ int ResultSet::decode_row(void)
 	return 0;
 }
 
-int packet_body_len(PacketHeader &header)
+int packet_body_len_v1(PacketHeaderV1 &header)
 {
 	int pktbodylen = 0;
 	for (int i = 0; i < DRequest::Section::Total; i++) {

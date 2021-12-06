@@ -31,7 +31,7 @@
 /* not yet pollized*/
 int Packet::encode_detect(const DTCTableDefinition *tdef, int sn)
 {
-	PacketHeader header;
+	PacketHeaderV1 header;
 
 	header.version = 1;
 	header.scts = 8;
@@ -83,7 +83,7 @@ int Packet::encode_detect(const DTCTableDefinition *tdef, int sn)
 	/* no result set */
 	header.len[DRequest::Section::DTCResultSet] = 0;
 
-	bytes = encode_header(header);
+	bytes = encode_header_v1(header);
 	const int len = bytes;
 
 	/* exist and large enough, use. else free and malloc */
@@ -131,7 +131,7 @@ int Packet::encode_detect(const DTCTableDefinition *tdef, int sn)
 
 int Packet::encode_reload_config(const DTCTableDefinition *tdef, int sn)
 {
-	PacketHeader header;
+	PacketHeaderV1 header;
 
 	header.version = 1;
 	header.scts = 8;
@@ -183,7 +183,7 @@ int Packet::encode_reload_config(const DTCTableDefinition *tdef, int sn)
 	/* no result set */
 	header.len[DRequest::Section::DTCResultSet] = 0;
 
-	bytes = encode_header(header);
+	bytes = encode_header_v1(header);
 	const int len = bytes;
 
 	/* pool, exist and large enough, use. else free and malloc */
@@ -244,7 +244,7 @@ static char *EncodeBinary(char *p, const DTCBinary &b)
 int Packet::encode_fetch_data(DTCJobOperation &job)
 {
 	const DTCTableDefinition *tdef = job.table_definition();
-	PacketHeader header;
+	PacketHeaderV1 header;
 
 	header.version = 1;
 	header.scts = 8;
@@ -287,7 +287,7 @@ int Packet::encode_fetch_data(DTCJobOperation &job)
 	/* no result set */
 	header.len[DRequest::Section::DTCResultSet] = 0;
 
-	bytes = encode_header(header);
+	bytes = encode_header_v1(header);
 	const int len = bytes;
 
 	/* pool, exist and large enough, use. else free and malloc */
@@ -337,7 +337,7 @@ int Packet::encode_fetch_data(DTCJobOperation &job)
 int Packet::encode_pass_thru(DtcJob &job)
 {
 	const DTCTableDefinition *tdef = job.table_definition();
-	PacketHeader header;
+	PacketHeaderV1 header;
 
 	header.version = 1;
 	header.scts = 8;
@@ -379,7 +379,7 @@ int Packet::encode_pass_thru(DtcJob &job)
 	/* no result set */
 	header.len[DRequest::Section::DTCResultSet] = 0;
 
-	bytes = encode_header(header);
+	bytes = encode_header_v1(header);
 	const int len = bytes;
 
 	/* pool, exist and large enough, use. else free and malloc */
@@ -489,7 +489,7 @@ int Packet::encode_result(DtcJob &job, int mtu, uint32_t ts)
 	if (job.result_key() == NULL && job.request_key() != NULL)
 		job.set_result_key(*job.request_key());
 
-	PacketHeader header;
+	PacketHeaderV1 header;
 
 	header.version = 1;
 	header.scts = 8;
@@ -527,7 +527,7 @@ int Packet::encode_result(DtcJob &job, int mtu, uint32_t ts)
 	/* copy result set */
 	header.len[DRequest::Section::DTCResultSet] = lrp;
 
-	bytes = encode_header(header);
+	bytes = encode_header_v1(header);
 	if (bytes > mtu) {
 		/* clear result set */
 		nrp = 0;
@@ -545,7 +545,7 @@ int Packet::encode_result(DtcJob &job, int mtu, uint32_t ts)
 		header.cmd = DRequest::result_code;
 		header.len[DRequest::Section::DTCResultSet] = 0;
 		/* FIXME: only work in LITTLE ENDIAN machine */
-		bytes = encode_header(header);
+		bytes = encode_header_v1(header);
 	}
 
 	//non-result packet len

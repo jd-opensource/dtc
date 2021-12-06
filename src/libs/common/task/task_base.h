@@ -192,9 +192,10 @@ class DtcJob : public TableReference {
 
     protected:
 	// return total packet size
-	int decode_header(const PacketHeader &in, PacketHeader *out = NULL);
-	int validate_section(PacketHeader &header);
-	void decode_request(PacketHeader &header, char *p);
+	int decode_header_v1(const PacketHeaderV1 &in,
+			     PacketHeaderV1 *out = NULL);
+	int validate_section(PacketHeaderV1 &header);
+	void decode_request_v1(PacketHeaderV1 &header, char *p);
 	int decode_field_value(char *d, int l, int m);
 	int decode_field_set(char *d, int l);
 	int decode_result_set(char *d, int l);
@@ -377,11 +378,11 @@ class DtcJob : public TableReference {
 
 	static int max_header_size(void)
 	{
-		return sizeof(PacketHeader);
+		return sizeof(PacketHeaderV1);
 	}
 	static int min_header_size(void)
 	{
-		return sizeof(PacketHeader);
+		return sizeof(PacketHeaderV1);
 	}
 	static int check_packet_size(const char *buf, int len);
 
@@ -671,6 +672,6 @@ class DtcJob : public TableReference {
 	int process_internal_result(uint32_t ts = 0);
 };
 
-extern int packet_body_len(PacketHeader &header);
+extern int packet_body_len_v1(PacketHeaderV1 &header);
 
 #endif
