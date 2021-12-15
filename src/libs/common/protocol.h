@@ -135,10 +135,10 @@ struct PacketHeaderV1 {
 
 struct PacketHeaderV2 {
 	uint8_t version;
-	uint8_t scts;
-	uint8_t flags;
-	uint8_t cmd;
-	uint32_t len[DRequest::Section::Total];
+	uint8_t admin;
+	uint8_t reserved[2];
+	uint32_t packet_len;
+	uint64_t id;
 };
 
 struct DTCServerInfo {

@@ -172,8 +172,6 @@ void my_parse_rsp(struct msg *r) {
 		}
 		r->peerid = ((struct DTC_HEADER*)p)->id;
 		r->admin = ((struct DTC_HEADER*)p)->admin;
-		log_debug("%x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x ",
-			p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15], p[16], p[17], p[18], p[19]);
 		p = p + sizeof(struct DTC_HEADER);
 		
 		r->pkt_nr = (uint8_t)(p[3]);	// mysql sequence id

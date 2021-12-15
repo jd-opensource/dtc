@@ -146,7 +146,7 @@ int AgentMultiRequest::decode_agent_request()
 					    *(PacketHeaderV1 *)packetstart) +
 				    sizeof(PacketHeaderV1);
 		} else if (packetVersion == 2) {
-			packetlen = ((PacketHeaderV2 *)packetstart)->len;
+			packetlen = ((PacketHeaderV2 *)packetstart)->packet_len;
 		}
 
 		DecodeOneRequest(packetstart, packetlen, i);

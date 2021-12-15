@@ -28,6 +28,7 @@
 #include "dtc_error_code.h"
 #include "../log/log.h"
 #include "algorithm/md5.h"
+#include "../my/my_request.h"
 
 int DtcJob::check_packet_size(const char *buf, int len)
 {
@@ -189,6 +190,41 @@ int8_t DtcJob::select_version(char *packetIn, int packetLen)
 //     type 2: use external packet
 void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 {
+	PacketHeaderV2 *header;
+	char *p = packetIn;
+
+	switch (stage) {
+	default:
+		break;
+	case DecodeStageFatalError:
+	case DecodeStageDataError:
+	case DecodeStageDone:
+		return;
+	}
+
+	if (packetLen < (int)sizeof(PacketHeaderV2)) {
+		stage = DecodeStageFatalError;
+		return;
+	}
+
+	//Parse DTC v2 protocol.
+	header = (PacketHeaderV2 *)p;
+
+	if (header->version != 2) {
+		stage = DecodeStageDataError;
+		return;
+	}
+
+	p = p + sizeof(PacketHeaderV2);
+
+	MyRequest mr;
+	mr.set_packet_info(p, packetLen - sizeof(PacketHeaderV2));
+	if (!mr.load_sql()) {
+		log4cplus_error("load sql error");
+		stage = DecodeStageDataError;
+		return;
+	}
+
 	return;
 }
 
