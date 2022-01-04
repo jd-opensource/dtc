@@ -2134,6 +2134,7 @@ BufferProcessAskChain::buffer_process_replicate(DTCJobOperation &job)
 			job.build_packed_key();
 			row[2] = (*pstRow)[0];
 			// only bring back the key list
+			log4cplus_debug("append_row flag");
 			job.append_row(&row);
 			rawdata.destory();
 		}
@@ -2242,7 +2243,7 @@ BufferResult BufferProcessAskChain::check_and_expire(DTCJobOperation &job)
 
 void BufferProcessAskChain::job_ask_procedure(DTCJobOperation *job_operation)
 {
-	log4cplus_debug("enter job_ask_procedure");
+	log4cplus_debug("BufferProcessAskChain enter job_ask_procedure");
 	table_define_infomation_ =
 		TableDefinitionManager::instance()->get_cur_table_def();
 	uint64_t now_unix_time = GET_TIMESTAMP() / 1000;
@@ -2374,7 +2375,7 @@ void BufferProcessAskChain::job_ask_procedure(DTCJobOperation *job_operation)
 
 	//delay purge.
 	cache_.delay_purge_notify();
-	log4cplus_debug("leave job_ask_procedure");
+	log4cplus_debug("BufferProcessAskChain leave job_ask_procedure");
 }
 
 void BufferProcessAskChain::job_answer_procedure(DTCJobOperation *job_operation)
@@ -3270,6 +3271,7 @@ BufferResult BufferProcessAskChain::buffer_get_key_list(DTCJobOperation &Job)
 		r[3].Set((char *)(rawdata.get_addr()),
 			 (int)(rawdata.data_size()));
 
+		log4cplus_debug("append_row flag");
 		Job.append_row(&r);
 
 		rawdata.destory();
@@ -3314,6 +3316,7 @@ BufferResult BufferProcessAskChain::buffer_get_raw_data(DTCJobOperation &Job)
 		if (!stNode) { //master没有该key的数据
 			stRow[1].u64 = DTCHotBackup::KEY_NOEXIST;
 			stRow[3].Set(0);
+			log4cplus_debug("append_row flag");
 			Job.append_row(&stRow);
 			continue;
 		} else {
@@ -3329,6 +3332,7 @@ BufferResult BufferProcessAskChain::buffer_get_raw_data(DTCJobOperation &Job)
 				     (int)(stNodeData.data_size()));
 		}
 
+		log4cplus_debug("append_row flag");
 		Job.append_row(&stRow); //当前行添加到task中
 		stNodeData.destory();
 	}

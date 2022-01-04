@@ -40,7 +40,7 @@ int Templateencode_request(NCRequest &rq, const DTCValue *kptr, T *tgt)
 
 	const char *accessKey = sv->access_token_.c_str();
 
-	PacketHeaderV1 header;
+	DTC_HEADER_V1 header;
 
 	header.version = 1;
 	header.scts = 8;

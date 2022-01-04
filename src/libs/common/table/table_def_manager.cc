@@ -163,7 +163,7 @@ DTCTableDefinition *TableDefinitionManager::load_table(const char *file)
 	// should copy one, as load_buffered_table will modify buf
 	strncpy(buf, _buf, len);
 	buf[len] = '\0';
-	log4cplus_debug("read file to buf, len: %d, content: %s", len, _buf);
+	log4cplus_debug("read file to buf, len: %d", len);
 	ret = load_buffered_table(buf);
 	if (!ret)
 		FREE_CLEAR(_buf);

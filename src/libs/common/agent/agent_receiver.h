@@ -52,7 +52,7 @@ class AgentReceiver {
 	int recv_once();
 	int real_recv();
 	int recv_again();
-	int decode_header_v1(PacketHeaderV1 *header);
+	int decode_header_v1(DTC_HEADER_V1 *header);
 	void set_recved_info(RecvedPacket &packet);
 	int count_packet_v1();
 	int count_packet_v2();

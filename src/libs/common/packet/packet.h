@@ -22,6 +22,7 @@
 #include "section.h"
 #include "socket/socket_addr.h"
 #include "log/log.h"
+#include "result.h"
 
 class NCRequest;
 union DTCValue;
@@ -87,9 +88,9 @@ class Packet {
 		return sendedVecCount == nv;
 	}
 
-	static int encode_header_v1(PacketHeaderV1 &header);
+	static int encode_header_v1(DTC_HEADER_V1 &header);
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-	static int encode_header_v1(const PacketHeaderV1 &header);
+	static int encode_header_v1(const DTC_HEADER_V1 &header);
 #endif
 	int encode_forward_request(DTCJobOperation &);
 	int encode_pass_thru(DtcJob &);
@@ -101,6 +102,8 @@ class Packet {
 	// 	if no result/error code set, no result_code() to zero
 	// 	if no result key set, set result key to request key
 	int encode_result(DtcJob &, int mtu = 0, uint32_t ts = 0);
+	int encode_result_v2(DtcJob &, int mtu = 0, uint32_t ts = 0);
+	int desc_tables_result(DtcJob *job);
 	int encode_result(DTCJobOperation &, int mtu = 0);
 	int encode_detect(const DTCTableDefinition *tdef, int sn = 1);
 	int encode_request(NCRequest &r, const DTCValue *k = NULL);
@@ -125,6 +128,9 @@ class Packet {
 	int encode_agent_request(NCRequest &rq, const DTCValue *kptr);
 
 	int encode_reload_config(const DTCTableDefinition *tdef, int sn = 1);
+
+	int encode_mysql_protocol(ResultSet *rp, char *my_result, int *my_len,
+				  DtcJob &job);
 };
 
 #endif

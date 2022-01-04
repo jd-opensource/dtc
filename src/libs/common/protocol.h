@@ -125,7 +125,7 @@ class DRequest {
 	};
 };
 
-struct PacketHeaderV1 {
+struct DTC_HEADER_V1 {
 	uint8_t version;
 	uint8_t scts;
 	uint8_t flags;
@@ -133,7 +133,7 @@ struct PacketHeaderV1 {
 	uint32_t len[DRequest::Section::Total];
 };
 
-struct PacketHeaderV2 {
+struct DTC_HEADER_V2 {
 	uint8_t version;
 	uint8_t admin;
 	uint8_t reserved[2];

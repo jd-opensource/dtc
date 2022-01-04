@@ -30,10 +30,14 @@
 #include "algorithm/md5.h"
 #include "../my/my_request.h"
 
+#include "../../hsql/include/SQLParser.h"
+#include "../../hsql/include/SQLParserResult.h"
+#include "../../hsql/include/util/sqlhelper.h"
+
 int DtcJob::check_packet_size(const char *buf, int len)
 {
-	const PacketHeaderV1 *header = (PacketHeaderV1 *)buf;
-	if (len < (int)sizeof(PacketHeaderV1))
+	const DTC_HEADER_V1 *header = (DTC_HEADER_V1 *)buf;
+	if (len < (int)sizeof(DTC_HEADER_V1))
 		return 0;
 
 	if (header->version != 1) { // version not supported
@@ -58,7 +62,7 @@ int DtcJob::check_packet_size(const char *buf, int len)
 		return -4;
 	}
 
-	return (int)n + sizeof(PacketHeaderV1);
+	return (int)n + sizeof(DTC_HEADER_V1);
 }
 
 void DtcJob::decode_stream(SimpleReceiver &receiver)
@@ -157,6 +161,7 @@ void DtcJob::decode_stream(SimpleReceiver &receiver)
 int8_t DtcJob::select_version(char *packetIn, int packetLen)
 {
 	int8_t ver = 0;
+	log4cplus_debug("select version entry.");
 
 	switch (stage) {
 	default:
@@ -164,16 +169,18 @@ int8_t DtcJob::select_version(char *packetIn, int packetLen)
 	case DecodeStageFatalError:
 	case DecodeStageDataError:
 	case DecodeStageDone:
+		log4cplus_error("stage: %d", stage);
 		return -1;
 	}
 
 	if (packetLen <= 1) {
+		log4cplus_error("packet len: %d", packetLen);
 		stage = DecodeStageFatalError;
 		return -2;
 	}
 
 	ver = (int8_t)(packetIn[0]);
-
+	log4cplus_debug("incoming dtc packet version:%d", ver);
 	if (ver != 1 && ver != 2) {
 		log4cplus_error("dtc packet version error:%d, pkt len:%d", ver,
 				packetLen);
@@ -190,7 +197,7 @@ int8_t DtcJob::select_version(char *packetIn, int packetLen)
 //     type 2: use external packet
 void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 {
-	PacketHeaderV2 *header;
+	DTC_HEADER_V2 *header;
 	char *p = packetIn;
 
 	switch (stage) {
@@ -202,28 +209,32 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 		return;
 	}
 
-	if (packetLen < (int)sizeof(PacketHeaderV2)) {
+	if (packetLen < (int)sizeof(DTC_HEADER_V2)) {
 		stage = DecodeStageFatalError;
 		return;
 	}
 
 	//Parse DTC v2 protocol.
-	header = (PacketHeaderV2 *)p;
+	header = (DTC_HEADER_V2 *)p;
 
 	if (header->version != 2) {
 		stage = DecodeStageDataError;
 		return;
 	}
 
-	p = p + sizeof(PacketHeaderV2);
+	serialNr = header->id;
 
-	MyRequest mr;
-	mr.set_packet_info(p, packetLen - sizeof(PacketHeaderV2));
+	//offset DTC Header.
+	p = p + sizeof(DTC_HEADER_V2);
+
+	mr.set_packet_info(p, packetLen - sizeof(DTC_HEADER_V2));
 	if (!mr.load_sql()) {
 		log4cplus_error("load sql error");
 		stage = DecodeStageDataError;
 		return;
 	}
+
+	decode_request_v2(&mr);
 
 	return;
 }
@@ -234,11 +245,11 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 //     type 2: use external packet
 void DtcJob::decode_packet_v1(char *packetIn, int packetLen, int type)
 {
-	PacketHeaderV1 header;
+	DTC_HEADER_V1 header;
 #if __BYTE_ORDER == __BIG_ENDIAN
-	PacketHeaderV1 out[1];
+	DTC_HEADER_V1 out[1];
 #else
-	PacketHeaderV1 *const out = &header;
+	DTC_HEADER_V1 *const out = &header;
 #endif
 
 	switch (stage) {
@@ -250,7 +261,7 @@ void DtcJob::decode_packet_v1(char *packetIn, int packetLen, int type)
 		return;
 	}
 
-	if (packetLen < (int)sizeof(PacketHeaderV1)) {
+	if (packetLen < (int)sizeof(DTC_HEADER_V1)) {
 		stage = DecodeStageFatalError;
 		return;
 	}
@@ -262,12 +273,12 @@ void DtcJob::decode_packet_v1(char *packetIn, int packetLen, int type)
 		return;
 	}
 
-	if ((int)(sizeof(PacketHeaderV1) + rv) > packetLen) {
+	if ((int)(sizeof(DTC_HEADER_V1) + rv) > packetLen) {
 		stage = DecodeStageFatalError;
 		return;
 	}
 
-	char *buf = (char *)packetIn + sizeof(PacketHeaderV1);
+	char *buf = (char *)packetIn + sizeof(DTC_HEADER_V1);
 	switch (type) {
 	default:
 	case 0:
@@ -291,7 +302,7 @@ void DtcJob::decode_packet_v1(char *packetIn, int packetLen, int type)
 	return;
 }
 
-int DtcJob::decode_header_v1(const PacketHeaderV1 &header, PacketHeaderV1 *out)
+int DtcJob::decode_header_v1(const DTC_HEADER_V1 &header, DTC_HEADER_V1 *out)
 {
 	if (header.version != 1) { // version not supported
 		stage = DecodeStageFatalError;
@@ -342,7 +353,7 @@ int DtcJob::decode_header_v1(const PacketHeaderV1 &header, PacketHeaderV1 *out)
 	return (int)n;
 }
 
-int DtcJob::validate_section(PacketHeaderV1 &header)
+int DtcJob::validate_section(DTC_HEADER_V1 &header)
 {
 	int i;
 	int m;
@@ -372,7 +383,84 @@ int DtcJob::validate_section(PacketHeaderV1 &header)
 	return 0;
 }
 
-void DtcJob::decode_request_v1(PacketHeaderV1 &header, char *p)
+void DtcJob::decode_request_v2(MyRequest *mr)
+{
+	char *p = mr->get_packet_ptr();
+
+	//1.versionInfo
+	this->versionInfo.set_serial_nr(mr->get_pkt_nr());
+
+	//2.requestInfo
+	DTCValue key;
+	if (mr->get_key(&key)) {
+		requestInfo.set_key(key);
+	}
+
+	//limit
+	if (mr->get_limit_count()) {
+		requestInfo.set_limit_start(mr->get_limit_start());
+		requestInfo.set_limit_count(mr->get_limit_count());
+	}
+
+	//3.fieldList(Need)
+	if (mr->get_need_num_fields() > 0) {
+		FieldSetByName fs;
+		std::vector<std::string> need = mr->get_need_array();
+		if (need.size() != mr->get_need_num_fields()) {
+			log4cplus_error("need field num error:%d, %d",
+					need.size(), mr->get_need_num_fields());
+			return;
+		}
+		for (int i = 0; i < need.size(); i++) {
+			fs.add_field(need[i].c_str(), i);
+		}
+		if (!fs.Solved())
+			fs.Resolve(TableDefinitionManager::instance()
+					   ->get_cur_table_def(),
+				   0);
+
+		fieldList = new DTCFieldSet(fs.num_fields());
+		fieldList->Copy(fs); // never failed
+	}
+
+	//4.conditionInfo(where)
+	if (mr->get_condition_num_fields() > 0) {
+		hsql::SelectStatement *stmt = mr->get_result()->getStatement(0);
+		hsql::Expr *where = stmt->whereClause;
+
+		int size = where->exprList->size();
+		if (size <= 1) {
+			log4cplus_error("condition num error: %d", size);
+			return;
+		}
+
+		FieldValueByName ci;
+		for (int i = 0; i < size; i++) {
+			ci.add_value(
+				where->exprList->at(i)->getName(), DField::Set,
+				where->exprList->at(i)
+					->type /*DField::Unsigned*/,
+				DTCValue::Make(
+					where->exprList->at(i)->expr2->ival));
+		}
+
+		conditionInfo = new DTCFieldValue(size);
+		int err = conditionInfo->Copy(
+			ci, 0,
+			TableDefinitionManager::instance()->get_cur_table_def());
+		if (err < 0) {
+			log4cplus_error("decode condition info error: %d", err);
+			return;
+		}
+	}
+
+	//5.updateInfo Set(update) / values(insert into)
+	if (mr->get_update_num_fields() > 0) {
+		DTCFieldValue *updateInfo;
+	}
+}
+
+void DtcJob::decode_request_v1(DTC_HEADER_V1 &header, char *p)
 {
 #if !CLIENTAPI
 	if (DRequest::ReloadConfig == requestCode &&
@@ -392,6 +480,7 @@ void DtcJob::decode_request_v1(PacketHeaderV1 &header, char *p)
 		goto error;                                                    \
 	} while (0)
 
+	//VersionInfo
 	if (header.len[id]) {
 		/* decode version info */
 		err = decode_simple_section(p, header.len[id], versionInfo,
@@ -496,6 +585,7 @@ void DtcJob::decode_request_v1(PacketHeaderV1 &header, char *p)
 		return;
 	}
 
+	//table_definition
 	p += header.len[id++];
 
 	// only client use remote table
@@ -523,6 +613,7 @@ void DtcJob::decode_request_v1(PacketHeaderV1 &header, char *p)
 			mark_has_remote_table();
 	}
 
+	//RequestInfo
 	p += header.len[id++];
 
 	if (header.len[id]) {
@@ -560,6 +651,7 @@ void DtcJob::decode_request_v1(PacketHeaderV1 &header, char *p)
 		}
 	}
 
+	//ResultInfo
 	p += header.len[id++];
 
 	if (header.len[id]) {
@@ -574,6 +666,7 @@ void DtcJob::decode_request_v1(PacketHeaderV1 &header, char *p)
 		rkey = resultInfo.key();
 	}
 
+	//UpdateInfo
 	p += header.len[id++];
 
 	if (header.len[id]) {
@@ -586,6 +679,7 @@ void DtcJob::decode_request_v1(PacketHeaderV1 &header, char *p)
 				"decode update info error: %d", err);
 	}
 
+	//ConditionInfo
 	p += header.len[id++];
 
 	if (header.len[id]) {
@@ -597,6 +691,7 @@ void DtcJob::decode_request_v1(PacketHeaderV1 &header, char *p)
 				"decode condition error: %d", err);
 	}
 
+	//FieldSet
 	p += header.len[id++];
 
 	if (header.len[id]) {
@@ -608,6 +703,7 @@ void DtcJob::decode_request_v1(PacketHeaderV1 &header, char *p)
 				"decode field set error: %d", err);
 	}
 
+	//DTCResultSet
 	p += header.len[id++];
 
 	if (header.len[id]) {
@@ -890,7 +986,7 @@ int ResultSet::decode_row(void)
 	return 0;
 }
 
-int packet_body_len_v1(PacketHeaderV1 &header)
+int packet_body_len_v1(DTC_HEADER_V1 &header)
 {
 	int pktbodylen = 0;
 	for (int i = 0; i < DRequest::Section::Total; i++) {

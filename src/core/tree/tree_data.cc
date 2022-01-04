@@ -1454,6 +1454,7 @@ int TreeData::get_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord)
 		if (stpTaskTab->expire_time_field_id() > 0)
 			stpTaskRow->update_expire_time();
 		//当前行添加到task中
+		log4cplus_debug("append_row flag");
 		job_op.append_row(stpTaskRow);
 
 		if (job_op.all_rows() && job_op.result_full()) {

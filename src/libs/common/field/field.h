@@ -184,17 +184,6 @@ class RowValue : public TableReference {
 		memset(value, 0, sizeof(DTCValue) * (num_fields() + 1));
 	}
 
-#if 0
-	int key_fields(void) const { return table_definition_->key_fields(); }
-        int num_fields(void) const { return table_definition_->num_fields(); }
-        int field_type(int n) const { return table_definition_->field_type(n); }
-	int field_size(int n) const { return table_definition_->field_size(n); }
-	int field_b_size(int n) const {return table_definition_->field_b_size(n);}
-	int field_b_offset(int n) const {return table_definition_->field_b_offset(n);}
-	int is_same_table(const RowValue &rv) const { return table_definition_->is_same_table(rv.table_definition_); }
-	int is_same_table(const RowValue *rv) const { return rv ? is_same_table(*rv) : 0; }
-	const DTCTableDefinition *table_definition(void) const { return table_definition_; }
-#endif
 #if !CLIENTAPI
 	// this macro test is scope-test only, didn't affected the class implementation
 	void default_value(void)

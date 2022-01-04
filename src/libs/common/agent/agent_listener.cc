@@ -65,7 +65,7 @@ void AgentListener::input_notify()
 			break;
 		}
 
-		log4cplus_debug("new CAgentClient accepted!!");
+		log4cplus_debug("new client connection accepting.");
 
 		ClientAgent *client;
 		try {

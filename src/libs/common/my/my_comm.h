@@ -33,12 +33,6 @@ MYSQL Protocol Definition, See more detail:
 
 enum enum_agent_admin { CMD_NOP = 0, CMD_KEY_DEFINE };
 
-struct DTC_HEADER {
-	uint8_t version;
-	uint8_t admin;
-	uint64_t id;
-};
-
 enum AGENT_NEXT_OPERATION { NEXT_FORWARD = 0, NEXT_RSP_OK, NEXT_RSP_ERROR };
 
 static inline int32 sint3korr(const uchar *A)

@@ -21,7 +21,7 @@
 
 class SimpleReceiver {
     private:
-	struct PacketHeaderV1 _header;
+	struct DTC_HEADER_V1 _header;
 	char *_packet;
 	int _netfd;
 	int _count;
@@ -86,11 +86,11 @@ class SimpleReceiver {
 	{
 		return _packet;
 	}
-	PacketHeaderV1 &header(void)
+	DTC_HEADER_V1 &header(void)
 	{
 		return _header;
 	}
-	const PacketHeaderV1 &header(void) const
+	const DTC_HEADER_V1 &header(void) const
 	{
 		return _header;
 	}

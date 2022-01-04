@@ -163,16 +163,16 @@ void my_parse_rsp(struct msg *r) {
 
 	if (p < b->last) 
 	{
-		if (b->last - p < sizeof(struct DTC_HEADER) + MYSQL_HEADER_SIZE) {
+		if (b->last - p < sizeof(struct DTC_HEADER_V2) + MYSQL_HEADER_SIZE) {
 			log_error("receive size small than package header. id:%d", r->id);
 			p = b->last;
 			r->parse_res = MSG_PARSE_ERROR;
 			errno = EINVAL;
 			return ;
 		}
-		r->peerid = ((struct DTC_HEADER*)p)->id;
-		r->admin = ((struct DTC_HEADER*)p)->admin;
-		p = p + sizeof(struct DTC_HEADER);
+		r->peerid = ((struct DTC_HEADER_V2*)p)->id;
+		r->admin = ((struct DTC_HEADER_V2*)p)->admin;
+		p = p + sizeof(struct DTC_HEADER_V2);
 		
 		r->pkt_nr = (uint8_t)(p[3]);	// mysql sequence id
 		log_debug("pkt_nr:%d, peerid:%d, id:%d, admin:%d", r->pkt_nr, r->peerid, r->id, r->admin);

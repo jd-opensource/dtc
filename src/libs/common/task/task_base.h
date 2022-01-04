@@ -27,6 +27,7 @@
 #include "../log/log.h"
 #include "buffer.h"
 #include "receiver.h"
+#include "../my/my_request.h"
 
 class NCRequest;
 
@@ -161,6 +162,7 @@ class DtcJob : public TableReference {
 
     public:
 	ResultSet *result;
+	MyRequest mr;
 
     public: // packet info, read-write
 	DTCVersionInfo versionInfo;
@@ -192,13 +194,13 @@ class DtcJob : public TableReference {
 
     protected:
 	// return total packet size
-	int decode_header_v1(const PacketHeaderV1 &in,
-			     PacketHeaderV1 *out = NULL);
-	int validate_section(PacketHeaderV1 &header);
-	void decode_request_v1(PacketHeaderV1 &header, char *p);
+	int decode_header_v1(const DTC_HEADER_V1 &in,
+			     DTC_HEADER_V1 *out = NULL);
+	int validate_section(DTC_HEADER_V1 &header);
+	void decode_request_v1(DTC_HEADER_V1 &header, char *p);
+	void decode_request_v2(MyRequest *mr);
 	int decode_field_value(char *d, int l, int m);
 	int decode_field_set(char *d, int l);
-	int decode_result_set(char *d, int l);
 
     private:
 	int8_t select_version(char *packetIn, int packetLen);
@@ -233,7 +235,7 @@ class DtcJob : public TableReference {
 		DtcJob();
 		Copy(orig);
 	}
-
+	int decode_result_set(char *d, int l);
 	// these Copy()... only apply to empty DtcJob
 	// linked clone
 	int Copy(const DtcJob &orig);
@@ -292,17 +294,6 @@ class DtcJob : public TableReference {
 	{
 		return replicateTableDef;
 	}
-#if 0
-		DTCTableDefinition *table_definition(void) const { return table_definition_; }
-		int key_format(void) const { return table_definition_->key_format(); }
-		int key_fields(void) const { return table_definition_->key_fields(); }
-		int key_auto_increment(void) const { return table_definition_->key_auto_increment(); }
-		int auto_increment_field_id(void) const { return table_definition_->auto_increment_field_id(); }
-		int field_type(int n) const { return table_definition_->field_type(n); }
-		int field_offset(int n) const { return table_definition_->field_type(n); }
-		int field_id(const char *n) const { return table_definition_->field_id(n); }
-		const char* field_name(int id) const { return table_definition_->field_name(id); }
-#endif
 
 	// This code has to value (not very usefull):
 	// DRequest::ResultInfo --> result/error code/key only
@@ -378,11 +369,11 @@ class DtcJob : public TableReference {
 
 	static int max_header_size(void)
 	{
-		return sizeof(PacketHeaderV1);
+		return sizeof(DTC_HEADER_V1);
 	}
 	static int min_header_size(void)
 	{
-		return sizeof(PacketHeaderV1);
+		return sizeof(DTC_HEADER_V1);
 	}
 	static int check_packet_size(const char *buf, int len);
 
@@ -672,6 +663,6 @@ class DtcJob : public TableReference {
 	int process_internal_result(uint32_t ts = 0);
 };
 
-extern int packet_body_len_v1(PacketHeaderV1 &header);
+extern int packet_body_len_v1(DTC_HEADER_V1 &header);
 
 #endif

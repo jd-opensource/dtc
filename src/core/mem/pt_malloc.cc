@@ -1331,11 +1331,6 @@ int PtMalloc::inter_free(ALLOC_HANDLE_T hHandle, ALLOC_SIZE_T &tMemSize)
 			 ptr_to_handle(pstChunk));
 		set_bin_bit_map(smallbin_index(tSize));
 	} else {
-#if 0
-		/* 当一个bin下挂接的节点非常多时，因为要排序，所以这个调用会花费很多cpu时间 by ada */
-		int iIdx = largebin_index(tSize);
-		link_sorted_bin(m_ptBin[iIdx], ptr_to_handle(pstChunk), tSize);
-#endif
 		link_bin(m_ptBin[largebin_index(tSize)],
 			 ptr_to_handle(pstChunk));
 		set_bin_bit_map(largebin_index(tSize));

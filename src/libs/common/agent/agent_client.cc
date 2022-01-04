@@ -77,7 +77,7 @@ void AgentReply::job_answer_procedure(DTCJobOperation *job)
 				     job->default_expire_time() :
 				     job->requestInfo.get_expire_time(
 					     job->versionInfo.CTLibIntVer());
-	int req_delaytime = job->responseTimer.live();
+	int req_delaytime = 0;
 
 	if (!init_stat_flag) {
 		stat_agent_expore_count =

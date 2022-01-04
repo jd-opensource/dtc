@@ -78,10 +78,6 @@ class JobTunnel : public JobAskInterface<T>, public JobAnswerInterface<T> {
 	}
 	inline int dig_tunnel(ChainJoint<T> *from, JobAskInterface<T> *to)
 	{
-#if 0
-		log4cplus_debug("Bind taskpipe from thread %s to thread %s",
-				fr->owner_thread()->Name(), to->owner_thread()->Name());
-#endif
 		JobAskInterface<T>::owner = from->get_owner_thread();
 
 		incQueue.attach_poller(from->get_owner_thread(),

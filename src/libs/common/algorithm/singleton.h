@@ -73,15 +73,6 @@ T *Singleton<T, CreationPolicy>::instance(void)
 	return _instance;
 }
 
-/* BUGFIX by ada*/
-#if 0
-template <class T, template <class> class CreationPolicy> 
-void Singleton<T, CreationPolicy>::destory (void)
-{
-	return CreationPolicy<T>::destory (_instance);
-}
-#endif
-
 template <class T, template <class> class CreationPolicy>
 void Singleton<T, CreationPolicy>::destory(void)
 {

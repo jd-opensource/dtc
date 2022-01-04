@@ -37,7 +37,7 @@ bool MyRequest::do_mysql_protocol_parse()
 
 	if (sizeof(MYSQL_HEADER_SIZE) + input_packet_length > raw_len) {
 		log4cplus_error(
-			"the len %d at mysql header is different with len %d actually.",
+			"mysql header len %d is different with actual len %d.",
 			input_packet_length, raw_len);
 		return false;
 	}
@@ -57,27 +57,33 @@ bool MyRequest::do_mysql_protocol_parse()
 		input_packet_length--;
 	}
 	m_sql.assign(p, input_packet_length);
-	log4cplus_debug("sql:%s", m_sql.c_str());
+	log4cplus_debug("sql: \"%s\"", m_sql.c_str());
 
 	return true;
 }
 
 bool MyRequest::load_sql()
 {
+	log4cplus_debug("load_sql entry.");
 	if (!check_packet_info())
 		return false;
 
 	if (!do_mysql_protocol_parse())
 		return false;
 
-	/*hsql::SQLParser::parse(m_sql, &m_result);
-	if (result.isValid())
+	hsql::SQLParser::parse(m_sql, &m_result);
+	if (m_result.isValid()) {
+		log4cplus_debug("load_sql success.");
 		return true;
-	else {
-		log4cplus_error("%s (Line %d:%d)", result.errorMsg(),
-				result.errorLine(), result.errorColumn());
+	} else {
+		log4cplus_error("%s (Line %d:%d)", m_result.errorMsg(),
+				m_result.errorLine(), m_result.errorColumn());
 		return false;
-	}*/
+	}
+
+	//check statement size.
+	if (m_result.size() != 1)
+		return false;
 
 	return false;
 }
@@ -91,4 +97,40 @@ bool MyRequest::check_packet_info()
 		return false;
 	} else
 		return true;
+}
+
+bool MyRequest::get_key(DTCValue *key)
+{
+	return false;
+}
+
+uint32_t MyRequest::get_limit_start()
+{
+	return 0;
+}
+
+uint32_t MyRequest::get_limit_count()
+{
+	return 0;
+}
+
+uint32_t MyRequest::get_need_num_fields()
+{
+	return 0;
+}
+
+uint32_t MyRequest::get_condition_num_fields()
+{
+	return 0;
+}
+
+uint32_t MyRequest::get_update_num_fields()
+{
+	return 0;
+}
+
+std::vector<std::string> MyRequest::get_need_array()
+{
+	std::vector<std::string> need;
+	return need;
 }

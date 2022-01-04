@@ -20,12 +20,14 @@ INCLUDE_DIRECTORIES (
     ../libs/log4cplus/include/
     ../libs/zlib/include64
     ../libs/yaml-cpp/include/
-    ../libs/mysql/include/)
+    ../libs/mysql/include/
+    ../libs/hsql/include)
 
 LINK_DIRECTORIES (
     ${PROJECT_SOURCE_DIR}/src/libs/mysql/libs
     ${PROJECT_SOURCE_DIR}/src/libs/zlib/lib
     ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/libs
+    ${PROJECT_SOURCE_DIR}/src/libs/hsql/libs
     ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/libs
     ${PROJECT_SOURCE_DIR}/build/src/libs/common
     ${PROJECT_SOURCE_DIR}/build/src/core/lib
@@ -34,6 +36,7 @@ LINK_DIRECTORIES (
 )
 
 LINK_LIBRARIES(liblog4cplus.a) 
+LINK_LIBRARIES(libsqlparser.a)
 LINK_LIBRARIES(libyaml-cpp.a)
 LINK_LIBRARIES(libz64.a)
 LINK_LIBRARIES(pthread)

@@ -125,7 +125,9 @@ int DTCConfig::parse_config(const char *fn, const char *defsec, bool bakconfig)
 	if (bakconfig) {
 		char bak_config[1024];
 		int err = 0;
-		snprintf(bak_config, sizeof(bak_config), "cp %s /usr/local/dtc/stat/", fn);
+		system("mkdir -p /usr/local/dtc/stat/");
+		snprintf(bak_config, sizeof(bak_config),
+			 "cp %s /usr/local/dtc/stat/", fn);
 		if (err == 0)
 			err = system(bak_config);
 	}

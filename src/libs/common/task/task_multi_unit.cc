@@ -59,8 +59,8 @@ JobHubAskChain::~JobHubAskChain(void)
 
 void JobHubAskChain::job_ask_procedure(DTCJobOperation *job_operation)
 {
-	log4cplus_debug("enter job_ask_procedure");
-	log4cplus_debug("flag_multi_key_val: %d",
+	log4cplus_debug("JobHubAskChain enter job_ask_procedure");
+	log4cplus_debug("multi key flag: %d",
 			job_operation->flag_multi_key_val());
 
 	if (!job_operation->flag_multi_key_val()) {
@@ -127,6 +127,6 @@ void JobHubAskChain::job_ask_procedure(DTCJobOperation *job_operation)
 	job_operation->set_batch_key_list(req);
 	replyMultiplexer.job_answer_procedure(job_operation);
 
-	log4cplus_debug("enter job_ask_procedure");
+	log4cplus_debug("JobHubAskChain enter job_ask_procedure");
 	return;
 }

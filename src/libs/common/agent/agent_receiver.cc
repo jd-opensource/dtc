@@ -151,7 +151,7 @@ int AgentReceiver::recv_again()
 	return rv;
 }
 
-int AgentReceiver::decode_header_v1(PacketHeaderV1 *header)
+int AgentReceiver::decode_header_v1(DTC_HEADER_V1 *header)
 {
 	if (header->version != 1) { // version not supported
 		log4cplus_error("version incorrect: %d", header->version);
@@ -197,12 +197,12 @@ int AgentReceiver::count_packet_v2()
 	if (pos == NULL || leftlen == 0)
 		return 0;
 
-	PacketHeaderV2 *header = NULL;
+	DTC_HEADER_V2 *header = NULL;
 
 	while (1) {
-		PacketHeaderV2 *header = NULL;
+		DTC_HEADER_V2 *header = NULL;
 
-		if (leftlen < (int)sizeof(PacketHeaderV2))
+		if (leftlen < (int)sizeof(DTC_HEADER_V2))
 			break;
 
 		pos += leftlen;
@@ -227,21 +227,21 @@ int AgentReceiver::count_packet_v1()
 
 	while (1) {
 		int pktbodylen = 0;
-		PacketHeaderV1 *header = NULL;
+		DTC_HEADER_V1 *header = NULL;
 
-		if (leftlen < (int)sizeof(PacketHeaderV1))
+		if (leftlen < (int)sizeof(DTC_HEADER_V1))
 			break;
 
-		header = (PacketHeaderV1 *)pos;
+		header = (DTC_HEADER_V1 *)pos;
 		pktbodylen = decode_header_v1(header);
 		if (pktbodylen < 0)
 			return -1;
 
-		if (leftlen < (int)sizeof(PacketHeaderV1) + pktbodylen)
+		if (leftlen < (int)sizeof(DTC_HEADER_V1) + pktbodylen)
 			break;
 
-		pos += sizeof(PacketHeaderV1) + pktbodylen;
-		leftlen -= sizeof(PacketHeaderV1) + pktbodylen;
+		pos += sizeof(DTC_HEADER_V1) + pktbodylen;
+		leftlen -= sizeof(DTC_HEADER_V1) + pktbodylen;
 		pktCnt++;
 	}
 

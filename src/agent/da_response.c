@@ -148,7 +148,7 @@ int dtc_header_remove(struct msg* msg)
 	if(new_buf == NULL)
 		return -2;
 
-	mbuf_copy(new_buf, mbuf->start + sizeof(struct DTC_HEADER), mbuf_length(mbuf) - sizeof(struct DTC_HEADER));
+	mbuf_copy(new_buf, mbuf->start + sizeof(struct DTC_HEADER_V2), mbuf_length(mbuf) - sizeof(struct DTC_HEADER_V2));
 
 	mbuf_remove(&msg->buf_q, mbuf);
 	mbuf_put(mbuf);
@@ -165,14 +165,16 @@ int key_define_handle(struct msg* msg)
 	struct mbuf* mbuf = STAILQ_LAST(&msg->buf_q, mbuf, next);
 	int buf_len = 0;
 
+	log_debug("key_define_handle entry.");
+
 	if(!mbuf)
 		return -1;
 
 	buf_len = mbuf->last - mbuf->start;
-	if(buf_len < sizeof(struct DTC_HEADER))
+	if(buf_len < sizeof(struct DTC_HEADER_V2))
 		return -3;
 
-	uint8_t* pos = mbuf->start + sizeof(struct DTC_HEADER);
+	uint8_t* pos = mbuf->start + sizeof(struct DTC_HEADER_V2);
 	uint8_t type = *pos;
 	uint8_t key_len;
 	int i = 0;
@@ -186,13 +188,19 @@ int key_define_handle(struct msg* msg)
 	
 	if(mbuf->last - pos < key_len)
 	{
+		log_debug("key len:%d %d", mbuf->last - pos, key_len);
 		return -4;
 	}
 
 	memcpy(g_dtc_key, pos, key_len);
+	g_dtc_key[key_len] = '\0';
 
 	for(i = 0; i < key_len; i++)
 		g_dtc_key[i] = upper(g_dtc_key[i]);
+	
+	log_info("dtc key:%s", g_dtc_key);
+
+	log_debug("key_define_handle leave.");
 
 	return 0;
 }
@@ -282,7 +290,7 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	}
 
 	if (req_done(c_conn, req)) {
-		log_debug("msg is done , rsp forword msg %"PRIu64"",req->id);
+		log_debug("msg is done , rsp msg id: %"PRIu64"",req->id);
 		
 		switch(msg->admin)
 		{

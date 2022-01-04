@@ -306,7 +306,7 @@ static void req_make_loopback(struct context *ctx, struct conn *conn,
 
 int dtc_header_add(struct msg* msg, enum enum_agent_admin admin)
 {
-	struct DTC_HEADER dtc_header = {0};
+	struct DTC_HEADER_V2 dtc_header = {0};
 
 	struct mbuf* mbuf = STAILQ_LAST(&msg->buf_q, mbuf, next);
 	if(!mbuf)
@@ -324,6 +324,7 @@ int dtc_header_add(struct msg* msg, enum enum_agent_admin admin)
 		dtc_header.id = msg->id;
 #endif
 	dtc_header.id = msg->id;
+	dtc_header.packet_len = mbuf_length(mbuf) + sizeof(dtc_header);
 	mbuf_copy(new_buf, &dtc_header, sizeof(dtc_header));
 	mbuf_copy(new_buf, mbuf->start, mbuf_length(mbuf));
 

@@ -34,9 +34,11 @@ MYSQL Protocol Definition, See more detail:
 
 enum enum_agent_admin { CMD_NOP = 0, CMD_KEY_DEFINE };
 
-struct DTC_HEADER {
+struct DTC_HEADER_V2 {
 	uint8_t version;
 	uint8_t admin;
+	uint8_t reserved[2];
+	uint32_t packet_len;
 	uint64_t id;
 };
 
