@@ -236,6 +236,8 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 
 	decode_request_v2(&mr);
 
+	stage = DecodeStageDone;
+
 	return;
 }
 
@@ -392,9 +394,12 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 
 	//2.requestInfo
 	DTCValue key;
-	if (mr->get_key(&key)) {
+	if (mr->get_key(&key, table_definition()->key_name())) {
 		requestInfo.set_key(key);
+		set_request_key(&key);
 	}
+	log4cplus_debug("key type:%d %d", mr->get_request_type(), key.s64);
+	set_request_code(mr->get_request_type());
 
 	//limit
 	if (mr->get_limit_count()) {

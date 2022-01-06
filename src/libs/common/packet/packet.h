@@ -104,6 +104,7 @@ class Packet {
 	int encode_result(DtcJob &, int mtu = 0, uint32_t ts = 0);
 	int encode_result_v2(DtcJob &, int mtu = 0, uint32_t ts = 0);
 	int desc_tables_result(DtcJob *job);
+	int demo_result(DtcJob *job);
 	int encode_result(DTCJobOperation &, int mtu = 0);
 	int encode_detect(const DTCTableDefinition *tdef, int sn = 1);
 	int encode_request(NCRequest &r, const DTCValue *k = NULL);
@@ -129,8 +130,7 @@ class Packet {
 
 	int encode_reload_config(const DTCTableDefinition *tdef, int sn = 1);
 
-	int encode_mysql_protocol(ResultSet *rp, char *my_result, int *my_len,
-				  DtcJob &job);
+	BufferChain *encode_mysql_protocol(DtcJob *job);
 };
 
 #endif

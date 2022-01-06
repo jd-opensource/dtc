@@ -137,4 +137,29 @@ static inline longlong sint8korr(const uchar *A)
 	return ret;
 }
 
+static inline void int2store_little_endian(uchar *T, uint16 A)
+{
+	memcpy(T, &A, sizeof(A));
+}
+
+static inline void int4store_little_endian(uchar *T, uint32 A)
+{
+	memcpy(T, &A, sizeof(A));
+}
+
+static inline void int2store_big_endian(uchar *T, uint16 A)
+{
+	uint def_temp = A;
+	*(T) = (uchar)(def_temp);
+	*(T + 1) = (uchar)(def_temp >> 8);
+}
+
+static inline void int4store_big_endian(uchar *T, uint32 A)
+{
+	*(T) = (uchar)(A);
+	*(T + 1) = (uchar)(A >> 8);
+	*(T + 2) = (uchar)(A >> 16);
+	*(T + 3) = (uchar)(A >> 24);
+}
+
 #endif /* _MY_COMM_H */

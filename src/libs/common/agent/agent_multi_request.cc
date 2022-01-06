@@ -108,6 +108,7 @@ void AgentMultiRequest::DecodeOneRequest(char *packetstart, int packetlen,
 		taskList[index].processed = 1;
 		break;
 	case DecodeDone:
+		log4cplus_debug("do_decode DecodeDone.");
 		if ((err = job->prepare_process()) < 0) {
 			log4cplus_error("build packed key error: %d, %s", err,
 					job->resultInfo.error_message());

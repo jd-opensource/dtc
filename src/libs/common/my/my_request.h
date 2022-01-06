@@ -18,6 +18,7 @@
 #include "my_comm.h"
 #include <string>
 #include "../../common/value.h"
+#include "../../common/protocol.h"
 
 #include "../../hsql/include/SQLParser.h"
 #include "../../hsql/include/util/sqlhelper.h"
@@ -55,6 +56,17 @@ class MyRequest {
 		this->pkt_nr = pkt_nr;
 	}
 
+	int get_request_type()
+	{
+		int t = m_result.getStatement(0)->type();
+		if (t == hsql::StatementType::kStmtSelect)
+			return DRequest::Get;
+		else if (t == hsql::StatementType::kStmtInsert)
+			return DRequest::Insert;
+
+		return 0;
+	}
+
 	uint64_t get_pkt_nr()
 	{
 		return this->pkt_nr;
@@ -70,7 +82,7 @@ class MyRequest {
 		return m_sql;
 	}
 
-	bool get_key(DTCValue *key);
+	bool get_key(DTCValue *key, char *key_name);
 	uint32_t get_limit_start();
 	uint32_t get_limit_count();
 	uint32_t get_need_num_fields();

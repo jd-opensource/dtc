@@ -99,9 +99,20 @@ bool MyRequest::check_packet_info()
 		return true;
 }
 
-bool MyRequest::get_key(DTCValue *key)
+bool MyRequest::get_key(DTCValue *key, char *key_name)
 {
-	return false;
+	hsql::SelectStatement *stmt = get_result()->getStatement(0);
+	hsql::Expr *where = stmt->whereClause;
+	if (!where)
+		return false;
+
+	log4cplus_debug("key name:%s", key_name);
+
+	log4cplus_debug("key val:%d", where->expr2->ival);
+
+	*key = DTCValue::Make(where->expr2->ival);
+
+	return true;
 }
 
 uint32_t MyRequest::get_limit_start()
@@ -116,12 +127,19 @@ uint32_t MyRequest::get_limit_count()
 
 uint32_t MyRequest::get_need_num_fields()
 {
-	return 0;
+	hsql::SelectStatement *stmt = get_result()->getStatement(0);
+	std::vector<hsql::Expr *> *selectList = stmt->selectList;
+	log4cplus_debug("select size:%d", selectList->size());
+	return selectList->size();
 }
 
 uint32_t MyRequest::get_condition_num_fields()
 {
 	return 0;
+	hsql::SelectStatement *stmt = get_result()->getStatement(0);
+	hsql::Expr *where = stmt->whereClause;
+
+	return where->exprList->size();
 }
 
 uint32_t MyRequest::get_update_num_fields()
@@ -132,5 +150,12 @@ uint32_t MyRequest::get_update_num_fields()
 std::vector<std::string> MyRequest::get_need_array()
 {
 	std::vector<std::string> need;
+
+	hsql::SelectStatement *stmt = get_result()->getStatement(0);
+	std::vector<hsql::Expr *> *selectList = stmt->selectList;
+	for (int i = 0; i < stmt->selectList->size(); i++) {
+		need.push_back(stmt->selectList->at(i)->getName());
+	}
+
 	return need;
 }

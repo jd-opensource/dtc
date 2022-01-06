@@ -51,6 +51,7 @@ extern DbConfig *dbConfig;
 
 inline int BufferProcessAskChain::transaction_find_node(DTCJobOperation &job)
 {
+	log4cplus_debug("transaction_find_node entry.");
 	// alreay cleared/zero-ed
 	key = job.packed_key();
 	if (empty_node_filter_ != NULL &&
@@ -60,6 +61,7 @@ inline int BufferProcessAskChain::transaction_find_node(DTCJobOperation &job)
 		return node_status = DTC_CODE_NODE_EMPTY;
 	}
 
+	log4cplus_debug("cache find key:%d", (*(int *)key));
 	int newhash, oldhash;
 	if (g_hash_changing) {
 		if (g_target_new_hash) {
@@ -95,6 +97,7 @@ inline int BufferProcessAskChain::transaction_find_node(DTCJobOperation &job)
 	old_rows = cache_.node_rows_count(cache_transaction_node);
 	// prepare to decrease empty node count
 	node_empty = key_dirty == 0 && old_rows == 0;
+	log4cplus_debug("transaction_find_node leave.");
 	return node_status = DTC_CODE_NODE_HIT;
 }
 
@@ -2246,7 +2249,7 @@ void BufferProcessAskChain::job_ask_procedure(DTCJobOperation *job_operation)
 	log4cplus_debug("BufferProcessAskChain enter job_ask_procedure");
 	table_define_infomation_ =
 		TableDefinitionManager::instance()->get_cur_table_def();
-	uint64_t now_unix_time = GET_TIMESTAMP() / 1000;
+	/*uint64_t now_unix_time = GET_TIMESTAMP() / 1000;
 	if (job_operation->is_expired(now_unix_time)) {
 		log4cplus_debug(
 			"job time out, throw it for availability, now is [%lld] expire is [%lld]",
@@ -2257,7 +2260,7 @@ void BufferProcessAskChain::job_ask_procedure(DTCJobOperation *job_operation)
 					 "buffer_process_unit", "job time out");
 		job_operation->turn_around_job_answer();
 		return;
-	}
+	}*/
 
 	unsigned blacksize = 0;
 	transaction_begin(job_operation);
