@@ -642,6 +642,7 @@ struct my_result_set_field {
 	uchar type;
 	uint16_t flags;
 	uchar decimals;
+	uint16_t reverse;
 };
 
 int encode_set_field(char *buf, my_result_set_field *sf)
@@ -712,6 +713,10 @@ int encode_set_field(char *buf, my_result_set_field *sf)
 	*p = sf->decimals;
 	p += sizeof(sf->decimals);
 
+	//reverse
+	*p = sf->reverse;
+	p += sizeof(sf->reverse);
+
 	return p - buf;
 }
 
@@ -752,6 +757,9 @@ int calc_field_def(my_result_set_field *sf)
 
 	//decimals
 	len += sizeof(sf->decimals);
+
+	//reverse
+	len += sizeof(sf->reverse);
 
 	log4cplus_debug("sf len:%d", len);
 
@@ -820,7 +828,8 @@ BufferChain *encode_field_def(DtcJob *job, BufferChain *bc, uint8_t pkt_num)
 		sf.name = need[i];
 		sf.original_name = need[i];
 		sf.decimals = 0x00;
-		sf.flags = 0x1001;
+		sf.flags = 0x0;
+		sf.reverse = 0x0000;
 
 		int packet_len = sizeof(BufferChain) + calc_field_def(&sf) +
 				 sizeof(MYSQL_HEADER_SIZE);
@@ -828,6 +837,7 @@ BufferChain *encode_field_def(DtcJob *job, BufferChain *bc, uint8_t pkt_num)
 		if (r == NULL) {
 			return NULL;
 		}
+		memset(r, 0, packet_len);
 		r->totalBytes = packet_len - sizeof(BufferChain);
 
 		int set_len = encode_set_field(
@@ -848,7 +858,7 @@ struct my_result_set_eof {
 	uchar eof;
 	uint16_t warning;
 	uint16_t server_status;
-	//uint16_t reverse;
+	uint16_t reverse;
 };
 #pragma pack()
 
@@ -858,8 +868,8 @@ BufferChain *encode_eof(BufferChain *bc, int pkt_nr)
 	my_result_set_eof eof;
 	eof.eof = 0xfe;
 	eof.warning = 0;
-	eof.server_status = 0x0002;
-	//eof.reverse = 0;
+	eof.server_status = 0x0022;
+	eof.reverse = 0;
 
 	int packet_len =
 		sizeof(BufferChain) + sizeof(eof) + sizeof(MYSQL_HEADER_SIZE);
@@ -1028,9 +1038,9 @@ BufferChain *Packet::encode_mysql_protocol(DtcJob *job)
 	pos = encode_field_def(job, bc, ++pkt_nr);
 	if (!pos)
 		return NULL;
-	pos = encode_eof(pos, ++pkt_nr);
-	if (!pos)
-		return NULL;
+	//pos = encode_eof(pos, ++pkt_nr);
+	//if (!pos)
+	//	return NULL;
 	log4cplus_debug("***3333333");
 	pos = encode_row_data(job, pos, ++pkt_nr);
 	if (!pos)
@@ -1192,7 +1202,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	log4cplus_debug("8888888888888888888888");
 
 	nrp = 1 /*fields count info*/ +
-	      job.mr.get_need_array().size() /*fields def*/ + 1 /*eof*/ +
+	      job.mr.get_need_array().size() /*fields def*/ + 0 /*eof*/ +
 	      job.result->total_rows() /*row data*/ + 1 /*eof*/;
 
 	/* pool, exist and large enough, use. else free and malloc */

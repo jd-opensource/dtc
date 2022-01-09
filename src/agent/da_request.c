@@ -343,7 +343,7 @@ void req_process(struct context *ctx, struct conn *c_conn,
 {
 	if(c_conn->stage == CONN_STAGE_LOGGING_IN)	/* this request is a login authentication */
 	{
-		if(1)
+		if(0)
 		{
 			c_conn->stage = CONN_STAGE_SWITCH_NATIVE_PASSWD;
 			if(net_send_switch(msg, c_conn) < 0)  /* default resp login success. */
