@@ -63,6 +63,7 @@ typedef void (*conn_msgtree_t)(struct context *, struct conn *, struct msg *);
 typedef enum conn_stage{
   CONN_STAGE_UNLOGIN = 0,
   CONN_STAGE_LOGGING_IN,
+  CONN_STAGE_SWITCH_NATIVE_PASSWD,
   CONN_STAGE_LOGGED_IN,
   
   CONN_STAGE_DEFAULT

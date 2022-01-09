@@ -63,6 +63,47 @@ int net_send_server_greeting(struct conn* c, struct msg *smsg) {
 	return 0;
 }
 
+int net_send_switch(struct msg *smsg, struct conn *c_conn) {
+	uint8_t buf[MYSQL_ERRMSG_SIZE+10] = {0xfe, 0x6d, 0x79, 0x73, 0x71, 0x6c, 0x5f, 0x6e, 0x61, 0x74, 0x69, 0x76, 
+	0x65, 0x5f, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x00, 0x4e, 0x7e, 0x06, 0x67, 0x4c, 0x5c, 0x19,
+	0x69, 0x38, 0x45, 0x65, 0x7a, 0x1f, 0x07, 0x69, 0x2c, 0x65, 0x3f, 0x56, 0x72, 0x00};
+	uint8_t *pos, *start;
+	struct msg* dmsg = NULL;
+	uint8_t pkt_nr = smsg->pkt_nr;
+	dmsg = msg_get(c_conn, false);
+	if(dmsg == NULL)
+	{
+		log_error("get new msg error.");
+		c_conn->error = 1;
+		c_conn->err = CONN_MSG_GET_ERR;
+		return -1;
+	}
+
+	start = buf;
+	pos = buf;
+
+	pos += 44;
+	
+	log_debug("net_send_ok pkt nr:%d", pkt_nr);
+	if(net_write(dmsg, buf, (size_t)(pos - start), ++pkt_nr))
+	{
+		msg_put(dmsg);
+		c_conn->error = 1;
+		c_conn->err = CONN_MSG_GET_ERR;
+		return -2;
+	}
+
+	dmsg->pkt_nr = pkt_nr;
+	dmsg->mlen = (size_t)(pos - start) + MYSQL_HEADER_SIZE;
+	
+	log_debug("dmsg len:%d", dmsg->mlen);
+	dmsg->peer = smsg;
+	smsg->peer = dmsg;
+
+	return 0;
+}
+
+
 int net_send_ok(struct msg *smsg, struct conn *c_conn) {
 	uint8_t buf[MYSQL_ERRMSG_SIZE+10] = {0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
 	uint8_t *pos, *start;

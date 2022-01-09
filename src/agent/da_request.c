@@ -343,12 +343,33 @@ void req_process(struct context *ctx, struct conn *c_conn,
 {
 	if(c_conn->stage == CONN_STAGE_LOGGING_IN)	/* this request is a login authentication */
 	{
+		if(1)
+		{
+			c_conn->stage = CONN_STAGE_SWITCH_NATIVE_PASSWD;
+			if(net_send_switch(msg, c_conn) < 0)  /* default resp login success. */
+				return ;
+			req_make_loopback(ctx, c_conn, msg);
+		}
+		else
+		{
+			c_conn->stage = CONN_STAGE_LOGGED_IN;
+			if(net_send_ok(msg, c_conn) < 0)  /* default resp login success. */
+				return ;
+			req_make_loopback(ctx, c_conn, msg);
+		}
+
+		return;
+	}
+
+	if(c_conn->stage == CONN_STAGE_SWITCH_NATIVE_PASSWD)
+	{
 		c_conn->stage = CONN_STAGE_LOGGED_IN;
+
 		if(net_send_ok(msg, c_conn) < 0)  /* default resp login success. */
 			return ;
 		req_make_loopback(ctx, c_conn, msg);
 
-		return ;
+		return;
 	}
 
 	if(c_conn->stage != CONN_STAGE_LOGGED_IN) /* not logged in yet, resp error */

@@ -27,6 +27,7 @@
 #include "../task/task_request.h"
 
 #include "../log/log.h"
+#include "mysql/field_types.h"
 
 const char *req_string = "select dtctables";
 
@@ -605,14 +606,15 @@ void encode_mysql_header(BufferChain *r, int len, uint8_t pkt_num)
 {
 	//Packet Lenght + Packet Number
 	char t[3];
-	int3store(t, pkt_num);
+	int3store(t, len);
 	memcpy(r->data, t, 3);
 	*(r->data + 3) = pkt_num;
 }
 
 int encode_my_fileds_info(BufferChain **bc, uint8_t pkt_num, uint8_t fields_num)
 {
-	int packet_len = sizeof(BufferChain) + sizeof(struct iovec) + 5;
+	int packet_len = sizeof(BufferChain) + sizeof(MYSQL_HEADER_SIZE) +
+			 sizeof(fields_num);
 
 	*bc = (BufferChain *)MALLOC(packet_len);
 	BufferChain *r = *bc;
@@ -636,10 +638,10 @@ struct my_result_set_field {
 	std::string name;
 	std::string original_name;
 	uint16_t charset_number;
-	int32_t length;
-	char type;
+	uint32_t length;
+	uchar type;
 	uint16_t flags;
-	char decimals;
+	uchar decimals;
 };
 
 int encode_set_field(char *buf, my_result_set_field *sf)
@@ -648,64 +650,67 @@ int encode_set_field(char *buf, my_result_set_field *sf)
 	char *p = buf;
 
 	len = sf->catalog.length();
-	*p = (uint8_t)len;
-	p++;
+	*p++ = (uint8_t)len;
 	if (len > 0) {
 		memcpy(p, sf->catalog.c_str(), len);
 		p += len;
 	}
 
 	len = sf->database.length();
-	*p = (uint8_t)len;
-	p++;
+	*p++ = (uint8_t)len;
 	if (len > 0) {
 		memcpy(p, sf->database.c_str(), len);
 		p += len;
 	}
 
 	len = sf->table.length();
-	*p = (uint8_t)len;
-	p++;
+	*p++ = (uint8_t)len;
 	if (len > 0) {
 		memcpy(p, sf->table.c_str(), len);
 		p += len;
 	}
 
 	len = sf->original_table.length();
-	*p = (uint8_t)len;
-	p++;
+	*p++ = (uint8_t)len;
 	if (len > 0) {
 		memcpy(p, sf->original_table.c_str(), len);
 		p += len;
 	}
 
 	len = sf->name.length();
-	*p = (uint8_t)len;
-	p++;
+	*p++ = (uint8_t)len;
 	if (len > 0) {
 		memcpy(p, sf->name.c_str(), len);
 		p += len;
 	}
 
 	len = sf->original_name.length();
-	*p = (uint8_t)len;
-	p++;
+	*p++ = (uint8_t)len;
 	if (len > 0) {
 		memcpy(p, sf->original_name.c_str(), len);
 		p += len;
 	}
 
 	//charset number
-	int2store_little_endian(p, sf->charset_number);
+	*p++ = 0x0c;
+	int2store_big_endian(p, sf->charset_number);
 	p += sizeof(sf->charset_number);
 
 	//length
-	int4store_little_endian(p, sf->length);
+	int4store_big_endian(p, sf->length);
 	p += sizeof(sf->length);
 
 	//type
 	*p = sf->type;
 	p += sizeof(sf->type);
+
+	//flags
+	int2store_big_endian(p, sf->flags);
+	p += sizeof(sf->flags);
+
+	//decimals
+	*p = sf->decimals;
+	p += sizeof(sf->decimals);
 
 	return p - buf;
 }
@@ -727,12 +732,13 @@ int calc_field_def(my_result_set_field *sf)
 	len += sf->original_table.length();
 
 	len++;
-	len = sf->name.length();
+	len += sf->name.length();
 
 	len++;
-	len = sf->original_name.length();
+	len += sf->original_name.length();
 
 	//charset number
+	len++; //0x0c
 	len += sizeof(sf->charset_number);
 
 	//length
@@ -741,7 +747,57 @@ int calc_field_def(my_result_set_field *sf)
 	//type
 	len += sizeof(sf->type);
 
+	//flag
+	len += sizeof(sf->flags);
+
+	//decimals
+	len += sizeof(sf->decimals);
+
+	log4cplus_debug("sf len:%d", len);
+
 	return len;
+}
+
+int build_field_type(int type)
+{
+	switch (type) {
+	case DField::Signed:
+		return MYSQL_TYPE_LONG;
+	case DField::Unsigned:
+		return MYSQL_TYPE_LONG;
+	case DField::Float:
+		return MYSQL_TYPE_FLOAT;
+	case DField::String:
+		return MYSQL_TYPE_VAR_STRING;
+	case DField::Binary:
+		return MYSQL_TYPE_VAR_STRING;
+	}
+}
+
+uint16_t build_charset(int type)
+{
+	switch (type) {
+	case MYSQL_TYPE_VAR_STRING:
+		return 0xff; //utf8mb4
+		break;
+	case MYSQL_TYPE_LONG:
+	case MYSQL_TYPE_FLOAT:
+	default:
+		return 0x3f; //binary COLLATE binary
+	}
+}
+
+uint16_t build_length(int type)
+{
+	switch (type) {
+	case MYSQL_TYPE_VAR_STRING:
+		return 200;
+		break;
+	case MYSQL_TYPE_LONG:
+	case MYSQL_TYPE_FLOAT:
+	default:
+		return 11;
+	}
 }
 
 BufferChain *encode_field_def(DtcJob *job, BufferChain *bc, uint8_t pkt_num)
@@ -749,19 +805,24 @@ BufferChain *encode_field_def(DtcJob *job, BufferChain *bc, uint8_t pkt_num)
 	const DTCTableDefinition *tdef = job->table_definition();
 	BufferChain *nbc = bc;
 	BufferChain *r = NULL;
+	std::vector<std::string> need = job->mr.get_need_array();
 
-	for (int i = 0; i < job->num_fields(); i++) {
-		my_result_set_field sf = { 0 };
-		sf.charset_number = 0xff;
-		sf.type = job->field_type(i);
+	for (int i = 0; i < need.size(); i++) {
+		my_result_set_field sf;
+		sf.type = build_field_type(
+			job->field_type(job->field_id(need[i].c_str())));
+		sf.charset_number = build_charset(sf.type);
+		sf.database = "dtc";
+		sf.length = build_length(sf.type);
 		sf.catalog = "def";
 		sf.table = job->table_name();
 		sf.original_table = job->table_name();
-		sf.name = job->field_name(i);
-		sf.original_name = job->field_name(i);
+		sf.name = need[i];
+		sf.original_name = need[i];
+		sf.decimals = 0x00;
+		sf.flags = 0x1001;
 
-		int packet_len = sizeof(BufferChain) + sizeof(struct iovec) +
-				 calc_field_def(&sf) +
+		int packet_len = sizeof(BufferChain) + calc_field_def(&sf) +
 				 sizeof(MYSQL_HEADER_SIZE);
 		r = (BufferChain *)MALLOC(packet_len);
 		if (r == NULL) {
@@ -771,6 +832,7 @@ BufferChain *encode_field_def(DtcJob *job, BufferChain *bc, uint8_t pkt_num)
 
 		int set_len = encode_set_field(
 			r->data + sizeof(MYSQL_HEADER_SIZE), &sf);
+		log4cplus_debug("set_len:%d", set_len);
 		r->usedBytes = sizeof(MYSQL_HEADER_SIZE) + set_len;
 		r->nextBuffer = NULL;
 		encode_mysql_header(r, set_len, pkt_num);
@@ -781,21 +843,26 @@ BufferChain *encode_field_def(DtcJob *job, BufferChain *bc, uint8_t pkt_num)
 	return nbc;
 }
 
+#pragma pack(1)
 struct my_result_set_eof {
-	char eof = 0xfe;
+	uchar eof;
 	uint16_t warning;
 	uint16_t server_status;
+	//uint16_t reverse;
 };
+#pragma pack()
 
 BufferChain *encode_eof(BufferChain *bc, int pkt_nr)
 {
 	BufferChain *nbc = bc;
 	my_result_set_eof eof;
+	eof.eof = 0xfe;
 	eof.warning = 0;
-	eof.server_status = 0x0022;
+	eof.server_status = 0x0002;
+	//eof.reverse = 0;
 
-	int packet_len = sizeof(BufferChain) + sizeof(struct iovec) +
-			 sizeof(eof) + sizeof(MYSQL_HEADER_SIZE);
+	int packet_len =
+		sizeof(BufferChain) + sizeof(eof) + sizeof(MYSQL_HEADER_SIZE);
 	BufferChain *r = (BufferChain *)MALLOC(packet_len);
 	if (r == NULL) {
 		return NULL;
@@ -813,11 +880,13 @@ BufferChain *encode_eof(BufferChain *bc, int pkt_nr)
 	return nbc;
 }
 
-BufferChain *encode_row_data(ResultSet *rp, BufferChain *bc, int &pkt_nr)
+BufferChain *encode_row_data(DtcJob *job, BufferChain *bc, int &pkt_nr)
 {
-	ResultSet *pstResultSet = rp;
+	ResultSet *pstResultSet = job->result;
 	int count = 0;
 	BufferChain *nbc = bc;
+	std::vector<std::string> result_field = job->mr.get_need_array();
+	const DTCTableDefinition *tdef = job->table_definition();
 
 	for (int i = 0; i < pstResultSet->total_rows(); i++) {
 		char buf[32] = { 0 };
@@ -829,9 +898,10 @@ BufferChain *encode_row_data(ResultSet *rp, BufferChain *bc, int &pkt_nr)
 
 		//calc current row len
 		int row_len = 0;
-		for (int j = 0; j < pstResultSet->num_fields(); j++) {
-			DTCValue *v = pstRow->field_value(j);
-			int field_type = pstRow->field_type(j);
+		for (int j = 0; j < result_field.size(); j++) {
+			int id = tdef->field_id(result_field[j].c_str());
+			DTCValue *v = pstRow->field_value(id);
+			int field_type = pstRow->field_type(id);
 			switch (field_type) {
 			case DField::Signed: {
 				row_len++; //first byte for result len
@@ -863,10 +933,9 @@ BufferChain *encode_row_data(ResultSet *rp, BufferChain *bc, int &pkt_nr)
 				break;
 			}
 		}
-		row_len += MYSQL_HEADER_SIZE;
 
 		//alloc new buffer to store row data.
-		int packet_len = sizeof(BufferChain) + sizeof(struct iovec) +
+		int packet_len = sizeof(BufferChain) +
 				 sizeof(MYSQL_HEADER_SIZE) + row_len;
 		BufferChain *nbuff = (BufferChain *)MALLOC(packet_len);
 		if (nbuff == NULL) {
@@ -882,9 +951,10 @@ BufferChain *encode_row_data(ResultSet *rp, BufferChain *bc, int &pkt_nr)
 		offset += sizeof(MYSQL_HEADER_SIZE);
 
 		//copy fields content
-		for (int j = 0; j < pstResultSet->num_fields(); j++) {
-			DTCValue *v = pstRow->field_value(j);
-			int field_type = pstRow->field_type(j);
+		for (int j = 0; j < result_field.size(); j++) {
+			int id = tdef->field_id(result_field[j].c_str());
+			DTCValue *v = pstRow->field_value(id);
+			int field_type = pstRow->field_type(id);
 			int num_len = 0;
 			switch (field_type) {
 			case DField::Signed: {
@@ -962,11 +1032,11 @@ BufferChain *Packet::encode_mysql_protocol(DtcJob *job)
 	if (!pos)
 		return NULL;
 	log4cplus_debug("***3333333");
-	pos = encode_row_data(job->result, pos, ++pkt_nr);
+	pos = encode_row_data(job, pos, ++pkt_nr);
 	if (!pos)
 		return NULL;
 	log4cplus_debug("***4444444444444");
-	pos = encode_eof(pos, ++pkt_nr);
+	pos = encode_eof(pos, pkt_nr);
 	if (!pos)
 		return NULL;
 	log4cplus_debug("***5555555555555");
@@ -987,69 +1057,6 @@ bool is_desc_tables(DtcJob *job)
 		return true;
 
 	return false;
-}
-
-bool is_select_demo(DtcJob *job)
-{
-	std::string sql = job->mr.get_sql();
-	if (sql == string("select city from opensource where uid = 1"))
-		return true;
-
-	return false;
-}
-
-int Packet::demo_result(DtcJob *job)
-{
-	log4cplus_debug("demo_result entry.");
-	const DTCTableDefinition *tdef = job->table_definition();
-	DTC_HEADER_V2 header = { 0 };
-	nv = 1;
-	int content_len = 1024;
-	int packet_len = sizeof(BufferChain) + sizeof(struct iovec) +
-			 sizeof(header) + content_len + 2;
-
-	header.version = 2;
-	header.id = job->request_serial();
-	header.packet_len = packet_len;
-	header.admin = CMD_NOP;
-
-	if (buf == NULL) {
-		buf = (BufferChain *)MALLOC(packet_len);
-		if (buf == NULL) {
-			return -ENOMEM;
-		}
-		buf->totalBytes = packet_len - sizeof(BufferChain);
-	} else if (buf &&
-		   packet_len - (int)sizeof(BufferChain) > buf->totalBytes) {
-		FREE_IF(buf);
-		buf = (BufferChain *)MALLOC(packet_len);
-		if (buf == NULL) {
-			return -ENOMEM;
-		}
-		buf->totalBytes = packet_len - sizeof(BufferChain);
-	}
-
-	char *p = buf->data + sizeof(struct iovec);
-	v = (struct iovec *)buf->data;
-	v->iov_base = p;
-	v->iov_len = sizeof(header) + content_len + 2;
-
-	memcpy(p, &header, sizeof(header));
-	p += sizeof(header);
-	*p = (uint8_t)tdef->field_type(0);
-	p++;
-	*p = (uint8_t)content_len;
-	p++;
-
-	int my_len = 0;
-	if (encode_mysql_protocol(job) < 0)
-		return -1;
-	p += my_len;
-	log4cplus_debug("header len:%d %d", sizeof(header), my_len);
-	v->iov_len = sizeof(header) + my_len;
-	//memcpy(p, tdef->field_name(0), content_len);
-
-	log4cplus_debug("demo_result leave.");
 }
 
 int Packet::desc_tables_result(DtcJob *job)
@@ -1109,10 +1116,6 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	if (is_desc_tables(&job)) {
 		return desc_tables_result(&job);
 	}
-
-	/*if (is_select_demo(&job)) {
-		return demo_result(&job);
-	}*/
 
 	// rp指向返回数据集
 	ResultPacket *rp =
@@ -1188,7 +1191,8 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 
 	log4cplus_debug("8888888888888888888888");
 
-	nrp = 1 /*MYSQL header*/ + job.num_fields() /*fields def*/ + 1 /*eof*/ +
+	nrp = 1 /*fields count info*/ +
+	      job.mr.get_need_array().size() /*fields def*/ + 1 /*eof*/ +
 	      job.result->total_rows() /*row data*/ + 1 /*eof*/;
 
 	/* pool, exist and large enough, use. else free and malloc */
@@ -1219,6 +1223,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	v->iov_base = p;
 	v->iov_len = sizeof(dtc_header);
 	nv = nrp + 1;
+	buf->usedBytes = sizeof(struct iovec) * (nrp + 1) + sizeof(dtc_header);
 
 	//修改第一个包的内容
 	memcpy(p, &dtc_header, sizeof(dtc_header));
