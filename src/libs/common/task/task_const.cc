@@ -106,19 +106,6 @@ const uint8_t DtcJob::validktype[DField::TotalType][DField::TotalType] = {
 	{ 0, 0, 0, 0, 1, 1 }, /* b */
 };
 
-#if 0
-/* [fieldtype][op] */
-const uint8_t DtcJob::validops[DField::TotalType][DField::TotalOperation] = {
-	/* =, +, b */
-	{  0, 0, 0 }, /* - */
-	{  1, 1, 1 }, /* d */
-	{  1, 1, 1 }, /* u */
-	{  1, 1, 0 }, /* f */
-	{  1, 0, 1 }, /* s */
-	{  1, 0, 1 }, /* b */
-};
-#endif
-
 /* [fieldtype][ valuetype] */
 const uint8_t DtcJob::validxtype[DField::TotalOperation][DField::TotalType]
 				[DField::TotalType] = {

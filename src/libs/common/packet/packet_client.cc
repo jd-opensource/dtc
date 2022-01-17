@@ -40,7 +40,7 @@ int Templateencode_request(NCRequest &rq, const DTCValue *kptr, T *tgt)
 
 	const char *accessKey = sv->access_token_.c_str();
 
-	PacketHeader header;
+	DTC_HEADER_V1 header;
 
 	header.version = 1;
 	header.scts = 8;
@@ -207,7 +207,7 @@ int Templateencode_request(NCRequest &rq, const DTCValue *kptr, T *tgt)
 	/* no result set */
 	header.len[DRequest::Section::DTCResultSet] = 0;
 
-	const int len = Packet::encode_header(header);
+	const int len = Packet::encode_header_v1(header);
 	char *p = tgt->allocate_simple(len);
 
 	memcpy(p, &header, sizeof(header));

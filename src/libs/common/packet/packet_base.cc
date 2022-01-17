@@ -80,10 +80,6 @@ int Packet::send_to(int fd, void *addr, int len)
 	int rv = sendmsg(fd, &msgh, MSG_DONTWAIT | MSG_NOSIGNAL);
 
 	if (rv < 0) {
-#if 0
-	    if(errno==EINTR || errno==EAGAIN || errno==EINPROGRESS)
-		return SendResultMoreData;
-#endif
 		return SendResultError;
 	}
 	if (rv == 0)
@@ -97,7 +93,7 @@ int Packet::send_to(int fd, void *addr, int len)
 	return SendResultError;
 }
 
-int Packet::encode_header(PacketHeader &header)
+int Packet::encode_header_v1(DTC_HEADER_V1 &header)
 {
 	int len = sizeof(header);
 	for (int i = 0; i < DRequest::Section::Total; i++) {
@@ -110,7 +106,7 @@ int Packet::encode_header(PacketHeader &header)
 }
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-int Packet::encode_header(const PacketHeader &header)
+int Packet::encode_header_v1(const DTC_HEADER_V1 &header)
 {
 	int len = sizeof(header);
 	for (int i = 0; i < DRequest::Section::Total; i++) {

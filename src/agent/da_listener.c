@@ -22,9 +22,10 @@
 #include "da_core.h"
 #include "da_event.h"
 #include "da_stats.h"
+#include "da_msg.h"
 
-void listener_ref(struct conn *l, void *owner) {
-
+void listener_ref(struct conn *l, void *owner)
+{
 	struct server_pool *pool = owner;
 	ASSERT(owner == NULL);
 
@@ -35,7 +36,8 @@ void listener_ref(struct conn *l, void *owner) {
 	pool->listener = l;
 }
 
-void listener_unref(struct conn *l) {
+void listener_unref(struct conn *l)
+{
 	ASSERT(l->type & LISTENER);
 	ASSERT(l->owner != NULL);
 
@@ -44,12 +46,11 @@ void listener_unref(struct conn *l) {
 	pool = l->owner;
 	l->owner = NULL;
 	pool->listener = NULL;
-
 }
 
-void listener_close(struct context *ctx, struct conn *l) {
-
-	ASSERT(ctx!=NULL);
+void listener_close(struct context *ctx, struct conn *l)
+{
+	ASSERT(ctx != NULL);
 	ASSERT(l->flag & LISTENER);
 
 	int status;
@@ -66,18 +67,20 @@ void listener_close(struct context *ctx, struct conn *l) {
 	status = event_del_conn(ctx->evb, l);
 	if (status < 0) {
 		log_error("event del conn p %d failed, ignored: %s", l->fd,
-				strerror(errno));
+			  strerror(errno));
 	}
 
 	status = close(l->fd);
 	if (status < 0) {
-		log_error("close p %d failed, ignored: %s", l->fd, strerror(errno));
+		log_error("close p %d failed, ignored: %s", l->fd,
+			  strerror(errno));
 	}
 	l->fd = -1;
 	conn_put(l);
 }
 
-static int listener_reuse(struct conn *l) {
+static int listener_reuse(struct conn *l)
+{
 	int status;
 	struct sockaddr_un *un;
 
@@ -87,7 +90,7 @@ static int listener_reuse(struct conn *l) {
 		set_reuseaddr(l->fd);
 		break;
 	case AF_UNIX:
-		un = (struct sockaddr_un *) l->addr;
+		un = (struct sockaddr_un *)l->addr;
 		unlink(un->sun_path);
 		status = 0;
 		break;
@@ -97,7 +100,8 @@ static int listener_reuse(struct conn *l) {
 	return status;
 }
 
-static int listener_listen(struct context *ctx, struct conn *l) {
+static int listener_listen(struct context *ctx, struct conn *l)
+{
 	int status;
 	struct server_pool *pool = l->owner;
 
@@ -109,45 +113,39 @@ static int listener_listen(struct context *ctx, struct conn *l) {
 	}
 	status = listener_reuse(l);
 	if (status < 0) {
-		log_error("reuse of addr '%.*s' for listening on p %d failed: %s",
-				pool->addrstr.len, pool->addrstr.data, l->fd, strerror(errno));
+		log_error(
+			"reuse of addr '%.*s' for listening on p %d failed: %s",
+			pool->addrstr.len, pool->addrstr.data, l->fd,
+			strerror(errno));
 		return status;
 	}
 	status = bind(l->fd, pool->addr, pool->addrlen);
 	if (status < 0) {
 		log_error("bind on p %d to addr '%.*s' failed: %s", l->fd,
-				pool->addrstr.len, pool->addrstr.data, strerror(errno));
+			  pool->addrstr.len, pool->addrstr.data,
+			  strerror(errno));
 		return -1;
 	}
 	status = listen(l->fd, pool->backlog);
 	if (status < 0) {
 		log_error("listen on p %d on addr '%.*s' failed: %s", l->fd,
-				pool->addrstr.len, pool->addrstr.data, strerror(errno));
+			  pool->addrstr.len, pool->addrstr.data,
+			  strerror(errno));
 		return -1;
 	}
 	status = set_nonblocking(l->fd);
 	if (status < 0) {
-		log_error("set nonblock on p %d on addr '%.*s' failed: %s", l->fd,
-				pool->addrstr.len, pool->addrstr.data, strerror(errno));
+		log_error("set nonblock on p %d on addr '%.*s' failed: %s",
+			  l->fd, pool->addrstr.len, pool->addrstr.data,
+			  strerror(errno));
 		return -1;
 	}
-//	event_add_conn(ctx->evb, l);
-//	if (status < 0) {
-//		log_error("event add conn p %d on addr '%.*s' failed: %s", l->fd,
-//				pool->addrstr.len, pool->addrstr.data, strerror(errno));
-//		return -1;
-//	}
-//
-//	status = event_del_out(ctx->evb, l);
-//	if (status < 0) {
-//		log_error("event del out p %d on addr '%.*s' failed: %s", l->fd,
-//				pool->addrstr.len, pool->addrstr.data, strerror(errno));
-//		return -1;
-//	}
+
 	return 0;
 }
 
-static int listener_inherited_listen(struct context *ctx, struct conn *l) {
+static int listener_inherited_listen(struct context *ctx, struct conn *l)
+{
 	int status;
 	int fd;
 	struct server_pool *pool = l->owner;
@@ -164,20 +162,23 @@ static int listener_inherited_listen(struct context *ctx, struct conn *l) {
 	}
 	status = event_add_conn(ctx->evb, l);
 	if (status < 0) {
-		log_error("event add conn p %d on addr '%.*s' failed: %s", l->fd,
-				pool->addrstr.len, pool->addrstr.data, strerror(errno));
+		log_error("event add conn p %d on addr '%.*s' failed: %s",
+			  l->fd, pool->addrstr.len, pool->addrstr.data,
+			  strerror(errno));
 		return -1;
 	}
 	status = event_del_out(ctx->evb, l);
 	if (status < 0) {
 		log_error("event del out p %d on addr '%.*s' failed: %s", l->fd,
-				pool->addrstr.len, pool->addrstr.data, strerror(errno));
+			  pool->addrstr.len, pool->addrstr.data,
+			  strerror(errno));
 		return -1;
 	}
 	return 0;
 }
 
-int listener_each_init(void *elem, void *data) {
+int listener_each_init(void *elem, void *data)
+{
 	int status;
 	struct server_pool *pool = elem;
 	struct conn *l;
@@ -194,12 +195,13 @@ int listener_each_init(void *elem, void *data) {
 		log_error("listener %d listen fail!", l->fd);
 		return -1;
 	}
-	log_debug("pool:%p addr '%.*s' ,listen success",pool,pool->addrstr.len,
-			pool->addrstr.data);
+	log_debug("pool:%p addr '%.*s' ,listen success", pool,
+		  pool->addrstr.len, pool->addrstr.data);
 	return 0;
 }
 
-int listener_each_deinit(void *elem, void *data) {
+int listener_each_deinit(void *elem, void *data)
+{
 	struct server_pool *pool = elem;
 	struct conn *l;
 
@@ -208,11 +210,12 @@ int listener_each_deinit(void *elem, void *data) {
 		l->close(pool->ctx, l);
 	}
 	log_debug(" addr '%.*s' ,deinit listener success", pool->addrstr.len,
-			pool->addrstr.data);
+		  pool->addrstr.data);
 	return 0;
 }
 
-int listener_init(struct context *ctx) {
+int listener_init(struct context *ctx)
+{
 	int status;
 	ASSERT(array_n(&ctx->pool) != 0);
 	status = array_each(&ctx->pool, listener_each_init, NULL);
@@ -224,7 +227,8 @@ int listener_init(struct context *ctx) {
 	return 0;
 }
 
-void listener_deinit(struct context *ctx) {
+void listener_deinit(struct context *ctx)
+{
 	int status;
 	ASSERT(array_n(&ctx->pool) != 0);
 	status = array_each(&ctx->pool, listener_each_deinit, NULL);
@@ -235,39 +239,45 @@ void listener_deinit(struct context *ctx) {
 	return;
 }
 
-static int listener_accept(struct context *ctx, struct conn *l) {
+static int listener_accept(struct context *ctx, struct conn *l)
+{
 	int status;
 	int fd;
 	struct conn *c;
 
 	ASSERT(l->type & LISTENER);
 	ASSERT(l->fd > 0);
-	ASSERT((l->flag & RECV_ACTIVE) &&(l->flag & RECV_READY));
+	ASSERT((l->flag & RECV_ACTIVE) && (l->flag & RECV_READY));
 
 	for (;;) {
 		fd = accept(l->fd, NULL, NULL);
 		if (fd < 0) {
 			if (errno == EINTR) {
-				log_debug("accept on listener %d not ready - eintr", l->fd);
+				log_debug(
+					"accept on listener %d not ready - eintr",
+					l->fd);
 				continue;
 			}
 			/*
 			 * 多进程情况下，同时accept会出现错误，errno=11,程序吞掉这个错误
 			 */
-			if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ECONNABORTED) {
-				log_debug("accept on l %d not ready - eagain", l->fd);
+			if (errno == EAGAIN || errno == EWOULDBLOCK ||
+			    errno == ECONNABORTED) {
+				log_debug("accept on l %d not ready - eagain",
+					  l->fd);
 				l->flag &= ~RECV_READY;
 				return 0;
 			}
 
 			if (errno == EMFILE || errno == ENFILE) {
-				log_debug("accept on listener :%d fail :no enough fd for use",
-						l->fd);
+				log_debug(
+					"accept on listener :%d fail :no enough fd for use",
+					l->fd);
 				l->flag &= ~RECV_READY;
 				return 0;
 			}
 			log_error("accept on listener %d failed: %s", l->fd,
-					strerror(errno));
+				  strerror(errno));
 			return -1;
 		}
 		break;
@@ -276,28 +286,28 @@ static int listener_accept(struct context *ctx, struct conn *l) {
 	/*
 	 * 对全局的FD资源进行限制,每个进程单独资源
 	 */
-	if (get_ncurr_cconn() >= ctx->max_ncconn
-			|| get_ncurr_cconn()
-					> ((struct server_pool *) (l->owner))->client_connections) {
+	if (get_ncurr_cconn() >= ctx->max_ncconn ||
+	    get_ncurr_cconn() >
+		    ((struct server_pool *)(l->owner))->client_connections) {
 		log_error(
-				"current conn:%d is biger than max client connection for ctx:%d",
-				get_ncurr_cconn(), ctx->max_ncconn);
+			"current conn:%d is biger than max client connection for ctx:%d",
+			get_ncurr_cconn(), ctx->max_ncconn);
 		status = close(fd);
 		if (status < 0) {
 			log_error("close client %d failed, ignored: %s", fd,
-					strerror(errno));
+				  strerror(errno));
 		}
 		return 0;
 	}
 
 	c = get_client_conn(l->owner);
 	if (c == NULL) {
-		log_error("get conn for client %d from p %d failed: %s", fd, l->fd,
-				strerror(errno));
+		log_error("get conn for client %d from p %d failed: %s", fd,
+			  l->fd, strerror(errno));
 		status = close(fd);
 		if (status < 0) {
 			log_error("close client %d failed, ignored: %s", fd,
-					strerror(errno));
+				  strerror(errno));
 		}
 		return -1;
 	}
@@ -305,8 +315,8 @@ static int listener_accept(struct context *ctx, struct conn *l) {
 
 	status = set_nonblocking(c->fd);
 	if (status < 0) {
-		log_error("set nonblock on client %d from p %d failed: %s", c->fd,
-				l->fd, strerror(errno));
+		log_error("set nonblock on client %d from p %d failed: %s",
+			  c->fd, l->fd, strerror(errno));
 		c->close(ctx, c);
 		return status;
 	}
@@ -315,7 +325,7 @@ static int listener_accept(struct context *ctx, struct conn *l) {
 	status = fcntl(c->fd, F_SETFD, FD_CLOEXEC);
 	if (status < 0) {
 		log_error("fcntl FD_CLOEXEC on c %d from p %d failed: %s",
-				c->fd, l->fd, strerror(errno));
+			  c->fd, l->fd, strerror(errno));
 		c->close(ctx, c);
 		return status;
 	}
@@ -327,8 +337,8 @@ static int listener_accept(struct context *ctx, struct conn *l) {
 		status = set_tcpnodelay(c->fd);
 		if (status < 0) {
 			log_error(
-					"set tcpnodelay on client %d from listener %d failed, ignored: %s",
-					c->fd, l->fd, strerror(errno));
+				"set tcpnodelay on client %d from listener %d failed, ignored: %s",
+				c->fd, l->fd, strerror(errno));
 		}
 	}
 
@@ -336,7 +346,7 @@ static int listener_accept(struct context *ctx, struct conn *l) {
 	status = event_add_conn(ctx->evb, c);
 	if (status < 0) {
 		log_error("event add conn from client %d failed: %s", c->fd,
-				strerror(errno));
+			  strerror(errno));
 		c->close(ctx, c);
 		return status;
 	}
@@ -344,10 +354,42 @@ static int listener_accept(struct context *ctx, struct conn *l) {
 	c->connected = 1;
 
 	log_debug("accepted client %d on listener %d", c->fd, l->fd);
+
+	/* send mysql server welcome info after tcp connected. */
+	struct msg *smsg;
+	if (c->writecached == 0 && c->connected == 1) {
+		c->stage = CONN_STAGE_LOGGING_IN;
+
+		smsg = msg_get(c, true);
+		if (smsg == NULL) {
+			c->error = 1;
+			c->err = CONN_MSG_GET_ERR;
+			return -1;
+		}
+		status = net_send_server_greeting(c, smsg);
+		if (status < 0) {
+			log_error("server greeting info build error:%d",
+				  status);
+			c->error = 1;
+			c->err = CONN_MSG_GET_ERR;
+			msg_put(smsg);
+			return -1;
+		}
+
+		if (c->writecached == 0 && c->connected == 1) {
+			log_debug("writecached & connected");
+			cache_send_event(c);
+		}
+	}
+	c->enqueue_outq(ctx, c, smsg);
+
+	//init dtc key info
+	request_dtc_key_define(ctx, c);
 	return 0;
 }
 
-int listener_recv(struct context *ctx, struct conn *conn) {
+int listener_recv(struct context *ctx, struct conn *conn)
+{
 	int status;
 
 	ASSERT(conn->type & LISTENER);
@@ -363,4 +405,3 @@ int listener_recv(struct context *ctx, struct conn *conn) {
 
 	return 0;
 }
-

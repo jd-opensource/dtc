@@ -461,10 +461,11 @@ int DTCJobOperation::decode_agent_request()
 
 void DTCJobOperation::pass_recved_result_to_agent_muti_req()
 {
-	agent_multi_req->save_recved_result(recv_buf, recv_len,
-					    recv_packet_cnt);
+	agent_multi_req->save_recved_result(recv_buf, recv_len, recv_packet_cnt,
+					    packet_version);
 	recv_buf = NULL;
 	recv_len = recv_packet_cnt = 0;
+	packet_version = 0;
 }
 
 bool DTCJobOperation::is_agent_request_completed()

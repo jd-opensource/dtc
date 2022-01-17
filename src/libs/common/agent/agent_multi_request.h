@@ -55,15 +55,18 @@ class AgentMultiRequest : public ListObject<AgentMultiRequest> {
 	{
 		return taskList[index].processed == 1;
 	}
-	inline void save_recved_result(char *buff, int len, int pktcnt)
+	inline void save_recved_result(char *buff, int len, int pktcnt,
+				       uint8_t pktver)
 	{
 		packets.Set(buff, len);
 		packetCnt = pktcnt;
+		packetVersion = pktver;
 	}
 
     private:
 	DTCBinary packets;
 	int packetCnt;
+	uint8_t packetVersion;
 	DTCJobOperation *owner;
 	DecodedTask *volatile taskList;
 	volatile int compleTask;

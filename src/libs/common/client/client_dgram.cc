@@ -192,7 +192,7 @@ int ClientDgram::recv_request(int noempty)
 		return 0;
 	}
 
-	if (data_len <= (int)sizeof(PacketHeader)) {
+	if (data_len <= (int)sizeof(DTC_HEADER_V1)) {
 		int err = data_len == -1 ? errno : 0;
 		if (err != EAGAIN)
 			log4cplus_info("recvfrom error: size=%d errno=%d",

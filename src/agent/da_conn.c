@@ -165,35 +165,6 @@ struct conn *get_client_conn(void *pool) {
 	return c;
 }
 
-/*struct conn *get_server_conn(void *pool) {
-	struct conn *c = _conn_get();
-	if (c == NULL) {
-		return NULL;
-	}
-
-	c->type |= BACKWORK;
-	c->active = server_active;
-	c->ref = server_ref;
-	c->unref = server_unref;
-	c->close = server_close;
-
-	c->send = msg_send;
-	c->send_next = req_send_next;
-	c->send_done = req_send_done;
-	c->recv      = msg_recv;
-	c->recv_next = rsp_recv_next;
-	c->recv_done = rsp_recv_done;
-
-	c->enqueue_inq = req_server_enqueue_imsgq;
-	c->dequeue_inq = req_server_dequeue_imsgq;
-
-	c->en_msgtree = req_server_en_msgtree;
-	c->de_msgtree = req_server_de_msgtree;
-
-	c->ref(c, pool);
-	return c;
-}
-*/
 struct conn *get_instance_conn(void *pool) {
 	struct conn *c = _conn_get();
 	if (c == NULL) {
@@ -250,7 +221,6 @@ struct context *conn_to_ctx(struct conn *conn) {
 
 ssize_t conn_recv(struct conn *conn, void *buf, size_t size) {
 	ssize_t n;
-//	int status;
 
 	ASSERT(buf != NULL);
 	ASSERT(size > 0);
@@ -258,12 +228,6 @@ ssize_t conn_recv(struct conn *conn, void *buf, size_t size) {
 
 	for (;;) {
 		n = da_read(conn->fd, buf, size);
-//		status=set_tcpquickack(conn->fd);
-//		if(status<0)
-//		{
-//			log_error("set tcpquickack on client %d failed, ignored: %s",
-//					conn->fd,  strerror(errno));
-//		}
 
 		log_debug("recv on fd %d %zd of %zu", conn->fd, n, size);
 

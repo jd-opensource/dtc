@@ -13,8 +13,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#include"da_rbtree.h"
-
+#include "da_rbtree.h"
+#include "da_log.h"
 
 void rbtree_node_init(struct rbnode *node) {
 	node->left = NULL;
@@ -65,17 +65,20 @@ struct rbnode *rbtree_search(struct rbtree *tree,struct rbnode *tnode) {
 	}
 	while (node != sentinel)
 	{
+		if(!node || !tnode)
+			return NULL;
+
 		if(tnode->key == node->key)
 		{
 			break;
 		}
 		else if(tnode->key > node->key)
 		{
-			node=node->right;
+			node = node->right;
 		}
 		else if(tnode->key < node->key)
 		{
-			node=node->left;
+			node = node->left;
 		}
 	}
 	if(node==sentinel)

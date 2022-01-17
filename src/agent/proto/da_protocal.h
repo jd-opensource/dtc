@@ -20,23 +20,25 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define MYSQL_ERRMSG_SIZE 512
+
 struct msg;
 struct msg_tqh;
 
 struct CPacketHeader {
-  uint8_t version;
-  uint8_t scts;
-  uint8_t flags;
-  uint8_t cmd;
-  uint32_t len[8];
+	uint8_t version;
+	uint8_t scts;
+	uint8_t flags;
+	uint8_t cmd;
+	uint32_t len[8];
 };
 
 typedef union CValue {
-  // member
-  int64_t s64;
-  uint64_t u64;
-  double flt;
-  struct string str;
+	// member
+	int64_t s64;
+	uint64_t u64;
+	double flt;
+	struct string str;
 
 } CValue;
 

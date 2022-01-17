@@ -22,6 +22,8 @@
 #include "da_server.h"
 #include "da_time.h"
 #include "da_protocal.h"
+#include "my/my_parse.h"
+#include "my/my_comm.h"
 #include "da_core.h"
 #include "limits.h"
 #include "da_conn.h"
@@ -211,6 +213,8 @@ static struct msg *_msg_get() {
 	m->hitflag = 0;
 	m->sending = 0;
 
+	m->pkt_nr = 0;
+
 	return m;
 }
 
@@ -225,12 +229,11 @@ struct msg *msg_get(struct conn *conn, bool request) {
 	msg->request = request ? 1 : 0;
 
 	if (msg->request) {
-		msg->parser = dtc_parse_req;
-
+		msg->parser = my_parse_req;
 	} else {
-		msg->parser = dtc_parse_rsp;
+		msg->parser = my_parse_rsp;
 	}
-	msg->fragment = dtc_fragment;
+	msg->fragment = my_fragment;
 	msg->coalesce = dtc_coalesce;
 	msg->start_ts = now_us;
 
@@ -274,10 +277,12 @@ static int msg_parsed(struct context *ctx, struct conn *conn, struct msg *msg) {
 	mbuf = STAILQ_LAST(&msg->buf_q, mbuf, next);
 	if (msg->pos == mbuf->last) {
 		/* no more data to parse */
-		log_debug("no more data to parse,recv done");
+		log_debug("no more data to parse, parsed %d byte. recv done(%p %p %p)",
+			  mbuf_length(mbuf), mbuf->pos, mbuf->last, msg->pos);
 		conn->recv_done(ctx, conn, msg, NULL);
 		return 0;
 	}
+	log_debug("has more data to parse....");
 	if (conn->type & FRONTWORK)
 		stats_pool_incr(ctx, conn->owner, pool_package_split);
 	else {
@@ -298,6 +303,7 @@ static int msg_parsed(struct context *ctx, struct conn *conn, struct msg *msg) {
 		return -1;
 	}
 
+	log_debug("msg request:%d", msg->request);
 	nmsg = msg_get(msg->owner, msg->request);
 	if (nmsg == NULL) {
 		log_error("msg split error,because of get a new msg error");
@@ -345,24 +351,24 @@ static int msg_parse(struct context *ctx, struct conn *conn, struct msg *msg) {
 	msg->parser(msg);
 	switch (msg->parse_res) {
 	case MSG_PARSE_OK:
-		log_debug("msg id:%"PRIu64"parsed ok!",msg->id);
+		log_debug("msg id:%"PRIu64" parsed ok!",msg->id);
 		status = msg_parsed(ctx, conn, msg);
 		break;
 
 	case MSG_PARSE_REPAIR:
-		log_debug("msg id:%"PRIu64"need repair!",msg->id);
+		log_debug("msg id:%"PRIu64" need repair!",msg->id);
 		status = msg_repair(ctx, conn, msg);
 		break;
 
 	case MSG_PARSE_AGAIN:
-		log_debug("msg id:%"PRIu64"need parse again!",msg->id);
+		log_debug("msg id:%"PRIu64" need parse again!",msg->id);
 		status = 0;
 		break;
 
 	default:
-		status = -1;
-		conn->error=1;
-		conn->err=CONN_MSG_PARSE_ERR;
+		log_error("parser get some trouble:%d", msg->parse_res);
+		status = 0;
+		error_reply(msg, conn, ctx);
 		break;
 	}
 
@@ -414,6 +420,7 @@ static int msg_recv_chain(struct context *ctx, struct conn *conn,
 	ASSERT((mbuf->last + n) <= mbuf->end);
 	mbuf->last += n;
 	msg->mlen += (uint32_t) n;
+	log_debug("mbuf recv %d bytes data actually.(%p %p %p)", mbuf->last - mbuf->pos, mbuf->last, mbuf->pos, msg->pos);
 	for (;;) {
 		status = msg_parse(ctx, conn, msg);
 		if (status != 0) {
@@ -560,6 +567,7 @@ static int msg_send_chain(struct context *ctx, struct conn *conn,
 
 	limit = SSIZE_MAX;
 	for (;;) {
+		// msg is ths message which will be sent.
 		TAILQ_INSERT_TAIL(&send_msgq, msg, o_tqe);
 		msg->sending = 1;
 
@@ -573,6 +581,7 @@ static int msg_send_chain(struct context *ctx, struct conn *conn,
 			}
 
 			mlen = mbuf_length(mbuf);
+			log_debug("mbuf len, len:%d, msg len:%d; %p %p", mlen, msg->mlen, mbuf->last, mbuf->pos);
 			if ((nsend + mlen) > limit) {
 				mlen = limit - nsend;
 			}
@@ -587,6 +596,8 @@ static int msg_send_chain(struct context *ctx, struct conn *conn,
 		if (array_n(&sendv) >= NC_IOV_MAX || nsend >= limit) {
 			break;
 		}
+
+		// build msg which will be sent by next loop.
 		msg = conn->send_next(ctx, conn);
 		if (msg == NULL) {
 			break;

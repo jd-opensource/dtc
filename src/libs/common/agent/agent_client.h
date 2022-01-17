@@ -87,7 +87,7 @@ class ClientAgent : public EpollBase, public TimerObject {
 	ListObject<AgentMultiRequest> rememberReqHeader;
 
 	DTCJobOperation *parse_job_message(char *recvbuff, int recvlen,
-					   int pktcnt);
+					   int pktcnt, uint8_t pktver);
 	int recv_request();
 	void remember_request(DTCJobOperation *request);
 };

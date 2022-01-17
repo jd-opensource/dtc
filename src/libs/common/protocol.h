@@ -108,10 +108,10 @@ class DRequest {
 			kNodeHandleChange = 13,
 			Migrate = 14,
 			ReloadClusterNodeList = 15,
-			SetClusterNodeState  = 16,
+			SetClusterNodeState = 16,
 			change_node_address = 17,
-			GetClusterState  = 18,
-			PurgeForHit  = 19,
+			GetClusterState = 18,
+			PurgeForHit = 19,
 			QUERY_MEM_INFO = 20,
 			ClearCache = 21,
 			MigrateDB = 22,
@@ -125,12 +125,20 @@ class DRequest {
 	};
 };
 
-struct PacketHeader {
+struct DTC_HEADER_V1 {
 	uint8_t version;
 	uint8_t scts;
 	uint8_t flags;
 	uint8_t cmd;
 	uint32_t len[DRequest::Section::Total];
+};
+
+struct DTC_HEADER_V2 {
+	uint8_t version;
+	uint8_t admin;
+	uint8_t reserved[2];
+	uint32_t packet_len;
+	uint64_t id;
 };
 
 struct DTCServerInfo {

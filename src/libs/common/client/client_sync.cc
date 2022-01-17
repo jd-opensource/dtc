@@ -186,10 +186,7 @@ int ClientSync::recv_request()
 			log4cplus_debug("build packed key error: %d", ret);
 			return send_result();
 		}
-#if 0
-        /* 处理任务时，如果client关闭连接，server也应该关闭连接, 所以依然enable_input */
-        disable_input();
-#endif
+
 		disable_output();
 		job->set_owner_info(this, 0, (struct sockaddr *)addr);
 		stage = ProcReqState;

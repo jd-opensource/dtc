@@ -210,8 +210,8 @@ void _write_log_(int level, char *filename, const char *funcname,
 		remote_log(0, NULL, REMOTELOG_ERR_TYPE, 0, buf, now, 0, 0, off);
 	}
 
-	if (level <= 6 && !noconsole) {
-		// debug don't send to console/stderr
+	if (level <= 7 && !noconsole) {
+		// debug send to console/stderr too.
 		unused = fwrite(buf + 3, 1, off - 3, stderr);
 		if (unused <= 0) {
 			// disable console if write error

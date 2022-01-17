@@ -134,5 +134,5 @@ void SystemCommandAskChain::job_ask_procedure(DTCJobOperation *job_operation)
 	}
 
 	main_chain.job_ask_procedure(job_operation);
-	log4cplus_debug("enter job_ask_procedure");
+	log4cplus_debug("leave job_ask_procedure");
 }

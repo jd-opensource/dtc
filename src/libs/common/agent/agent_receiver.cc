@@ -151,7 +151,7 @@ int AgentReceiver::recv_again()
 	return rv;
 }
 
-int AgentReceiver::decode_header(PacketHeader *header)
+int AgentReceiver::decode_header_v1(DTC_HEADER_V1 *header)
 {
 	if (header->version != 1) { // version not supported
 		log4cplus_error("version incorrect: %d", header->version);
@@ -187,7 +187,35 @@ int AgentReceiver::decode_header(PacketHeader *header)
 	return pktbodylen;
 }
 
-int AgentReceiver::count_packet()
+int AgentReceiver::count_packet_v2()
+{
+	char *pos = buffer;
+	int leftlen = offset;
+
+	pktCnt = 0;
+
+	if (pos == NULL || leftlen == 0)
+		return 0;
+
+	DTC_HEADER_V2 *header = NULL;
+
+	while (1) {
+		DTC_HEADER_V2 *header = NULL;
+
+		if (leftlen < (int)sizeof(DTC_HEADER_V2))
+			break;
+
+		pos += leftlen;
+		leftlen = 0;
+		pktCnt = 1;
+	}
+
+	pktTail = pos - buffer;
+
+	return 0;
+}
+
+int AgentReceiver::count_packet_v1()
 {
 	char *pos = buffer;
 	int leftlen = offset;
@@ -199,21 +227,21 @@ int AgentReceiver::count_packet()
 
 	while (1) {
 		int pktbodylen = 0;
-		PacketHeader *header = NULL;
+		DTC_HEADER_V1 *header = NULL;
 
-		if (leftlen < (int)sizeof(PacketHeader))
+		if (leftlen < (int)sizeof(DTC_HEADER_V1))
 			break;
 
-		header = (PacketHeader *)pos;
-		pktbodylen = decode_header(header);
+		header = (DTC_HEADER_V1 *)pos;
+		pktbodylen = decode_header_v1(header);
 		if (pktbodylen < 0)
 			return -1;
 
-		if (leftlen < (int)sizeof(PacketHeader) + pktbodylen)
+		if (leftlen < (int)sizeof(DTC_HEADER_V1) + pktbodylen)
 			break;
 
-		pos += sizeof(PacketHeader) + pktbodylen;
-		leftlen -= sizeof(PacketHeader) + pktbodylen;
+		pos += sizeof(DTC_HEADER_V1) + pktbodylen;
+		leftlen -= sizeof(DTC_HEADER_V1) + pktbodylen;
 		pktCnt++;
 	}
 
@@ -229,8 +257,20 @@ return value:
 */
 void AgentReceiver::set_recved_info(RecvedPacket &packet)
 {
-	if (count_packet() < 0) {
-		packet.err = -1;
+	uint8_t ver = (uint8_t)(buffer[0]);
+
+	if (ver == 1) {
+		if (count_packet_v1() < 0) {
+			packet.err = -1;
+			return;
+		}
+	} else if (ver == 2) {
+		if (count_packet_v2() < 0) {
+			packet.err = -1;
+			return;
+		}
+	} else {
+		log4cplus_error("parse dtc protocol version error:%d", ver);
 		return;
 	}
 
@@ -252,6 +292,7 @@ void AgentReceiver::set_recved_info(RecvedPacket &packet)
 	packet.buff = buffer;
 	packet.len = pktTail;
 	packet.pktCnt = pktCnt;
+	packet.version = ver;
 
 	buffer = tmpbuff;
 	offset -= pktTail;

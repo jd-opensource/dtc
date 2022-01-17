@@ -56,6 +56,9 @@ int string_duplicate(struct string *dst, const struct string *src);
 int string_copy(struct string *dst, const uint8_t *src, uint32_t srclen);
 int string_compare(const struct string *s1, const struct string *s2);
 
+bool string_upper(struct string* str);
+bool string_lower(struct string* str);
+
 static inline uint8_t *_da_strchr(uint8_t *p, uint8_t *last, uint8_t c) {
   while (p < last) {
     if (*p == c) {

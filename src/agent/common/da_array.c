@@ -76,8 +76,8 @@ uint32_t array_idx(struct array *a, void *elem) {
 
 	ASSERT(elem >= a->elem);
 
-	p = a->elem;
-	q = elem;
+	p = (uint8_t*)a->elem;
+	q = (uint8_t*)elem;
 	off = (uint32_t) (q - p);
 
 	ASSERT(off % (uint32_t) a->size == 0);
@@ -87,25 +87,25 @@ uint32_t array_idx(struct array *a, void *elem) {
 	return idx;
 }
 
-void *
-array_push(struct array *a) {
-	void *elem, *new;
+void * array_push(struct array *a) {
+	void *elem; 
+	void *da_new;
 	size_t size;
 
 	if (a->nelem == a->nalloc) {
 
 		/* the array is full; allocate new array */
 		size = a->size * a->nalloc;
-		new = realloc(a->elem,2 * size);
-		if (new == NULL) {
+		da_new = realloc(a->elem,2 * size);
+		if (da_new == NULL) {
 			return NULL;
 		}
 
-		a->elem = new;
+		a->elem = da_new;
 		a->nalloc *= 2;
 	}
 
-	elem = (uint8_t *) a->elem + a->size * a->nelem;
+	elem =a->elem + a->size * a->nelem;
 	a->nelem++;
 
 	return elem;

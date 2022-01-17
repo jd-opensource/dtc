@@ -77,7 +77,7 @@ void AgentReply::job_answer_procedure(DTCJobOperation *job)
 				     job->default_expire_time() :
 				     job->requestInfo.get_expire_time(
 					     job->versionInfo.CTLibIntVer());
-	int req_delaytime = job->responseTimer.live();
+	int req_delaytime = 0;
 
 	if (!init_stat_flag) {
 		stat_agent_expore_count =
@@ -208,7 +208,7 @@ void ClientAgent::remember_request(DTCJobOperation *request)
 }
 
 DTCJobOperation *ClientAgent::parse_job_message(char *recvbuff, int recvlen,
-						int pktcnt)
+						int pktcnt, uint8_t pktver)
 {
 	DTCJobOperation *job;
 
@@ -225,7 +225,7 @@ DTCJobOperation *ClientAgent::parse_job_message(char *recvbuff, int recvlen,
 	job->set_owner_info(this, 0, NULL);
 	job->set_owner_client(this);
 	job->push_reply_dispatcher(&agent_reply);
-	job->save_recved_result(recvbuff, recvlen, pktcnt);
+	job->save_recved_result(recvbuff, recvlen, pktcnt, pktver);
 
 	/* assume only a few sub request decode error */
 	if (job->decode_agent_request() < 0) {
@@ -263,7 +263,8 @@ int ClientAgent::recv_request()
 	recvlen = packets.len;
 	pktcnt = packets.pktCnt;
 
-	job_operation = parse_job_message(recvbuff, recvlen, pktcnt);
+	job_operation =
+		parse_job_message(recvbuff, recvlen, pktcnt, packets.version);
 	if (job_operation != NULL)
 		owner->start_job_ask_procedure(job_operation);
 

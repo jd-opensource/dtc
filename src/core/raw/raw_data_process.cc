@@ -494,6 +494,7 @@ int RawDataProcess::do_get(DTCJobOperation &job_op, Node *p_node)
 			if (stpTaskTab->expire_time_field_id() > 0)
 				stpTaskRow->update_expire_time();
 			//当前行添加到task中
+			log4cplus_debug("append_row flag");
 			if (job_op.append_row(stpTaskRow) > 0 && laid > 0) {
 				raw_data_.update_lastacc(job_op.Timestamp());
 			}

@@ -204,11 +204,13 @@ int DtcJob::Copy(NCRequest &rq, const DTCValue *kptr)
 	versionInfo.set_master_hb_timestamp(rq.master_hotbackup_timestamp_);
 	versionInfo.set_slave_hb_timestamp(rq.slave_hotbackup_timestamp_);
 	if (sv->table_definition_ && rq.adminCode != 0)
-		versionInfo.set_data_table_hash(sv->table_definition_->table_hash());
+		versionInfo.set_data_table_hash(
+			sv->table_definition_->table_hash());
 
 	if (rq.flags & DRequest::Flag::MultiKeyValue) {
 		kptr = NULL;
-		if (sv->simple_batch_key() && rq.key_value_list_.KeyCount() == 1) {
+		if (sv->simple_batch_key() &&
+		    rq.key_value_list_.KeyCount() == 1) {
 			/* single field single key batch, convert to normal */
 			kptr = rq.key_value_list_.val;
 			requestFlags &= ~DRequest::Flag::MultiKeyValue;
@@ -234,11 +236,13 @@ int DtcJob::Copy(NCRequest &rq, const DTCValue *kptr)
 		requestInfo.set_admin_code(rq.adminCode);
 	}
 
+	//Need condition.
 	if (rq.fs.num_fields() > 0) {
 		fieldList = new DTCFieldSet(rq.fs.num_fields());
 		fieldList->Copy(rq.fs); // never failed
 	}
 
+	//Set(update) / values(insert into)
 	if (rq.ui.num_fields() > 0) {
 		/* decode updateInfo */
 		updateInfo = new DTCFieldValue(rq.ui.num_fields());
@@ -249,6 +253,7 @@ int DtcJob::Copy(NCRequest &rq, const DTCValue *kptr)
 				"decode update info error: %d", err);
 	}
 
+	//where
 	if (rq.ci.num_fields() > 0) {
 		/* decode conditionInfo */
 		conditionInfo = new DTCFieldValue(rq.ci.num_fields());

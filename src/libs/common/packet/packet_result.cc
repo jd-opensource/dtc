@@ -132,6 +132,7 @@ static int expand(BufferChain *&bc, int addsize)
 
 int ResultPacket::append_row(const RowValue &r)
 {
+	log4cplus_debug("append_row entry.");
 	int ret = 0;
 	totalRows++;
 	if (limitNext > 0) {
@@ -146,16 +147,8 @@ int ResultPacket::append_row(const RowValue &r)
 							r.field_type(id));
 		}
 
-#if 0
-	    BufferChain *c = (BufferChain *)REALLOC(bc,
-		    sizeof(BufferChain)+ bc->usedBytes + len);
-
-	    if(c==NULL) return -ENOMEM;
-	    bc = c;
-#else
 		if (expand(bc, len) != 0)
 			return -ENOMEM;
-#endif
 
 		char *p = bc->data + bc->usedBytes;
 		bc->usedBytes += len;
@@ -168,6 +161,7 @@ int ResultPacket::append_row(const RowValue &r)
 		ret = 1;
 	}
 	numRows = totalRows - limitStart;
+	log4cplus_debug("append_row leave");
 	return ret;
 }
 

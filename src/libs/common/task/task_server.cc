@@ -42,6 +42,7 @@ int DtcJob::append_result(ResultSet *rs)
 			if (r == NULL)
 				return rs->error_num();
 			if (compare_row(*r)) {
+				log4cplus_debug("append_row flag");
 				int rv = resultWriter->append_row(*r);
 				if (rv < 0)
 					return rv;
@@ -72,6 +73,7 @@ int DtcJob::pass_all_result(ResultSet *rs)
 				set_error(rv, "fetch_row()", NULL);
 				return rv;
 			}
+			log4cplus_debug("append_row flag");
 			rv = resultWriter->append_row(*r);
 			if (rv < 0) {
 				set_error(rv, "append_row()", NULL);

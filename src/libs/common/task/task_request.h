@@ -83,7 +83,7 @@ class DTCJobOperation : public DtcJob,
 		  multi_key(NULL), keyList(NULL), batch_key(NULL),
 		  agent_multi_req(NULL), owner_client_(NULL), recv_buf(NULL),
 		  recv_len(0), recv_packet_cnt(0), resource_id(0),
-		  resource_owner(NULL), resource_seq(0){};
+		  packet_version(0), resource_owner(NULL), resource_seq(0){};
 
 	virtual ~DTCJobOperation();
 
@@ -240,6 +240,7 @@ class DTCJobOperation : public DtcJob,
 	char *recv_buf;
 	int recv_len;
 	int recv_packet_cnt;
+	uint8_t packet_version;
 
     public:
 	unsigned int key_val_count() const
@@ -287,11 +288,13 @@ class DTCJobOperation : public DtcJob,
 	void clear_owner_client();
 
 	int decode_agent_request();
-	inline void save_recved_result(char *buff, int len, int pktcnt)
+	inline void save_recved_result(char *buff, int len, int pktcnt,
+				       uint8_t pktver)
 	{
 		recv_buf = buff;
 		recv_len = len;
 		recv_packet_cnt = pktcnt;
+		packet_version = pktver;
 	}
 	bool is_agent_request_completed();
 	void done_one_agent_sub_request();

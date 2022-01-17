@@ -28,11 +28,19 @@
 #include "dtc_error_code.h"
 #include "../log/log.h"
 #include "algorithm/md5.h"
+#include "../my/my_request.h"
+
+#include "../../hsql/include/SQLParser.h"
+#include "../../hsql/include/SQLParserResult.h"
+#include "../../hsql/include/util/sqlhelper.h"
+#include "../../hsql/include/sql/Expr.h"
+
+using namespace hsql;
 
 int DtcJob::check_packet_size(const char *buf, int len)
 {
-	const PacketHeader *header = (PacketHeader *)buf;
-	if (len < (int)sizeof(PacketHeader))
+	const DTC_HEADER_V1 *header = (DTC_HEADER_V1 *)buf;
+	if (len < (int)sizeof(DTC_HEADER_V1))
 		return 0;
 
 	if (header->version != 1) { // version not supported
@@ -57,7 +65,7 @@ int DtcJob::check_packet_size(const char *buf, int len)
 		return -4;
 	}
 
-	return (int)n + sizeof(PacketHeader);
+	return (int)n + sizeof(DTC_HEADER_V1);
 }
 
 void DtcJob::decode_stream(SimpleReceiver &receiver)
@@ -99,8 +107,8 @@ void DtcJob::decode_stream(SimpleReceiver &receiver)
 			return;
 		}
 
-		if ((rv = decode_header(receiver.header(),
-					&receiver.header())) < 0) {
+		if ((rv = decode_header_v1(receiver.header(),
+					   &receiver.header())) < 0) {
 			return;
 		}
 
@@ -147,8 +155,91 @@ void DtcJob::decode_stream(SimpleReceiver &receiver)
 	}
 
 	if (receiver.remain() <= 0) {
-		decode_request(receiver.header(), receiver.c_str());
+		decode_request_v1(receiver.header(), receiver.c_str());
 	}
+
+	return;
+}
+
+int8_t DtcJob::select_version(char *packetIn, int packetLen)
+{
+	int8_t ver = 0;
+	log4cplus_debug("select version entry.");
+
+	switch (stage) {
+	default:
+		break;
+	case DecodeStageFatalError:
+	case DecodeStageDataError:
+	case DecodeStageDone:
+		log4cplus_error("stage: %d", stage);
+		return -1;
+	}
+
+	if (packetLen <= 1) {
+		log4cplus_error("packet len: %d", packetLen);
+		stage = DecodeStageFatalError;
+		return -2;
+	}
+
+	ver = (int8_t)(packetIn[0]);
+	log4cplus_debug("incoming dtc packet version:%d", ver);
+	if (ver != 1 && ver != 2) {
+		log4cplus_error("dtc packet version error:%d, pkt len:%d", ver,
+				packetLen);
+		stage = DecodeStageFatalError;
+		return -3;
+	}
+
+	return ver;
+}
+
+// Decode data from packet
+//     type 0: clone packet
+//     type 1: eat(keep&free) packet
+//     type 2: use external packet
+void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
+{
+	DTC_HEADER_V2 *header;
+	char *p = packetIn;
+
+	switch (stage) {
+	default:
+		break;
+	case DecodeStageFatalError:
+	case DecodeStageDataError:
+	case DecodeStageDone:
+		return;
+	}
+
+	if (packetLen < (int)sizeof(DTC_HEADER_V2)) {
+		stage = DecodeStageFatalError;
+		return;
+	}
+
+	//Parse DTC v2 protocol.
+	header = (DTC_HEADER_V2 *)p;
+
+	if (header->version != 2) {
+		stage = DecodeStageDataError;
+		return;
+	}
+
+	serialNr = header->id;
+
+	//offset DTC Header.
+	p = p + sizeof(DTC_HEADER_V2);
+
+	mr.set_packet_info(p, packetLen - sizeof(DTC_HEADER_V2));
+	if (!mr.load_sql()) {
+		log4cplus_error("load sql error");
+		stage = DecodeStageDataError;
+		return;
+	}
+
+	decode_request_v2(&mr);
+
+	stage = DecodeStageDone;
 
 	return;
 }
@@ -157,13 +248,13 @@ void DtcJob::decode_stream(SimpleReceiver &receiver)
 //     type 0: clone packet
 //     type 1: eat(keep&free) packet
 //     type 2: use external packet
-void DtcJob::decode_packet(char *packetIn, int packetLen, int type)
+void DtcJob::decode_packet_v1(char *packetIn, int packetLen, int type)
 {
-	PacketHeader header;
+	DTC_HEADER_V1 header;
 #if __BYTE_ORDER == __BIG_ENDIAN
-	PacketHeader out[1];
+	DTC_HEADER_V1 out[1];
 #else
-	PacketHeader *const out = &header;
+	DTC_HEADER_V1 *const out = &header;
 #endif
 
 	switch (stage) {
@@ -175,24 +266,24 @@ void DtcJob::decode_packet(char *packetIn, int packetLen, int type)
 		return;
 	}
 
-	if (packetLen < (int)sizeof(PacketHeader)) {
+	if (packetLen < (int)sizeof(DTC_HEADER_V1)) {
 		stage = DecodeStageFatalError;
 		return;
 	}
 
 	memcpy((char *)&header, packetIn, sizeof(header));
 
-	int rv = decode_header(header, out);
+	int rv = decode_header_v1(header, out);
 	if (rv < 0) {
 		return;
 	}
 
-	if ((int)(sizeof(PacketHeader) + rv) > packetLen) {
+	if ((int)(sizeof(DTC_HEADER_V1) + rv) > packetLen) {
 		stage = DecodeStageFatalError;
 		return;
 	}
 
-	char *buf = (char *)packetIn + sizeof(PacketHeader);
+	char *buf = (char *)packetIn + sizeof(DTC_HEADER_V1);
 	switch (type) {
 	default:
 	case 0:
@@ -212,11 +303,11 @@ void DtcJob::decode_packet(char *packetIn, int packetLen, int type)
 		break;
 	}
 
-	decode_request(*out, buf);
+	decode_request_v1(*out, buf);
 	return;
 }
 
-int DtcJob::decode_header(const PacketHeader &header, PacketHeader *out)
+int DtcJob::decode_header_v1(const DTC_HEADER_V1 &header, DTC_HEADER_V1 *out)
 {
 	if (header.version != 1) { // version not supported
 		stage = DecodeStageFatalError;
@@ -267,7 +358,7 @@ int DtcJob::decode_header(const PacketHeader &header, PacketHeader *out)
 	return (int)n;
 }
 
-int DtcJob::validate_section(PacketHeader &header)
+int DtcJob::validate_section(DTC_HEADER_V1 &header)
 {
 	int i;
 	int m;
@@ -297,7 +388,298 @@ int DtcJob::validate_section(PacketHeader &header)
 	return 0;
 }
 
-void DtcJob::decode_request(PacketHeader &header, char *p)
+int DtcJob::build_field_type_r(int sql_type, char *field_name)
+{
+	const DTCTableDefinition *tdef = this->table_definition();
+	int t_type = tdef->field_type(tdef->field_id(field_name));
+
+	switch (sql_type) {
+	case hsql::ExprType::kExprLiteralInt:
+		return t_type == DField::Signed || t_type == DField::Signed ?
+			       t_type :
+			       -1;
+	case hsql::ExprType::kExprLiteralFloat:
+		return t_type == DField::Float ? t_type : -1;
+	case hsql::ExprType::kExprLiteralString:
+		return t_type == DField::String || t_type == DField::Binary ?
+			       t_type :
+			       -1;
+	}
+
+	return -1;
+}
+
+int build_condition_fields(Expr *expr, Expr *parent,
+			   std::vector<hsql::Expr *> *vec_expr)
+{
+	int count = 0;
+	if (!expr)
+		return 0;
+	switch (expr->type) {
+	case kExprColumnRef:
+		if (parent) {
+			count++;
+			vec_expr->push_back(parent);
+		}
+
+		break;
+	case kExprOperator:
+		if ((expr->opType >= kOpEquals &&
+		     expr->opType <= kOpGreaterEq) ||
+		    expr->opType == kOpAnd) {
+			count += build_condition_fields(expr->expr, expr,
+							vec_expr);
+
+			if (expr->expr2)
+				count += build_condition_fields(expr->expr2,
+								NULL, vec_expr);
+		} else {
+			return 0;
+		}
+	default:
+		break;
+	}
+
+	return count;
+}
+
+void DtcJob::decode_request_v2(MyRequest *mr)
+{
+	char *p = mr->get_packet_ptr();
+
+	//1.versionInfo
+	this->versionInfo.set_serial_nr(mr->get_pkt_nr());
+
+	//2.requestInfo
+	DTCValue key;
+	if (mr->get_key(&key, table_definition()->key_name())) {
+		requestInfo.set_key(key);
+		set_request_key(&key);
+	}
+	log4cplus_debug("key type:%d %d", mr->get_request_type(), key.s64);
+	set_request_code(mr->get_request_type());
+
+	//limit
+	if (mr->get_limit_count()) {
+		requestInfo.set_limit_start(mr->get_limit_start());
+		requestInfo.set_limit_count(mr->get_limit_count());
+	}
+
+	//3.fieldList(Need)
+	if (mr->get_need_num_fields() > 0) {
+		FieldSetByName fs;
+		std::vector<std::string> need = mr->get_need_array();
+		if (need.size() != mr->get_need_num_fields()) {
+			log4cplus_error("need field num error:%d, %d",
+					need.size(), mr->get_need_num_fields());
+			return;
+		}
+		for (int i = 0; i < need.size(); i++) {
+			fs.add_field(need[i].c_str(), i);
+		}
+		if (!fs.Solved())
+			fs.Resolve(TableDefinitionManager::instance()
+					   ->get_cur_table_def(),
+				   0);
+
+		fieldList = new DTCFieldSet(fs.num_fields());
+		fieldList->Copy(fs); // never failed
+	}
+
+	//4.conditionInfo(where)
+	std::vector<hsql::Expr *> exprList;
+
+	hsql::StatementType type = mr->get_result()->getStatement(0)->type();
+	hsql::Expr *where = NULL;
+
+	if (type != hsql::StatementType::kStmtInsert) {
+		if (type == hsql::StatementType::kStmtUpdate) {
+			hsql::UpdateStatement *stmt =
+				mr->get_result()->getStatement(0);
+			where = stmt->where;
+		} else if (type == hsql::StatementType::kStmtDelete) {
+			hsql::DeleteStatement *stmt =
+				mr->get_result()->getStatement(0);
+			where = stmt->expr;
+		} else if (type == hsql::StatementType::kStmtSelect) {
+			hsql::SelectStatement *stmt =
+				mr->get_result()->getStatement(0);
+			where = stmt->whereClause;
+		} else {
+			log4cplus_error("StatementType error: %d", type);
+			return;
+		}
+
+		int cnts = build_condition_fields(where, NULL, &exprList);
+		if (cnts != exprList.size()) {
+			log4cplus_error("build_condition_fields error: %d %d",
+					cnts, exprList.size());
+			return;
+		}
+		log4cplus_debug("condition num: %d", cnts);
+
+		if (exprList.size() > 1) {
+			int temp = 0;
+			for (int i = 0; i < exprList.size(); i++) {
+				if (strcmp(exprList.at(i)->expr->getName(),
+					   table_definition()->key_name()) ==
+				    0) { //is key
+					temp--;
+					continue;
+				}
+
+				int rtype = build_field_type_r(
+					exprList.at(i)
+						->expr2
+						->type /*DField::Unsigned*/,
+					exprList.at(i)->expr->getName());
+				if (rtype == -1) {
+					temp--;
+					continue;
+				}
+
+				if (DField::Signed == rtype ||
+				    DField::Unsigned == rtype) {
+					ci.add_value(exprList.at(i)->expr->getName(),
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							     exprList.at(i)->expr2->ival));
+				} else if (DField::Float == rtype) {
+					ci.add_value(exprList.at(i)->expr->getName(),
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							    exprList.at(i)->expr2->fval));
+				} else if (DField::String == rtype ||
+					   DField::Binary == rtype) {
+					ci.add_value(exprList.at(i)->expr->getName(),
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							    exprList.at(i)->expr2->name));
+				}
+			}
+			ci.Resolve(TableDefinitionManager::instance()
+					   ->get_cur_table_def(),
+				   0);
+
+			if (exprList.size() + temp > 0) {
+				conditionInfo = new DTCFieldValue(
+					exprList.size() + temp);
+				int err = conditionInfo->Copy(
+					ci, 0,
+					TableDefinitionManager::instance()
+						->get_cur_table_def());
+				if (err < 0) {
+					log4cplus_error(
+						"decode condition info error: %d",
+						err);
+					return;
+				}
+				clear_all_rows();
+			}
+		}
+	}
+
+	//5.updateInfo Set(update) / values(insert into)
+	if (mr->get_update_num_fields() > 0) {
+		int count = 0;
+		int t = mr->get_result()->getStatement(0)->type();
+		if (hsql::StatementType::kStmtUpdate == t) {
+			hsql::UpdateStatement *stmt =
+				mr->get_result()->getStatement(0);
+
+			count = stmt->updates->size();
+			for (int i = 0; i < count; i++) {
+				int rtype = build_field_type_r(
+					stmt->updates->at(i)->value->type,
+					stmt->updates->at(i)->column);
+				if (rtype == -1) {
+					return;
+				}
+
+				if (DField::Signed == rtype ||
+				    DField::Unsigned == rtype) {
+					ui.add_value(stmt->updates->at(i)->column,
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							     stmt->updates->at(i)
+							       ->value->ival));
+				} else if (DField::Float == rtype) {
+					ui.add_value(stmt->updates->at(i)->column,
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							     stmt->updates->at(i)
+							       ->value->fval));
+				} else if (DField::String == rtype ||
+					   DField::Binary == rtype) {
+					ui.add_value(stmt->updates->at(i)->column,
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							    stmt->updates->at(i)
+							       ->value->name));
+				}
+			}
+
+		} else if (hsql::StatementType::kStmtInsert == t) {
+			hsql::InsertStatement *stmt =
+				mr->get_result()->getStatement(0);
+
+			count = stmt->columns->size();
+			for (int i = 0; i < count; i++) {
+				int rtype = build_field_type_r(
+					stmt->values->at(i)->type,
+					stmt->columns->at(i));
+				if (rtype == -1) {
+					return;
+				}
+
+				if (DField::Signed == rtype ||
+				    DField::Unsigned == rtype) {
+					ui.add_value(stmt->columns->at(i),
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							     stmt->values->at(i)
+								     ->ival));
+				} else if (DField::Float == rtype) {
+					ui.add_value(stmt->columns->at(i),
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							     stmt->values->at(i)
+								     ->fval));
+				} else if (DField::String == rtype ||
+					   DField::Binary == rtype) {
+					log4cplus_debug(
+						"DTCValue key: %s, value: %s",
+						stmt->columns->at(i),
+						stmt->values->at(i)->name);
+					ui.add_value(stmt->columns->at(i),
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							     stmt->values->at(i)
+								     ->name));
+				}
+			}
+		}
+
+		if (count > 0) {
+			ui.Resolve(TableDefinitionManager::instance()
+					   ->get_cur_table_def(),
+				   0);
+
+			updateInfo = new DTCFieldValue(count);
+			int err = updateInfo->Copy(
+				ui, 1,
+				TableDefinitionManager::instance()
+					->get_cur_table_def());
+			if (err < 0) {
+				log4cplus_error("decode update info error: %d",
+						err);
+				return;
+			}
+		}
+	}
+}
+
+void DtcJob::decode_request_v1(DTC_HEADER_V1 &header, char *p)
 {
 #if !CLIENTAPI
 	if (DRequest::ReloadConfig == requestCode &&
@@ -317,6 +699,7 @@ void DtcJob::decode_request(PacketHeader &header, char *p)
 		goto error;                                                    \
 	} while (0)
 
+	//VersionInfo
 	if (header.len[id]) {
 		/* decode version info */
 		err = decode_simple_section(p, header.len[id], versionInfo,
@@ -421,6 +804,7 @@ void DtcJob::decode_request(PacketHeader &header, char *p)
 		return;
 	}
 
+	//table_definition
 	p += header.len[id++];
 
 	// only client use remote table
@@ -448,6 +832,7 @@ void DtcJob::decode_request(PacketHeader &header, char *p)
 			mark_has_remote_table();
 	}
 
+	//RequestInfo
 	p += header.len[id++];
 
 	if (header.len[id]) {
@@ -485,6 +870,7 @@ void DtcJob::decode_request(PacketHeader &header, char *p)
 		}
 	}
 
+	//ResultInfo
 	p += header.len[id++];
 
 	if (header.len[id]) {
@@ -499,6 +885,7 @@ void DtcJob::decode_request(PacketHeader &header, char *p)
 		rkey = resultInfo.key();
 	}
 
+	//UpdateInfo
 	p += header.len[id++];
 
 	if (header.len[id]) {
@@ -511,6 +898,7 @@ void DtcJob::decode_request(PacketHeader &header, char *p)
 				"decode update info error: %d", err);
 	}
 
+	//ConditionInfo
 	p += header.len[id++];
 
 	if (header.len[id]) {
@@ -522,6 +910,7 @@ void DtcJob::decode_request(PacketHeader &header, char *p)
 				"decode condition error: %d", err);
 	}
 
+	//FieldSet
 	p += header.len[id++];
 
 	if (header.len[id]) {
@@ -533,6 +922,7 @@ void DtcJob::decode_request(PacketHeader &header, char *p)
 				"decode field set error: %d", err);
 	}
 
+	//DTCResultSet
 	p += header.len[id++];
 
 	if (header.len[id]) {
@@ -815,7 +1205,7 @@ int ResultSet::decode_row(void)
 	return 0;
 }
 
-int packet_body_len(PacketHeader &header)
+int packet_body_len_v1(DTC_HEADER_V1 &header)
 {
 	int pktbodylen = 0;
 	for (int i = 0; i < DRequest::Section::Total; i++) {

@@ -35,66 +35,96 @@
  * to be freed.
  */
 
-void string_init(struct string *str) {
+void string_init(struct string *str)
+{
 	str->len = 0;
 	str->data = NULL;
 }
 
 void string_deinit(struct string *str)
 {
-    ASSERT((str->len == 0 && str->data == NULL) ||
-           (str->len != 0 && str->data != NULL));
+	ASSERT((str->len == 0 && str->data == NULL) ||
+	       (str->len != 0 && str->data != NULL));
 
-    if (str->data != NULL) {
-        free(str->data);
-        string_init(str);
-    }
+	if (str->data != NULL) {
+		free(str->data);
+		string_init(str);
+	}
 }
 
-bool string_empty(const struct string *str) {
-	ASSERT((str->len == 0 && str->data == NULL)|| (str->len != 0 && str->data != NULL));
+bool string_empty(const struct string *str)
+{
+	ASSERT((str->len == 0 && str->data == NULL) ||
+	       (str->len != 0 && str->data != NULL));
 	return str->len == 0 ? true : false;
 }
 
 int string_duplicate(struct string *dst, const struct string *src)
 {
-    ASSERT(dst->len == 0 && dst->data == NULL);
-    ASSERT(src->len != 0 && src->data != NULL);
+	ASSERT(dst->len == 0 && dst->data == NULL);
+	ASSERT(src->len != 0 && src->data != NULL);
 
-    dst->data = da_strndup(src->data, src->len + 1);
-    if (dst->data == NULL) {
-        return -1;
-    }
-    dst->len = src->len;
-    dst->data[dst->len] = '\0';
+	dst->data = da_strndup(src->data, src->len + 1);
+	if (dst->data == NULL) {
+		return -1;
+	}
+	dst->len = src->len;
+	dst->data[dst->len] = '\0';
 
-    return 0;
+	return 0;
+}
+
+bool string_lower(struct string *str)
+{
+	int i = 0;
+	if (string_empty(str))
+		return false;
+
+	for (i = 0; i < str->len; i++) {
+		str->data[i] = lower(str->data[i]);
+	}
+
+	return true;
+}
+
+bool string_upper(struct string *str)
+{
+	int i = 0;
+	if (string_empty(str))
+		return false;
+
+	for (i = 0; i < str->len; i++) {
+		str->data[i] = upper(str->data[i]);
+	}
+
+	return true;
 }
 
 int string_copy(struct string *dst, const uint8_t *src, uint32_t srclen)
 {
-    ASSERT(dst->len == 0 && dst->data == NULL);
-    ASSERT(src != NULL && srclen != 0);
+	ASSERT(dst->len == 0 && dst->data == NULL);
+	ASSERT(src != NULL && srclen != 0);
 
-    dst->data = da_strndup(src, srclen + 1);
-    if (dst->data == NULL) {
-        return -1;
-    }
-    dst->len = srclen;
-    dst->data[dst->len] = '\0';
+	dst->data = da_strndup(src, srclen + 1);
+	if (dst->data == NULL) {
+		return -1;
+	}
+	dst->len = srclen;
+	dst->data[dst->len] = '\0';
 
-    return 0;
+	return 0;
 }
 
-int string_compare(const struct string *s1, const struct string *s2) {
+int string_compare(const struct string *s1, const struct string *s2)
+{
 	if (s1->len != s2->len) {
 		return s1->len > s2->len ? 1 : -1;
 	}
 	return da_strncmp(s1->data, s2->data, s1->len);
 }
 
-static const char *
-_safe_check_longlong(const char *fmt, int32_t * have_longlong) {
+static const char *_safe_check_longlong(const char *fmt, int32_t *have_longlong)
+{
 	*have_longlong = false;
 	if (*fmt == 'l') {
 		fmt++;
@@ -108,10 +138,10 @@ _safe_check_longlong(const char *fmt, int32_t * have_longlong) {
 	return fmt;
 }
 
-static char *
-_safe_utoa(int _base, uint64_t val, char *buf) {
+static char *_safe_utoa(int _base, uint64_t val, char *buf)
+{
 	char hex[] = "0123456789abcdef";
-	uint32_t base = (uint32_t) _base;
+	uint32_t base = (uint32_t)_base;
 	*buf-- = 0;
 	do {
 		*buf-- = hex[val % base];
@@ -119,8 +149,8 @@ _safe_utoa(int _base, uint64_t val, char *buf) {
 	return buf + 1;
 }
 
-static char *
-_safe_itoa(int base, int64_t val, char *buf) {
+static char *_safe_itoa(int base, int64_t val, char *buf)
+{
 	char hex[] = "0123456789abcdef";
 	char *orig_buf = buf;
 	const int32_t is_neg = (val < 0);
@@ -205,7 +235,8 @@ _safe_itoa(int base, int64_t val, char *buf) {
 	return buf + 1;
 }
 
-int _safe_vsnprintf(char *to, size_t size, const char *format, va_list ap) {
+int _safe_vsnprintf(char *to, size_t size, const char *format, va_list ap)
+{
 	char *start = to;
 	char *end = start + size - 1;
 	for (; *format; ++format) {
@@ -230,7 +261,8 @@ int _safe_vsnprintf(char *to, size_t size, const char *format, va_list ap) {
 			int64_t ival = 0;
 			uint64_t uval = 0;
 			if (*format == 'p')
-				have_longlong = (sizeof(void *) == sizeof(uint64_t));
+				have_longlong =
+					(sizeof(void *) == sizeof(uint64_t));
 			if (have_longlong) {
 				if (*format == 'u') {
 					uval = va_arg(ap, uint64_t);
@@ -247,18 +279,25 @@ int _safe_vsnprintf(char *to, size_t size, const char *format, va_list ap) {
 
 			{
 				char buff[22];
-				const int base = (*format == 'x' || *format == 'p') ? 16 : 10;
+				const int base =
+					(*format == 'x' || *format == 'p') ?
+						16 :
+						      10;
 
 				/* *INDENT-OFF* */
 				char *val_as_str =
-						(*format == 'u') ?
-								_safe_utoa(base, uval,
-										&buff[sizeof(buff) - 1]) :
-								_safe_itoa(base, ival, &buff[sizeof(buff) - 1]);
+					(*format == 'u') ?
+						_safe_utoa(base, uval,
+							   &buff[sizeof(buff) -
+								 1]) :
+						      _safe_itoa(
+							base, ival,
+							&buff[sizeof(buff) - 1]);
 				/* *INDENT-ON* */
 
 				/* Strip off "ffffffff" if we have 'x' format without 'll' */
-				if (*format == 'x' && !have_longlong && ival < 0) {
+				if (*format == 'x' && !have_longlong &&
+				    ival < 0) {
 					val_as_str += 8;
 				}
 
@@ -281,10 +320,11 @@ int _safe_vsnprintf(char *to, size_t size, const char *format, va_list ap) {
 		}
 	}
 	*to = 0;
-	return (int) (to - start);
+	return (int)(to - start);
 }
 
-int _safe_snprintf(char *to, size_t n, const char *fmt, ...) {
+int _safe_snprintf(char *to, size_t n, const char *fmt, ...)
+{
 	int result;
 	va_list args;
 	va_start(args, fmt);

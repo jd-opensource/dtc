@@ -555,7 +555,7 @@ int init_buffer_process_ask_chain(PollerBase *thread)
 	    0)
 		return DTC_CODE_FAILED;
 
-	log4cplus_error("init_buffer_process_ask_chain end");
+	log4cplus_debug("init_buffer_process_ask_chain end");
 
 	return DTC_CODE_SUCCESS;
 }

@@ -108,6 +108,7 @@ void AgentMultiRequest::DecodeOneRequest(char *packetstart, int packetlen,
 		taskList[index].processed = 1;
 		break;
 	case DecodeDone:
+		log4cplus_debug("do_decode DecodeDone.");
 		if ((err = job->prepare_process()) < 0) {
 			log4cplus_error("build packed key error: %d, %s", err,
 					job->resultInfo.error_message());
@@ -127,6 +128,7 @@ void AgentMultiRequest::DecodeOneRequest(char *packetstart, int packetlen,
 int AgentMultiRequest::decode_agent_request()
 {
 	int cursor = 0;
+	log4cplus_debug("AgentMultiRequest decode_agent_request entry.");
 
 	taskList = new DecodedTask[packetCnt];
 	if (NULL == taskList) {
@@ -135,19 +137,29 @@ int AgentMultiRequest::decode_agent_request()
 	}
 	memset((void *)taskList, 0, sizeof(DecodedTask) * packetCnt);
 
+	log4cplus_debug("packet cnt:%d", packetCnt);
+
 	/* whether can work, reply on input buffer's correctness */
 	for (int i = 0; i < packetCnt; i++) {
 		char *packetstart;
 		int packetlen;
 
 		packetstart = packets.ptr + cursor;
-		packetlen = packet_body_len(*(PacketHeader *)packetstart) +
-			    sizeof(PacketHeader);
+		if (packetVersion == 1) {
+			packetlen = packet_body_len_v1(
+					    *(DTC_HEADER_V1 *)packetstart) +
+				    sizeof(DTC_HEADER_V1);
+		} else if (packetVersion == 2) {
+			packetlen = ((DTC_HEADER_V2 *)packetstart)->packet_len;
+		}
 
+		log4cplus_debug("packet len: %d", packetlen);
 		DecodeOneRequest(packetstart, packetlen, i);
 
 		cursor += packetlen;
 	}
+
+	log4cplus_debug("AgentMultiRequest decode_agent_request leave.");
 
 	return 0;
 }

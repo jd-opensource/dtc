@@ -418,8 +418,6 @@ static void process_cached_write_event(struct context *ctx) {
 		if((((conn->type & FRONTWORK) && !TAILQ_EMPTY(&conn->omsg_q)) ||
 			((conn->type & BACKWORK) && !TAILQ_EMPTY(&conn->imsg_q)))
 			&& conn->connected && !(conn->done || conn -> error)){ 
-	///*	if (!TAILQ_EMPTY(&conn->omsg_q) && conn->connected
-	//			&& !(conn->done || conn->error)) */{
 			status = event_add_out(ctx->evb, conn);			
 			if (status < 0) {
 				conn->error = 1;
