@@ -17,6 +17,8 @@
 #include "my_request.h"
 #include "my_command.h"
 
+using namespace hsql;
+
 bool MyRequest::do_mysql_protocol_parse()
 {
 	char *p = this->raw;
@@ -48,9 +50,13 @@ bool MyRequest::do_mysql_protocol_parse()
 		return false;
 	}
 
-	input_packet_length -= 2;
+	input_packet_length --;
+	p++;
 
-	p += 2;
+	if (*p == 0x0) {
+		p++;
+		input_packet_length--;
+	}
 
 	if (*p == 0x01) {
 		p++;
@@ -71,6 +77,15 @@ bool MyRequest::load_sql()
 	if (!do_mysql_protocol_parse())
 		return false;
 
+	if ((m_sql.find("insert into") != string::npos ||
+	     m_sql.find("INSERT INTO") != string::npos) &&
+	    (m_sql.find(" where ") != string::npos ||
+	     m_sql.find(" WHERE ") != string::npos)) {
+		m_sql = m_sql.substr(0, m_sql.find(" where "));
+		m_sql = m_sql.substr(0, m_sql.find(" WHERE "));
+	}
+
+	log4cplus_debug("sql: %s", m_sql.c_str());
 	hsql::SQLParser::parse(m_sql, &m_result);
 	if (m_result.isValid()) {
 		log4cplus_debug("load_sql success.");
@@ -101,18 +116,81 @@ bool MyRequest::check_packet_info()
 
 bool MyRequest::get_key(DTCValue *key, char *key_name)
 {
-	hsql::SelectStatement *stmt = get_result()->getStatement(0);
-	hsql::Expr *where = stmt->whereClause;
-	if (!where)
-		return false;
+	hsql::Expr *where = NULL;
+	int t = m_result.getStatement(0)->type();
 
-	log4cplus_debug("key name:%s", key_name);
+	if (hsql::StatementType::kStmtInsert == t) {
+		hsql::InsertStatement *stmt = get_result()->getStatement(0);
+		for (int i = 0; i < stmt->columns->size(); i++) {
+			if (strcmp(stmt->columns->at(i), key_name) == 0) {
 
-	log4cplus_debug("key val:%d", where->expr2->ival);
+				switch (stmt->values->at(i)->type) {
+				case hsql::ExprType::kExprLiteralInt:
+					*key = DTCValue::Make(
+						stmt->values->at(i)->ival);
+					return true;
+				case hsql::ExprType::kExprLiteralFloat:
+					*key = DTCValue::Make(
+						stmt->values->at(i)->fval);
+					return true;
+				case hsql::ExprType::kExprLiteralString:
+					*key = DTCValue::Make(
+						stmt->values->at(i)->name);
+					return true;
+				default:
+					return false;
+				}
+			}
+		}
+	} else {
+		if (hsql::StatementType::kStmtUpdate == t) {
+			hsql::UpdateStatement *stmt =
+				get_result()->getStatement(0);
+			where = stmt->where;
+		} else if (hsql::StatementType::kStmtSelect == t) {
+			hsql::SelectStatement *stmt =
+				get_result()->getStatement(0);
+			where = stmt->whereClause;
+		} else if (hsql::StatementType::kStmtDelete == t) {
+			hsql::DeleteStatement *stmt =
+				get_result()->getStatement(0);
+			where = stmt->expr;
+		}
 
-	*key = DTCValue::Make(where->expr2->ival);
+		if (!where)
+			return false;
 
-	return true;
+		if (where->type == kExprOperator && where->opType == kOpAnd) {
+			where = where->expr;
+		}
+
+		if (where->type == kExprOperator &&
+		    where->expr->type == kExprColumnRef) {
+			if (strcmp(where->expr->name, key_name) == 0) {
+				if (where->expr2) {
+					switch (where->expr2->type) {
+						case hsql::ExprType::kExprLiteralInt:
+							*key = DTCValue::Make(
+								where->expr2->ival);
+							return true;
+						case hsql::ExprType::kExprLiteralFloat:
+							*key = DTCValue::Make(
+								where->expr2->fval);
+							return true;
+						case hsql::ExprType::kExprLiteralString:
+							*key = DTCValue::Make(
+								where->expr2->name);
+							return true;
+						default:
+							return false;
+					}
+				}
+				return false;
+			}
+		}
+	}
+
+	return false;
 }
 
 uint32_t MyRequest::get_limit_start()
@@ -127,29 +205,37 @@ uint32_t MyRequest::get_limit_count()
 
 uint32_t MyRequest::get_need_num_fields()
 {
+	int t = m_result.getStatement(0)->type();
+	if (t != hsql::StatementType::kStmtSelect) {
+		return 0;
+	}
 	hsql::SelectStatement *stmt = get_result()->getStatement(0);
 	std::vector<hsql::Expr *> *selectList = stmt->selectList;
 	log4cplus_debug("select size:%d", selectList->size());
 	return selectList->size();
 }
 
-uint32_t MyRequest::get_condition_num_fields()
-{
-	return 0;
-	hsql::SelectStatement *stmt = get_result()->getStatement(0);
-	hsql::Expr *where = stmt->whereClause;
-
-	return where->exprList->size();
-}
-
 uint32_t MyRequest::get_update_num_fields()
 {
+	int t = m_result.getStatement(0)->type();
+	if (hsql::StatementType::kStmtUpdate == t) {
+		hsql::UpdateStatement *stmt = get_result()->getStatement(0);
+		return stmt->updates->size();
+	} else if (hsql::StatementType::kStmtInsert == t) {
+		hsql::InsertStatement *stmt = get_result()->getStatement(0);
+		return stmt->columns->size();
+	}
+
 	return 0;
 }
 
 std::vector<std::string> MyRequest::get_need_array()
 {
 	std::vector<std::string> need;
+	int t = m_result.getStatement(0)->type();
+	if (t != hsql::StatementType::kStmtSelect) {
+		return need;
+	}
 
 	hsql::SelectStatement *stmt = get_result()->getStatement(0);
 	std::vector<hsql::Expr *> *selectList = stmt->selectList;

@@ -33,6 +33,9 @@
 #include "../../hsql/include/SQLParser.h"
 #include "../../hsql/include/SQLParserResult.h"
 #include "../../hsql/include/util/sqlhelper.h"
+#include "../../hsql/include/sql/Expr.h"
+
+using namespace hsql;
 
 int DtcJob::check_packet_size(const char *buf, int len)
 {
@@ -385,6 +388,61 @@ int DtcJob::validate_section(DTC_HEADER_V1 &header)
 	return 0;
 }
 
+int DtcJob::build_field_type_r(int sql_type, char *field_name)
+{
+	const DTCTableDefinition *tdef = this->table_definition();
+	int t_type = tdef->field_type(tdef->field_id(field_name));
+
+	switch (sql_type) {
+	case hsql::ExprType::kExprLiteralInt:
+		return t_type == DField::Signed || t_type == DField::Signed ?
+			       t_type :
+			       -1;
+	case hsql::ExprType::kExprLiteralFloat:
+		return t_type == DField::Float ? t_type : -1;
+	case hsql::ExprType::kExprLiteralString:
+		return t_type == DField::String || t_type == DField::Binary ?
+			       t_type :
+			       -1;
+	}
+
+	return -1;
+}
+
+int build_condition_fields(Expr *expr, Expr *parent,
+			   std::vector<hsql::Expr *> *vec_expr)
+{
+	int count = 0;
+	if (!expr)
+		return 0;
+	switch (expr->type) {
+	case kExprColumnRef:
+		if (parent) {
+			count++;
+			vec_expr->push_back(parent);
+		}
+
+		break;
+	case kExprOperator:
+		if ((expr->opType >= kOpEquals &&
+		     expr->opType <= kOpGreaterEq) ||
+		    expr->opType == kOpAnd) {
+			count += build_condition_fields(expr->expr, expr,
+							vec_expr);
+
+			if (expr->expr2)
+				count += build_condition_fields(expr->expr2,
+								NULL, vec_expr);
+		} else {
+			return 0;
+		}
+	default:
+		break;
+	}
+
+	return count;
+}
+
 void DtcJob::decode_request_v2(MyRequest *mr)
 {
 	char *p = mr->get_packet_ptr();
@@ -429,39 +487,195 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 	}
 
 	//4.conditionInfo(where)
-	if (mr->get_condition_num_fields() > 0) {
-		hsql::SelectStatement *stmt = mr->get_result()->getStatement(0);
-		hsql::Expr *where = stmt->whereClause;
+	std::vector<hsql::Expr *> exprList;
 
-		int size = where->exprList->size();
-		if (size <= 1) {
-			log4cplus_error("condition num error: %d", size);
+	hsql::StatementType type = mr->get_result()->getStatement(0)->type();
+	hsql::Expr *where = NULL;
+
+	if (type != hsql::StatementType::kStmtInsert) {
+		if (type == hsql::StatementType::kStmtUpdate) {
+			hsql::UpdateStatement *stmt =
+				mr->get_result()->getStatement(0);
+			where = stmt->where;
+		} else if (type == hsql::StatementType::kStmtDelete) {
+			hsql::DeleteStatement *stmt =
+				mr->get_result()->getStatement(0);
+			where = stmt->expr;
+		} else if (type == hsql::StatementType::kStmtSelect) {
+			hsql::SelectStatement *stmt =
+				mr->get_result()->getStatement(0);
+			where = stmt->whereClause;
+		} else {
+			log4cplus_error("StatementType error: %d", type);
 			return;
 		}
 
-		FieldValueByName ci;
-		for (int i = 0; i < size; i++) {
-			ci.add_value(
-				where->exprList->at(i)->getName(), DField::Set,
-				where->exprList->at(i)
-					->type /*DField::Unsigned*/,
-				DTCValue::Make(
-					where->exprList->at(i)->expr2->ival));
-		}
-
-		conditionInfo = new DTCFieldValue(size);
-		int err = conditionInfo->Copy(
-			ci, 0,
-			TableDefinitionManager::instance()->get_cur_table_def());
-		if (err < 0) {
-			log4cplus_error("decode condition info error: %d", err);
+		int cnts = build_condition_fields(where, NULL, &exprList);
+		if (cnts != exprList.size()) {
+			log4cplus_error("build_condition_fields error: %d %d",
+					cnts, exprList.size());
 			return;
+		}
+		log4cplus_debug("condition num: %d", cnts);
+
+		if (exprList.size() > 1) {
+			int temp = 0;
+			for (int i = 0; i < exprList.size(); i++) {
+				if (strcmp(exprList.at(i)->expr->getName(),
+					   table_definition()->key_name()) ==
+				    0) { //is key
+					temp--;
+					continue;
+				}
+
+				int rtype = build_field_type_r(
+					exprList.at(i)
+						->expr2
+						->type /*DField::Unsigned*/,
+					exprList.at(i)->expr->getName());
+				if (rtype == -1) {
+					temp--;
+					continue;
+				}
+
+				if (DField::Signed == rtype ||
+				    DField::Unsigned == rtype) {
+					ci.add_value(exprList.at(i)->expr->getName(),
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							     exprList.at(i)->expr2->ival));
+				} else if (DField::Float == rtype) {
+					ci.add_value(exprList.at(i)->expr->getName(),
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							    exprList.at(i)->expr2->fval));
+				} else if (DField::String == rtype ||
+					   DField::Binary == rtype) {
+					ci.add_value(exprList.at(i)->expr->getName(),
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							    exprList.at(i)->expr2->name));
+				}
+			}
+			ci.Resolve(TableDefinitionManager::instance()
+					   ->get_cur_table_def(),
+				   0);
+
+			if (exprList.size() + temp > 0) {
+				conditionInfo = new DTCFieldValue(
+					exprList.size() + temp);
+				int err = conditionInfo->Copy(
+					ci, 0,
+					TableDefinitionManager::instance()
+						->get_cur_table_def());
+				if (err < 0) {
+					log4cplus_error(
+						"decode condition info error: %d",
+						err);
+					return;
+				}
+				clear_all_rows();
+			}
 		}
 	}
 
 	//5.updateInfo Set(update) / values(insert into)
 	if (mr->get_update_num_fields() > 0) {
-		DTCFieldValue *updateInfo;
+		int count = 0;
+		int t = mr->get_result()->getStatement(0)->type();
+		if (hsql::StatementType::kStmtUpdate == t) {
+			hsql::UpdateStatement *stmt =
+				mr->get_result()->getStatement(0);
+
+			count = stmt->updates->size();
+			for (int i = 0; i < count; i++) {
+				int rtype = build_field_type_r(
+					stmt->updates->at(i)->value->type,
+					stmt->updates->at(i)->column);
+				if (rtype == -1) {
+					return;
+				}
+
+				if (DField::Signed == rtype ||
+				    DField::Unsigned == rtype) {
+					ui.add_value(stmt->updates->at(i)->column,
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							     stmt->updates->at(i)
+							       ->value->ival));
+				} else if (DField::Float == rtype) {
+					ui.add_value(stmt->updates->at(i)->column,
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							     stmt->updates->at(i)
+							       ->value->fval));
+				} else if (DField::String == rtype ||
+					   DField::Binary == rtype) {
+					ui.add_value(stmt->updates->at(i)->column,
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							    stmt->updates->at(i)
+							       ->value->name));
+				}
+			}
+
+		} else if (hsql::StatementType::kStmtInsert == t) {
+			hsql::InsertStatement *stmt =
+				mr->get_result()->getStatement(0);
+
+			count = stmt->columns->size();
+			for (int i = 0; i < count; i++) {
+				int rtype = build_field_type_r(
+					stmt->values->at(i)->type,
+					stmt->columns->at(i));
+				if (rtype == -1) {
+					return;
+				}
+
+				if (DField::Signed == rtype ||
+				    DField::Unsigned == rtype) {
+					ui.add_value(stmt->columns->at(i),
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							     stmt->values->at(i)
+								     ->ival));
+				} else if (DField::Float == rtype) {
+					ui.add_value(stmt->columns->at(i),
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							     stmt->values->at(i)
+								     ->fval));
+				} else if (DField::String == rtype ||
+					   DField::Binary == rtype) {
+					log4cplus_debug(
+						"DTCValue key: %s, value: %s",
+						stmt->columns->at(i),
+						stmt->values->at(i)->name);
+					ui.add_value(stmt->columns->at(i),
+						     DField::Set, rtype,
+						     DTCValue::Make(
+							     stmt->values->at(i)
+								     ->name));
+				}
+			}
+		}
+
+		if (count > 0) {
+			ui.Resolve(TableDefinitionManager::instance()
+					   ->get_cur_table_def(),
+				   0);
+
+			updateInfo = new DTCFieldValue(count);
+			int err = updateInfo->Copy(
+				ui, 1,
+				TableDefinitionManager::instance()
+					->get_cur_table_def());
+			if (err < 0) {
+				log4cplus_error("decode update info error: %d",
+						err);
+				return;
+			}
+		}
 	}
 }
 

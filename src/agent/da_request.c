@@ -32,9 +32,10 @@
 extern char g_dtc_key[DTC_KEY_MAX];
 extern int g_dtc_key_type;
 
-void req_put(struct msg *msg) {
+void req_put(struct msg *msg)
+{
 	struct msg *pmsg; /* peer message (response) */
-	ASSERT(msg !=NULL);
+	ASSERT(msg != NULL);
 	ASSERT(msg->request);
 	pmsg = msg->peer;
 	if (pmsg != NULL) {
@@ -43,26 +44,28 @@ void req_put(struct msg *msg) {
 		pmsg->peer = NULL;
 		rsp_put(pmsg);
 	}
-	
+
 	msg_tmo_delete(msg);
 	msg_put(msg);
 }
 
-static struct msg *req_get(struct conn *conn) {
+static struct msg *req_get(struct conn *conn)
+{
 	struct msg *msg;
 	msg = msg_get(conn, true);
 	//lack of memory ,close client connection
 	if (msg == NULL) {
 		conn->error = 1;
 		conn->err = CONN_MSG_GET_ERR;
-		log_error("req enter,get msg from pool_2msg error,lack of memory");
+		log_error(
+			"req enter,get msg from pool_2msg error,lack of memory");
 	}
 	return msg;
 }
 
-struct msg *req_recv_next(struct context *ctx, struct conn *conn, bool alloc) {
-
-	ASSERT(conn !=NULL && conn->fd>0);
+struct msg *req_recv_next(struct context *ctx, struct conn *conn, bool alloc)
+{
+	ASSERT(conn != NULL && conn->fd > 0);
 
 	struct msg *msg;
 	if (conn->eof) {
@@ -70,15 +73,17 @@ struct msg *req_recv_next(struct context *ctx, struct conn *conn, bool alloc) {
 
 		if (msg != NULL) {
 			conn->rmsg = NULL;
-			log_error(
-					"eof s %d discarding incomplete req %"PRIu64" len " "%"PRIu32"",
-					conn->fd, msg->id, msg->mlen);
+			log_error("eof s %d discarding incomplete req %" PRIu64
+				  " len "
+				  "%" PRIu32 "",
+				  conn->fd, msg->id, msg->mlen);
 			req_put(msg);
 		}
 		//no half connection
 		//if (!conn->active(conn)) {
 		conn->done = 1;
-		log_debug("c %d active %d is done", conn->fd, conn->active(conn));
+		log_debug("c %d active %d is done", conn->fd,
+			  conn->active(conn));
 		//}
 		return NULL;
 	}
@@ -97,8 +102,8 @@ struct msg *req_recv_next(struct context *ctx, struct conn *conn, bool alloc) {
 	return msg;
 }
 
-struct msg *req_send_next(struct context *ctx, struct conn *conn) {
-
+struct msg *req_send_next(struct context *ctx, struct conn *conn)
+{
 	int status;
 	struct msg *msg, *nmsg; /* current and next message */
 
@@ -132,8 +137,9 @@ struct msg *req_send_next(struct context *ctx, struct conn *conn) {
 
 	ASSERT(nmsg->request && !nmsg->done);
 
-	log_debug("send next req %"PRIu64" len %"PRIu32" type %d on " "s %d",
-			nmsg->id, nmsg->mlen, nmsg->cmd, conn->fd);
+	log_debug("send next req %" PRIu64 " len %" PRIu32 " type %d on "
+		  "s %d",
+		  nmsg->id, nmsg->mlen, nmsg->cmd, conn->fd);
 
 	return nmsg;
 }
@@ -141,15 +147,16 @@ struct msg *req_send_next(struct context *ctx, struct conn *conn) {
 /*
  * dequeue msg from server send msgq,insert masg into search tree
  */
-void req_send_done(struct context *ctx, struct conn *conn, struct msg *msg) {
-
+void req_send_done(struct context *ctx, struct conn *conn, struct msg *msg)
+{
 	ASSERT(conn->type & BACKWORK);
 	ASSERT(msg != NULL && conn->smsg == NULL);
 	ASSERT(msg->request && !msg->done);
 	ASSERT(msg->owner != conn);
 
-	log_debug("send done req %"PRIu64" len %"PRIu32" type %d on " "s %d",
-			msg->id, msg->mlen, msg->cmd, conn->fd);
+	log_debug("send done req %" PRIu64 " len %" PRIu32 " type %d on "
+		  "s %d",
+		  msg->id, msg->mlen, msg->cmd, conn->fd);
 
 	/*struct cache_instance *ci;
 	ci = conn->owner;
@@ -166,7 +173,8 @@ void req_send_done(struct context *ctx, struct conn *conn, struct msg *msg) {
 }
 
 void req_client_enqueue_omsgq(struct context *ctx, struct conn *conn,
-		struct msg *msg) {
+			      struct msg *msg)
+{
 	ASSERT(msg->request);
 	ASSERT(conn->type & FRONTWORK);
 
@@ -175,7 +183,8 @@ void req_client_enqueue_omsgq(struct context *ctx, struct conn *conn,
 }
 
 void req_client_dequeue_omsgq(struct context *ctx, struct conn *conn,
-		struct msg *msg) {
+			      struct msg *msg)
+{
 	ASSERT(msg->request);
 	ASSERT(conn->type & FRONTWORK);
 
@@ -184,7 +193,8 @@ void req_client_dequeue_omsgq(struct context *ctx, struct conn *conn,
 }
 
 void req_client_enqueue_imsgq(struct context *ctx, struct conn *conn,
-		struct msg *msg) {
+			      struct msg *msg)
+{
 	ASSERT(msg->request);
 	ASSERT(conn->type & FRONTWORK);
 
@@ -193,7 +203,8 @@ void req_client_enqueue_imsgq(struct context *ctx, struct conn *conn,
 }
 
 void req_client_dequeue_imsgq(struct context *ctx, struct conn *conn,
-		struct msg *msg) {
+			      struct msg *msg)
+{
 	ASSERT(msg->request);
 	ASSERT(conn->type & FRONTWORK);
 
@@ -202,21 +213,23 @@ void req_client_dequeue_imsgq(struct context *ctx, struct conn *conn,
 }
 
 void req_server_enqueue_imsgq(struct context *ctx, struct conn *conn,
-		struct msg *msg) {
+			      struct msg *msg)
+{
 	ASSERT(msg->request);
 	ASSERT(conn->type & BACKWORK);
 	struct cache_instance *ci;
-	
+
 	msg_tmo_insert(msg, conn);
-	TAILQ_INSERT_TAIL(&conn->imsg_q, msg, s_i_tqe);	
-	msg->sev_inq = 1;	
+	TAILQ_INSERT_TAIL(&conn->imsg_q, msg, s_i_tqe);
+	msg->sev_inq = 1;
 	//TODO
 	ci = conn->owner;
 	stats_server_incr(ctx, ci, server_in_queue);
 }
 
 void req_server_dequeue_imsgq(struct context *ctx, struct conn *conn,
-		struct msg *msg) {
+			      struct msg *msg)
+{
 	ASSERT(msg->request);
 	ASSERT(conn->type & BACKWORK);
 
@@ -232,7 +245,8 @@ void req_server_dequeue_imsgq(struct context *ctx, struct conn *conn,
  * insert a msg to a server msg rbtree
  */
 void req_server_en_msgtree(struct context *ctx, struct conn *conn,
-		struct msg *msg) {
+			   struct msg *msg)
+{
 	ASSERT(msg->request);
 	ASSERT(conn->type & BACKWORK);
 
@@ -253,7 +267,8 @@ void req_server_en_msgtree(struct context *ctx, struct conn *conn,
  *  delete a msg from server msg rbtree
  */
 void req_server_de_msgtree(struct context *ctx, struct conn *conn,
-		struct msg *msg) {
+			   struct msg *msg)
+{
 	ASSERT(msg->request);
 	ASSERT(conn->type & BACKWORK);
 
@@ -261,8 +276,7 @@ void req_server_de_msgtree(struct context *ctx, struct conn *conn,
 
 	/*put msg into msg search tree*/
 	node = &msg->msg_rbe;
-	if(node->data == NULL)
-	{
+	if (node->data == NULL) {
 		return;
 	}
 
@@ -274,54 +288,55 @@ void req_server_de_msgtree(struct context *ctx, struct conn *conn,
 	stats_server_decr(ctx, ci, server_in_tree);
 }
 
-static void req_forward_stats(struct context *ctx, struct cache_instance *ci, struct msg *msg)
+static void req_forward_stats(struct context *ctx, struct cache_instance *ci,
+			      struct msg *msg)
 {
-    ASSERT(msg->request);
+	ASSERT(msg->request);
 
-    stats_server_incr(ctx, ci, server_requests);
-    stats_server_incr_by(ctx, ci, server_request_bytes, msg->mlen);
+	stats_server_incr(ctx, ci, server_requests);
+	stats_server_incr_by(ctx, ci, server_request_bytes, msg->mlen);
 }
 
 /*
  * msg not in any queue ,can reply client
  */
 static void req_make_loopback(struct context *ctx, struct conn *conn,
-		struct msg *msg) {
-
+			      struct msg *msg)
+{
 	ASSERT((conn->type & FRONTWORK) && !(conn->type & LISTENER));
 
-	log_debug(
-			"loopback req %"PRIu64" len %"PRIu32" type %d from " "c %d",
-			msg->id, msg->mlen, msg->cmd, conn->fd);
+	log_debug("loopback req %" PRIu64 " len %" PRIu32 " type %d from "
+		  "c %d",
+		  msg->id, msg->mlen, msg->cmd, conn->fd);
 
 	msg->done = 1;
 
 	if (conn->writecached == 0 && conn->connected == 1) {
-			cache_send_event(conn);
+		cache_send_event(conn);
 	}
 	//insert msg into client out msg queue
 	conn->enqueue_outq(ctx, conn, msg);
 	return;
 }
 
-int dtc_header_add(struct msg* msg, enum enum_agent_admin admin)
+int dtc_header_add(struct msg *msg, enum enum_agent_admin admin)
 {
-	struct DTC_HEADER_V2 dtc_header = {0};
+	struct DTC_HEADER_V2 dtc_header = { 0 };
 
-	struct mbuf* mbuf = STAILQ_LAST(&msg->buf_q, mbuf, next);
-	if(!mbuf)
+	struct mbuf *mbuf = STAILQ_LAST(&msg->buf_q, mbuf, next);
+	if (!mbuf)
 		return -1;
 
-	struct mbuf* new_buf = mbuf_get();
-	if(new_buf == NULL)
+	struct mbuf *new_buf = mbuf_get();
+	if (new_buf == NULL)
 		return -2;
 
 	dtc_header.version = DA_PROTOCOL_VERSION;
 	dtc_header.admin = admin;
 #if __BYTE_ORDER == __BIG_ENDIAN
-		dtc_header.id = bswap_64(msg->id);
+	dtc_header.id = bswap_64(msg->id);
 #else
-		dtc_header.id = msg->id;
+	dtc_header.id = msg->id;
 #endif
 	dtc_header.id = msg->id;
 	dtc_header.packet_len = mbuf_length(mbuf) + sizeof(dtc_header);
@@ -333,81 +348,93 @@ int dtc_header_add(struct msg* msg, enum enum_agent_admin admin)
 	mbuf_insert(&msg->buf_q, new_buf);
 
 	msg->mlen = mbuf_length(new_buf);
-	log_debug("msg->mlen:%d sizeof(dtc_header):%d mbuf_length(mbuf):%d", msg->mlen, sizeof(dtc_header), mbuf_length(mbuf));
+	log_debug("msg->mlen:%d sizeof(dtc_header):%d mbuf_length(mbuf):%d",
+		  msg->mlen, sizeof(dtc_header), mbuf_length(mbuf));
 
 	return 0;
 }
 
-void req_process(struct context *ctx, struct conn *c_conn,
-		struct msg *msg) 
+void req_process(struct context *ctx, struct conn *c_conn, struct msg *msg)
 {
-	if(c_conn->stage == CONN_STAGE_LOGGING_IN)	/* this request is a login authentication */
+	if (c_conn->stage ==
+	    CONN_STAGE_LOGGING_IN) /* this request is a login authentication */
 	{
-		if(0)
-		{
+		if (0) {
 			c_conn->stage = CONN_STAGE_SWITCH_NATIVE_PASSWD;
-			if(net_send_switch(msg, c_conn) < 0)  /* default resp login success. */
-				return ;
+			if (net_send_switch(msg, c_conn) <
+			    0) /* default resp login success. */
+				return;
 			req_make_loopback(ctx, c_conn, msg);
-		}
-		else
-		{
+		} else {
 			c_conn->stage = CONN_STAGE_LOGGED_IN;
-			if(net_send_ok(msg, c_conn) < 0)  /* default resp login success. */
-				return ;
+			if (net_send_ok(msg, c_conn) <
+			    0) /* default resp login success. */
+				return;
 			req_make_loopback(ctx, c_conn, msg);
 		}
 
 		return;
 	}
 
-	if(c_conn->stage == CONN_STAGE_SWITCH_NATIVE_PASSWD)
-	{
+	if (c_conn->stage == CONN_STAGE_SWITCH_NATIVE_PASSWD) {
 		c_conn->stage = CONN_STAGE_LOGGED_IN;
 
-		if(net_send_ok(msg, c_conn) < 0)  /* default resp login success. */
-			return ;
+		if (net_send_ok(msg, c_conn) <
+		    0) /* default resp login success. */
+			return;
 		req_make_loopback(ctx, c_conn, msg);
 
 		return;
 	}
 
-	if(c_conn->stage != CONN_STAGE_LOGGED_IN) /* not logged in yet, resp error */
+	if (c_conn->stage !=
+	    CONN_STAGE_LOGGED_IN) /* not logged in yet, resp error */
 	{
 		log_error("log in auth occur something wrong.");
-		if(net_send_error(msg, c_conn) < 0)  /* default resp login success. */
-				return ;
+		if (net_send_error(msg, c_conn) <
+		    0) /* default resp login success. */
+			return;
 		req_make_loopback(ctx, c_conn, msg);
-		return ;
+		return;
 	}
 
 	int oper = my_do_command(msg);
-	switch(oper)
-	{
-		case NEXT_FORWARD:
-			dtc_header_add(msg, CMD_NOP);
-			log_debug("req process will forward to dtc. msg len: %d, msg id: %d", msg->mlen, msg->id);
-			req_forward(ctx, c_conn, msg);
-			break;
-		case NEXT_RSP_OK:
-			if(net_send_ok(msg, c_conn) < 0)  /* default resp login success. */
-				return ;
-			req_make_loopback(ctx, c_conn, msg);
-			break;
-		case NEXT_RSP_ERROR:
-			if(net_send_error(msg, c_conn) < 0)  /* default resp login success. */
-				return ;
-			req_make_loopback(ctx, c_conn, msg);
-			break;
-		default:
-			log_error("my_do_command operation error:%d", oper);
+	switch (oper) {
+	case NEXT_FORWARD:
+		dtc_header_add(msg, CMD_NOP);
+		log_debug(
+			"req process will forward to dtc. msg len: %d, msg id: %d",
+			msg->mlen, msg->id);
+		req_forward(ctx, c_conn, msg);
+		break;
+	case NEXT_RSP_OK:
+		if (net_send_ok(msg, c_conn) <
+		    0) /* default resp login success. */
+			return;
+		req_make_loopback(ctx, c_conn, msg);
+		break;
+	case NEXT_RSP_ERROR:
+		if (net_send_error(msg, c_conn) <
+		    0) /* default resp login success. */
+			return;
+		req_make_loopback(ctx, c_conn, msg);
+		break;
+	case NEXT_RSP_NULL:
+		if (net_send_ok(msg, c_conn) <
+		    0) /* default resp login success. */
+			return;
+		req_make_loopback(ctx, c_conn, msg);
+		break;
+	default:
+		log_error("my_do_command operation error:%d", oper);
 	}
 
 	return;
 }
 
 static void req_forward(struct context *ctx, struct conn *c_conn,
-		struct msg *msg) {
+			struct msg *msg)
+{
 	struct conn *s_conn;
 	struct server_pool *pool;
 	struct cache_instance *ci;
@@ -419,7 +446,8 @@ static void req_forward(struct context *ctx, struct conn *c_conn,
 	c_conn->enqueue_inq(ctx, c_conn, msg);
 
 	pool = c_conn->owner;
-	s_conn = server_pool_conn(ctx, (struct server_pool *) c_conn->owner, msg);
+	s_conn =
+		server_pool_conn(ctx, (struct server_pool *)c_conn->owner, msg);
 	if (s_conn == NULL) {
 		log_debug("s_conn null");
 		//client connection is still exist,no swallow
@@ -432,56 +460,54 @@ static void req_forward(struct context *ctx, struct conn *c_conn,
 		if (req_done(c_conn, msg)) {
 			rsp_forward(ctx, c_conn, msg);
 		}
-		stats_pool_incr(ctx,pool,forward_error);
-		log_error("msg :%"PRIu64" from c %d ,get s_conn fail!", msg->id,
-				c_conn->fd);
+		stats_pool_incr(ctx, pool, forward_error);
+		log_error("msg :%" PRIu64 " from c %d ,get s_conn fail!",
+			  msg->id, c_conn->fd);
 		return;
 	}
 	//set the peer_conn of msg
 	msg->peer_conn = s_conn;
-	
+
 	if (s_conn->writecached == 0 && s_conn->connected == 1) {
 		cache_send_event(s_conn);
 	}
-	
+
 	/*
 	 * insert msg to server imsgq,send to dtc server
 	 */
 	s_conn->enqueue_inq(ctx, s_conn, msg);
 
-	
-
 	//stats counter incr
-	if(msg->cmd == MSG_REQ_GET)
-	{
-		stats_pool_incr_by(ctx,(struct server_pool*)c_conn->owner, pool_request_get_keys, msg->keyCount);
+	if (msg->cmd == MSG_REQ_GET) {
+		stats_pool_incr_by(ctx, (struct server_pool *)c_conn->owner,
+				   pool_request_get_keys, msg->keyCount);
 	}
 	ci = s_conn->owner;
 	req_forward_stats(ctx, s_conn->owner, msg);
-	log_debug("forward from c %d to s %d req %"PRIu64" len %"PRIu32 " type %d",
-			c_conn->fd, s_conn->fd, msg->id, msg->mlen, msg->cmd);
-	
+	log_debug("forward from c %d to s %d req %" PRIu64 " len %" PRIu32
+		  " type %d",
+		  c_conn->fd, s_conn->fd, msg->id, msg->mlen, msg->cmd);
 }
 
 /*
  * msg not in any queue ,can reply client
  */
 static void req_make_error(struct context *ctx, struct conn *conn,
-		struct msg *msg, int msg_errno) {
-
+			   struct msg *msg, int msg_errno)
+{
 	ASSERT((conn->type & FRONTWORK) && !(conn->type & LISTENER));
 
-	log_debug(
-			"forward req %"PRIu64" len %"PRIu32" type %d from " "c %d failed,msg errno:%d,errmsg:%s",
-			msg->id, msg->mlen, msg->cmd, conn->fd, msg_errno,
-			GetMsgErrorCodeStr(msg_errno));
+	log_debug("forward req %" PRIu64 " len %" PRIu32 " type %d from "
+		  "c %d failed,msg errno:%d,errmsg:%s",
+		  msg->id, msg->mlen, msg->cmd, conn->fd, msg_errno,
+		  GetMsgErrorCodeStr(msg_errno));
 
 	msg->done = 1;
 	msg->error = 1;
 	msg->err = msg_errno;
 
 	if (conn->writecached == 0 && conn->connected == 1) {
-			cache_send_event(conn);
+		cache_send_event(conn);
 	}
 	//insert msg into client out msg queue
 	conn->enqueue_outq(ctx, conn, msg);
@@ -489,27 +515,29 @@ static void req_make_error(struct context *ctx, struct conn *conn,
 }
 
 static bool req_filter_empty(struct context *ctx, struct conn *conn,
-		struct msg *msg) {
-		ASSERT(conn->client && !conn->proxy);
-		if (msg_empty(msg)) {
+			     struct msg *msg)
+{
+	ASSERT(conn->client && !conn->proxy);
+	if (msg_empty(msg)) {
 		ASSERT(conn->rmsg == NULL);
-		log_debug("filter empty req %"PRIu64" from c %d", msg->id, conn->fd);
-		req_put(msg);		
+		log_debug("filter empty req %" PRIu64 " from c %d", msg->id,
+			  conn->fd);
+		req_put(msg);
 		return true;
 	}
 	return false;
 }
 
 static void req_recv_done_stats(struct context *ctx, struct server_pool *pool,
-		struct msg *msg)
+				struct msg *msg)
 {
 	stats_pool_incr(ctx, pool, pool_requests);
 	stats_pool_incr_by(ctx, pool, pool_request_bytes, msg->mlen);
 }
 
 void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
-		struct msg *nmsg) {
-
+		   struct msg *nmsg)
+{
 	int status;
 	struct server_pool *pool;
 	struct msg_tqh frag_msgq;
@@ -529,11 +557,11 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	if (req_filter_empty(ctx, conn, msg)) {
 		ASSERT(conn->rmsg == NULL);
 		log_debug("filter a empty msg: %" PRIu64 "in conn:%d", msg->id,
-				conn->fd);
+			  conn->fd);
 		return;
 	}
 
-	pool = (struct server_pool *) conn->owner;
+	pool = (struct server_pool *)conn->owner;
 
 	conn->isvalid = 1;
 
@@ -544,10 +572,11 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	status = msg->fragment(msg, pool->ncontinuum, &frag_msgq);
 	if (status < 0) {
 		ASSERT(TAILQ_EMPTY(&frag_msgq));
-		if(msg->err == MSG_FRAGMENT_ERR)
+		if (msg->err == MSG_FRAGMENT_ERR)
 			stats_pool_incr(ctx, pool, fragment_error);
 		else
 			stats_pool_incr(ctx, pool, pool_withoutkey_req);
+		log_debug("req_make_error");
 		req_make_error(ctx, conn, msg, msg->err);
 		return;
 	}
@@ -579,7 +608,7 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 	
 	ASSERT(TAILQ_EMPTY(&frag_msgq));
 
-#endif 
+#endif
 	log_debug("req_recv_done leave.");
 	return;
 }
@@ -587,7 +616,8 @@ void req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 /*
  * whether req is done
  */
-bool req_done(struct conn *c, struct msg *msg) {
+bool req_done(struct conn *c, struct msg *msg)
+{
 	int id, nfragment;
 	struct msg *sub_msg, *temp_msg;
 	if (!msg->done) {
@@ -601,7 +631,8 @@ bool req_done(struct conn *c, struct msg *msg) {
 	if (msg->fdone) {
 		return true;
 	}
-	log_debug("nfrag_done:%d,nfrag:%d",msg->frag_owner->nfrag_done,msg->frag_owner->nfrag);
+	log_debug("nfrag_done:%d,nfrag:%d", msg->frag_owner->nfrag_done,
+		  msg->frag_owner->nfrag);
 	if (msg->frag_owner->nfrag_done < msg->frag_owner->nfrag) {
 		return false;
 	}
@@ -610,16 +641,15 @@ bool req_done(struct conn *c, struct msg *msg) {
 	 * check all sub msg
 	 */
 	for (sub_msg = msg, temp_msg = TAILQ_PREV(msg, msg_tqh, c_i_tqe);
-			temp_msg != NULL && temp_msg->frag_id == id;
-			sub_msg = temp_msg, temp_msg = TAILQ_PREV(temp_msg, msg_tqh,
-					c_i_tqe)) {
+	     temp_msg != NULL && temp_msg->frag_id == id; sub_msg = temp_msg,
+	    temp_msg = TAILQ_PREV(temp_msg, msg_tqh, c_i_tqe)) {
 		if (!(sub_msg->done)) {
 			return false;
 		}
 	}
 	for (sub_msg = msg, temp_msg = TAILQ_NEXT(msg, c_i_tqe);
-			temp_msg != NULL && temp_msg->frag_id == id;
-			sub_msg = temp_msg, temp_msg = TAILQ_NEXT(temp_msg, c_i_tqe)) {
+	     temp_msg != NULL && temp_msg->frag_id == id;
+	     sub_msg = temp_msg, temp_msg = TAILQ_NEXT(temp_msg, c_i_tqe)) {
 		if (!(sub_msg->done)) {
 			return false;
 		}
@@ -631,15 +661,14 @@ bool req_done(struct conn *c, struct msg *msg) {
 	 * check all sub msgs and set fdone
 	 */
 	for (sub_msg = msg, temp_msg = TAILQ_PREV(msg, msg_tqh, c_i_tqe);
-			temp_msg != NULL && temp_msg->frag_id == id;
-			sub_msg = temp_msg, temp_msg = TAILQ_PREV(temp_msg, msg_tqh,
-					c_i_tqe)) {
+	     temp_msg != NULL && temp_msg->frag_id == id; sub_msg = temp_msg,
+	    temp_msg = TAILQ_PREV(temp_msg, msg_tqh, c_i_tqe)) {
 		temp_msg->fdone = 1;
 		nfragment++;
 	}
 	for (sub_msg = msg, temp_msg = TAILQ_NEXT(msg, c_i_tqe);
-			temp_msg != NULL && temp_msg->frag_id == id;
-			sub_msg = temp_msg, temp_msg = TAILQ_NEXT(temp_msg, c_i_tqe)) {
+	     temp_msg != NULL && temp_msg->frag_id == id;
+	     sub_msg = temp_msg, temp_msg = TAILQ_NEXT(temp_msg, c_i_tqe)) {
 		temp_msg->fdone = 1;
 		nfragment++;
 	}
@@ -648,7 +677,8 @@ bool req_done(struct conn *c, struct msg *msg) {
 	return true;
 }
 
-bool req_error(struct conn *conn, struct msg *msg) {
+bool req_error(struct conn *conn, struct msg *msg)
+{
 	struct msg *cmsg; /* current message */
 	uint64_t id;
 	uint32_t nfragment;
@@ -668,17 +698,16 @@ bool req_error(struct conn *conn, struct msg *msg) {
 		return true;
 	}
 	for (cmsg = TAILQ_PREV(msg, msg_tqh, c_i_tqe);
-			cmsg != NULL && cmsg->frag_id == id;
-			cmsg = TAILQ_PREV(cmsg, msg_tqh, c_i_tqe)) {
-
+	     cmsg != NULL && cmsg->frag_id == id;
+	     cmsg = TAILQ_PREV(cmsg, msg_tqh, c_i_tqe)) {
 		if (cmsg->error) {
 			goto ferror;
 		}
 	}
 
-	for (cmsg = TAILQ_NEXT(msg, c_i_tqe); cmsg != NULL && cmsg->frag_id == id;
-			cmsg = TAILQ_NEXT(cmsg, c_i_tqe)) {
-
+	for (cmsg = TAILQ_NEXT(msg, c_i_tqe);
+	     cmsg != NULL && cmsg->frag_id == id;
+	     cmsg = TAILQ_NEXT(cmsg, c_i_tqe)) {
 		if (cmsg->error) {
 			goto ferror;
 		}
@@ -686,7 +715,7 @@ bool req_error(struct conn *conn, struct msg *msg) {
 
 	return false;
 
-	ferror:
+ferror:
 
 	/*
 	 * Mark all fragments of the given request to be in error to speed up
@@ -697,21 +726,22 @@ bool req_error(struct conn *conn, struct msg *msg) {
 	nfragment = 1;
 
 	for (cmsg = TAILQ_PREV(msg, msg_tqh, c_i_tqe);
-			cmsg != NULL && cmsg->frag_id == id;
-			cmsg = TAILQ_PREV(cmsg, msg_tqh, c_i_tqe)) {
+	     cmsg != NULL && cmsg->frag_id == id;
+	     cmsg = TAILQ_PREV(cmsg, msg_tqh, c_i_tqe)) {
 		cmsg->ferror = 1;
 		nfragment++;
 	}
 
-	for (cmsg = TAILQ_NEXT(msg, c_i_tqe); cmsg != NULL && cmsg->frag_id == id;
-			cmsg = TAILQ_NEXT(cmsg, c_i_tqe)) {
+	for (cmsg = TAILQ_NEXT(msg, c_i_tqe);
+	     cmsg != NULL && cmsg->frag_id == id;
+	     cmsg = TAILQ_NEXT(cmsg, c_i_tqe)) {
 		cmsg->ferror = 1;
 		nfragment++;
 	}
 
-	log_debug(
-			"req from c %d with fid %"PRIu64" and %"PRIu32" " "fragments is in error",
-			conn->fd, id, nfragment);
+	log_debug("req from c %d with fid %" PRIu64 " and %" PRIu32 " "
+		  "fragments is in error",
+		  conn->fd, id, nfragment);
 
 	return true;
 }
@@ -720,31 +750,31 @@ void request_dtc_key_define(struct context *ctx, struct conn *c)
 {
 	struct msg *msg = NULL;
 	int ret = 0;
-	if(g_dtc_key_type != -1)
+	if (g_dtc_key_type != -1)
 		return;
 
 	msg = net_send_desc_dtctable(c);
-	if(msg == NULL)
-	{
+	if (msg == NULL) {
 		log_error("error code:%d", ret);
 		return;
 	}
 	ret = dtc_header_add(msg, CMD_KEY_DEFINE);
-	if(ret)
-	{
+	if (ret) {
 		log_error("error code:%d %p", ret, msg);
 		return;
 	}
 
-	uint64_t rkey=1;
-	msg->idx = msg_backend_idx(msg, (uint8_t *)&rkey,sizeof(uint64_t));
-	log_debug("request process will forward to dtc. msg len: %d, msg id: %d, ret:%d, idx:%d", msg->mlen, msg->id, ret, msg->idx);
+	uint64_t rkey = 1;
+	msg->idx = msg_backend_idx(msg, (uint8_t *)&rkey, sizeof(uint64_t));
+	log_debug(
+		"request process will forward to dtc. msg len: %d, msg id: %d, ret:%d, idx:%d",
+		msg->mlen, msg->id, ret, msg->idx);
 	req_forward(ctx, c, msg);
 }
 
-void error_reply(struct msg* msg, struct conn* conn, struct context* ctx)
+void error_reply(struct msg *msg, struct conn *conn, struct context *ctx)
 {
-	if(net_send_error(msg, conn) < 0)
-		return ;
+	if (net_send_error(msg, conn) < 0)
+		return;
 	req_make_loopback(ctx, conn, msg);
 }

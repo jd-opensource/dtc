@@ -51,7 +51,7 @@ class MyRequest {
 	bool check_packet_info();
 
 	//sequence id
-	void set_pkt_nr(uint64_t pkt_nr)
+	void set_pkt_nr(uint8_t pkt_nr)
 	{
 		this->pkt_nr = pkt_nr;
 	}
@@ -63,11 +63,15 @@ class MyRequest {
 			return DRequest::Get;
 		else if (t == hsql::StatementType::kStmtInsert)
 			return DRequest::Insert;
+		else if (t == hsql::StatementType::kStmtUpdate)
+			return DRequest::Update;
+		else if (t == hsql::StatementType::kStmtDelete)
+			return DRequest::Delete;
 
 		return 0;
 	}
 
-	uint64_t get_pkt_nr()
+	uint8_t get_pkt_nr()
 	{
 		return this->pkt_nr;
 	}
@@ -82,13 +86,18 @@ class MyRequest {
 		return m_sql;
 	}
 
+	std::string get_error_str()
+	{
+		std::string str = m_result.errorMsg();
+		return str;
+	}
+
 	bool get_key(DTCValue *key, char *key_name);
 	uint32_t get_limit_start();
 	uint32_t get_limit_count();
 	uint32_t get_need_num_fields();
 	std::vector<std::string> get_need_array();
 
-	uint32_t get_condition_num_fields();
 	uint32_t get_update_num_fields();
 
     public:
@@ -96,7 +105,7 @@ class MyRequest {
 	int raw_len;
 	std::string m_sql;
 	hsql::SQLParserResult m_result;
-	uint64_t pkt_nr;
+	uint8_t pkt_nr;
 };
 
 #endif

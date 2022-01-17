@@ -611,7 +611,7 @@ void encode_mysql_header(BufferChain *r, int len, uint8_t pkt_num)
 	*(r->data + 3) = pkt_num;
 }
 
-int encode_my_fileds_info(BufferChain **bc, uint8_t pkt_num, uint8_t fields_num)
+int encode_my_fileds_info(BufferChain **bc, uint8_t& pkt_num, uint8_t fields_num)
 {
 	int packet_len = sizeof(BufferChain) + sizeof(MYSQL_HEADER_SIZE) +
 			 sizeof(fields_num);
@@ -622,7 +622,7 @@ int encode_my_fileds_info(BufferChain **bc, uint8_t pkt_num, uint8_t fields_num)
 		return -ENOMEM;
 	}
 	r->totalBytes = packet_len - sizeof(BufferChain);
-	encode_mysql_header(r, 1, pkt_num);
+	encode_mysql_header(r, 1, pkt_num++);
 	*(r->data + sizeof(MYSQL_HEADER_SIZE)) = fields_num;
 	r->usedBytes = 5;
 	r->nextBuffer = NULL;
@@ -808,7 +808,7 @@ uint16_t build_length(int type)
 	}
 }
 
-BufferChain *encode_field_def(DtcJob *job, BufferChain *bc, uint8_t pkt_num)
+BufferChain *encode_field_def(DtcJob *job, BufferChain *bc, uint8_t& pkt_num)
 {
 	const DTCTableDefinition *tdef = job->table_definition();
 	BufferChain *nbc = bc;
@@ -845,7 +845,7 @@ BufferChain *encode_field_def(DtcJob *job, BufferChain *bc, uint8_t pkt_num)
 		log4cplus_debug("set_len:%d", set_len);
 		r->usedBytes = sizeof(MYSQL_HEADER_SIZE) + set_len;
 		r->nextBuffer = NULL;
-		encode_mysql_header(r, set_len, pkt_num);
+		encode_mysql_header(r, set_len, pkt_num++);
 
 		nbc->nextBuffer = r;
 		nbc = nbc->nextBuffer;
@@ -862,7 +862,7 @@ struct my_result_set_eof {
 };
 #pragma pack()
 
-BufferChain *encode_eof(BufferChain *bc, int pkt_nr)
+BufferChain *encode_eof(BufferChain *bc, uint8_t pkt_nr)
 {
 	BufferChain *nbc = bc;
 	my_result_set_eof eof;
@@ -890,13 +890,16 @@ BufferChain *encode_eof(BufferChain *bc, int pkt_nr)
 	return nbc;
 }
 
-BufferChain *encode_row_data(DtcJob *job, BufferChain *bc, int &pkt_nr)
+BufferChain *encode_row_data(DtcJob *job, BufferChain *bc, uint8_t &pkt_nr)
 {
 	ResultSet *pstResultSet = job->result;
 	int count = 0;
 	BufferChain *nbc = bc;
 	std::vector<std::string> result_field = job->mr.get_need_array();
 	const DTCTableDefinition *tdef = job->table_definition();
+
+	if (pstResultSet == NULL)
+		return NULL;
 
 	for (int i = 0; i < pstResultSet->total_rows(); i++) {
 		char buf[32] = { 0 };
@@ -1022,34 +1025,60 @@ BufferChain *encode_row_data(DtcJob *job, BufferChain *bc, int &pkt_nr)
 	return nbc;
 }
 
+BufferChain *Packet::encode_mysql_ok(DtcJob *job)
+{
+	BufferChain *bc = NULL;
+	BufferChain *pos = NULL;
+
+	uint8_t buf[7] = {0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
+	int2store_big_endian(buf+ 1, job->resultInfo.affected_rows());
+
+	uint8_t pkt_nr = job->mr.get_pkt_nr();
+	pkt_nr++;
+
+
+	int packet_len = sizeof(BufferChain) + sizeof(MYSQL_HEADER_SIZE) +
+		sizeof(buf);
+
+	bc = (BufferChain *)MALLOC(packet_len);
+	BufferChain *r = bc;
+	if (r == NULL) {
+		return -ENOMEM;
+	}
+	r->totalBytes = packet_len - sizeof(BufferChain);
+	encode_mysql_header(r, sizeof(buf), pkt_nr);
+	memcpy(r->data + sizeof(MYSQL_HEADER_SIZE), buf, sizeof(buf));
+	r->usedBytes = sizeof(buf) + sizeof(MYSQL_HEADER_SIZE);
+	r->nextBuffer = NULL;
+
+	return bc;
+}
+
 BufferChain *Packet::encode_mysql_protocol(DtcJob *job)
 {
 	BufferChain *bc = NULL;
 	BufferChain *pos = NULL;
-	log4cplus_debug("***0000000000000");
 
-	int pkt_nr = job->mr.get_pkt_nr();
+	uint8_t pkt_nr = job->mr.get_pkt_nr();
+	pkt_nr++;
 
-	int ret = encode_my_fileds_info(&bc, ++pkt_nr,
+	int ret = encode_my_fileds_info(&bc, pkt_nr,
 					job->mr.get_need_num_fields());
 	if (ret < 0)
 		return NULL;
-	log4cplus_debug("***2222222222222");
-	pos = encode_field_def(job, bc, ++pkt_nr);
+	pos = encode_field_def(job, bc, pkt_nr);
 	if (!pos)
 		return NULL;
 	//pos = encode_eof(pos, ++pkt_nr);
 	//if (!pos)
 	//	return NULL;
-	log4cplus_debug("***3333333");
-	pos = encode_row_data(job, pos, ++pkt_nr);
-	if (!pos)
-		return NULL;
-	log4cplus_debug("***4444444444444");
+	BufferChain *prow = encode_row_data(job, pos, pkt_nr);
+	if (prow) {
+		pos = prow;
+	}
 	pos = encode_eof(pos, pkt_nr);
 	if (!pos)
 		return NULL;
-	log4cplus_debug("***5555555555555");
 
 	return bc;
 }
@@ -1132,15 +1161,13 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 		job.result_code() >= 0 ? job.get_result_packet() : NULL;
 	BufferChain *rb = NULL;
 	int nrp = 0, lrp = 0, off = 0;
-	log4cplus_debug("111111111111");
+	bool bok = false;
 	if (mtu <= 0) {
-		log4cplus_debug("222222222");
 		mtu = MAXPACKETSIZE;
 	}
-	log4cplus_debug("333333333333333");
+
 	/* rp may exist but no result */
 	if (rp && (rp->numRows || rp->totalRows)) {
-		log4cplus_debug("4444444444444");
 		//rb指向数据结果集缓冲区起始位置
 		rb = rp->bc;
 		if (rb)
@@ -1150,8 +1177,8 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 		lrp -= off;
 		job.resultInfo.set_total_rows(rp->totalRows);
 	} else {
-		log4cplus_debug("55555555555555555:%d %d", job.result_code(),
-				is_desc_tables(&job));
+		nrp = 1;
+		bok = true;
 		if (rp && rp->totalRows == 0 && rp->bc) {
 			FREE(rp->bc);
 			rp->bc = NULL;
@@ -1171,7 +1198,6 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 			}
 		}
 	}
-	log4cplus_debug("66666666666666666666");
 	if (ts) {
 		job.resultInfo.set_time_info(ts);
 	}
@@ -1179,16 +1205,11 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 
 	if (job.result_key() == NULL && job.request_key() != NULL)
 		job.set_result_key(*job.request_key());
-	log4cplus_debug("7777777777777777777:%d %d %p %d", job.mr.get_pkt_nr(),
-			job.request_serial(), &job.mr.pkt_nr, job.mr.pkt_nr);
 
 	//转换内容包
 	int err = job.decode_result_set(rb->data + off, lrp);
 	if (err) {
-		log4cplus_debug(
-			"decode result set error, decode result set error: %d",
-			err);
-		return -1;
+		log4cplus_debug("decode result null: %d", err);
 	} else {
 		log4cplus_debug("decode_result_set success");
 	}
@@ -1199,11 +1220,14 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	dtc_header.packet_len = 0;
 	dtc_header.admin = CMD_NOP;
 
-	log4cplus_debug("8888888888888888888888");
+	if(bok == false)
+	{
+		nrp = 1 /*fields count info*/ +
+			job.mr.get_need_array().size() /*fields def*/ + 0 /*eof*/ +
+			(job.result ? job.result->total_rows() : 0) /*row data*/ +
+			1 /*eof*/;
+	}
 
-	nrp = 1 /*fields count info*/ +
-	      job.mr.get_need_array().size() /*fields def*/ + 0 /*eof*/ +
-	      job.result->total_rows() /*row data*/ + 1 /*eof*/;
 
 	/* pool, exist and large enough, use. else free and malloc */
 	int first_packet_len = sizeof(BufferChain) +
@@ -1226,7 +1250,6 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 		buf->totalBytes = first_packet_len - sizeof(BufferChain);
 		buf->nextBuffer = NULL;
 	}
-	log4cplus_debug("999999999999999999999999");
 	//设置要发送的第一个包
 	char *p = buf->data + sizeof(struct iovec) * (nrp + 1);
 	v = (struct iovec *)buf->data;
@@ -1238,15 +1261,16 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	//修改第一个包的内容
 	memcpy(p, &dtc_header, sizeof(dtc_header));
 	p += sizeof(dtc_header);
-	log4cplus_debug("AAAAAAAAAAAAAAAAAAAAAAA");
 	if (p - (char *)v->iov_base != sizeof(dtc_header))
 		fprintf(stderr, "%s(%d): BAD ENCODER len=%ld must=%d\n",
 			__FILE__, __LINE__, (long)(p - (char *)v->iov_base),
 			sizeof(dtc_header));
-	log4cplus_debug("BBBBBBBBBBBBBBB:%p %d", rb->data, lrp);
 
 	rb = NULL;
-	rb = encode_mysql_protocol(&job);
+	if(bok == true)
+		rb = encode_mysql_ok(&job);
+	else
+		rb = encode_mysql_protocol(&job);
 	if (!rb)
 		return -3;
 

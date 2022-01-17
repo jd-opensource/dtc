@@ -28,6 +28,7 @@
 #include "buffer.h"
 #include "receiver.h"
 #include "../my/my_request.h"
+#include "../field/field_api.h"
 
 class NCRequest;
 
@@ -168,6 +169,8 @@ class DtcJob : public TableReference {
 	DTCVersionInfo versionInfo;
 	DTCRequestInfo requestInfo;
 	DTCResultInfo resultInfo;
+	FieldValueByName ui;
+	FieldValueByName ci;
 
     protected: // working data
 	uint64_t serialNr; /* derived from packet */
@@ -391,6 +394,8 @@ class DtcJob : public TableReference {
 	//     type 2: use external packet
 	void decode_packet_v1(char *packetIn, int packetLen, int type);
 	void decode_packet_v2(char *packetIn, int packetLen, int type);
+
+	int build_field_type_r(int sql_type, char *field_name);
 
 	DecodeResult do_decode(char *packetIn, int packetLen, int type)
 	{

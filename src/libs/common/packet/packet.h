@@ -131,6 +131,7 @@ class Packet {
 	int encode_reload_config(const DTCTableDefinition *tdef, int sn = 1);
 
 	BufferChain *encode_mysql_protocol(DtcJob *job);
+	BufferChain *encode_mysql_ok(DtcJob *job);
 };
 
 #endif

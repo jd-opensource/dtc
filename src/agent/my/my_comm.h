@@ -32,7 +32,12 @@ MYSQL Protocol Definition, See more detail:
 #define MAX_PACKET_LENGTH (256L * 256L * 256L - 1)
 #define DA_PROTOCOL_VERSION 2
 
-enum enum_agent_admin { CMD_NOP = 0, CMD_KEY_DEFINE };
+enum enum_agent_admin {
+	CMD_NOP = 0,
+	CMD_KEY_DEFINE,
+	CMD_SQL_PASS_OK,
+	CMD_SQL_PASS_NULL
+};
 
 struct DTC_HEADER_V2 {
 	uint8_t version;
@@ -42,14 +47,19 @@ struct DTC_HEADER_V2 {
 	uint64_t id;
 };
 
-enum AGENT_NEXT_OPERATION { NEXT_FORWARD = 0, NEXT_RSP_OK, NEXT_RSP_ERROR };
+enum AGENT_NEXT_OPERATION {
+	NEXT_FORWARD = 0,
+	NEXT_RSP_OK,
+	NEXT_RSP_ERROR,
+	NEXT_RSP_NULL
+};
 
 static inline int32 sint3korr(const uchar *A)
 {
 	return ((int32)(((A[2]) & 128) ?
 				(((uint32)255L << 24) | (((uint32)A[2]) << 16) |
 				 (((uint32)A[1]) << 8) | ((uint32)A[0])) :
-				(((uint32)A[2]) << 16) | (((uint32)A[1]) << 8) |
+				      (((uint32)A[2]) << 16) | (((uint32)A[1]) << 8) |
 					((uint32)A[0])));
 }
 
