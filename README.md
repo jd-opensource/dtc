@@ -1,5 +1,5 @@
 ![DTC](http://storage.360buyimg.com/bq-install/release/dtc_logo.png)
-# DTC - Distributed Table Cache 分布式表缓存
+# DTC - Distributed Table Cache
 [![Build Status](https://app.travis-ci.com/DTC8/DTC.svg?branch=master)](https://app.travis-ci.com/github/DTC8/DTC)
 
 ## Overview
