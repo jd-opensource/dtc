@@ -1,0 +1,10 @@
+version: '3'
+services:
+    agent:
+      image: dtc8/agent:latest
+      ports:
+      - "12001:12001"
+      links:
+      - dtc
+    dtc:
+      image: dtc8/server:latest
