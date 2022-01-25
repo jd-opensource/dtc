@@ -424,7 +424,7 @@ int init_data_connector_chain_thread()
 
 int init_buffer_process_ask_chain(PollerBase *thread)
 {
-	log4cplus_error("init_buffer_process_ask_chain start");
+	log4cplus_debug("init_buffer_process_ask_chain start");
 	g_buffer_process_ask_instance = new BufferProcessAskChain(
 		thread, TableDefinitionManager::instance()->get_cur_table_def(),
 		async_update ? MODE_ASYNC : MODE_SYNC);
