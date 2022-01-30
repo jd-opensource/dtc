@@ -231,11 +231,17 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 	p = p + sizeof(DTC_HEADER_V2);
 
 	mr.set_packet_info(p, packetLen - sizeof(DTC_HEADER_V2));
+
+	struct timeval tv1, tv2;
+	gettimeofday(&tv1, NULL);
+
 	if (!mr.load_sql()) {
 		log4cplus_error("load sql error");
 		stage = DecodeStageDataError;
 		return;
 	}
+	gettimeofday(&tv2, NULL);
+	log4cplus_debug("load sql used time:%d us", tv2.tv_usec- tv1.tv_usec);
 
 	decode_request_v2(&mr);
 
