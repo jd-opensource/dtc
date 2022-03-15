@@ -14,28 +14,27 @@
 * limitations under the License.
 * 
 */
-#ifndef __H_WATCHDOG_DAEMON_H__
-#define __H_WATCHDOG_DAEMON_H__
+#include "sharding_entry.h"
+#include <unistd.h>
+#include "proc_title.h"
 
-#include "daemons.h"
+const char *sharding_name = "sharding";
 
-class WatchDogDaemon : public WatchDogObject,
-					   private TimerObject
+ShardingEntry::ShardingEntry(WatchDog *watchdog, int sec)
+	: WatchDogDaemon(watchdog, sec)
 {
-private:
-	TimerList *timer_list_;
+	strncpy(watchdog_object_name_, "sharding", sizeof(watchdog_object_name_));
+}
 
-private:
-	virtual void killed_notify(int signo, int coredumped);
-	virtual void exited_notify(int retval);
-	virtual void job_timer_procedure();
+ShardingEntry::~ShardingEntry(void)
+{
+}
 
-public:
-	WatchDogDaemon(WatchDog *watchdog, int sec);
-	~WatchDogDaemon();
+void ShardingEntry::exec()
+{
+	char *argv[1];
+	argv[0] = NULL;
 
-	virtual int new_proc_fork();
-	virtual void exec() = 0;
-};
-
-#endif
+	set_proc_title("agent_sharding");
+	execv("./../../sharding/bin/start.sh", argv);
+}

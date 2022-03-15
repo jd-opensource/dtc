@@ -14,28 +14,26 @@
 * limitations under the License.
 * 
 */
-#ifndef __H_WATCHDOG_DAEMON_H__
-#define __H_WATCHDOG_DAEMON_H__
+#include "fulldata_entry.h"
+#include <unistd.h>
 
-#include "daemons.h"
+const char *fulldata_name = "full_data";
 
-class WatchDogDaemon : public WatchDogObject,
-					   private TimerObject
+FullDataEntry::FullDataEntry(WatchDog *watchdog, int sec)
+	: WatchDogDaemon(watchdog, sec)
 {
-private:
-	TimerList *timer_list_;
+	strncpy(watchdog_object_name_, fulldata_name, sizeof(watchdog_object_name_) < strlen(fulldata_name) ? sizeof(watchdog_object_name_) : strlen(fulldata_name));
+}
 
-private:
-	virtual void killed_notify(int signo, int coredumped);
-	virtual void exited_notify(int retval);
-	virtual void job_timer_procedure();
+FullDataEntry::~FullDataEntry(void)
+{
+}
 
-public:
-	WatchDogDaemon(WatchDog *watchdog, int sec);
-	~WatchDogDaemon();
+void FullDataEntry::exec()
+{
+	char *argv[2];
 
-	virtual int new_proc_fork();
-	virtual void exec() = 0;
-};
-
-#endif
+	argv[1] = NULL;
+	argv[0] = (char *)fulldata_name;
+	execv(argv[0], argv);
+}

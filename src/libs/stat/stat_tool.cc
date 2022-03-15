@@ -26,10 +26,8 @@
 #include <daemon/daemon.h>
 #include <dtc_global.h>
 
-const char project_name[] = "stattool";
-const char usage_argv[] = "dump Id or reporter";
-char cache_file[256] = CACHE_CONF_NAME;
-char table_file[256] = TABLE_CONF_NAME;
+
+
 StatClient stc;
 std::vector<StatClient::Iterator_> idset;
 StateTableFormater out;
@@ -575,7 +573,7 @@ void usage(void)
 			"        setbase id v1 v2...\n");
 	exit(-2);
 }
-
+#if 1
 int main(int argc, char **argv)
 {
 	argv++, --argc;
@@ -642,3 +640,4 @@ int main(int argc, char **argv)
 		usage();
 	return 0;
 }
+#endif

@@ -21,11 +21,10 @@
 #include "daemons.h"
 #include "daemon/daemon.h"
 #include "log/log.h"
-#include "dtc_global.h"
 
-char daemons_cache_file[256] = CACHE_CONF_NAME;
-char daemons_table_file[256] = TABLE_CONF_NAME;
-
+extern int watchdog_stop;
+extern int load_all;
+extern int load_sharding;
 
 WatchDogPipe::WatchDogPipe()
 {
@@ -63,7 +62,7 @@ void WatchDogPipe::wake()
 
 static WatchDogPipe *notifier;
 static void sighdlr(int signo) 
-{ 
+{
 	notifier->wake(); 
 }
 
@@ -71,11 +70,23 @@ WatchDog::WatchDog()
 {
 	/* 立马注册进程退出处理函数，解决启动时创建太多进程导致部分进程退出没有收到信号linjinming 2014-06-14*/
 	notifier = new WatchDogPipe;
-	signal(SIGCHLD, sighdlr);
+	//signal(SIGCHLD, sighdlr);
+
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = sighdlr;
+	sigaction(SIGCHLD, &sa, NULL);
 }
 
 WatchDog::~WatchDog(void)
 {
+}
+
+void close_sharding()
+{
+	char* p[1];
+	p[0] = NULL;
+	execv("./../../sharding/bin/stop.sh", p);
 }
 
 void WatchDog::run_loop()
@@ -91,11 +102,13 @@ void WatchDog::run_loop()
 		pfd[1].revents = 0;
 	}
 
-	while (!stop) {
-		int timeout = expire_micro_seconds(3600 * 1000, 1);
+	while (!watchdog_stop) {
+		int timeout = expire_micro_seconds(1000, 1);
+		log4cplus_debug("befor poll, timeout:%d, %d, %d\n", timeout, pfd[0].fd, pfd[1].fd);
 		int interrupted = poll(pfd, 2, timeout);
+		log4cplus_debug("after poll, watchdog_stop:%d, interrupted:%d\n", watchdog_stop, interrupted);
 		update_now_time(timeout, interrupted);
-		if (stop)
+		if (watchdog_stop)
 			break;
 
 		if (pfd[0].revents & POLLIN)
@@ -107,9 +120,12 @@ void WatchDog::run_loop()
 		check_expired();
 		check_ready();
 	}
+	
 	log4cplus_debug("prepare stopping");
-	//kill_allwatchdog();
-	force_kill_allwatchdog();
+	kill_allwatchdog();
+	if(load_sharding || load_all)
+		close_sharding();
+	//force_kill_allwatchdog();
 	check_watchdog();
 	time_t stoptimer = time(NULL) + 5;
 	int stopretry = 0;

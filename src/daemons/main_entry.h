@@ -14,28 +14,28 @@
 * limitations under the License.
 * 
 */
-#ifndef __H_WATCHDOG_DAEMON_H__
-#define __H_WATCHDOG_DAEMON_H__
+#ifndef __H_DTC_ENTRY_H__
+#define __H_DTC_ENTRY_H__
 
 #include "daemons.h"
 
-class WatchDogDaemon : public WatchDogObject,
-					   private TimerObject
+class MainEntry : private WatchDogObject
 {
 private:
-	TimerList *timer_list_;
+	int (*entry)(void *);
+	void *args_;
+	int recovery_;
+	int core_count_;
 
 private:
 	virtual void killed_notify(int signo, int coredumped);
 	virtual void exited_notify(int retval);
-	virtual void job_timer_procedure();
 
 public:
-	WatchDogDaemon(WatchDog *watchdog, int sec);
-	~WatchDogDaemon();
-
-	virtual int new_proc_fork();
-	virtual void exec() = 0;
+	MainEntry(WatchDogUnit *watchdog, int (*entry)(void *), void *args_, int recovery);  
+	virtual ~MainEntry();
+	
+	int fork_main(int enCoreDump = 0);
 };
 
 #endif

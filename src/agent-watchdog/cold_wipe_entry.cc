@@ -14,28 +14,25 @@
 * limitations under the License.
 * 
 */
-#ifndef __H_WATCHDOG_DAEMON_H__
-#define __H_WATCHDOG_DAEMON_H__
+#include "cold_wipe_entry.h"
+#include <unistd.h>
 
-#include "daemons.h"
+const char *cold_wipe_name = "data_lifecycle_manager";
 
-class WatchDogDaemon : public WatchDogObject,
-					   private TimerObject
+DataLifeCycleEntry::DataLifeCycleEntry(WatchDog *watchdog, int sec)
+	: WatchDogDaemon(watchdog, sec)
 {
-private:
-	TimerList *timer_list_;
+	strncpy(watchdog_object_name_, cold_wipe_name, sizeof(watchdog_object_name_) < strlen(cold_wipe_name)? sizeof(watchdog_object_name_): strlen(cold_wipe_name));
+}
 
-private:
-	virtual void killed_notify(int signo, int coredumped);
-	virtual void exited_notify(int retval);
-	virtual void job_timer_procedure();
+DataLifeCycleEntry::~DataLifeCycleEntry(void)
+{
+}
 
-public:
-	WatchDogDaemon(WatchDog *watchdog, int sec);
-	~WatchDogDaemon();
-
-	virtual int new_proc_fork();
-	virtual void exec() = 0;
-};
-
-#endif
+void DataLifeCycleEntry::exec()
+{
+	char *argv[2];
+	argv[1] = NULL;
+	argv[0] = (char *)cold_wipe_name;
+	execv(argv[0], argv);
+}

@@ -65,9 +65,9 @@ void WatchDogHelper::exec()
 
 	argv[argc++] = NULL;
 	argv[argc++] = (char *)"-d";
-	if (strcmp(cache_file, CACHE_CONF_NAME)) {
+	if (strcmp(daemons_cache_file, CACHE_CONF_NAME)) {
 		argv[argc++] = (char *)"-f";
-		argv[argc++] = cache_file;
+		argv[argc++] = daemons_cache_file;
 	}
 	if (conf_ == DBHELPER_TABLE_NEW) {
 		argv[argc++] = (char *)"-t";
@@ -75,9 +75,9 @@ void WatchDogHelper::exec()
 		snprintf(tableName, 64, "../conf/table%d.yaml", num_);
 		argv[argc++] = tableName;
 	} else if (conf_ == DBHELPER_TABLE_ORIGIN &&
-		   strcmp(table_file, TABLE_CONF_NAME)) {
+		   strcmp(daemons_table_file, TABLE_CONF_NAME)) {
 		argv[argc++] = (char *)"-t";
-		argv[argc++] = table_file;
+		argv[argc++] = daemons_table_file;
 	}
 	argv[argc++] = watchdog_object_name_ + 6;
 	argv[argc++] = (char *)"-";

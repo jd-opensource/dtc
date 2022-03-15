@@ -14,28 +14,30 @@
 * limitations under the License.
 * 
 */
-#ifndef __H_WATCHDOG_MAIN_H__
-#define __H_WATCHDOG_MAIN_H__
+#include "agent_entry.h"
+#include <unistd.h>
 
-#include "daemons.h"
+const char *agent_name = "dtcagent";
 
-class WatchDogEntry : private WatchDogObject
+AgentEntry::AgentEntry(WatchDog *watchdog, int sec)
+	: WatchDogDaemon(watchdog, sec)
 {
-private:
-	int (*entry)(void *);
-	void *args_;
-	int recovery_;
-	int core_count_;
+	strncpy(watchdog_object_name_, agent_name, sizeof(watchdog_object_name_) < strlen(agent_name)? sizeof(watchdog_object_name_): strlen(agent_name));
+}
 
-private:
-	virtual void killed_notify(int signo, int coredumped);
-	virtual void exited_notify(int retval);
+AgentEntry::~AgentEntry(void)
+{
+}
 
-public:
-	WatchDogEntry(WatchDogUnit *watchdog, int (*entry)(void *), void *args_, int recovery);  
-	virtual ~WatchDogEntry();
-	
-	int dtc_fork(int enCoreDump = 0);
-};
+void AgentEntry::exec()
+{
+	char *argv[6];
 
-#endif
+	argv[1] = (char *)"-v";
+	argv[2] = (char *)"7";
+	argv[3] = (char *)"-p";
+	argv[4] = (char *)"agent.pid";
+	argv[5] = NULL;
+	argv[0] = (char *)"agent-main";
+	execv(argv[0], argv);
+}

@@ -14,28 +14,40 @@
 * limitations under the License.
 * 
 */
-#ifndef __H_WATCHDOG_DAEMON_H__
-#define __H_WATCHDOG_DAEMON_H__
+#ifndef __H_WATCHDOG__H__
+#define __H_WATCHDOG__H__
 
-#include "daemons.h"
+#include "unit.h"
+#include "poll/poller.h"
+#include "timer/timer_list.h"
 
-class WatchDogDaemon : public WatchDogObject,
-					   private TimerObject
+class WatchDogPipe : public EpollBase
 {
 private:
-	TimerList *timer_list_;
-
-private:
-	virtual void killed_notify(int signo, int coredumped);
-	virtual void exited_notify(int retval);
-	virtual void job_timer_procedure();
+	int peerfd_;
 
 public:
-	WatchDogDaemon(WatchDog *watchdog, int sec);
-	~WatchDogDaemon();
+	WatchDogPipe();
+	virtual ~WatchDogPipe();
 
-	virtual int new_proc_fork();
-	virtual void exec() = 0;
+public:
+	void wake();
+	virtual void input_notify();
 };
 
+class WatchDog : public WatchDogUnit,
+				 public TimerUnit
+{
+private:
+	EpollBase *listener_;
+
+public:
+	WatchDog();
+	virtual ~WatchDog();
+
+	void set_listener(EpollBase *listener) { listener_ = listener; }
+	void run_loop();
+};
+
+extern int start_dtc(int (*entry)(void *), void *);
 #endif

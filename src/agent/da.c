@@ -625,6 +625,7 @@ int main(int argc, char **argv) {
 	struct instance dai;
 
 	set_default_options(&dai);
+
 	dai.argv = argv;
 
 	status = get_options(argc, argv, &dai);
