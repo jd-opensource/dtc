@@ -12,30 +12,16 @@
 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 * See the License for the specific language governing permissions and
 * limitations under the License.
-* 
 */
-#ifndef __H_WATCHDOG_DAEMON_H__
-#define __H_WATCHDOG_DAEMON_H__
+#ifndef __DTC_PROCTITLE_H
+#define __DTC_PROCTITLE_H
 
-#include "daemons.h"
-
-class WatchDogDaemon : public WatchDogObject,
-					   private TimerObject
+extern "C"
 {
-private:
-	TimerList *timer_list_;
-
-private:
-	virtual void killed_notify(int signo, int coredumped);
-	virtual void exited_notify(int retval);
-	virtual void job_timer_procedure();
-
-public:
-	WatchDogDaemon(WatchDog *watchdog, int sec);
-	~WatchDogDaemon();
-
-	virtual int new_proc_fork();
-	virtual void exec() = 0;
-};
+	extern void init_proc_title(int, char **);
+	extern void set_proc_title(const char *title);
+	extern void set_proc_name(const char *);
+	extern void get_proc_name(char *);
+}
 
 #endif

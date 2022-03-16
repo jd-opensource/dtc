@@ -19,6 +19,10 @@
 
 #include "base.h"
 #include "log/log.h"
+#include "proc_title.h"
+
+extern int watchdog_stop;
+extern int recovery_mode;
 
 WatchDogDaemon::WatchDogDaemon(WatchDog *watchdog, int sec)
 	: WatchDogObject(watchdog)
@@ -34,37 +38,24 @@ WatchDogDaemon::~WatchDogDaemon(void)
 int WatchDogDaemon::new_proc_fork()
 {
 	/* an error detection pipe */
-	// int err, fd[2];
-	// fd[0] = 0;
-	// fd[1] = 0;
-	// int unused = 0;
 	int err, fd[2];
 	int unused;
 
 	unused = pipe(fd);
+
 	/* fork child process */
 	watchdog_object_pid_ = fork();
 	if (watchdog_object_pid_ == -1)
 		return watchdog_object_pid_;
 	if (watchdog_object_pid_ == 0) {
 		// child process in.
-		/* close pipe if exec succ */
-		close(fd[0]);
-		fcntl(fd[1], F_SETFD, FD_CLOEXEC);
 		exec();
 		err = errno;
-		log4cplus_error("%s: exec(): %m", watchdog_object_name_);
-		unused = write(fd[1], &err, sizeof(err));
+		log4cplus_info("%s: exec(): %m", watchdog_object_name_);
 		exit(-1);
 	}
 
 	// parent process in.
-	close(fd[1]);
-	if (read(fd[0], &err, sizeof(err)) == sizeof(err)) {
-		errno = err;
-		return -1;
-	}
-	close(fd[0]);
 	attach_watch_dog();
 	return watchdog_object_pid_;
 }
@@ -80,13 +71,20 @@ void WatchDogDaemon::job_timer_procedure()
 
 void WatchDogDaemon::killed_notify(int signo, int coredumped)
 {
-	if (timer_list_)
-		attach_timer(timer_list_);
-	report_kill_alarm(signo, coredumped);
+	if (recovery_mode)
+	{
+		sleep(2);
+		new_proc_fork();
+	}
+	return;
 }
 
 void WatchDogDaemon::exited_notify(int retval)
 {
-	if (timer_list_)
-		attach_timer(timer_list_);
+	if (recovery_mode)
+	{
+		sleep(2);
+		new_proc_fork();
+	}
+	return;
 }

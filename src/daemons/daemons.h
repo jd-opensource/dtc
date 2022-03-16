@@ -21,6 +21,9 @@
 #include "poll/poller.h"
 #include "timer/timer_list.h"
 
+extern char daemons_cache_file[256];
+extern char daemons_table_file[256];
+
 class WatchDogPipe : public EpollBase
 {
 private:
@@ -49,5 +52,5 @@ public:
 	void run_loop();
 };
 
-extern int start_watch_dog(int (*entry)(void *), void *);
+extern int start_dtc(int (*entry)(void *), void *);
 #endif

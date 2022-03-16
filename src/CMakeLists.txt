@@ -1,6 +1,7 @@
-ADD_SUBDIRECTORY(./agent)
 ADD_SUBDIRECTORY(./configcenter)
 ADD_SUBDIRECTORY(./libs)	
 ADD_SUBDIRECTORY(./daemons)
+ADD_SUBDIRECTORY(./agent-watchdog)
+ADD_SUBDIRECTORY(./agent)
 ADD_SUBDIRECTORY(./core)
 ADD_SUBDIRECTORY(./connector)
