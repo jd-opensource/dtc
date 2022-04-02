@@ -1,16 +1,19 @@
-FILE(GLOB_RECURSE SRC_LIST ./*.cc ./*.c)
+FILE(GLOB_RECURSE SRC_LIST ./*.cc ./*.c ../../connector/*tion.cc)
 
 INCLUDE_DIRECTORIES (
     .
+    ../mysql/include
     ../libs/hsql/include/
     ../../libs/dep
     ../../daemons
     ../stat
+    ../core
     ../log4cplus/include/
     ../zlib/include64
     ../yaml-cpp/include/)
 
 LINK_DIRECTORIES (
+    ${PROJECT_SOURCE_DIR}/src/libs/mysql/libs
     ${PROJECT_SOURCE_DIR}/src/libs/zlib/lib/libz64.a
     ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/libs
     ${PROJECT_SOURCE_DIR}/src/libs/hsql/libs
@@ -22,9 +25,10 @@ LINK_LIBRARIES(libyaml-cpp.a)
 LINK_LIBRARIES(libsqlparser.a)
 LINK_LIBRARIES(libz64.a)
 LINK_LIBRARIES(pthread)
+LINK_LIBRARIES(libmysqlclient.a)
 
 ADD_DEFINITIONS ("-g -fPIC -fpermissive -std=gnu++11")
 
 ADD_LIBRARY (common ${SRC_LIST})
 
-TARGET_LINK_LIBRARIES(common liblog4cplus.a libyaml-cpp.a libsqlparser.a libz64.a)
+TARGET_LINK_LIBRARIES(common liblog4cplus.a libyaml-cpp.a libsqlparser.a libz64.a libmysqlclient.a)

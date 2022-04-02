@@ -16,10 +16,10 @@
 #ifndef __HELPER_CLIENT_H__
 #define __HELPER_CLIENT_H__
 
-#include "../poll/poller.h"
-#include "../packet/packet.h"
-#include "../timer/timer_list.h"
-#include "../task/task_request.h"
+#include "poll/poller.h"
+#include "packet/packet.h"
+#include "timer/timer_list.h"
+#include "task/task_request.h"
 #include "stop_watch.h"
 
 enum HelperState {

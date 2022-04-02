@@ -19,6 +19,7 @@
 #include "daemons.h"
 #include "main.h"
 #include "stattool.h"
+#include "hwc.h"
 #include "listener/listener.h"
 #include "helper.h"
 #include "logger.h"
@@ -51,6 +52,12 @@ int start_watch_dog(int (*entry)(void *), void *args)
 				return -1;
 			log4cplus_info("fork stat reporter");
 		}
+
+		WatchDogHWC* p_hwc_wd = new WatchDogHWC(wdog, delay);
+        if (p_hwc_wd->dtc_fork() < 0) {
+            return -1;
+        }
+        log4cplus_info ("fork hwc server");
 	}
 	if (g_dtc_config->get_int_val("cache", "DTC_MODE", 0) == 0) {
 		int nh = 0;

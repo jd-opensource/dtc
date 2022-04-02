@@ -349,9 +349,13 @@ class DtcJob : public TableReference {
 	{
 		updateInfo = ui;
 	}
-	const DTCFieldSet *request_fields(void) const
+	const DTCFieldSet *request_fields(void)
 	{
 		return fieldList;
+	}
+	void set_request_fields(const DTCFieldSet* p_dtc_field_set)
+	{
+		fieldList = p_dtc_field_set;
 	}
 	const uint64_t request_serial(void) const
 	{

@@ -343,12 +343,13 @@ static int single_thread_mode_initiazation()
 
 static int multiple_thread_mode_initiazation()
 {
+	if (init_hotbackup_chain_thread())
+		return DTC_CODE_FAILED;
 	if (init_data_connector_chain_thread() < 0)
 		return DTC_CODE_FAILED;
 	if (init_remote_dtc_chain_thread() < 0)
 		return DTC_CODE_FAILED;
-	if (init_hotbackup_chain_thread())
-		return DTC_CODE_FAILED;
+	
 
 	if (g_datasource_mode == DTC_MODE_DATABASE_ONLY) {
 		g_data_connector_ask_instance->disable_commit_group();

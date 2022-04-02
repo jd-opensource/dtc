@@ -104,6 +104,8 @@ class Packet {
 	int encode_result(DtcJob &, int mtu = 0, uint32_t ts = 0);
 	int encode_result_v2(DtcJob &, int mtu = 0, uint32_t ts = 0);
 	int desc_tables_result(DtcJob *job);
+	int yaml_config_result(DtcJob *job , const char* p_filename);
+    
 	int demo_result(DtcJob *job);
 	int encode_result(DTCJobOperation &, int mtu = 0);
 	int encode_detect(const DTCTableDefinition *tdef, int sn = 1);
@@ -132,6 +134,9 @@ class Packet {
 
 	BufferChain *encode_mysql_protocol(DtcJob *job);
 	BufferChain *encode_mysql_ok(DtcJob *job);
+
+private:
+	int load_table(const char* p_filename, char* file , int& i_length);
 };
 
 #endif

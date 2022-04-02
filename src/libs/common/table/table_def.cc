@@ -59,6 +59,7 @@ DTCTableDefinition::DTCTableDefinition(int m)
 						      sizeof(FieldDefinition));
 		defaultValue = (DTCValue *)calloc(maxFields, sizeof(DTCValue));
 		uniqFields = (uint8_t *)calloc(maxFields, sizeof(uint8_t));
+		rawFields = (uint8_t *)calloc(maxFields, sizeof(uint8_t));
 		packedTableDefinition.Set(NULL, 0);
 		packedFullFieldSet.Set(NULL, 0);
 		packedFieldSet.Set(NULL, 0);
@@ -74,6 +75,7 @@ DTCTableDefinition::DTCTableDefinition(int m)
 		m_row_size = 0;
 		hasDiscard = 0;
 		indexFields = 0; // by TREE_DATA
+		maxKeySize = 0;
 	} else {
 		// client side code
 		fieldList = NULL;
@@ -109,6 +111,7 @@ DTCTableDefinition::~DTCTableDefinition(void)
 		FREE_IF(packedFullFieldSet.ptr);
 		FREE_IF(packedFieldSet.ptr);
 		FREE_IF(uniqFields);
+		FREE_IF(rawFields);
 		FREE(defaultValue);
 	}
 }
@@ -231,6 +234,9 @@ int DTCTableDefinition::add_field(int id, const char *name, uint8_t type,
 		numFields = id;
 	if (id)
 		usedFields++;
+	if (id != 0) {
+		rawFields[id] = id;
+	}
 	return 0;
 }
 
@@ -295,19 +301,20 @@ int DTCTableDefinition::set_key_fields(int n)
 	keysAsUniqField = 2; /* SUBSET */
 	int i, maxSize = 0, nvar = 0;
 	for (i = 0; i < keyFields; i++) {
-		mark_as_read_only(i);
+		mark_as_read_only(i); // key is readonly
 		fieldList[i].offset = maxSize;
 		switch (field_type(i)) {
 		case DField::Signed:
 		case DField::Unsigned: //整数
 		case DField::Float: //浮点数
 			maxSize += field_size(i);
+			log4cplus_info("cyj001:%d" , maxSize);
 			break;
 		case DField::String: //以null结尾的字符串
 		case DField::Binary: //二进制数据
 		default:
 			nvar++;
-			maxSize = 1 + field_size(i);
+			maxSize = 1 + field_size(i); // 1字节用于存储 字符串长度
 			break;
 		}
 		if (keysAsUniqField) {
@@ -320,13 +327,14 @@ int DTCTableDefinition::set_key_fields(int n)
 	}
 	if (uniqFieldCnt == n && keysAsUniqField > 0)
 		keysAsUniqField = 1; /* EXACT */
-	if (nvar == 0) {
-		if (maxKeySize >= 256)
+	if (nvar == 0) { // not string , binary
+		log4cplus_info("cyj002:%d" , maxKeySize);
+		if (maxKeySize >= 256) 
 			return -1;
-		keyFormat = maxSize;
+		keyFormat = maxSize; // key 总大小
 		maxKeySize = maxSize;
-	} else {
-		if (maxKeySize >= 256 + 1)
+	} else {  // key has string , binary type field
+		if (maxKeySize >= 256 + 1) 
 			return -1;
 		if (keyFields != 1)
 			return -1;
