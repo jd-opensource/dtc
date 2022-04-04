@@ -1,0 +1,1 @@
+int get_rule_condition_num(hsql::Expr* rule)
