@@ -1,6 +1,4 @@
 #include "re_match.h"
-#include "../libs/hsql/include/SQLParser.h"
-#include "../libs/hsql/include/util/sqlhelper.h"
 #include "re_comm.h"
 
 using namespace hsql;
@@ -14,10 +12,10 @@ int do_check_sql()
 }
 
 // parse sql to AST.
-int do_parse_sql(std::string sql)
+int re_parse_sql(std::string sql, hsql::SQLParserResult* sql_ast)
 {
-    hsql::SQLParser::parse(sql, &sql_ast);
-    if (!sql_ast.isValid() || sql_ast.size() <= 0)
+    hsql::SQLParser::parse(sql, sql_ast);
+    if (!sql_ast->isValid() || sql_ast->size() <= 0)
     {
         return -1; 
     }
@@ -57,9 +55,6 @@ bool do_match_expr(hsql::Expr* input, hsql::Expr* rule)
 
 int re_match_sql(std::string sql, vector<expr_properity> expr_rules)
 {
-    if(do_parse_sql(sql) != 0)
-        return -1;
-
     hsql::Expr* expr_sql = NULL;
     int expr_sql_condition_num = 0;
     bool b_match = false;

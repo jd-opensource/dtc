@@ -1,7 +1,4 @@
 #include "re_cache.h"
-#include "../libs/hsql/include/SQLParser.h"
-#include "../libs/hsql/include/util/sqlhelper.h"
-#include "re_comm.h"
 #include "re_load.h"
 
 using namespace hsql;
@@ -225,15 +222,15 @@ bool re_is_cache_sql(SQLParserResult* sql_ast, std::string key)
     else if(type == kStmtInsert)
     {
         const InsertStatement* stmt = (const InsertStatement*)(sql_ast->getStatement(0));
-        if(stmt->type() != kInsertValues)
+        if(stmt->type != kInsertValues)
             return false;
         
-        if(stmt->columns.size() == 0)
+        if(stmt->columns->size() == 0)
             return false;
 
-        for(int i = 0; i < stmt->columns.size(); i++)
+        for(int i = 0; i < stmt->columns->size(); i++)
         {
-            if(std::string(stmt->columns[i]) == key)
+            if(std::string(stmt->columns->at(i)) == key)
                 return true;
         }
     }

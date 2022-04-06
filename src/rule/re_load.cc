@@ -1,8 +1,6 @@
 #include "re_load.h"
 #include "yaml-cpp/yaml.h"
 #include "log.h"
-#include "../libs/hsql/include/SQLParser.h"
-#include "../libs/hsql/include/util/sqlhelper.h"
 #include "re_comm.h"
 
 #define TABLE_CONF_NAME "/etc/dtc/table.yaml"
