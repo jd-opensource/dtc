@@ -151,9 +151,30 @@ int re_load_rule()
 
 std::string re_load_table_key()
 {
-    if(config["TABLE_CONF"]["key_count"] == 1)
+    YAML::Node config;
+    try {
+        config = YAML::LoadFile(TABLE_CONF_NAME);
+	} catch (const YAML::Exception &e) {
+		log4cplus_error("config file error:%s\n", e.what());
+		return "";
+	}
+
+    if(config["TABLE_CONF"])
     {
-        return config["FIELD1"]["field_name"];
+        if(config["TABLE_CONF"]["key_count"])
+        {
+            if(config["TABLE_CONF"]["key_count"].as<int>() == 1)
+            {
+                if(config["FIELD1"])
+                {
+                    if(config["FIELD1"]["field_name"])
+                    {
+                        return config["FIELD1"]["field_name"].as<string>();
+                    }
+                }
+            }
+        }
     }
+
     return "";
 }

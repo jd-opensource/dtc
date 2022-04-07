@@ -15,8 +15,13 @@ extern vector<expr_properity> expr_rules;
 int main(int argc, char* argv[])
 {
     printf("hello dtc, ./bin KEY SQL\n");
-    std::string key = argv[1];
-    std::string sql = argv[2];
+    std::string key = "";
+    std::string sql = argv[1];
+
+    key = re_load_table_key();
+    if(key.length() == 0)
+        return -1;
+
     cout<<"key: "<<key<<endl;
     cout<<"sql: "<<sql<<endl;
 
