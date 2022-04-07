@@ -194,6 +194,7 @@ class DtcJob : public TableReference {
 	       PFLAG_BLACKHOLED = 0x80,
 	};
 	uint8_t processFlags; /* processing */
+	int8_t pac_version;
 
     protected:
 	// return total packet size
@@ -219,7 +220,7 @@ class DtcJob : public TableReference {
 		  serialNr(0), key(NULL), rkey(NULL), resultWriter(NULL),
 		  resultWriterReseted(0), requestCode(0), requestType(0),
 		  requestFlags(0), replyCode(0), replyFlags(0),
-		  processFlags(PFLAG_ALLROWS)
+		  processFlags(PFLAG_ALLROWS) , pac_version(0)
 	{
 	}
 
@@ -400,13 +401,14 @@ class DtcJob : public TableReference {
 	void decode_packet_v2(char *packetIn, int packetLen, int type);
 
 	int build_field_type_r(int sql_type, char *field_name);
+	int8_t get_pac_version() { return pac_version;}
 
 	DecodeResult do_decode(char *packetIn, int packetLen, int type)
 	{
-		int8_t ver = select_version(packetIn, packetLen);
-		if (ver == 1)
+		pac_version = select_version(packetIn, packetLen);
+		if (pac_version == 1)
 			decode_packet_v1(packetIn, packetLen, type);
-		else if (ver == 2)
+		else if (pac_version == 2)
 			decode_packet_v2(packetIn, packetLen, type);
 
 		return get_decode_result();
@@ -414,10 +416,10 @@ class DtcJob : public TableReference {
 
 	DecodeResult do_decode(const char *packetIn, int packetLen)
 	{
-		int8_t ver = select_version(packetIn, packetLen);
-		if (ver == 1)
+		pac_version = select_version(packetIn, packetLen);
+		if (pac_version == 1)
 			decode_packet_v1((char *)packetIn, packetLen, 0);
-		else if (ver == 2)
+		else if (pac_version == 2)
 			decode_packet_v2((char *)packetIn, packetLen, 0);
 
 		return get_decode_result();

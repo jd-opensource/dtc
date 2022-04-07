@@ -1441,8 +1441,14 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 
 int Packet::encode_result(DTCJobOperation &job, int mtu)
 {
-	return encode_result((DtcJob &)job, mtu, job.Timestamp());
-	return encode_result_v2((DtcJob &)job, mtu, job.Timestamp());
+	if (1 == job.get_pac_version()) {
+		return encode_result((DtcJob &)job, mtu, job.Timestamp());
+	} else if (2 == job.get_pac_version()) {
+		return encode_result_v2((DtcJob &)job, mtu, job.Timestamp());
+	} else {
+		log4cplus_error("illegal packet version");
+		return -1;
+	}
 }
 
 void Packet::free_result_buff()

@@ -1258,7 +1258,7 @@ void DbConfig::destory(void)
     FREE((void *)this);
 }
 
-void dump_db_config(const struct DbConfig *cf)
+void DbConfig::dump_db_config(const struct DbConfig *cf)
 {
     int i, j;
 

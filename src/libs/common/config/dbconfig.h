@@ -131,7 +131,7 @@ struct DbConfig {
 	static bool build_path(char *path, int n, int pid, int group, int role,
 			       int type);
 	void destory(void);
-	void dump_db_config(FILE *);
+	void dump_db_config(const struct DbConfig *cf);
 	void set_helper_path(int);
 	DTCTableDefinition *build_table_definition(void);
 	int load_key_hash(DTCConfig *);
