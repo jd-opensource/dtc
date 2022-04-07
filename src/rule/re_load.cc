@@ -1,6 +1,8 @@
 #include "re_load.h"
 #include "yaml-cpp/yaml.h"
 #include "log.h"
+#include <string>
+#include <iostream>
 #include "re_comm.h"
 
 #define TABLE_CONF_NAME "/etc/dtc/table.yaml"
@@ -17,7 +19,7 @@ std::string do_get_rule()
 {
     YAML::Node config;
     try {
-        config = YAML::LoadFile(TABLE_CONF_NAME);
+        config = YAML::LoadFile(CACHE_CONF_NAME);
 	} catch (const YAML::Exception &e) {
 		log4cplus_error("config file error:%s\n", e.what());
 		return "";
@@ -25,9 +27,9 @@ std::string do_get_rule()
 
     if(config["match"])
     {
-        if(config["match"]["rule"])
+        if(config["match"]["RULE"])
         {
-            std::string rules = config["match"]["rule"].as<string>();
+            std::string rules = config["match"]["RULE"].as<string>();
             return rules;
         }
     }
@@ -59,7 +61,7 @@ int do_parse_rule(std::string rules)
     std::string sql = "select * from rules where ";
     sql += rules;
     sql += ";";
-
+    log4cplus_debug("rule sql: %s", sql.c_str());
     hsql::SQLParser::parse(sql, &rule_ast);
     if (rule_ast.isValid() && rule_ast.size() > 0)
     {
@@ -74,13 +76,14 @@ int traverse_ast(hsql::Expr* where)
     if(where->isType(kExprOperator) &&  where->opType == kOpOr)
     {
         traverse_ast(where->expr);
-        traverse_ast(where->exprList->at(0));
+        traverse_ast(where->expr2);
     }
     else
     {
         expr_properity ep;
         ep.rule = where;
         ep.condition_num = get_rule_condition_num(where);
+        log4cplus_debug("ep.condition_num: %d", ep.condition_num);
         expr_rules.push_back(ep);
     }
 
@@ -105,7 +108,7 @@ int do_check_rule()
         return -3;
 
     traverse_ast(where);
-    
+
     return 0;
 }
 
@@ -123,6 +126,7 @@ int do_split_rules()
 
 int re_load_rule()
 {
+    log4cplus_debug("load rule start...");
     std::string rules = do_get_rule();
     if(rules.length() <= 0)
         return -1;
@@ -141,5 +145,15 @@ int re_load_rule()
         return -3;
     }
 
+    log4cplus_debug("load rule end.");
     return 0;
+}
+
+std::string re_load_table_key()
+{
+    if(config["TABLE_CONF"]["key_count"] == 1)
+    {
+        return config["FIELD1"]["field_name"];
+    }
+    return "";
 }

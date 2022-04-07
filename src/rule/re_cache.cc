@@ -1,5 +1,6 @@
 #include "re_cache.h"
 #include "re_load.h"
+#include "log.h"
 
 using namespace hsql;
 
@@ -195,7 +196,6 @@ bool re_is_cache_sql(SQLParserResult* sql_ast, std::string key)
         Expr* where = stmt->whereClause;
         if(!where) 
             return false;
-
         if(check_dtc_key(where, key) == 1)
             return true;
     }
