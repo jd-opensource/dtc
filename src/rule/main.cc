@@ -10,7 +10,7 @@
 
 using namespace std;
 
-extern vector<expr_properity> expr_rules;
+extern vector<vector<hsql::Expr*> > expr_rules;
 
 int main(int argc, char* argv[])
 {

@@ -261,11 +261,80 @@ Expr* get_expr(SQLParserResult* sql_ast)
     return NULL;
 }
 
-int re_match_sql(hsql::SQLParserResult* sql_ast, vector<expr_properity> expr_rules)
+bool traverse_input_sql(hsql::Expr* input, vector<hsql::Expr*> rules)
+{
+    bool left = false;
+    bool right = false;
+
+    if(!input)
+        return false;
+
+    if(!input->expr || !input->expr2)
+        return false;
+
+    if(input->opType >= kOpEquals && input->opType <= kOpGreaterEq)
+    {
+        for(int i = 0; i < rules.size(); i++)
+        {
+            if(do_match_expr(input, rules[i]))
+            {
+                return true;
+            }
+        }
+    }
+    
+    if(input->expr->opType >= kOpEquals && input->expr->opType <= kOpGreaterEq)
+    {
+        for(int i = 0; i < rules.size(); i++)
+        {
+            if(do_match_expr(input->expr, rules[i]))
+            {
+                left = true;
+                break;
+            }
+        }
+    }
+    else if(input->expr->opType == kOpAnd || input->expr->opType == kOpOr)
+    {
+        left = traverse_input_sql(input->expr, rules);
+    }
+
+    if(input->expr2->opType >= kOpEquals && input->expr2->opType <= kOpGreaterEq)
+    {
+        for(int i = 0; i < rules.size(); i++)
+        {
+            if(do_match_expr(input->expr2, rules[i]))
+            {
+                right = true;
+                break;
+            }
+        }
+
+    }
+    else if(input->expr2->opType == kOpAnd || input->expr2->opType == kOpOr)
+    {
+        right = traverse_input_sql(input->expr2, rules);
+    }
+
+    if(input->opType == kOpAnd)
+    {
+        if(left || right)
+            return true;
+    }
+    else if(input->opType == kOpOr)
+    {
+        if(left && right)
+            return true;
+    }
+
+    return false;
+}
+
+int re_match_sql(hsql::SQLParserResult* sql_ast, vector<vector<hsql::Expr*> > expr_rules)
 {
     bool b_match = false;
     hsql::Expr* input_expr = NULL;
-    int ret = 0;
+    int ret = -1;
     int statment_num = 0;
 
     log4cplus_debug("sql match start..");
@@ -298,6 +367,17 @@ int re_match_sql(hsql::SQLParserResult* sql_ast, vector<expr_properity> expr_rul
     log4cplus_debug("expr rule count: %d", expr_rules.size());
     for(int i = 0; i < expr_rules.size(); i++)
     {
+        if(traverse_input_sql(input_expr, expr_rules[i]))
+        {
+            ret = 0;
+            goto RESULT;
+        }
+    }
+
+
+#if 0 
+    for(int i = 0; i < expr_rules.size(); i++)
+    {
         expr_properity ep = expr_rules[i];
 
         hsql::Expr* rule = ep.rule;
@@ -314,8 +394,10 @@ int re_match_sql(hsql::SQLParserResult* sql_ast, vector<expr_properity> expr_rul
         {
             if(input_expr->isType(kExprOperator) && input_expr->opType == kOpAnd)
             {
+                log4cplus_debug("1111111111, %d", ep.condition_num);
                 if(ep.condition_num == 1)
                 {
+                    log4cplus_debug("2222222222");
                     if(do_match_expr(input_expr->expr, ep.rule) || do_match_expr(input_expr->expr2, ep.rule))
                     {
                         ret = 0;
@@ -324,6 +406,7 @@ int re_match_sql(hsql::SQLParserResult* sql_ast, vector<expr_properity> expr_rul
                 }
                 else if(ep.condition_num > 1)
                 {
+                    log4cplus_debug("3333333333333");
                     if(ep.rule->isType(kExprOperator) && ep.rule->opType == kOpAnd)
                     {
                         if((do_match_expr(input_expr->expr, ep.rule->expr) && do_match_expr(input_expr->expr2, ep.rule->expr2)) ||
@@ -352,6 +435,7 @@ int re_match_sql(hsql::SQLParserResult* sql_ast, vector<expr_properity> expr_rul
 
         
     }
+#endif
 
     ret = -2;
 

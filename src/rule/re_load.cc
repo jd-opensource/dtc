@@ -12,7 +12,7 @@
 using namespace hsql;
 hsql::SQLParserResult rule_ast;
 
-vector<expr_properity> expr_rules;
+vector<vector<hsql::Expr*> > expr_rules;
 
 // load rule from dtc.yaml
 std::string do_get_rule()
@@ -71,6 +71,19 @@ int do_parse_rule(std::string rules)
     return -1;
 }
 
+int traverse_sub_ast(hsql::Expr* where, vector<hsql::Expr*>* v_expr)
+{
+    if(where->isType(kExprOperator) &&  where->opType == kOpAnd)
+    {
+        traverse_sub_ast(where->expr, v_expr);
+        traverse_sub_ast(where->expr2, v_expr);
+    }
+    else
+    {
+        v_expr->push_back(where);
+    }
+}
+
 int traverse_ast(hsql::Expr* where)
 {
     if(where->isType(kExprOperator) &&  where->opType == kOpOr)
@@ -80,11 +93,10 @@ int traverse_ast(hsql::Expr* where)
     }
     else
     {
-        expr_properity ep;
-        ep.rule = where;
-        ep.condition_num = get_rule_condition_num(where);
-        log4cplus_debug("ep.condition_num: %d", ep.condition_num);
-        expr_rules.push_back(ep);
+        vector<hsql::Expr*> v_expr;
+        traverse_sub_ast(where, &v_expr);
+
+        expr_rules.push_back(v_expr);
     }
 
     return 0;

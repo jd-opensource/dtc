@@ -3,5 +3,7 @@
 #include <vector>
 #include "re_comm.h"
 
-int re_match_sql(hsql::SQLParserResult*, std::vector<expr_properity> expr_rules);
+using namespace std;
+
+int re_match_sql(hsql::SQLParserResult*, vector<vector<hsql::Expr*> > expr_rules);
 int re_parse_sql(std::string sql, hsql::SQLParserResult* sql_ast);
