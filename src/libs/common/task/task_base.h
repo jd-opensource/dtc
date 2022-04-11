@@ -401,7 +401,7 @@ class DtcJob : public TableReference {
 	void decode_packet_v2(char *packetIn, int packetLen, int type);
 
 	int build_field_type_r(int sql_type, char *field_name);
-	int8_t get_pac_version() { return pac_version;}
+	int8_t get_pac_version() { return pac_version; }
 
 	DecodeResult do_decode(char *packetIn, int packetLen, int type)
 	{
