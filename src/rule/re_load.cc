@@ -161,14 +161,14 @@ int re_load_rule()
     return 0;
 }
 
-std::string re_load_table_key()
+extern "C" int re_load_table_key(char* key)
 {
     YAML::Node config;
     try {
         config = YAML::LoadFile(TABLE_CONF_NAME);
 	} catch (const YAML::Exception &e) {
 		log4cplus_error("config file error:%s\n", e.what());
-		return "";
+		return -1;
 	}
 
     if(config["TABLE_CONF"])
@@ -181,12 +181,17 @@ std::string re_load_table_key()
                 {
                     if(config["FIELD1"]["field_name"])
                     {
-                        return config["FIELD1"]["field_name"].as<string>();
+                        if(config["FIELD1"]["field_name"].as<string>().length() >= 50)
+                        {
+                            return -1;
+                        }
+                        strcpy(key, config["FIELD1"]["field_name"].as<string>().c_str());
+                        return 0;
                     }
                 }
             }
         }
     }
 
-    return "";
+    return -1;
 }
