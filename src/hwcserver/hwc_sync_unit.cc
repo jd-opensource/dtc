@@ -1,38 +1,34 @@
 #include "hwc_sync_unit.h"
 #include <string>
+#include <sys/time.h>
 // local
 #include "comm.h"
 #include "system_state.h"
-// common
-#include "log/log.h"
-#include "task/task_request.h"
-#include "task/task_pkey.h"
-#include "mem_check.h"
-#include "table/hotbackup_table_def.h"
 // connector
 #include "mysql_operation.h"
 // libs/api/cc_api/include/
 #include "dtcapi.h"
+#include "mysqld_error.h"
 
 HwcSync::HwcSync(DTC::Server* p_server)
     : i_limit_(1)
     , p_master_(p_server)
     , o_journal_id_(SystemState::Instance()->GetJournalID()) // CComm::registor.JournalId())
-{
-    bzero(s_err_msg_, sizeof(s_err_msg_));
-} 
+{ } 
 
 HwcSync::~HwcSync()
 { }
 
-int HwcSync::direct_query_sql_server(
-    DTCJobOperation* p_job)
+int HwcSync::query_cold_server(
+    DTCJobOperation* p_job,
+    const DTCValue* key)
 {
+    p_job->set_request_key(key);
     p_job->set_request_code(DRequest::Get);
     DTCFieldSet* p_dtc_field_set = p_job->request_fields();
     DELETE(p_dtc_field_set);
 
-    DTCTableDefinition* p_dtc_tab_def = SystemState::Instance()->GetDtcTabDef();
+    DTCTableDefinition* p_dtc_tab_def = TableDefinitionManager::instance()->get_cur_table_def();
     
     #if FOR_DEBUG
     for (int i = 1; i < p_job->num_fields() + 1; i++) {
@@ -46,22 +42,58 @@ int HwcSync::direct_query_sql_server(
         p_job->num_fields() + 1);
     p_job->set_request_fields(p_dtc_field_set);
 
-    return CComm::mysql_process_.do_process(p_job);
+    if (CComm::mysql_process_.do_process(p_job)) {
+        return -1;
+    }
+
+    return p_job->process_internal_result();
+
+}
+
+void HwcSync::sql_statement_query(
+    const DTCValue* p_key,
+    std::string& s_sql)
+{
+    uint32_t ui_count = 0;
+
+    do {
+        int i_ret = CComm::mysql_process_.process_statement_query(p_key , s_sql);
+        if (-ER_DUP_ENTRY == i_ret || 0 == i_ret) {
+            break;
+        }
+        
+        uint64_t ui_interval = pow(2, ++ui_count);
+        sleep(ui_interval);
+        log4cplus_error("sql statement query fail sequence:%d" , ui_count);
+    } while (true);
+}
+
+void HwcSync::decode_hotbin_result(
+    ResultSet* o_hot_res,
+    const HwcBinlogCont& o_hwc_bin)
+{
+    DTCBinary o_raw_bin;
+    o_raw_bin.len = o_hwc_bin.i_raw_len;
+    o_raw_bin.ptr = o_hwc_bin.p_raw_val;
+
+    o_hot_res->set_value_data(o_hwc_bin.i_raw_nums , o_raw_bin);
+}
+
+int HwcSync::get_current_time()
+{
+    timeval now;
+    gettimeofday(&now, NULL);
+    return now.tv_sec;
 }
 
 int HwcSync::Run()
 {
     /* 先关闭连接，防止fd重路 */
     p_master_->Close();
-
-    timeval now;
-    gettimeofday(&now, NULL);
-    int i_sec = now.tv_sec + 1;
-
+    int i_sec = get_current_time() + 1;
     while (true) {
         usleep(1000000); // 1s
-        gettimeofday(&now, NULL);
-        if (now.tv_sec >= i_sec) {
+        if (get_current_time() >= i_sec) {
             if (CComm::registor.CheckMemoryCreateTime()) {
                 log4cplus_error("detect share memory changed");
             }
@@ -76,9 +108,8 @@ int HwcSync::Run()
         request_m.Need("key");
         request_m.Need("value");
         request_m.SetHotBackupID((uint64_t)o_journal_id_);
-        log4cplus_info("begin serial:%d , offset:%d" , o_journal_id_.serial , o_journal_id_.offset);
-
         request_m.Limit(0, i_limit_);
+        log4cplus_info("begin serial:%d , offset:%d" , o_journal_id_.serial , o_journal_id_.offset);
 
         DTC::Result result_m;
         int ret = request_m.Execute(result_m);
@@ -92,10 +123,6 @@ int HwcSync::Run()
         if (0 != ret) {
             log4cplus_error("fetch key-list from master failed, limit[%d], ret=%d, err=%s",
             i_limit_, ret, result_m.ErrorMessage());
-            
-            snprintf(s_err_msg_, sizeof(s_err_msg_),
-                 "fetch key-list from master failed, limit[%d], ret=%d, err=%s",
-                  i_limit_, ret, result_m.ErrorMessage());
             usleep(100);
             continue;
         }
@@ -103,10 +130,8 @@ int HwcSync::Run()
         for (int i = 0; i < result_m.NumRows(); ++i) {
             ret = result_m.FetchRow();
             if (ret < 0) {
-                snprintf(s_err_msg_, sizeof(s_err_msg_),
-                     "fetch key-list from master failed, limit[%d], ret=%d, err=%s",
+                log4cplus_error("fetch key-list from master failed, limit[%d], ret=%d, err=%s",
                       i_limit_, ret, result_m.ErrorMessage());
-
                 // dtc可以运行失败
                 return E_HWC_SYNC_DTC_ERROR;
             }
@@ -121,68 +146,65 @@ int HwcSync::Run()
             int i_key_size = 0;
             char* p_key = result_m.BinaryValue("key", i_key_size);
 
-            DTCTableDefinition* p_dtc_tab_def = SystemState::Instance()->GetDtcTabDef();
+            DTCTableDefinition* p_dtc_tab_def = TableDefinitionManager::instance()->get_cur_table_def();
 
             DTCValue astKey[p_dtc_tab_def->key_fields()];// always single key
             TaskPackedKey::unpack_key(p_dtc_tab_def, p_key, astKey);
 
-            // value parse
-            // |(int)len|mysql cmd content|(int)check flag|(unsigned int)numRows|(int)len|raw value格式
             int i_value_size = 0;
             char* p_value = (char *)result_m.BinaryValue("value", i_value_size);
 
-            int i_mysql_len = *(int*)p_value;
-            p_value += sizeof(int);
+            HwcBinlogCont o_hot_bin;
+            bool b_ret = o_hot_bin.ParseFromString(p_value , i_value_size);
+            if (!b_ret) {
+                log4cplus_error("report alarm to manager");
+                break;
+            }
 
-            std::string s_mysql_cmd(p_value , i_mysql_len);
-            p_value += i_mysql_len;
+            std::string s_sql(o_hot_bin.p_sql , o_hot_bin.i_sql_len);
+            log4cplus_info(" mysql cmd:%s , check flag:%d , row len:%d" ,
+                 s_sql.c_str(), o_hot_bin.i_check_flag
+                 , o_hot_bin.i_raw_len);
 
-            int i_check = *(int*)p_value;
-            p_value += sizeof(int);
-
-            log4cplus_info(" mysql cmd:%s , check flag:%d" , s_mysql_cmd.c_str(), i_check);
-
-            if (i_check) { // 需进行行数 check ，对账
+            if (0 == o_hot_bin.i_check_flag) {
+                sql_statement_query(astKey, s_sql);
+                break;
+            } else if (1 == o_hot_bin.i_check_flag) {
                 log4cplus_info("check: starting...");
-                unsigned int ui_num_rows = *(unsigned int*)p_value;
-                p_value += sizeof(unsigned int);
 
-                DTCBinary o_value;
-                o_value.len = *(int*)p_value;
+                DTCJobOperation o_cold_job(p_dtc_tab_def);
+                query_cold_server(&o_cold_job , astKey);
 
-                p_value += sizeof(int);
-                o_value.ptr = p_value;
-
-                
-                uint8_t* p_fiedld_list = p_dtc_tab_def->raw_fields_list();
-
-                ResultSet* p_result_set = new ResultSet(*p_fiedld_list , p_dtc_tab_def);
-                p_result_set->set_value_data(ui_num_rows , o_value);
-
-                log4cplus_info(" row num:%d" , ui_num_rows);
-
-                // 冷数据库key查询
-                DTCJobOperation* p_job = new DTCJobOperation(p_dtc_tab_def);
-                p_job->set_request_key(astKey);
-                direct_query_sql_server(p_job);
-                p_job->process_internal_result();
-
-                ResultSet* p_cold_res = p_job->result;
-                if (NULL == p_cold_res) {
+                ResultSet* p_cold_res = o_cold_job.result;
+                if (!p_cold_res) {
                     log4cplus_info("cold res is null");
                     return E_HWC_SYNC_NORMAL_EXIT;
                 }
 
-                for (int i = 0; i < ui_num_rows; i++) {
-                    RowValue* p_hot_raw = p_result_set->fetch_row();
+                log4cplus_info("hot row num:%d ,cold row num:%d" , 
+                        o_hot_bin.i_raw_nums , p_cold_res->total_rows());
 
+                if (o_hot_bin.i_raw_nums > p_cold_res->total_rows()) {
+                    sql_statement_query(astKey, s_sql);
+                    break;
+                }
+
+                uint8_t* p_fiedld_list = p_dtc_tab_def->raw_fields_list();
+                DTCFieldSet o_dtc_field_set(p_fiedld_list , p_dtc_tab_def->num_fields() + 1);
+
+                ResultSet p_hot_result(o_dtc_field_set , p_dtc_tab_def);
+                decode_hotbin_result(&p_hot_result , o_hot_bin);
+
+                for (int i = 0; i < p_hot_result.total_rows(); i++) {
+                    RowValue* p_hot_raw = p_hot_result.fetch_row();
+                    
                     bool b_check = false;
                     // 冷数据库为base,只要冷数据库中没有热的，就插入
                     for (int j = 0; j < p_cold_res->total_rows(); j++) {
                         RowValue* p_cold_raw = p_cold_res->fetch_row();
                         if(p_hot_raw->Compare(*p_cold_raw ,
                                 p_fiedld_list , 
-                                p_dtc_tab_def->num_fields()) == 0) {
+                                p_dtc_tab_def->num_fields() + 1) == 0) {
                             log4cplus_info("check: row data has been in cold table");
                             b_check = true;
                             break;
@@ -192,20 +214,15 @@ int HwcSync::Run()
                     if (!b_check) {
                         // 对账失败，执行sql语句 ，容错逻辑
                         log4cplus_info("check: need insert in cold table");
-                        if (CComm::mysql_process_.process_statement_query(astKey,
-                         s_mysql_cmd) != 0) {
-                            /* code */
-                        }
+                        sql_statement_query(astKey, s_sql);
                         break;
                     }
                     p_cold_res->rewind();
                 }
                 log4cplus_info("check: finish");
-            } else { // 插入冷数据库
-                if (CComm::mysql_process_.process_statement_query(astKey,
-                         s_mysql_cmd) != 0) {
-                    /* code */
-                }
+            } else {
+                log4cplus_error("illegal check flag");
+                continue;
             }
         }
         // 成功，则更新控制文件中的journalID

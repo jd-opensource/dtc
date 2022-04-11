@@ -91,7 +91,7 @@ class ConnectorProcess {
 	int process_delete(DtcJob *Task);
 	int process_delete_rb(DtcJob *Task);
 	int process_replace(DtcJob *Task);
-	// int process_reload_config(DtcJob *Task);
+ 	int process_reload_config(DtcJob *Task);
 public:
 	ConnectorProcess();
 

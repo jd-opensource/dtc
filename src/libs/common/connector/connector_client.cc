@@ -31,6 +31,7 @@ ConnectorClient::ConnectorClient(EpollOperation *o, ConnectorGroup *hg, int idx)
 {
     packet = NULL;
     job = NULL;
+    check_job = NULL;
 
     helperGroup = hg;
     helperIdx = idx;
@@ -411,29 +412,10 @@ int ConnectorClient::recv_response()
     case DecodeDone:
         {   
             log4cplus_info("response is done");
-            #if 1
-            // 查热数据库，并将结果写入binlog，便于对账
-            if (job->request_code() != DRequest::Get ) {
-            DTCJobOperation* o_query_job = new DTCJobOperation(TableDefinitionManager::instance()->get_cur_table_def());
-            o_query_job->set_request_key(job->request_key());
-            o_query_job->build_packed_key();
-            #if 1
-                log4cplus_info("key val01:%d" , o_query_job->request_key()->s64);
-                log4cplus_info("key val02:%d" , o_query_job->request_key()->u64);
-            #endif
-            // o_query_job.mr.m_sql = job->mr.m_sql; // sql is deep copy
-            // for temp test
-            o_query_job->mr.m_sql = "insert into table_hwc values(17, 'kaka' , 'shenzheng' ,112 ,112)";
-            log4cplus_info("cyj:%d" , __LINE__);
-                if (helperGroup->DirectQueryHotServer(o_query_job) != 0) {
-                    reconnect();
-                    break;
-                }
-            log4cplus_info("cyj:%d" , __LINE__);
-                if (helperGroup->WriteHBLog(o_query_job , 1) != 0) {
-                    reconnect();
-                    break;
-                }
+            #if 0
+            int i_ret = client_notify_helper_check();
+            if (i_ret) {
+                log4cplus_error("client_notify_helper_check fail");
             }
             #else
             // 正常写请求返回成功，写binlog
@@ -510,6 +492,11 @@ void ConnectorClient::input_notify(void)
         if (recv_notify_helper_reload_config() < 0)
             reconnect();
         return;
+    } else if (stage == HelperRecvNotifyCheckState) {
+        if (recv_notify_helper_check() < 0) {
+            reconnect();
+        }
+        return;
     } else if (stage == HelperRecvRepState) {
         if (recv_response() < 0) {
             reconnect();
@@ -520,6 +507,7 @@ void ConnectorClient::input_notify(void)
         Reset();
         return;
     }
+
     disable_input();
     log4cplus_debug("leave input_notify.");
 }
@@ -536,6 +524,13 @@ void ConnectorClient::output_notify(void)
         return;
     } else if (stage == HelperSendNotifyReloadConfigState) {
         if (send_notify_helper_reload_config() < 0) {
+            DELETE(packet);
+            reconnect();
+        }
+        return;
+    } else if (stage == HelperSendNotifyCheckState) {
+        log4cplus_info("line:%d",__LINE__);
+        if (send_notify_helper_check() < 0) {
             DELETE(packet);
             reconnect();
         }
@@ -573,28 +568,33 @@ void ConnectorClient::job_timer_procedure(void)
     log4cplus_debug("enter timer procedure");
     switch (stage) {
     case HelperRecvRepState:
-        stopWatch.stop();
-        helperGroup->record_process_time(job->request_code(),
+        {
+            stopWatch.stop();
+            if (DRequest::Get == job->request_code()
+                || client_notify_helper_check() != 0) {
+                DELETE(packet);
+                DELETE(check_job);
+                helperGroup->record_process_time(job->request_code(),
                          stopWatch);
-        // 查热数据库，并将结果写入binlog，便于对账
-        if (job->request_code() != DRequest::Get ) {
-            DTCJobOperation o_query_job(TableDefinitionManager::instance()->get_cur_table_def());
-            o_query_job.set_request_key(job->request_key());
-            o_query_job.mr.m_sql = job->mr.m_sql; // sql is deep copy
-            if (helperGroup->DirectQueryHotServer(&o_query_job) != 0) {
+                log4cplus_error("helper index[%d] do_execute timeout.", helperIdx);
+                set_error(-EC_UPSTREAM_ERROR, "ConnectorGroup::Timeout",
+                "helper do_execute timeout");
                 reconnect();
-                break;
-            }
-
-            if (helperGroup->WriteHBLog(&o_query_job , 1) != 0) {
-                reconnect();
-                break;
             }
         }
-        log4cplus_error("helper index[%d] do_execute timeout.", helperIdx);
-        set_error(-EC_UPSTREAM_ERROR, "ConnectorGroup::Timeout",
+        break;
+    case HelperSendNotifyCheckState:
+    case HelperRecvNotifyCheckState:
+        {
+            DELETE(packet);
+            DELETE(check_job);
+            helperGroup->record_process_time(job->request_code(),
+                         stopWatch);
+            log4cplus_error("helper index[%d] do_execute timeout.", helperIdx);
+            set_error(-EC_UPSTREAM_ERROR, "ConnectorGroup::Timeout",
               "helper do_execute timeout");
-        reconnect();
+            reconnect();
+        }
         break;
     case HelperSendReqState:
 
@@ -645,6 +645,52 @@ int ConnectorClient::client_notify_helper_reload_config()
     return send_notify_helper_reload_config();
 }
 
+int ConnectorClient::client_notify_helper_check()
+{
+    log4cplus_info("line:%d",__LINE__);
+    if (job->request_code() != DRequest::Get) {
+        check_job = new DTCJobOperation(
+                TableDefinitionManager::instance()->get_cur_table_def());
+        check_job->Copy(*job);
+        check_job->set_request_code(DRequest::Get);
+        check_job->set_request_key(job->request_key());
+        check_job->build_packed_key();
+        check_job->mr.m_sql = "insert into table_hwc values(17, 'kaka' , 'shenzheng' ,112 ,112)";
+        //job->mr.m_sql; // sql is deep copy
+
+        DTCFieldSet* p_dtc_field_set = check_job->request_fields();
+        DELETE(p_dtc_field_set);
+
+        p_dtc_field_set = new DTCFieldSet(
+            check_job->table_definition()->raw_fields_list(),
+            check_job->num_fields() + 1);
+        check_job->set_request_fields(p_dtc_field_set);
+
+        log4cplus_info("line:%d",__LINE__);
+        packet = new Packet;
+        if (packet->encode_forward_request(check_job) != 0) {
+            log4cplus_error("job=[%d]request error: %m", check_job->Role());
+            set_error(-EC_BAD_SOCKET, __FUNCTION__ , "forward requset failed");
+            return -1;
+        }
+        log4cplus_info("line:%d",__LINE__);
+        if (0 != attach_poller()) {
+            log4cplus_error(
+                "notify check data helper [%d] attach poller failed!",
+                helperIdx);
+            set_error(-EC_BAD_SOCKET, __FUNCTION__ , "check data helper attach poller failed");
+            return -1;
+        }
+        log4cplus_info("line:%d",__LINE__);
+        disable_input();
+        enable_output();
+        stage = HelperSendNotifyCheckState;
+        return send_notify_helper_check();
+    }
+    log4cplus_info("line:%d",__LINE__);
+    return 0;
+}
+
 int ConnectorClient::send_notify_helper_reload_config()
 {
     int ret = packet->Send(netfd);
@@ -670,6 +716,31 @@ int ConnectorClient::send_notify_helper_reload_config()
     }
 
     attach_timer(helperGroup->recvList);
+    return delay_apply_events();
+}
+
+int ConnectorClient::send_notify_helper_check()
+{
+    log4cplus_info("line:%d",__LINE__);
+    int ret = packet->Send(netfd);
+    if (SendResultDone == ret) {
+        log4cplus_info("line:%d",__LINE__);
+        DELETE(packet);
+        check_job->prepare_decode_reply();
+        receiver.attach(netfd);
+        receiver.erase();
+
+        stage = HelperRecvNotifyCheckState;
+        disable_output();
+        enable_input();
+    } else {
+        log4cplus_info("line:%d",__LINE__);
+        stage = HelperSendNotifyCheckState;
+        enable_output();
+    }
+
+    attach_timer(helperGroup->recvList);
+    log4cplus_info("line:%d",__LINE__);
     return delay_apply_events();
 }
 
@@ -726,5 +797,68 @@ ERROR_RETURN:
     attach_timer(helperGroup->retryList);
     //check helpergroup job queue expire.
     helperGroup->check_queue_expire();
+    return 0;
+}
+
+int ConnectorClient::recv_notify_helper_check()
+{
+    log4cplus_info("line:%d",__LINE__);
+    int ret = check_job->do_decode(receiver);
+    switch (ret) {
+    default:
+    case DecodeFatalError: {
+        log4cplus_error("decode fatal error retcode [%d] from helper",
+                ret);
+        set_error(-EC_UPSTREAM_ERROR, __FUNCTION__,
+                   "decode fatal error from helper");
+        }
+        break;
+    case DecodeDataError: {
+        log4cplus_error("decode data error retcode [%d] from helper",
+                ret);
+        set_error(-EC_UPSTREAM_ERROR, __FUNCTION__,
+                   "decode data error from helper");
+        }
+        break;
+    case DecodeWaitData:
+    case DecodeIdle: {
+        attach_timer(helperGroup->recvList);
+        return 0;
+    }
+    case DecodeDone: {
+        switch (check_job->result_code()) {
+        case 0:
+            {
+                log4cplus_info("line:%d",__LINE__);
+                if (helperGroup->WriteHBLog(check_job , 1) != 0) {
+                    set_error(-EC_SERVER_ERROR, __FUNCTION__ ,
+                         "write hb log failed");
+                    reconnect();
+                    break;
+                }
+            }
+            break;
+        default: {
+                log4cplus_error(
+                    "get check data failed unknow resultcode [%d] from helper",
+                    check_job->result_code());
+                set_error(-EC_UPSTREAM_ERROR, __FUNCTION__,
+                    "get check data failed from helper");
+                }
+            }
+        }
+    }
+    DELETE(packet);
+    DELETE(check_job);
+
+    helperGroup->record_process_time(job->request_code(), stopWatch);
+    complete_task();
+    helperGroup->request_completed(this);
+
+    // ??
+    enable_input();
+    stage = HelperIdleState;
+    if (ret != DecodeDone)
+        return -1;
     return 0;
 }

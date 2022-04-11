@@ -32,6 +32,8 @@ enum HelperState {
 	HelperRecvVerifyState,
 	HelperSendNotifyReloadConfigState,
 	HelperRecvNotifyReloadConfigState,
+	HelperSendNotifyCheckState,
+	HelperRecvNotifyCheckState,
 };
 
 class ConnectorGroup;
@@ -99,6 +101,10 @@ class ConnectorClient : public EpollBase, private TimerObject {
 	int send_notify_helper_reload_config();
 	int recv_notify_helper_reload_config();
 
+	int client_notify_helper_check();
+	int send_notify_helper_check();
+	int recv_notify_helper_check();
+
 	int Ready();
 	int connect_error();
 
@@ -136,6 +142,7 @@ class ConnectorClient : public EpollBase, private TimerObject {
 
 	SimpleReceiver receiver;
 	DTCJobOperation *job;
+	DTCJobOperation* check_job;
 	Packet *packet;
 
 	DTCJobOperation *verify_task;

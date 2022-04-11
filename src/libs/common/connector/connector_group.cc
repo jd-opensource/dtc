@@ -25,9 +25,9 @@
 #include "table/hotbackup_table_def.h"
 #include "table/table_def_manager.h"
 #include "task/task_pkey.h"
-#include "../../../connector/mysql_operation.h"
 #include "log/log.h"
 #include "socket/unix_socket.h"
+#include "hwc_binlog_obj.h"
 
 static StatCounter statHelperExpireCount;
 
@@ -89,8 +89,7 @@ ConnectorGroup::ConnectorGroup(const char *s, const char *name_, int hc, int qs,
       average_delay(0),/*默认时延为0*/
       hblogoutput_(owner),
       writeBinlogReply(),
-      i_group_id_(i_group_id),
-      p_mysql_conn_(new ConnectorProcess())
+      i_group_id_(i_group_id)
 {
     sockpath = strdup(s);
     freeHelper.InitList();
@@ -114,7 +113,6 @@ ConnectorGroup::~ConnectorGroup()
 {
     DELETE_ARRAY(helperList);
     free(sockpath);
-    DELETE(p_mysql_conn_);
 }
 
 void ConnectorGroup::record_response_delay(unsigned int t)
@@ -194,7 +192,6 @@ int ConnectorGroup::WriteHBLog(
     #endif
 
     hotbacktask.set_packed_key(packeKey.bin.ptr , packeKey.bin.len);
-    // log_debug(" packed key len:%d, key :%s", packeKey.bin.len, packeKey.bin.ptr);
     
     const std::string& s_value = p_job->mr.get_sql();
     if (s_value.empty()) {
@@ -207,76 +204,27 @@ int ConnectorGroup::WriteHBLog(
         hotbacktask.set_flag(DTCHotBackup::HAS_VALUE);
         // hblog value binary format
         // local file system ,same endian
-        // |(int)len|mysql cmd content|(int)check flag|(unsigned int)numRows|raw value格式
-        int i_raw_size = 0;
-        int i_buffer_size = sizeof(int) + s_value.length() + sizeof(int);
+        HwcBinlogCont o_hwc_bin_cont;
+        o_hwc_bin_cont.i_sql_len = s_value.length();
+        o_hwc_bin_cont.p_sql = s_value.data();
+        o_hwc_bin_cont.i_check_flag = i_check;
 
         if (i_check) {
-            i_raw_size = p_job->get_result_packet()->bc->usedBytes -
-                 p_job->get_result_packet()->rowDataBegin;
-
-            i_buffer_size +=  (sizeof(unsigned int) + sizeof(int) + i_raw_size);
-        }
-        
-        char c_buffer[i_buffer_size];
-
-        char* p_buf = c_buffer;
-
-        int i_value_size = s_value.length();
-        memcpy((void*)(p_buf) , (void*)(&i_value_size), sizeof(int));
-        p_buf += sizeof(int);
-
-        memcpy((void*)(p_buf) , (void*)(s_value.c_str()), i_value_size);
-        p_buf += i_value_size;
-        
-        memcpy((void*)(p_buf) , (void*)(&i_check), sizeof(int));
-        p_buf += sizeof(int);
-
-        if (i_check) {
-            memcpy((void*)(p_buf) , (void*)(&p_job->get_result_packet()->numRows), sizeof(unsigned int));
-            p_buf += sizeof(unsigned int);
-
-            memcpy((void*)(p_buf) , (void*)(&i_raw_size), sizeof(int));
-            p_buf += sizeof(int);
-
-            memcpy((void*)(p_buf) , 
-                (void*)(p_job->get_result_packet()->bc->data + p_job->get_result_packet()->rowDataBegin),
-                i_raw_size);
-            p_buf += i_raw_size;
+            o_hwc_bin_cont.i_raw_nums = p_job->result->total_rows();
+            o_hwc_bin_cont.i_raw_len = p_job->result->data_len();
+            o_hwc_bin_cont.p_raw_val = p_job->result->data();
         }
 
-        log4cplus_info("i_buffer_size:%d" , i_buffer_size);
-        hotbacktask.set_value(c_buffer , i_buffer_size);
+        log4cplus_info("total length:%d , row len:%d" , 
+            o_hwc_bin_cont.total_length() , o_hwc_bin_cont.i_raw_len);
+        char c_buffer[o_hwc_bin_cont.total_length()];
+        o_hwc_bin_cont.SerializeToString(c_buffer);
+        
+        hotbacktask.set_value(c_buffer , o_hwc_bin_cont.total_length());
         DispatchHotBackTask(p_task);
     }
     log4cplus_info("WriteHBLog end");
     return  0;
-}
-
-int ConnectorGroup::DirectQueryHotServer(
-    DTCJobOperation* p_job)
-{
-    log4cplus_info("cyj:%d" , __LINE__);
-    p_job->set_request_code(DRequest::Get);
-    log4cplus_info("cyj:%d" , __LINE__);
-    DTCFieldSet* p_dtc_field_set = p_job->request_fields();
-    DELETE(p_dtc_field_set);
-    log4cplus_info("cyj:%d" , __LINE__);
-
-    #if 1
-    for (int i = 1; i < p_job->num_fields() + 1; i++) {
-        log4cplus_info("field id:%d" , p_job->table_definition()->raw_fields_list()[i]);
-    }
-    #endif
-    // begin at 1 , exclude key field id
-    p_dtc_field_set = new DTCFieldSet(
-        p_job->table_definition()->raw_fields_list(),
-        p_job->num_fields() + 1);
-    p_job->set_request_fields(p_dtc_field_set);
-    log4cplus_info("cyj:%d" , __LINE__);
-    int i_ret = p_mysql_conn_->do_process(p_job);
-    log4cplus_info("cyj:%d" , __LINE__);
-    return i_ret;
 }
 
 void ConnectorGroup::record_process_time(int cmd, unsigned int usec)
@@ -313,8 +261,7 @@ void ConnectorGroup::record_process_time(int cmd, unsigned int usec)
 
 int ConnectorGroup::do_attach(
     PollerBase* thread,
-    LinkQueue<DTCJobOperation *>::allocator* a,
-    DbConfig* dbConfig)
+    LinkQueue<DTCJobOperation *>::allocator* a)
 {
     owner = thread;
     hblogoutput_.set_owner_thread(owner);
@@ -324,17 +271,6 @@ int ConnectorGroup::do_attach(
     }
 
     queue.SetAllocator(a);
-
-    log4cplus_info("do_attach start");
-    if (p_mysql_conn_->do_init(
-        i_group_id_, // 访问的具体服务机器号
-        dbConfig,
-        TableDefinitionManager::instance()->get_cur_table_def(),
-        0) != 0) {
-        log4cplus_error("init mysql connector fail");
-        return -1;
-    }
-    log4cplus_info("do_attach end");
     return 0;
 }
 

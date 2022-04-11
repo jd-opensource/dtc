@@ -236,6 +236,7 @@ int DTCTableDefinition::add_field(int id, const char *name, uint8_t type,
 		usedFields++;
 	if (id != 0) {
 		rawFields[id] = id;
+		log4cplus_info("rawFields[id]:%d" , rawFields[id]);
 	}
 	return 0;
 }
@@ -296,7 +297,7 @@ int DTCTableDefinition::set_key_fields(int n)
 		n = numFields + 1;
 	keyFields = n;
 	attr.set_key_field_count(n);
-
+	log4cplus_info("key count:%d" , keyFields);
 	int j;
 	keysAsUniqField = 2; /* SUBSET */
 	int i, maxSize = 0, nvar = 0;

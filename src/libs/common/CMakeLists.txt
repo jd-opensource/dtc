@@ -1,4 +1,4 @@
-FILE(GLOB_RECURSE SRC_LIST ./*.cc ./*.c ../../connector/*tion.cc)
+FILE(GLOB_RECURSE SRC_LIST ./*.cc ./*.c)
 
 INCLUDE_DIRECTORIES (
     .

@@ -7,7 +7,7 @@
 #include <string>
 // local 
 #include "comm.h"
-#include "global.h"
+#include "hwc_global.h"
 #include "async_file.h"
 // common
 #include "log/log.h"
@@ -130,9 +130,7 @@ int CComm::ReInitDtcAgency(DbConfig* pParser)
     if (CComm::connect_ttc_server(1, pParser)) {
         return -1;
     }
-    log4cplus_info("line:%d",__LINE__);
     CComm::registor.SetMasterServer(&CComm::master);
-    log4cplus_info("line:%d",__LINE__);
     return 0;
 }
 
@@ -152,7 +150,7 @@ int CComm::connect_ttc_server(
         int ret =  master.SetAddress(p_bind_addr);
         master.SetTimeout(30);
         master.IntKey();
-        master.SetTableName("table_hwc");
+        master.SetTableName(pParser->tblFormat);
         master.SetAutoUpdateTab(false);
         if (-DTC::EC_BAD_HOST_STRING == ret
             || (ret = master.Ping()) != 0) {

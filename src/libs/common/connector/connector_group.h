@@ -27,7 +27,6 @@
 
 class ConnectorClient;
 class HelperClientList;
-class ConnectorProcess;
 class DbConfig;
 
 class WriteBinLogReplay : public JobAnswerInterface<DTCJobOperation> {
@@ -67,8 +66,7 @@ class ConnectorGroup : private TimerObject,
     virtual void job_ask_procedure(DTCJobOperation *);
 
     int do_attach(PollerBase * thread, 
-        LinkQueue<DTCJobOperation *>::allocator * a,
-        DbConfig *dbConfig = NULL);
+        LinkQueue<DTCJobOperation *>::allocator * a);
 
     int connect_helper(int);
     const char *sock_path(void) const
@@ -95,7 +93,6 @@ class ConnectorGroup : private TimerObject,
     void dec_ready_helper();
 
     int WriteHBLog(const DTCJobOperation* p_job, int i_check = 0);
-    int DirectQueryHotServer(DTCJobOperation* p_job);
 
 private:
     virtual void job_timer_procedure(void);
@@ -138,7 +135,6 @@ private:
     ChainJoint<DTCJobOperation> hblogoutput_; // hblog task output 
     WriteBinLogReplay writeBinlogReply; // hb replay
     int i_group_id_;
-    ConnectorProcess* p_mysql_conn_;
 
     public:
     ConnectorGroup *fallback;

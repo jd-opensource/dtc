@@ -24,6 +24,14 @@
 #include <signal.h>
 // local
 #include "async_file.h"
+// common
+#include "log/log.h"
+#include "task/task_request.h"
+#include "task/task_pkey.h"
+#include "mem_check.h"
+#include "hwc_binlog_obj.h"
+#include "table/hotbackup_table_def.h"
+#include "table/table_def_manager.h"
 // libs/api/cc_api/include
 #include "dtcapi.h"
 
@@ -33,8 +41,6 @@ enum E_HWC_SYNC_ERROR_ID
     E_HWC_ACCOUNT_CHECK_FAILL = -100,
     E_HWC_SYNC_DTC_ERROR
 };
-
-class DTCJobOperation;
 
 class HwcSync
 {
@@ -49,18 +55,16 @@ public:
         i_limit_ = iLimit;
     }
 
-    const char* ErrorMessage() {
-        return s_err_msg_;
-    }
-
 public:
-    static int direct_query_sql_server(DTCJobOperation* p_job);
+    int query_cold_server(DTCJobOperation* p_job , const DTCValue* key);
+    void decode_hotbin_result(ResultSet* o_hot_res, const HwcBinlogCont& o_hwc_bin);
+    void sql_statement_query(const DTCValue* p_key , std::string& s_sql);
+    int get_current_time();
 
 private:
     int i_limit_;
     DTC::Server* p_master_;
     JournalID o_journal_id_;
-    char s_err_msg_[256];
 };
 
 class HwcSyncUnit {

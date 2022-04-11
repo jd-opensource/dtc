@@ -3,6 +3,8 @@ message(${SRC_LIST})
 
 INCLUDE_DIRECTORIES (
     ./
+    ../core
+    ../daemons
     ../connector/
     ../libs/api/cc_api/include/
     ../libs/common/

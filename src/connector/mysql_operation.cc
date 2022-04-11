@@ -35,8 +35,8 @@
 #include "daemon/daemon.h"
 // mysql include files
 #include "mysqld_error.h"
-// // core include files
-// #include "buffer/buffer_pond.h"
+// core include files
+#include "buffer/buffer_pond.h"
 
 #define MIN(x, y) ((x) <= (y) ? (x) : (y))
 
@@ -847,6 +847,7 @@ int ConnectorProcess::process_statement_query(
         } else {
             log4cplus_info("db query error: %s",
                        db_conn.get_err_msg());
+            return -ER_DUP_ENTRY;
         }
     }
     return i_ret;
@@ -1456,42 +1457,42 @@ void ConnectorProcess::set_title(const char *status)
     set_proc_title(title);
 }
 
-// int ConnectorProcess::process_reload_config(DtcJob *Task)
-// {
-//     const char *keyStr = g_dtc_config->get_str_val("cache", "DTCID");
-//     int cacheKey = 0;
-//     if (keyStr == NULL) {
-//         cacheKey = 0;
-//         log4cplus_info("DTCID not set!");
-//         return -1;
-//     } else if (!strcasecmp(keyStr, "none")) {
-//         log4cplus_warning("DTCID set to NONE, Cache disabled");
-//         return -1;
-//     } else if (isdigit(keyStr[0])) {
-//         cacheKey = strtol(keyStr, NULL, 0);
-//     } else {
-//         log4cplus_warning("Invalid DTCID value \"%s\"", keyStr);
-//         return -1;
-//     }
-//     BlockProperties stInfo;
-//     BufferPond cachePool;
-//     memset(&stInfo, 0, sizeof(stInfo));
-//     stInfo.ipc_mem_key = cacheKey;
-//     stInfo.key_size = TableDefinitionManager::instance()
-//                   ->get_cur_table_def()
-//                   ->key_format();
-//     stInfo.read_only = 1;
+int ConnectorProcess::process_reload_config(DtcJob *Task)
+{
+    const char *keyStr = g_dtc_config->get_str_val("cache", "DTCID");
+    int cacheKey = 0;
+    if (keyStr == NULL) {
+        cacheKey = 0;
+        log4cplus_info("DTCID not set!");
+        return -1;
+    } else if (!strcasecmp(keyStr, "none")) {
+        log4cplus_warning("DTCID set to NONE, Cache disabled");
+        return -1;
+    } else if (isdigit(keyStr[0])) {
+        cacheKey = strtol(keyStr, NULL, 0);
+    } else {
+        log4cplus_warning("Invalid DTCID value \"%s\"", keyStr);
+        return -1;
+    }
+    BlockProperties stInfo;
+    BufferPond cachePool;
+    memset(&stInfo, 0, sizeof(stInfo));
+    stInfo.ipc_mem_key = cacheKey;
+    stInfo.key_size = TableDefinitionManager::instance()
+                  ->get_cur_table_def()
+                  ->key_format();
+    stInfo.read_only = 1;
 
-//     if (cachePool.cache_open(&stInfo)) {
-//         log4cplus_error("%s", cachePool.error());
-//         Task->set_error(-EC_RELOAD_CONFIG_FAILED, __FUNCTION__,
-//                 "open cache error!");
-//         return -1;
-//     }
+    if (cachePool.cache_open(&stInfo)) {
+        log4cplus_error("%s", cachePool.error());
+        Task->set_error(-EC_RELOAD_CONFIG_FAILED, __FUNCTION__,
+                "open cache error!");
+        return -1;
+    }
 
-//     cachePool.reload_table();
-//     log4cplus_error(
-//         "cmd notify work helper reload table, tableIdx : [%d], pid : [%d]",
-//         cachePool.shm_table_idx(), getpid());
-//     return 0;
-// }
+    cachePool.reload_table();
+    log4cplus_error(
+        "cmd notify work helper reload table, tableIdx : [%d], pid : [%d]",
+        cachePool.shm_table_idx(), getpid());
+    return 0;
+}

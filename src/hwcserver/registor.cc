@@ -4,11 +4,8 @@
 #include "system_state.h"
 
 int CRegistor::Regist() {
-    log4cplus_info("line:%d",__LINE__);
     DTC::SvrAdminRequest rq(_master);
-    log4cplus_info("line:%d",__LINE__);
     rq.SetAdminCode(DTC::RegisterHB);
-    log4cplus_info("line:%d",__LINE__);
 
     // 发送自己的JournalID
     JournalID self = SystemState::Instance()->GetJournalID(); // = _controller.JournalId();

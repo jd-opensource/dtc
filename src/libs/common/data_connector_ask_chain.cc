@@ -652,20 +652,18 @@ int DataConnectorAskChain::renew_config(struct DbConfig *cfg)
 
 int DataConnectorAskChain::do_attach(PollerBase *thread, int idx)
 {
-	log4cplus_info("cyj:%d" , __LINE__);
 	if (idx == 0)
 		JobAskInterface<DTCJobOperation>::attach_thread(thread);
 	for (int i = 0; 
 		i < dbConfig[idx]->machineCnt * GROUPS_PER_MACHINE;
 	    i++) {
 		if (groups[idx][i]) {
-			groups[idx][i]->do_attach(owner, &task_queue_allocator , dbConfig[idx]);
-			log4cplus_info("cyj:%d" , __LINE__);
+			groups[idx][i]->do_attach(owner, &task_queue_allocator);
+
 			assert(p_task_dispatcher_ != NULL);
 			groups[idx][i]->BindHbLogDispatcher(p_task_dispatcher_);
 		}
 	}
-	log4cplus_info("cyj:%d" , __LINE__);
 	return 0;
 }
 

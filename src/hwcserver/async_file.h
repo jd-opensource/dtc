@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <unistd.h>
 // local
-#include "global.h"
+#include "hwc_global.h"
 #include "afile_pos.h"
 // common
 #include "journal_id.h"
@@ -130,12 +130,7 @@ public:
 	}
 
 	inline JournalID & JournalId() {
-		log4cplus_info("line:%d",__LINE__);
 		CControl *p = (CControl *) _map;
-		if (NULL == p) {
-			log4cplus_info("line:%d",__LINE__);
-		}
-		log4cplus_info("line:%d",__LINE__);
 		return p->jid;
 	}
 
