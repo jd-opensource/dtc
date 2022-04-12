@@ -3,7 +3,6 @@
 #include <sys/time.h>
 // local
 #include "comm.h"
-#include "system_state.h"
 // connector
 #include "mysql_operation.h"
 // libs/api/cc_api/include/
@@ -13,7 +12,7 @@
 HwcSync::HwcSync(DTC::Server* p_server)
     : i_limit_(1)
     , p_master_(p_server)
-    , o_journal_id_(SystemState::Instance()->GetJournalID()) // CComm::registor.JournalId())
+    , o_journal_id_(CComm::registor.JournalId())
 { } 
 
 HwcSync::~HwcSync()
@@ -228,8 +227,7 @@ int HwcSync::Run()
         // 成功，则更新控制文件中的journalID
         o_journal_id_ = (uint64_t)result_m.HotBackupID();
         log4cplus_info("end serial:%d , offset:%d" , o_journal_id_.serial , o_journal_id_.offset);
-        // CComm::registor.JournalId() = o_journal_id_;
-        SystemState::Instance()->SetJournalID(o_journal_id_);
+        CComm::registor.JournalId() = o_journal_id_;
     }
 
     return E_HWC_SYNC_NORMAL_EXIT;

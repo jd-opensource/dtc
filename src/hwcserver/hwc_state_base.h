@@ -23,7 +23,6 @@
 // local
 #include "comm.h"
 #include "hwc_state_manager.h"
-#include "system_state.h"
 // common
 #include "log/log.h"
 #include "mem_check.h"

@@ -1,14 +1,13 @@
 #include "registor.h"
 // local
 #include "comm.h" 
-#include "system_state.h"
 
 int CRegistor::Regist() {
     DTC::SvrAdminRequest rq(_master);
     rq.SetAdminCode(DTC::RegisterHB);
 
     // 发送自己的JournalID
-    JournalID self = SystemState::Instance()->GetJournalID(); // = _controller.JournalId();
+    JournalID self = _controller.JournalId();
     log4cplus_info("registed to master, master[serial=%u, offset=%u]",
                 self.serial , self.offset);
     rq.SetHotBackupID((uint64_t) self);
@@ -44,13 +43,12 @@ int CRegistor::Regist() {
                 log4cplus_error("share memory create time changed");
                 return -DTC::EC_ERR_SYNC_STAGE;
             }
-            // _controller.JournalId() = rs.HotBackupID();
-            SystemState::Instance()->SetJournalID(rs.HotBackupID());
+            _controller.JournalId() = rs.HotBackupID();
 
             log4cplus_info
                 ("registed to master, master[serial=%u, offset=%u]",
-                 SystemState::Instance()->GetJournalID().serial,
-                 SystemState::Instance()->GetJournalID().offset);
+                 _controller.JournalId().serial,
+                 _controller.JournalId().offset);
                  
             return -DTC::EC_FULL_SYNC_STAGE;
         }
