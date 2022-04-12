@@ -75,8 +75,9 @@ int CMapBase::Mount(const char *path, int rw, int size)
 	if (O_RDONLY == rw) {
 		size = st.st_size;
 	} else if (st.st_size != size) {
-		//int unused;
-		//unused = ftruncate(_fd, size);
+		if (ftruncate(_fd, size) != 0) {
+			return -1;
+		}
 	}
 
 	_map = (char *)mmap(0, size, prot, MAP_SHARED, _fd, 0);
