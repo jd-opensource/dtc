@@ -417,12 +417,15 @@ int ConnectorClient::recv_response()
             if (i_ret) {
                 log4cplus_error("client_notify_helper_check fail");
             }
+            if (job->request_code() != DRequest::Get) {
+                return 0;
+            }
             #else
             // 正常写请求返回成功，写binlog
             if (job->request_code() != DRequest::Get 
                 && (job->result_code() >= 0)) {
                 // for temp test
-                job->mr.m_sql = "insert into table_hwc values(7, 'lulu' , 'suzhou' ,111 ,111)";
+                // job->mr.m_sql = "insert into table_hwc values(7, 'lulu' , 'suzhou' ,111 ,111)";
                 helperGroup->WriteHBLog(job);
             }
             #endif
@@ -655,7 +658,10 @@ int ConnectorClient::client_notify_helper_check()
         check_job->set_request_code(DRequest::Get);
         check_job->set_request_key(job->request_key());
         check_job->build_packed_key();
-        check_job->mr.m_sql = "insert into table_hwc values(17, 'kaka' , 'shenzheng' ,112 ,112)";
+        check_job->mr.m_sql = job->mr.m_sql;
+        //"insert into table_hwc values(17, 'kaka' , 'shenzheng' ,112 ,112)";
+        //"update table_hwc set name = 'kaka' where uid = 17";
+        //"delete from table_hwc where uid = 17";
         //job->mr.m_sql; // sql is deep copy
 
         DTCFieldSet* p_dtc_field_set = check_job->request_fields();
@@ -836,6 +842,8 @@ int ConnectorClient::recv_notify_helper_check()
                     reconnect();
                     break;
                 }
+                set_error(-EC_SERVER_ERROR, __FUNCTION__ ,
+                         "need check data");
             }
             break;
         default: {

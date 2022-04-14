@@ -210,9 +210,11 @@ int ConnectorGroup::WriteHBLog(
         o_hwc_bin_cont.i_check_flag = i_check;
 
         if (i_check) {
-            o_hwc_bin_cont.i_raw_nums = p_job->result->total_rows();
-            o_hwc_bin_cont.i_raw_len = p_job->result->data_len();
-            o_hwc_bin_cont.p_raw_val = p_job->result->data();
+            o_hwc_bin_cont.i_raw_nums = p_job->resultInfo.total_rows();
+            if (o_hwc_bin_cont.i_raw_nums) {
+                o_hwc_bin_cont.i_raw_len = p_job->result->data_len();
+                o_hwc_bin_cont.p_raw_val = p_job->result->data();
+            }
         }
 
         log4cplus_info("total length:%d , row len:%d" , 

@@ -183,7 +183,8 @@ int HwcSync::Run()
                 log4cplus_info("hot row num:%d ,cold row num:%d" , 
                         o_hot_bin.i_raw_nums , p_cold_res->total_rows());
 
-                if (o_hot_bin.i_raw_nums > p_cold_res->total_rows()) {
+                if (o_hot_bin.i_raw_nums > p_cold_res->total_rows() ||
+                    o_hot_bin.i_raw_nums < p_cold_res->total_rows()) {
                     sql_statement_query(astKey, s_sql);
                     break;
                 }

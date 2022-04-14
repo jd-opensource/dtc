@@ -48,8 +48,10 @@ struct HwcBinlogCont
         this->i_check_flag = parse_int(c_buf);
         if (i_check_flag) {
             this->i_raw_nums = parse_int(c_buf);
-            this->i_raw_len = parse_int(c_buf);
-            this->p_raw_val = parse_str(c_buf , i_raw_len);
+            if (this->i_raw_nums) {
+                this->i_raw_len = parse_int(c_buf);
+                this->p_raw_val = parse_str(c_buf , i_raw_len);
+            }
         }
         return true;
     };
@@ -65,8 +67,10 @@ struct HwcBinlogCont
         log4cplus_info("line:%d " , __LINE__);
         if (i_check_flag) {
             append_int_to_buf(p_buf , this->i_raw_nums);
-            append_int_to_buf(p_buf , this->i_raw_len);
-            append_char_to_buf(p_buf , this->p_raw_val , this->i_raw_len);
+            if (this->i_raw_nums) {
+                append_int_to_buf(p_buf , this->i_raw_len);
+                append_char_to_buf(p_buf , this->p_raw_val , this->i_raw_len);
+            }
         }
         log4cplus_info("line:%d " , __LINE__);
         return true;
