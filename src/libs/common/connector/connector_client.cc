@@ -425,7 +425,15 @@ int ConnectorClient::recv_response()
             if (job->request_code() != DRequest::Get 
                 && (job->result_code() >= 0)) {
                 // for temp test
-                // job->mr.m_sql = "insert into table_hwc values(7, 'lulu' , 'suzhou' ,111 ,111)";
+                #if 0
+                if (DRequest::Insert == job->request_code()) {
+                    job->mr.m_sql = "insert into table_hwc values(17, 'kaka' , 'shenzheng' ,112 ,112)";
+                } else if (DRequest::Update == job->request_code()) {
+                    job->mr.m_sql = "update table_hwc set name = 'lulu' where uid = 17";
+                } else if (DRequest::Delete == job->request_code()) {
+                    job->mr.m_sql = "delete from table_hwc where uid = 17";
+                }
+                #endif
                 helperGroup->WriteHBLog(job);
             }
             #endif
@@ -658,11 +666,18 @@ int ConnectorClient::client_notify_helper_check()
         check_job->set_request_code(DRequest::Get);
         check_job->set_request_key(job->request_key());
         check_job->build_packed_key();
-        check_job->mr.m_sql = job->mr.m_sql;
-        //"insert into table_hwc values(17, 'kaka' , 'shenzheng' ,112 ,112)";
-        //"update table_hwc set name = 'kaka' where uid = 17";
-        //"delete from table_hwc where uid = 17";
-        //job->mr.m_sql; // sql is deep copy
+        
+        #if 0
+        if (DRequest::Insert == job->request_code()) {
+            check_job->mr.m_sql = "insert into table_hwc values(17, 'kaka' , 'shenzheng' ,112 ,112)";
+        } else if (DRequest::Update == job->request_code()) {
+            check_job->mr.m_sql = "update table_hwc set name = 'lulu' where uid = 17";
+        } else if (DRequest::Delete == job->request_code()) {
+            check_job->mr.m_sql = "delete from table_hwc where uid = 17";
+        }
+        #else
+        check_job->mr.m_sql = job->mr.m_sql; // sql is deep copy
+        #endif
 
         DTCFieldSet* p_dtc_field_set = check_job->request_fields();
         DELETE(p_dtc_field_set);
@@ -837,12 +852,12 @@ int ConnectorClient::recv_notify_helper_check()
             {
                 log4cplus_info("line:%d",__LINE__);
                 if (helperGroup->WriteHBLog(check_job , 1) != 0) {
-                    set_error(-EC_SERVER_ERROR, __FUNCTION__ ,
+                    set_error(-EC_UPSTREAM_ERROR, __FUNCTION__ ,
                          "write hb log failed");
                     reconnect();
                     break;
                 }
-                set_error(-EC_SERVER_ERROR, __FUNCTION__ ,
+                set_error(-EC_UPSTREAM_ERROR, __FUNCTION__ ,
                          "need check data");
             }
             break;

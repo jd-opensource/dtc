@@ -168,7 +168,7 @@ int ConnectorProcess::check_table()
     log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
     Ret = db_conn.do_query(DBName, sql.c_str());
-    log4cplus_debug("SELECT %d %s", Ret, db_conn.get_raw_err_no());
+    log4cplus_debug("SELECT %d %d", Ret, db_conn.get_raw_err_no());
     if (Ret != 0) {
         log4cplus_warning("db query error: %s, pid: %d, group-id: %d",
                   db_conn.get_err_msg(), getpid(),
@@ -941,7 +941,7 @@ int ConnectorProcess::process_select(DtcJob *Task)
     log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
     Ret = db_conn.do_query(DBName, sql.c_str());
-    log4cplus_debug("SELECT %d %s", Ret, db_conn.get_raw_err_no());
+    log4cplus_debug("SELECT %d %d", Ret, db_conn.get_raw_err_no());
     if (Ret != 0) {
         delete Row;
         Task->set_error_dup(db_conn.get_err_no(), __FUNCTION__,
@@ -1021,7 +1021,7 @@ int ConnectorProcess::process_select(DtcJob *Task)
         log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
         Ret = db_conn.do_query(DBName, sql.c_str());
-        log4cplus_debug("SELECT %d %s", Ret, db_conn.get_raw_err_no());
+        log4cplus_debug("SELECT %d %d", Ret, db_conn.get_raw_err_no());
         if (Ret != 0) {
             Task->set_error_dup(db_conn.get_err_no(), __FUNCTION__,
                         db_conn.get_err_msg());
@@ -1197,7 +1197,7 @@ int ConnectorProcess::process_insert(DtcJob *Task)
     log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
     Ret = db_conn.do_query(DBName, sql.c_str());
-    log4cplus_debug("INSERT %d %s", Ret, db_conn.get_raw_err_no());
+    log4cplus_debug("INSERT %d %d", Ret, db_conn.get_raw_err_no());
 
     if (Ret != 0) {
         int err = db_conn.get_err_no();
@@ -1272,7 +1272,7 @@ int ConnectorProcess::process_update(DtcJob *Task)
     log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
     Ret = db_conn.do_query(DBName, sql.c_str());
-    log4cplus_debug("UPDATE %d %s", Ret, db_conn.get_raw_err_no());
+    log4cplus_debug("UPDATE %d %d", Ret, db_conn.get_raw_err_no());
     if (Ret != 0) {
         int err = db_conn.get_err_no();
         Task->set_error_dup(err, __FUNCTION__, db_conn.get_err_msg());
@@ -1325,7 +1325,7 @@ int ConnectorProcess::process_delete(DtcJob *Task)
     log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
     Ret = db_conn.do_query(DBName, sql.c_str());
-    log4cplus_debug("DELETE %d %s", Ret, db_conn.get_raw_err_no());
+    log4cplus_debug("DELETE %d %d", Ret, db_conn.get_raw_err_no());
     if (Ret != 0) {
         Task->set_error_dup(db_conn.get_err_no(), __FUNCTION__,
                     db_conn.get_err_msg());
@@ -1418,7 +1418,7 @@ int ConnectorProcess::process_replace(DtcJob *Task)
     log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
 
     Ret = db_conn.do_query(DBName, sql.c_str());
-    log4cplus_debug("REPLACE %d %s", Ret, db_conn.get_raw_err_no());
+    log4cplus_debug("REPLACE %d %d", Ret, db_conn.get_raw_err_no());
 
     if (Ret != 0) {
         Task->set_error_dup(db_conn.get_err_no(), __FUNCTION__,
