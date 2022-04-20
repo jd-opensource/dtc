@@ -174,6 +174,7 @@ class DtcJob : public TableReference {
 
     protected: // working data
 	uint64_t serialNr; /* derived from packet */
+	uint64_t peerid;
 	const DTCValue *key; /* derived from packet */
 	const DTCValue *rkey; /* processing */
 	/* resultWriter only create once in job entire life */
@@ -217,7 +218,7 @@ class DtcJob : public TableReference {
 		  role(r), dataTableDef(tdef), hotbackupTableDef(NULL),
 		  replicateTableDef(NULL), updateInfo(NULL),
 		  conditionInfo(NULL), fieldList(NULL), result(NULL),
-		  serialNr(0), key(NULL), rkey(NULL), resultWriter(NULL),
+		  serialNr(0), peerid(0),key(NULL), rkey(NULL), resultWriter(NULL),
 		  resultWriterReseted(0), requestCode(0), requestType(0),
 		  requestFlags(0), replyCode(0), replyFlags(0),
 		  processFlags(PFLAG_ALLROWS) , pac_version(0)
@@ -361,6 +362,10 @@ class DtcJob : public TableReference {
 	const uint64_t request_serial(void) const
 	{
 		return serialNr;
+	}
+	const uint64_t request_peerid(void) const
+	{
+		return peerid;
 	}
 
 	// result key

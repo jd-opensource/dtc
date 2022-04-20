@@ -956,7 +956,12 @@ BufferChain *encode_row_data(DtcJob *job, BufferChain *bc, uint8_t &pkt_nr)
 		int row_len = 0;
 		for (int j = 0; j < result_field.size(); j++) {
 			int id = tdef->field_id(result_field[j].c_str());
-			DTCValue *v = pstRow->field_value(id);
+			DTCValue* v;
+			if (0 == id) {
+				v = job->request_key();
+			} else {
+				v = pstRow->field_value(id);
+			}
 			int field_type = pstRow->field_type(id);
 			switch (field_type) {
 			case DField::Signed: {
@@ -1009,7 +1014,12 @@ BufferChain *encode_row_data(DtcJob *job, BufferChain *bc, uint8_t &pkt_nr)
 		//copy fields content
 		for (int j = 0; j < result_field.size(); j++) {
 			int id = tdef->field_id(result_field[j].c_str());
-			DTCValue *v = pstRow->field_value(id);
+			DTCValue* v;
+			if (0 == id) {
+				v = job->request_key();
+			} else {
+				v = pstRow->field_value(id);
+			}
 			int field_type = pstRow->field_type(id);
 			int num_len = 0;
 			switch (field_type) {
@@ -1158,7 +1168,7 @@ int Packet::desc_tables_result(DtcJob *job)
 			 sizeof(header) + content_len + 2;
 
 	header.version = 2;
-	header.id = job->request_serial();
+	header.id = job->request_peerid();
 	header.packet_len = packet_len;
 	header.admin = CMD_KEY_DEFINE;
 
@@ -1213,7 +1223,7 @@ int Packet::yaml_config_result(DtcJob *job , const char* p_filename)
 
 	DTC_HEADER_V2 header = { 0 };
 	header.version = 2;
-	header.id = job->request_serial();
+	header.id = job->request_peerid();
 	header.packet_len = packet_len;
 	header.admin = CMD_KEY_DEFINE;
 
@@ -1359,7 +1369,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	if (ts) {
 		job.resultInfo.set_time_info(ts);
 	}
-	job.versionInfo.set_serial_nr(job.request_serial() + 1);
+	job.versionInfo.set_serial_nr(job.request_peerid() + 1);
 
 	if (job.result_key() == NULL && job.request_key() != NULL)
 		job.set_result_key(*job.request_key());
@@ -1374,7 +1384,8 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 
 	DTC_HEADER_V2 dtc_header = { 0 };
 	dtc_header.version = 2;
-	dtc_header.id = job.request_serial();
+	dtc_header.id = job.request_peerid();
+	log4cplus_info("dtc_header.id:%d , job.request_serial():%d" , dtc_header.id , job.request_peerid());
 	dtc_header.packet_len = 0;
 	dtc_header.admin = CMD_NOP;
 

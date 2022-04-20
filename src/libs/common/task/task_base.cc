@@ -225,7 +225,7 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 		return;
 	}
 
-	serialNr = header->id;
+	peerid = header->id;
 
 	//offset DTC Header.
 	p = p + sizeof(DTC_HEADER_V2);
@@ -461,9 +461,9 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 		this->versionInfo.set_table_name(p_table_name);
 	}
 	this->versionInfo.set_key_type(table_definition()->key_type());
-	
+
 	//2.requestInfo
-	DTCValue key;
+	static DTCValue key;
 	if (mr->get_key(&key, table_definition()->key_name())) {
 		requestInfo.set_key(key);
 		set_request_key(&key);
