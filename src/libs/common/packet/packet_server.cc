@@ -1314,6 +1314,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	// rp指向返回数据集
 	ResultPacket *rp =
 		job.result_code() >= 0 ? job.get_result_packet() : NULL;
+	log4cplus_info("result code:%d" , job.result_code());
 	BufferChain *rb = NULL;
 	int nrp = 0, lrp = 0, off = 0;
 	bool bok = false;
@@ -1324,6 +1325,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	/* rp may exist but no result */
 	if (rp && (rp->numRows || rp->totalRows)) {
 		//rb指向数据结果集缓冲区起始位置
+		log4cplus_info("line:%d" ,__LINE__);
 		rb = rp->bc;
 		if (rb)
 			rb->Count(nrp, lrp);
@@ -1332,6 +1334,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 		lrp -= off;
 		job.resultInfo.set_total_rows(rp->totalRows);
 	} else {
+		log4cplus_info("line:%d" ,__LINE__);
 		nrp = 1;
 		bok = true;
 		if (rp && rp->totalRows == 0 && rp->bc) {
@@ -1383,7 +1386,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 			1 /*eof*/;
 	}
 
-
+	log4cplus_info("line:%d" ,__LINE__);
 	/* pool, exist and large enough, use. else free and malloc */
 	int first_packet_len = sizeof(BufferChain) +
 			       sizeof(struct iovec) * (nrp + 1) +
