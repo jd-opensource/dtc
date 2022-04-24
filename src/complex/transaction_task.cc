@@ -76,7 +76,7 @@ int TransactionTask::HandleReadOper()
 	{
 		const char *errmsg = m_DBConn->GetErrMsg();
 		int m_ErrorNo = m_DBConn->GetErrNo();
-		log_error("db reconnect error, errno[%d]  errmsg[%s]", m_ErrorNo, errmsg);
+		log4cplus_error("db reconnect error, errno[%d]  errmsg[%s]", m_ErrorNo, errmsg);
 		SetErrorMessage(errmsg);
 		return m_ErrorNo;
 	}
@@ -86,21 +86,21 @@ int TransactionTask::HandleReadOper()
 	{
 		const char *errmsg = m_DBConn->GetErrMsg();
 		int m_ErrorNo = m_DBConn->GetErrNo();
-		log_error("db execute error. errno[%d]  errmsg[%s]", m_ErrorNo, errmsg);
-		log_error("error sql [%s]", m_Sql.c_str());
+		log4cplus_error("db execute error. errno[%d]  errmsg[%s]", m_ErrorNo, errmsg);
+		log4cplus_error("error sql [%s]", m_Sql.c_str());
 		SetErrorMessage(errmsg);
 		return m_ErrorNo;
 	}
 	ret = m_DBConn->UseResult();
 	if (0 != ret) {
-		log_error("can not use result,sql[%s]", m_Sql.c_str());
+		log4cplus_error("can not use result,sql[%s]", m_Sql.c_str());
 		SetErrorMessage(m_DBConn->GetErrMsg());
 		return -4;
 	}
 
 	ret = m_DBConn->FetchFields();
 	if (0 != ret) {
-		log_error("can not use fileds,[%d]%s", m_DBConn->GetErrNo(), m_DBConn->GetErrMsg());
+		log4cplus_error("can not use fileds,[%d]%s", m_DBConn->GetErrNo(), m_DBConn->GetErrMsg());
 		return -4;
 	}
 
@@ -114,14 +114,14 @@ int TransactionTask::HandleReadOper()
 		unsigned long *lengths = 0;
 		lengths = m_DBConn->getLengths();
 		if (0 == lengths) {
-			log_error("row length is 0,sql[%s]", m_Sql.c_str());
+			log4cplus_error("row length is 0,sql[%s]", m_Sql.c_str());
 			m_DBConn->FreeResult();
 			return -4;
 		}
 
 		if(SaveRow() != 0)
 		{
-			log_error("filed [%d] type unsupported, %s", i, GetErrorMessage().c_str());
+			log4cplus_error("filed [%d] type unsupported, %s", i, GetErrorMessage().c_str());
 			m_DBConn->FreeResult();
 			return -4;
 		}
@@ -201,22 +201,22 @@ int TransactionTask::BuildTransactionInfo()
 }
 
 int TransactionTask::Process(CTaskRequest *request) {
-	log_debug("TransactionTask::Process begin.");
+	log4cplus_debug("TransactionTask::Process begin.");
 #if 0
 	Json::FastWriter writer;
 	Json::Value response;
 	Json::Value recv_packet;
 	string request_string = request->buildRequsetString();
-	log_debug("json: %s", request_string.c_str());
+	log4cplus_debug("json: %s", request_string.c_str());
 	if (ParseJson(request_string.c_str(), request_string.size(), recv_packet)) {
-		log_debug("json parse finished.");
+		log4cplus_debug("json parse finished.");
 		response["ret"] = -1;
 		response["msg"] = GetErrorMessage();
 		std::string outputConfig = writer.write(response);
 		request->setResult(outputConfig);
 		return RT_PARSE_JSON_ERR;
 	}
-	log_debug("json parse finished.");
+	log4cplus_debug("json parse finished.");
 	int ret = 0;
 	if(strcasecmp(m_oper.c_str(), "write") == 0)
 		ret = HandleWriteOper();
@@ -227,7 +227,7 @@ int TransactionTask::Process(CTaskRequest *request) {
 		stringstream ss;
 		ss<<"oper method error, oper method: "<<m_oper;
 		SetErrorMessage(ss.str());
-		log_error(ss.str().c_str());
+		log4cplus_error(ss.str().c_str());
 	}
 	if(ret == 0)
 	{
@@ -250,6 +250,6 @@ int TransactionTask::Process(CTaskRequest *request) {
 	std::string outputConfig = writer.write(response);
 	request->setResult(outputConfig);
 #endif
-	log_debug("TransactionTask::Process end.");
+	log4cplus_debug("TransactionTask::Process end.");
 	return 0;
 }

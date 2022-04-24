@@ -17,11 +17,11 @@ CAgentProcess::~CAgentProcess()
 void CAgentProcess::TaskNotify(CTaskRequest * curr)
 {
     curr->CopyReplyForAgentSubTask();
-    log_debug("CAgentProcess::TaskNotify start");
+    log4cplus_debug("CAgentProcess::TaskNotify start");
     //there is a race condition here:
     //curr may be deleted during process (in task->ReplyNotify())
     int taskCount = curr->AgentSubTaskCount();
-     log_debug("CAgentProcess::TaskNotify task count is %d",taskCount );
+     log4cplus_debug("CAgentProcess::TaskNotify task count is %d",taskCount );
     for(int i = 0; i < taskCount; i++)
     {
 		CTaskRequest * task = NULL;
@@ -31,14 +31,14 @@ void CAgentProcess::TaskNotify(CTaskRequest * curr)
 
 		if(curr->IsCurrSubTaskProcessed(i))
 		{
-			 log_debug("CAgentProcess::TaskNotify task reply notify");
+			 log4cplus_debug("CAgentProcess::TaskNotify task reply notify");
 			 std::string ret("{\"error\":\"cmd not found\"}");
 			 task->setResult(ret);
 			 task->ReplyNotify();
 		}
 		else
 		{
-			 log_debug("CAgentProcess::TaskNotify TaskNotify next process");
+			 log4cplus_debug("CAgentProcess::TaskNotify TaskNotify next process");
 			  output.TaskNotify(task);
 		}
 	   

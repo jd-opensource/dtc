@@ -125,7 +125,7 @@ int CConfig::ParseBufferedConfig(char *buf, const char *fn, const char *defsec, 
 		// key must printable
 		if(!isprint(key[0]))
 		{
-			log_warning("%s(%d): invalid line: %s", fn, ln, key);
+			log4cplus_warning("%s(%d): invalid line: %s", fn, ln, key);
 			ret_code = -1;
 			continue;
 		}
@@ -142,14 +142,14 @@ int CConfig::ParseBufferedConfig(char *buf, const char *fn, const char *defsec, 
 			else if(key[0]=='[')
 				/*OK*/;
 			else {
-				log_warning("%s(%d): invalid line: %s", fn, ln, key);
+				log4cplus_warning("%s(%d): invalid line: %s", fn, ln, key);
 				ret_code = -1;
 				continue;
 			}
 			*start = '\0';
 		} else if(key[0] != '[')
 		{
-			log_warning("%s(%d): invalid line: %s", fn, ln, key);
+			log4cplus_warning("%s(%d): invalid line: %s", fn, ln, key);
 			ret_code = -1;
 			continue;
 		}
@@ -159,12 +159,12 @@ int CConfig::ParseBufferedConfig(char *buf, const char *fn, const char *defsec, 
 			char *r = strchr(key, ']');
 			if(!r)
 			{
-				log_warning("%s(%d): invalid section: %s", fn, ln, key);
+				log4cplus_warning("%s(%d): invalid section: %s", fn, ln, key);
 				ret_code = -1;
 				continue;
 			} else if(!((r[1]=='\0'&&v==NULL)||(r[1]=='.'&&v!=NULL)))
 			{
-				log_warning("%s(%d): invalid section: %s", fn, ln, key);
+				log4cplus_warning("%s(%d): invalid section: %s", fn, ln, key);
 				ret_code = -1;
 				continue;
 			} else {
@@ -212,7 +212,7 @@ int CConfig::ParseBufferedConfig(char *buf, const char *fn, const char *defsec, 
 				start--;
 			break;
 		error:
-			log_warning("%s(%d): unended quote or bracket", fn, ln);
+			log4cplus_warning("%s(%d): unended quote or bracket", fn, ln);
 			ret_code = -1;
 			continue;
 		}
@@ -250,7 +250,7 @@ int CConfig::ParseConfig (const char *fn, const char *defsec,bool bakconfig)
 
 	fd = open (fn, O_RDONLY);
 	if (fd < 0) {
-		log_warning ("open %s error, cwd=%s, %m\n", fn, get_current_dir_name ());
+		log4cplus_warning ("open %s error, cwd=%s, %m\n", fn, get_current_dir_name ());
 		return -1;
 	}
 	len = lseek (fd, 0L, SEEK_END);

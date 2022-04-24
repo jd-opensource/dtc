@@ -50,7 +50,7 @@ bool TrainCorpus::Init(string train_path) {
 	ifstream train_infile;  // 训练文件以空格为分隔符
 	train_infile.open(train_path.c_str());
 	if (train_infile.is_open() == false) {
-		log_error("open file error: %s.\n", train_path.c_str());
+		log4cplus_error("open file error: %s.\n", train_path.c_str());
 		return false;
 	}
 	string str;
@@ -75,7 +75,7 @@ bool TrainCorpus::Init(string train_path) {
 			line_state.insert(line_state.end(), item_state.begin(), item_state.end());
 		}
 		if (word_list.size() != line_state.size()) {
-			log_error("[line = %s]\n", str.c_str());
+			log4cplus_error("[line = %s]\n", str.c_str());
 		}
 		else {
 			for (size_t i = 0; i < line_state.size(); i++) {

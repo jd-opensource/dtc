@@ -5,23 +5,25 @@ CTransactionGroup::CTransactionGroup(int thread_num): m_thread_num(thread_num), 
 
 }
 
-void CTransactionGroup::Initialize()
+int CTransactionGroup::Initialize(DBHost* dbconfig)
 {
+	if(!dbconfig)
+		return -1;
+
 	m_trans_queue = new TransThreadQueue*[m_thread_num];
 	m_trans_thread = new CTransactionThread*[m_thread_num];
 
-	
 	for(int i = 0; i < m_thread_num; i++)
 	{
 		char thread_name[256] = {0};
 		m_trans_queue[i] = new TransThreadQueue;
 		
 		snprintf(thread_name, sizeof(thread_name), "%s@%d", "transaction", i);
-		m_trans_thread[i] = new CTransactionThread(thread_name, m_trans_queue[i], i);
+		m_trans_thread[i] = new CTransactionThread(thread_name, m_trans_queue[i], i, dbconfig);
 		m_trans_thread[i]->InitializeThread();
 	}
 
-	return ;
+	return 0;
 }
 
 void CTransactionGroup::RunningThread()

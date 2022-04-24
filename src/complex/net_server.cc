@@ -26,7 +26,7 @@ CNetServerProcess::~CNetServerProcess()
 
 void CNetServerProcess::TaskNotify(CTaskRequest * cur)
 {
-    log_debug("CNetServerProcess::TaskNotify start");
+    log4cplus_debug("CNetServerProcess::TaskNotify start");
     //there is a race condition here:
     //curr may be deleted during process (in task->ReplyNotify())
 

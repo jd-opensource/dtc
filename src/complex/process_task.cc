@@ -18,7 +18,7 @@ ProcessTask::ProcessTask()
 }
 
 int ProcessTask::Process(CTaskRequest *request) {
-	log_debug("process");
+	log4cplus_debug("process");
 	return 0;
 }
 

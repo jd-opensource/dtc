@@ -76,7 +76,7 @@ void iutf8string::refresh()
 {
 	int *tmp = new int[data.length()+1];
 	if (tmp == NULL) {
-		log_error("alloc memeory failed!");
+		log4cplus_error("alloc memeory failed!");
 		return;
 	}
 	int i, tmpidx = 0;
@@ -93,7 +93,7 @@ void iutf8string::refresh()
 
 	int *tmp2 = new int[tmpidx+1];
 	if (tmp2 == NULL) {
-		log_error("alloc memeory failed!");
+		log4cplus_error("alloc memeory failed!");
 		return;
 	}
 	for (i = 0; i < tmpidx; i++)

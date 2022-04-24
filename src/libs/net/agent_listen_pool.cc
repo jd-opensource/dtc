@@ -53,19 +53,19 @@ int CAgentListenPool::Bind(const char *bindaddr, CTaskDispatcher<CTaskRequest> *
 		thread[i] = new PollerBase(threadname);
 		if(NULL == thread[i])
 		{
-			log_error("no mem to new agent inc thread %d", i);
+			log4cplus_error("no mem to new agent inc thread %d", i);
 			return -1;
 		}
 		if(thread[i]->InitializeThread() < 0)
 		{
-			log_error("agent inc thread %d init error", i);
+			log4cplus_error("agent inc thread %d init error", i);
 			return -1;
 		}
 
 		out[i] = new CAgentClientUnit(thread[i], checktime);
 		if(NULL == out[i])
 		{
-			log_error("no mem to new agent client unit %d", i);
+			log4cplus_error("no mem to new agent client unit %d", i);
 			return -1;
 		}
 		out[i]->BindDispatcher(agentprocess);
@@ -73,12 +73,12 @@ int CAgentListenPool::Bind(const char *bindaddr, CTaskDispatcher<CTaskRequest> *
 		listener[i] = new CAgentListener(thread[i], out[i], addr[i]);
 		if(NULL == listener[i])
 		{
-			log_error("no mem to new agent listener %d", i);
+			log4cplus_error("no mem to new agent listener %d", i);
 			return -1;
 		}
 		if(listener[i]->Bind(blog) < 0)
 		{
-			log_error("agent listener %d bind error", i);
+			log4cplus_error("agent listener %d bind error", i);
 			return -1;
 		}
 
@@ -105,13 +105,13 @@ int CAgentListenPool::Bind(const char *bindaddr, CTaskDispatcher<CTaskRequest> *
 //	bindaddr = gc->GetStrVal("cache", bindstr);
 //	if(NULL == bindaddr)
 //	{
-//		log_error("get cache BindAddr configure failed");
+//		log4cplus_error("get cache BindAddr configure failed");
 //		return -1;
 //	}
 //
 //	if((errmsg = addr[0].SetAddress(bindaddr, (const char *)NULL)))
 //	{
-//		log_error("addr[0] setaddress failed");
+//		log4cplus_error("addr[0] setaddress failed");
 //		return -1;
 //	}
 //
@@ -120,7 +120,7 @@ int CAgentListenPool::Bind(const char *bindaddr, CTaskDispatcher<CTaskRequest> *
 //	out[0] = new CAgentClientUnit(thread[0], checktime);
 //	if(NULL == out[0])
 //	{
-//	    log_error("no mem to new agent client unit");
+//	    log4cplus_error("no mem to new agent client unit");
 //	    return -1;
 //	}
 //	out[0]->BindDispatcher(agentprocess);
@@ -128,12 +128,12 @@ int CAgentListenPool::Bind(const char *bindaddr, CTaskDispatcher<CTaskRequest> *
 //	listener[0] = new CAgentListener(thread[0], out[0], addr[0]);
 //	if(NULL == listener[0])
 //	{
-//	    log_error("no mem to new agent listener");
+//	    log4cplus_error("no mem to new agent listener");
 //	    return -1;
 //	}
 //	if(listener[0]->Bind(blog) < 0)
 //	{
-//	    log_error("agent listener bind error");
+//	    log4cplus_error("agent listener bind error");
 //	    return -1;
 //	}
 //	if(listener[0]->AttachThread() < 0)

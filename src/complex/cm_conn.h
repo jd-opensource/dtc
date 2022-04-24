@@ -22,7 +22,7 @@ struct DBHost
 	char	OptionFile[256];
 };
 
-class CDBConn
+class MysqlConn
 {
 private:
 	DBHost	DBConfig;
@@ -44,8 +44,8 @@ protected:
 	int Connect(const char* DBName);
 
 public:
-	CDBConn();
-	CDBConn(const DBHost* Host);
+	MysqlConn();
+	MysqlConn(const DBHost* Host);
 	
 	static int ClientVersion(void);
 	void Config(const DBHost* Host);
@@ -82,7 +82,7 @@ public:
 		return mysql_fetch_lengths (Res);	    
 	}
 
-	~CDBConn();
+	~MysqlConn();
 };
 
 #endif

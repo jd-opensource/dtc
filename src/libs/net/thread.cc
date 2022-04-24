@@ -94,7 +94,7 @@ void CThread::AutoConfigStackSize(void) {
 		size = 1<<30;
 
 	SetStackSize((int)size);
-	log_debug("autoconf thread %s ThreadStackSize %d", taskname, stacksize);
+	log4cplus_debug("autoconf thread %s ThreadStackSize %d", taskname, stacksize);
 }
 
 void CThread::AutoConfigCPUMask(void) {
@@ -103,7 +103,7 @@ void CThread::AutoConfigCPUMask(void) {
 	if(val != NULL) {
 		cpumask = strtoll(val, NULL, 16);
 	}
-	log_debug("autoconf thread %s ThreadCPUMask %llx", taskname, (unsigned long long)cpumask);
+	log4cplus_debug("autoconf thread %s ThreadCPUMask %llx", taskname, (unsigned long long)cpumask);
 #endif
 }
 
@@ -124,7 +124,7 @@ void CThread::AutoConfig(void) {
 
 int CThread::InitializeThread (void)
 {
-	log_info("###deubg init thread");
+	log4cplus_info("###deubg init thread");
 	int ret = Initialize();
 	if(ret < 0)
 		return -1;
@@ -161,7 +161,7 @@ int CThread::InitializeThread (void)
 
 void CThread::RunningThread ()
 {
-	log_info("###deubg runningthread");
+	log4cplus_info("###deubg runningthread");
 	switch(tasktype) {
 		case -1:
 			// error
@@ -182,9 +182,9 @@ void CThread::RunningThread ()
 
 void CThread::PrepareInternal (void)
 {
-	pid = net_gettid();
-	log_info("###deubg internal");
-	log_info("thread %s[%d] started", taskname, pid);
+	pid = gettid();
+	log4cplus_info("###deubg internal");
+	log4cplus_info("thread %s[%d] started", taskname, pid);
 	sigset_t sset;
 	sigemptyset(&sset);
 	sigaddset(&sset, SIGTERM);
@@ -218,9 +218,9 @@ void CThread::interrupt (void)
 
         if ((ret=pthread_join(tid, 0)) != 0)
         {
-            log_warning("Thread [%s] join failed %d.", Name(), ret);
+            log4cplus_warning("Thread [%s] join failed %d.", Name(), ret);
         } else {
-	    log_info("Thread [%s] stopped.", Name());
+	    log4cplus_info("Thread [%s] stopped.", Name());
 	}
     }
 }
@@ -253,7 +253,7 @@ void CThread::CrashHook (int signo)
 	if(&DaemonCrashed != 0) {
 		DaemonCrashed(signo);
 	}
-	log_crit("Ouch......, I crashed, hang and stopping server");
+	log4cplus_error("Ouch......, I crashed, hang and stopping server");
 	pthread_exit(NULL);
 	while(1) pause();
 }

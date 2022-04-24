@@ -83,7 +83,7 @@ void CAgentMultiRequest::DecodeOneRequest(char * packetstart, int packetlen, int
 	task = new CTaskRequest();
 	if(NULL == task)
 	{
-		log_crit("not enough mem for new task creation, client wont recv response");
+		log4cplus_error("not enough mem for new task creation, client wont recv response");
 		compleTask++;
 		return;
 	}
@@ -95,7 +95,7 @@ void CAgentMultiRequest::DecodeOneRequest(char * packetstart, int packetlen, int
 	}
 
 	if(!task->copyOnePacket(packetstart + sizeof(CPacketHeader), packetlen - sizeof(CPacketHeader))){
-		log_crit("not enough mem for buf copy, client wont recv response");
+		log4cplus_error("not enough mem for buf copy, client wont recv response");
 		compleTask++;
 		delete task;
 		return;
@@ -123,7 +123,7 @@ int CAgentMultiRequest::DecodeAgentRequest()
     taskList = new DecodedTask[packetCnt];
     if(NULL == taskList)
     {
-	log_crit("no mem new taskList");
+	log4cplus_error("no mem new taskList");
 	return -1;
     }
     memset((void *)taskList, 0, sizeof(DecodedTask) * packetCnt);
@@ -137,7 +137,7 @@ int CAgentMultiRequest::DecodeAgentRequest()
         packetstart = packets.ptr + cursor;
         packetlen = PacketBodyLen(*(CPacketHeader *)packetstart) + sizeof(CPacketHeader);
         if(packetlen < 2 || packetlen > packets.len - cursor){
-        	log_crit("decode packet len error");
+        	log4cplus_error("decode packet len error");
         	return -1;
         }
 

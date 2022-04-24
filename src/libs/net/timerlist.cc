@@ -20,7 +20,7 @@ CTimerObject::~CTimerObject(void) {
 }
 
 void CTimerObject::TimerNotify(void) {
-	log_debug("CTimerObject::TimerNotify start");
+	log4cplus_debug("CTimerObject::TimerNotify start");
 	delete this;
 }
 

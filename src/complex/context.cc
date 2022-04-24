@@ -10,7 +10,6 @@ Context::Context() {
 	listen_port = -1;
 	backlog = 10240;
 
-	pid_file = "dbproxy.pid";
 	log_dir = "/export/Logs";
 	log_name = "";
 	log_level = 6;

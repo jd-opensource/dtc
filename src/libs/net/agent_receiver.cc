@@ -52,11 +52,11 @@ int CAgentReceiver::RecvOnce()
 	{
 		if(EAGAIN == errno || EINTR == errno || EINPROGRESS == errno)
 			return 0;
-		log_error("agent receiver recv error: %m, %d", errno);
+		log4cplus_error("agent receiver recv error: %m, %d", errno);
 		return -errno;
 	}else if(0 == rv)
 	{
-		log_debug("remote close connection, fd[%d]", fd);
+		log4cplus_debug("remote close connection, fd[%d]", fd);
 		errno = ECONNRESET;
 		return -errno;
 	}
@@ -113,7 +113,7 @@ int CAgentReceiver::RealRecv()
 	{
 		if(EnlargeBuffer() < 0)
 		{
-			log_crit("no mme enlarge recv buffer error");
+			log4cplus_error("no mme enlarge recv buffer error");
 			return -ENOMEM;
 		}	
 	}
@@ -139,7 +139,7 @@ int CAgentReceiver::RecvAgain()
 
 	if(EnlargeBuffer() < 0)
 	{
-		log_crit("no mme enlarge recv buffer error");
+		log4cplus_error("no mme enlarge recv buffer error");
 		return -ENOMEM;
 	}
 
@@ -153,7 +153,7 @@ int CAgentReceiver::DecodeHeader(CPacketHeader * header)
 {
     if(ntohs(header->magic) != 0xFDFC)
     { // version not supported
-        log_error("magic incorrect: %X ", ntohs(header->magic));
+        log4cplus_error("magic incorrect: %X ", ntohs(header->magic));
         return -1;
     }
 
@@ -162,7 +162,7 @@ int CAgentReceiver::DecodeHeader(CPacketHeader * header)
 
     if(pktbodylen > MAXPACKETSIZE)
     {
-    	log_error("packet len > MAXPACKETSIZE 20M");
+    	log4cplus_error("packet len > MAXPACKETSIZE 20M");
     	return -1;
     }
 
@@ -226,7 +226,7 @@ void CAgentReceiver::SetRecvedInfo(RecvedPacket & packet)
     if(NULL == (tmpbuff = (char *)malloc(buffSize)))
     {
 	    /* recved buffer willbe free by outBuff */
-	    log_crit("no mem malloc new recv buffer");
+	    log4cplus_error("no mem malloc new recv buffer");
 	    packet.err = -1;
 	    return;
     }

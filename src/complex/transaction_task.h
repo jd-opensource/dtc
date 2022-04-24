@@ -5,13 +5,13 @@
 #include "process_task.h"
 #include "task_request.h"
 #include "global.h"
-#include "DBConn.h"
+#include "cm_conn.h"
 
 class TransactionTask
 {
 public:
 	TransactionTask();
-	TransactionTask(CDBConn* DbConn): m_DBConn(DbConn) {}
+	TransactionTask(MysqlConn* DbConn): m_DBConn(DbConn) {}
 	virtual ~TransactionTask();
 
 	int Process(CTaskRequest *request);
@@ -32,7 +32,7 @@ private:
 	std::string m_oper;
 	std::vector<TransactionInfo> m_trans_info;
 	std::string m_errmsg;
-	CDBConn* m_DBConn;
+	MysqlConn* m_DBConn;
 	
 	int SaveRow();
 	int ParseJson(const char *sz_json, int json_len);

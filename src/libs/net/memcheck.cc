@@ -57,7 +57,7 @@ void add_ptr(void *ptr, size_t size, const char *ret, int ln)
 	usedlist[n] = s;
 	totalsize += size;
 	if(size >= 1<<20)
-		log_debug("large memory allocated size=%ld", (long)size);
+		log4cplus_debug("large memory allocated size=%ld", (long)size);
 	if(totalsize > maxsize)
 		maxsize = totalsize;
 }
@@ -114,25 +114,25 @@ void dump_non_delete(void)
 		const location_t &loc = i->first;
 		const count_t &val = i->second;
 		if(loc.ln==0)
-			log_info("remain %ld %ld ret@%p", val.count, val.size, loc.ret);
+			log4cplus_info("remain %ld %ld ret@%p", val.count, val.size, loc.ret);
 		else
-			log_info("remain %ld %ld %s(%d)", val.count, val.size, loc.ret, loc.ln);
+			log4cplus_info("remain %ld %ld %s(%d)", val.count, val.size, loc.ret, loc.ln);
 	}
-	log_info("Maximum Memory allocated: %lu\n", maxsize);
+	log4cplus_info("Maximum Memory allocated: %lu\n", maxsize);
 }
 
 void report_mallinfo(void)
 {
 	struct mallinfo mi = mallinfo();
-	log_debug("mallinfo.   arena: %d\n", mi.arena);
-	log_debug("mallinfo. ordblks: %d\n", mi.ordblks);
-	log_debug("mallinfo.  smblks: %d\n", mi.smblks);
-	log_debug("mallinfo.   hblks: %d\n", mi.hblks);
-	log_debug("mallinfo. usmblks: %d\n", mi.usmblks);
-	log_debug("mallinfo. fsmblks: %d\n", mi.fsmblks);
-	log_debug("mallinfo.uordblks: %d\n", mi.uordblks);
-	log_debug("mallinfo.fordblks: %d\n", mi.fordblks);
-	log_debug("mallinfo.keepcost: %d\n", mi.keepcost);
+	log4cplus_debug("mallinfo.   arena: %d\n", mi.arena);
+	log4cplus_debug("mallinfo. ordblks: %d\n", mi.ordblks);
+	log4cplus_debug("mallinfo.  smblks: %d\n", mi.smblks);
+	log4cplus_debug("mallinfo.   hblks: %d\n", mi.hblks);
+	log4cplus_debug("mallinfo. usmblks: %d\n", mi.usmblks);
+	log4cplus_debug("mallinfo. fsmblks: %d\n", mi.fsmblks);
+	log4cplus_debug("mallinfo.uordblks: %d\n", mi.uordblks);
+	log4cplus_debug("mallinfo.fordblks: %d\n", mi.fordblks);
+	log4cplus_debug("mallinfo.keepcost: %d\n", mi.keepcost);
 }
 
 unsigned long count_virtual_size(void)
@@ -171,7 +171,7 @@ void *operator new(size_t size)
 	if(bypass==0)
 	{
 		if(p==NULL)
-			log_error("ret@%p: operator new(%ld) failed", ret, (long)size);
+			log4cplus_error("ret@%p: operator new(%ld) failed", ret, (long)size);
 		else
 			add_ptr(p, size, ret, 0);
 	}
@@ -199,7 +199,7 @@ void *operator new[](size_t size)
 	if(bypass==0)
 	{
 		if(p==NULL)
-			log_error("ret@%p: operator new(%ld) failed", ret, (long)size);
+			log4cplus_error("ret@%p: operator new(%ld) failed", ret, (long)size);
 		else
 			add_ptr(p, size, ret, 0);
 	}
@@ -227,7 +227,7 @@ void *malloc_debug(size_t size, const char *fn, int ln)
 	if(bypass==0)
 	{
 		if(p==NULL)
-			log_error("%s(%d): malloc(%ld) failed", fn, ln, (long)size);
+			log4cplus_error("%s(%d): malloc(%ld) failed", fn, ln, (long)size);
 		else
 			add_ptr(p, size, fn, ln);
 	}
@@ -243,7 +243,7 @@ void *calloc_debug(size_t size, size_t nmem, const char *fn, int ln)
 	if(bypass==0)
 	{
 		if(p==NULL)
-			log_error("%s(%d): calloc(%ld, %ld) failed", fn, ln, (long)size, (long)nmem);
+			log4cplus_error("%s(%d): calloc(%ld, %ld) failed", fn, ln, (long)size, (long)nmem);
 		else
 			add_ptr(p, size*nmem, fn, ln);
 	}
@@ -259,7 +259,7 @@ void *realloc_debug(void *o, size_t size, const char *fn, int ln)
 	if(bypass==0)
 	{
 		if(p==NULL)
-			log_error("%s(%d): realloc(%p, %ld) failed", fn, ln, o, (long)size);
+			log4cplus_error("%s(%d): realloc(%p, %ld) failed", fn, ln, o, (long)size);
 		else {
 			del_ptr(o);
 			add_ptr(p, size, fn, ln);
@@ -278,7 +278,7 @@ char *strdup_debug(const char *o, const char *fn, int ln)
 	{
 		long size = strlen(o)+1;
 		if(p==NULL)
-			log_error("%s(%d): strdup(%ld) failed", fn, ln, size);
+			log4cplus_error("%s(%d): strdup(%ld) failed", fn, ln, size);
 		else
 			add_ptr(p, size, fn, ln);
 	}

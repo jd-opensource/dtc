@@ -8,7 +8,7 @@ int SockBind (const CSocketAddress *addr, int backlog, int rbufsz, int wbufsz, i
 
 	if((netfd = addr->CreateSocket ()) == -1)
 	{
-		log_error("%s: make socket error, %m", addr->Name());
+		log4cplus_error("%s: make socket error, %m", addr->Name());
 		return -1;
 	}
 
@@ -24,14 +24,14 @@ int SockBind (const CSocketAddress *addr, int backlog, int rbufsz, int wbufsz, i
 
 	if(addr->BindSocket(netfd) == -1)
 	{
-		log_error("%s: bind failed, %m", addr->Name());
+		log4cplus_error("%s: bind failed, %m", addr->Name());
 		close (netfd);
 		return -1;
 	}
 
 	if(addr->SocketType()==SOCK_STREAM && listen(netfd, backlog) == -1)
 	{
-		log_error("%s: listen failed, %m", addr->Name());
+		log4cplus_error("%s: listen failed, %m", addr->Name());
 		close (netfd);
 		return -1;
 	}
@@ -39,6 +39,6 @@ int SockBind (const CSocketAddress *addr, int backlog, int rbufsz, int wbufsz, i
 	if(rbufsz) setsockopt(netfd, SOL_SOCKET, SO_RCVBUF, &rbufsz, sizeof(rbufsz));
 	if(wbufsz) setsockopt(netfd, SOL_SOCKET, SO_SNDBUF, &wbufsz, sizeof(wbufsz));
 
-	log_info("%s on %s", addr->SocketType()==SOCK_STREAM ? "listen" : "bind", addr->Name());
+	log4cplus_info("%s on %s", addr->SocketType()==SOCK_STREAM ? "listen" : "bind", addr->Name());
 	return netfd;
 }

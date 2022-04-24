@@ -69,7 +69,7 @@ bool FBSegment::Init2(string train_path) {
 	ifstream train_infile;
 	train_infile.open(train_path.c_str());
 	if (train_infile.is_open() == false) {
-		log_error("open file error: %s.\n", train_path.c_str());
+		log4cplus_error("open file error: %s.\n", train_path.c_str());
 		return false;
 	}
 	string beg_tag = "<BEG>";
@@ -117,10 +117,10 @@ bool FBSegment::Init2(string train_path) {
 
 	ret = train_corpus.Init(train_path);
 	if (ret == false) {
-		log_error("train_corpus init error.");
+		log4cplus_error("train_corpus init error.");
 		return ret;
 	}
-	log_info("total training words length is: %u, next_dict count: %d.", train_cnt, (int)next_dict.size());
+	log4cplus_info("total training words length is: %u, next_dict count: %d.", train_cnt, (int)next_dict.size());
 	
 	return true;
 }
@@ -135,7 +135,7 @@ bool FBSegment::Init3(string train_path, string word_path) {
 	ifstream word_infile;
 	word_infile.open(word_path.c_str());
 	if (word_infile.is_open() == false) {
-		log_error("open file error: %s.\n", word_path.c_str());
+		log4cplus_error("open file error: %s.\n", word_path.c_str());
 		return false;
 	}
 
@@ -156,7 +156,7 @@ bool FBSegment::Init3(string train_path, string word_path) {
 		word_info.word_id = word_id;
 		word_dict[word][appid] = word_info;
 	}
-	log_info("word_dict count: %d", (int)word_dict.size());
+	log4cplus_info("word_dict count: %d", (int)word_dict.size());
 
 	return true;
 }

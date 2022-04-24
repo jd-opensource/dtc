@@ -16,7 +16,7 @@ public:
 	CTransactionGroup(int thread_num);
 	~CTransactionGroup() {}
 
-	void Initialize();
+	int Initialize(DBHost* dbconfig);
 	void RunningThread();
 	int Push(CTaskRequest* task);
 };

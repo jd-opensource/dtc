@@ -37,7 +37,7 @@ class CAgentReply : public CReplyDispatcher<CTaskRequest>
 
 void CAgentReply::ReplyNotify(CTaskRequest *task)
 {
-	log_debug("CAgentReply::ReplyNotify start");
+	log4cplus_debug("CAgentReply::ReplyNotify start");
 
 	CClientAgent * client = task->OwnerClient(); 
 	if(client == NULL)
@@ -52,18 +52,18 @@ void CAgentReply::ReplyNotify(CTaskRequest *task)
 	int client_timeout = 6000;
 	int req_delaytime = task->responseTimer.live();
 
-    log_debug("task client_timeout: %d", client_timeout);
+    log4cplus_debug("task client_timeout: %d", client_timeout);
 			
 	if ( (req_delaytime / 1000 ) >= client_timeout) //ms
 	{
-		log_debug("CAgentReply::ReplyNotify client_timeout[%d]ms, req delay time[%d]us", 6000, req_delaytime);
+		log4cplus_debug("CAgentReply::ReplyNotify client_timeout[%d]ms, req delay time[%d]us", 6000, req_delaytime);
 	}
     CPacket * packet = new CPacket();
     if(packet == NULL)
     {
 	/* make response error, finish this task */
 	task->DoneOneAgentSubRequest();
-	log_crit("no mem new CPacket");
+	log4cplus_error("no mem new CPacket");
 	return;
     }
 
@@ -73,12 +73,12 @@ void CAgentReply::ReplyNotify(CTaskRequest *task)
     client->AddPacket(packet);
     if(client->SendResult() < 0)
     {
-        log_error("cliengAgent SendResult error");
+        log4cplus_error("cliengAgent SendResult error");
         delete client;
         return;
     }
 
-    log_debug("CAgentReply::ReplyNotify stop");
+    log4cplus_debug("CAgentReply::ReplyNotify stop");
 }
 
 static CAgentReply agentReply;
@@ -94,7 +94,7 @@ CClientAgent::CClientAgent(PollerBase * o, CAgentClientUnit * u, int fd):
     sender = new CAgentSender(fd);
     if(NULL == sender)
     {
-	log_error("no mem to new sender");
+	log4cplus_error("no mem to new sender");
 	throw (int)-ENOMEM;
     }
 
@@ -102,7 +102,7 @@ CClientAgent::CClientAgent(PollerBase * o, CAgentClientUnit * u, int fd):
     {
 	delete sender;
 	sender = NULL;
-	log_error("no mem to init sender");
+	log4cplus_error("no mem to init sender");
 	throw (int)-ENOMEM;	
     }
 
@@ -111,13 +111,13 @@ CClientAgent::CClientAgent(PollerBase * o, CAgentClientUnit * u, int fd):
 	receiver = new CAgentReceiver(fd);
 	if(NULL == receiver)
 	{
-	    log_error("no mem to new receiver");
+	    log4cplus_error("no mem to new receiver");
 	    throw (int)-ENOMEM;
 	}
 
 	if(receiver && receiver->Init() < 0)
 	{
-	    log_error("no mem to init receiver");
+	    log4cplus_error("no mem to init receiver");
 	    throw (int)-ENOMEM;
 	}
     }
@@ -125,7 +125,7 @@ CClientAgent::CClientAgent(PollerBase * o, CAgentClientUnit * u, int fd):
 
 CClientAgent::~CClientAgent()
 {
-	log_debug("~CClientAgent start");
+	log4cplus_debug("~CClientAgent start");
     CListObject<CAgentMultiRequest> * node = rememberReqHeader.ListNext();
     CAgentMultiRequest * req;
 
@@ -145,7 +145,7 @@ CClientAgent::~CClientAgent()
 
 	DetachPoller();
 
-	log_debug("~CClientAgent end");
+	log4cplus_debug("~CClientAgent end");
 }
 
 int CClientAgent::AttachThread()
@@ -155,7 +155,7 @@ int CClientAgent::AttachThread()
 
     if(AttachPoller() < 0)
     {
-		log_error("client agent attach agengInc thread failed");
+		log4cplus_error("client agent attach agengInc thread failed");
 		return -1;
     }
 
@@ -176,7 +176,7 @@ CTaskRequest * CClientAgent::PrepareRequest(char * recvbuff, int recvlen, int pk
     if(NULL == request)
     {
 		free(recvbuff);
-		log_crit("no mem allocate for new agent request");
+		log4cplus_error("no mem allocate for new agent request");
 		return NULL;
     }
 
@@ -233,15 +233,15 @@ int CClientAgent::RecvRequest()
 /* exit when recv error*/
 void CClientAgent::InputNotify()
 {
-    log_debug("CClientAgent::InputNotify() start");
+    log4cplus_debug("CClientAgent::InputNotify() start");
     if(RecvRequest() < 0)
     {
-		log_debug("erro when recv");
+		log4cplus_debug("erro when recv");
 		delete this;
 		return;
     }
     DelayApplyEvents();
-    log_debug("CClientAgent::InputNotify() stop");
+    log4cplus_debug("CClientAgent::InputNotify() stop");
     return;
 }
 
@@ -252,7 +252,7 @@ int CClientAgent::SendResult()
 {
     if(sender->IsBroken())
     {
-        log_error("sender broken");
+        log4cplus_error("sender broken");
         return -1;
     }
 
@@ -268,7 +268,7 @@ int CClientAgent::SendResult()
 		
 		if (frontPkt->VecCount() + sender->VecCount() > SENDER_MAX_VEC)
 		{
-			log_error("the sum value of front packet veccount[%d] and sender veccount[%d]is greater than SENDER_MAX_VEC[%d]",
+			log4cplus_error("the sum value of front packet veccount[%d] and sender veccount[%d]is greater than SENDER_MAX_VEC[%d]",
 					frontPkt->VecCount(),  sender->VecCount(), SENDER_MAX_VEC);
 			break;
 
@@ -292,7 +292,7 @@ int CClientAgent::SendResult()
 
     if(sender->Send() < 0)
     {
-	log_error("agent client send error");
+	log4cplus_error("agent client send error");
 	return -1;
     }
 
@@ -308,14 +308,14 @@ int CClientAgent::SendResult()
 
 void CClientAgent::OutputNotify()
 {
-    log_debug("CClientAgent::OutputNotify() start");
+    log4cplus_debug("CClientAgent::OutputNotify() start");
     if(SendResult() < 0)
     {
-	log_debug("error when response");
+	log4cplus_debug("error when response");
 	delete this;
 	return;
     }
-    log_debug("CClientAgent::OutputNotify() stop");
+    log4cplus_debug("CClientAgent::OutputNotify() stop");
 
     return;
 }

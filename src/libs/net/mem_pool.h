@@ -44,7 +44,7 @@ public:
 		void *ret;
 		ret = calloc(1, pool_block.size);
 		if (ret == NULL) {
-			log_error("allocate %s error,no more memory!", pool_block.name);
+			log4cplus_error("allocate %s error,no more memory!", pool_block.name);
 		}
 		return ret;
 	}

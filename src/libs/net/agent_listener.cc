@@ -48,7 +48,7 @@ int CAgentListener::AttachThread()
     EnableInput();
     if(CPollerObject::AttachPoller() < 0)
     {
-	log_error("agent listener attach agentInc thread error");
+	log4cplus_error("agent listener attach agentInc thread error");
 	return -1;
     }
     return 0;
@@ -66,11 +66,11 @@ void CAgentListener::InputNotify()
 		if(newfd < 0)
 		{
 			if(EINTR != errno && EAGAIN != errno)
-				log_error("agent listener accept error, %m");
+				log4cplus_error("agent listener accept error, %m");
 			break;
 		}
 
-		log_debug("new CAgentClient accepted!!");
+		log4cplus_debug("new CAgentClient accepted!!");
 
 		CClientAgent * client;
 		try { client = new CClientAgent(ownerThread, out, newfd); }
@@ -78,7 +78,7 @@ void CAgentListener::InputNotify()
 
 		if(NULL == client)
 		{
-			log_error("no mem for new client agent");
+			log4cplus_error("no mem for new client agent");
 			break;
 		}
 

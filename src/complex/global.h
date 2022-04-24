@@ -9,26 +9,16 @@
 
 #include "log.h"
 
-#include "dbconfig.h"
+#include "cm_load.h"
 #include "protocol.h"
 #include "waitqueue.h"
 #include "task_request.h"
 
+#define DEF_PID_FILE "complex.pid"
+
 using namespace std;
 
-/* 默认key-hash so文件名及路径 */
-#define DEFAULT_KEY_HASH_SO_NAME	"../lib/key-hash.so"
-/* key-hash接口函数 */
-typedef uint64_t (*key_hash_interface)(const char *key, int len, int left, int right);
-
 typedef CThreadingWaitQueue<CTaskRequest*> TransThreadQueue;
-
-struct CKeyHash{
-	int keyHashEnable;
-	int keyHashLeftBegin; 	/* buff 的左起始位置 */
-	int keyHashRightBegin;  /* buff 的右起始位置 */
-	key_hash_interface keyHashFunction;
-};
 
 class TableInfo{
 public:
@@ -38,18 +28,10 @@ public:
 	int keytype;
 	int keysize;
 
-	CKeyHash keyHashConfig;
-	char depoly;
-	int tblDiv;
-	int tblMod;
-
-	int dbDiv;
-	int dbMod;
-
 	std::string access_key;
 };
 
-class dbconfig;
+class ConfigHelper ;
 class TableInfo;
 
 
@@ -69,7 +51,6 @@ public:
 };
 
 extern std::map<string, TableInfo> g_table_set;
-extern int init_map_table_conf();
-extern dbconfig g_dbconfig;
+extern ConfigHelper  g_config;
 
 #endif

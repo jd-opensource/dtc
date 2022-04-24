@@ -12,7 +12,6 @@ public:
 	int32_t backlog;
 
 	std::string server_name;
-	std::string pid_file;
 	std::string log_dir;
 	std::string log_name;
 	int32_t log_level;

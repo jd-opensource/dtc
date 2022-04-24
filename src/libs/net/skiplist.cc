@@ -18,7 +18,7 @@ MemPool skipNodePool;
 bool SkipList::InitList()
 {
 	if (!CreateNode(1, footer)) {
-        log_error("create footer skiplist node error");
+        log4cplus_error("create footer skiplist node error");
 		return false;
 	}
     footer->key = NULL;
@@ -27,7 +27,7 @@ bool SkipList::InitList()
     if(!CreateNode(MAX_LEVEL, header)) {
         skipNodePool.PoolFree(footer);
         footer = NULL;
-        log_error("create header skiplist node error");
+        log4cplus_error("create header skiplist node error");
 		return false;
     }
     for (int i = 0; i < MAX_LEVEL; ++i) {
@@ -45,7 +45,7 @@ bool SkipList::InitList()
 bool SkipList::CreateNode(int level, SkipListNode *&node) {
 	node = (SkipListNode*)skipNodePool.PoolAlloc();
 	if (node == NULL) {
-        log_error("malloc skiplist node error");
+        log4cplus_error("malloc skiplist node error");
 		return false;
 	}
     memset((void*)node, 0, sizeof(SkipListNode));
@@ -60,7 +60,7 @@ bool SkipList::CreateNode(int level, SkipListNode *&node) {
 bool SkipList::CreateNode(int level, SkipListNode *&node, double key, const char* value) {
     node = (SkipListNode*)skipNodePool.PoolAlloc();
     if (node == NULL) {
-        log_error("malloc skiplist node error");
+        log4cplus_error("malloc skiplist node error");
 		return false;
 	}
     memset((void*)node, 0, sizeof(SkipListNode));

@@ -34,7 +34,7 @@ void CTaskRequest::Clean()
     CTaskOwnerInfo::Clean();
 }
 
-#define ERR_RET(ret_msg, fmt, args...) do{/* SetError(err, "decoder", ret_msg); */log_debug(fmt, ##args); return -1; }while(0)
+#define ERR_RET(ret_msg, fmt, args...) do{/* SetError(err, "decoder", ret_msg); */log4cplus_debug(fmt, ##args); return -1; }while(0)
 int CTaskRequest::PrepareProcess(void) {
 //	int err;
 
@@ -42,7 +42,7 @@ int CTaskRequest::PrepareProcess(void) {
 		/* timeout present */
 		int client_timeout = 6000;
 
-		log_debug("client api set timeout %d ms", client_timeout);
+		log4cplus_debug("client api set timeout %d ms", client_timeout);
 		struct timeval now;
 		gettimeofday(&now, NULL);
 
@@ -67,7 +67,7 @@ int CTaskRequest::DecodeAgentRequest()
     agentMultiReq = new CAgentMultiRequest(this);
     if(agentMultiReq == NULL)
     {
-        log_crit("no mem new CAgentMultiRequest");
+        log4cplus_error("no mem new CAgentMultiRequest");
         return -1;
     }
 
@@ -75,7 +75,7 @@ int CTaskRequest::DecodeAgentRequest()
 
     if(agentMultiReq->DecodeAgentRequest() < 0)
     {
-       log_error("agent multi request decode error");
+       log4cplus_error("agent multi request decode error");
        return -1;
     }
 

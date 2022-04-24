@@ -56,7 +56,7 @@ public:
 	inline int BindDispatcher(CRequestOutput<T> *fr, CTaskDispatcher<T> *to)
 	{
 #if 0
-		log_debug("Bind taskpipe from thread %s to thread %s",
+		log4cplus_debug("Bind taskpipe from thread %s to thread %s",
 				fr->OwnerThread()->Name(), to->OwnerThread()->Name());
 #endif
 		CTaskDispatcher<T>::owner = fr->OwnerThread();

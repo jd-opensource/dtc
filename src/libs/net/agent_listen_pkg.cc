@@ -41,19 +41,19 @@ int CAgentListenPkg::Bind(const char *bindaddr, CTaskDispatcher<CTaskRequest> * 
 	thread = new PollerBase(threadname);
 	if(NULL == thread)
 	{
-		log_error("no mem to new agent inc thread 0");
+		log4cplus_error("no mem to new agent inc thread 0");
 		return -1;
 	}
 	if(thread->InitializeThread() < 0)
 	{
-		log_error("agent inc thread 0 init error");
+		log4cplus_error("agent inc thread 0 init error");
 		return -1;
 	}
 
 	out = new CAgentClientUnit(thread, checktime);
 	if(NULL == out)
 	{
-		log_error("no mem to new agent client unit 0");
+		log4cplus_error("no mem to new agent client unit 0");
 		return -1;
 	}
 	out->BindDispatcher(agentprocess);
@@ -61,12 +61,12 @@ int CAgentListenPkg::Bind(const char *bindaddr, CTaskDispatcher<CTaskRequest> * 
 	listener = new CAgentListener(thread, out, addr);
 	if(NULL == listener)
 	{
-		log_error("no mem to new agent listener 0");
+		log4cplus_error("no mem to new agent listener 0");
 		return -1;
 	}
 	if(listener->Bind(blog) < 0)
 	{
-		log_error("agent listener 0 bind error");
+		log4cplus_error("agent listener 0 bind error");
 		return -1;
 	}
 

@@ -18,7 +18,7 @@ CPollerObject::~CPollerObject ()
 		ownerUnit->FreeEpollSlot (epslot);
 
 	if (netfd > 0) {
-		log_debug("%d fd been closed!",netfd);
+		log4cplus_debug("%d fd been closed!",netfd);
 		close (netfd);
 		netfd = 0;
 	}
@@ -57,7 +57,7 @@ int CPollerObject::AttachPoller (CPollerUnit *unit)
 			oldEvents = newEvents;
 		else {
             ownerUnit->FreeEpollSlot(epslot);
-			log_warning("Epctl: %m");
+			log4cplus_warning("Epctl: %m");
 			return -1;
 		}
 		return 0;
@@ -73,7 +73,7 @@ int CPollerObject::DetachPoller() {
 		if (ownerUnit->Epctl (EPOLL_CTL_DEL, netfd, &ev) == 0)
 			oldEvents = newEvents;
 		else {
-			log_warning("Epctl: %m");
+			log4cplus_warning("Epctl: %m");
 			return -1;
 		}
 		ownerUnit->FreeEpollSlot(epslot);
@@ -97,7 +97,7 @@ int CPollerObject::ApplyEvents ()
 	if (ownerUnit->Epctl (EPOLL_CTL_MOD, netfd, &ev) == 0)
 		oldEvents = newEvents;
 	else {
-		log_warning("Epctl: %m");
+		log4cplus_warning("Epctl: %m");
 		return -1;
 	}
 
@@ -115,7 +115,7 @@ int CPollerObject::DelayApplyEvents ()
     eventSlot = ownerUnit->AddDelayEventPoller(this);
     if(eventSlot == NULL)
     {
-	log_error("max events!!!!!!");
+	log4cplus_error("max events!!!!!!");
 	struct epoll_event ev;
 
 	ev.events = newEvents;
@@ -125,7 +125,7 @@ int CPollerObject::DelayApplyEvents ()
 	if (ownerUnit->Epctl (EPOLL_CTL_MOD, netfd, &ev) == 0)
 	    oldEvents = newEvents;
 	else {
-	    log_warning("Epctl: %m");
+	    log4cplus_warning("Epctl: %m");
 	    return -1;
 	}
     }
@@ -215,7 +215,7 @@ int CPollerUnit::InitializePollerUnit(void)
 
 	if (!pollerTable)
 	{
-		log_error("calloc failed, num=%d, %m", maxPollers);
+		log4cplus_error("calloc failed, num=%d, %m", maxPollers);
 		return -1;
 	}
 
@@ -232,13 +232,13 @@ int CPollerUnit::InitializePollerUnit(void)
 
 	if (!ep_events)
 	{
-		log_error("malloc failed, %m");
+		log4cplus_error("malloc failed, %m");
 		return -1;
 	}
 
 	if ((epfd = epoll_create (maxPollers)) == -1)
 	{
-		log_warning("epoll_create failed, %m");
+		log4cplus_warning("epoll_create failed, %m");
 		return -1;
 	}
 	fcntl(epfd, F_SETFD, FD_CLOEXEC);
@@ -256,7 +256,7 @@ inline int CPollerUnit::VerifyEvents (struct epoll_event *ev)
 
 	if(pollerTable[idx].poller == NULL || pollerTable[idx].freeList != 0)
 	{
-		log_notice("receive invalid epoll event. idx=%d seq=%d poller=%p freelist=%d event=%x",
+		log4cplus_info("receive invalid epoll event. idx=%d seq=%d poller=%p freelist=%d event=%x",
 				idx, (int)EPOLL_DATA_SEQ(ev), pollerTable[idx].poller, 
 				pollerTable[idx].freeList, ev->events);
 		return -1;
@@ -278,7 +278,7 @@ int CPollerUnit::AllocEpollSlot ()
 {
 	if (0 == freeSlotList) 
 	{
-        log_crit("no free epoll slot, usedPollers = %d", usedPollers);
+        log4cplus_error("no free epoll slot, usedPollers = %d", usedPollers);
         return -1;
 	}
 	
@@ -295,7 +295,7 @@ int CPollerUnit::Epctl (int op, int fd, struct epoll_event *events)
 {
 	if (epoll_ctl (epfd,  op, fd, events) == -1)
     {
-		log_warning("epoll_ctl error, epfd=%d, fd=%d", epfd, fd);
+		log4cplus_warning("epoll_ctl error, epfd=%d, fd=%d", epfd, fd);
 
 		return -1;
 	}
@@ -313,7 +313,7 @@ void CPollerUnit::ProcessPollerEvents(void) {
 	{
 		if(VerifyEvents (ep_events+i) == -1)
 		{
-			log_notice("VerifyEvents failed, ep_events[%d].data.u64 = %llu", i, (unsigned long long)ep_events[i].data.u64);
+			log4cplus_info("VerifyEvents failed, ep_events[%d].data.u64 = %llu", i, (unsigned long long)ep_events[i].data.u64);
 			continue;
 		}
 

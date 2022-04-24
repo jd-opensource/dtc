@@ -123,7 +123,7 @@ public:
 	}
 	inline void Dump(void) {
 		for(int i=0; i<count; i++)
-			log_debug("replyproc%d: %p", i, proc[i]);
+			log4cplus_debug("replyproc%d: %p", i, proc[i]);
 	}
 	inline void PushReplyDispatcher(CReplyDispatcher<T> *proc) {
 		if(proc==NULL)
@@ -143,7 +143,7 @@ public:
 
 template<typename T, int maxcount>
 void CTaskReplyList<T, maxcount>::Panic(const char *msg) {
-	log_crit("Internal Error Encountered: %s", msg);
+	log4cplus_error("Internal Error Encountered: %s", msg);
 }
 
 #endif

@@ -121,7 +121,7 @@ int CAgentSender::Send()
     {
         if(EINTR == errno || EAGAIN == errno || EINPROGRESS == errno)
             return 0;
-        log_error("agent sender send error. errno: %d, left len: %d, currVec: %d, IOV_MAX: %d", errno, leftLen, currVec, IOV_MAX);
+        log4cplus_error("agent sender send error. errno: %d, left len: %d, currVec: %d, IOV_MAX: %d", errno, leftLen, currVec, IOV_MAX);
         broken = 1;
         return -1;
     }

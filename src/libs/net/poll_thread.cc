@@ -30,7 +30,7 @@ int PollerBase::Initialize(void)
 		int mp0 = GetMaxPollers();
 		int mp1;
 		mp1 = g_autoconf->GetIntVal("MaxIncomingPollers", Name(), mp0);
-		log_debug("autoconf thread %s MaxIncomingPollers %d", taskname, mp1);
+		log4cplus_debug("autoconf thread %s MaxIncomingPollers %d", taskname, mp1);
 		if(mp1 > mp0) {
 			SetMaxPollers(mp1);
 		}
@@ -42,7 +42,7 @@ int PollerBase::Initialize(void)
 
 void * PollerBase::Process (void)
 {
-	log_info("###deubg pollthread process");
+	log4cplus_info("###deubg pollthread process");
 	while (!Stopping())
 	{
 		// if previous event loop has no events,

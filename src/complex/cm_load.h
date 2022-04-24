@@ -1,38 +1,37 @@
 #ifndef _DBP_DBCONFIG_H_
 #define _DBP_DBCONFIG_H_
+
 #include "global.h"
+#include "yaml-cpp/yaml.h"
+#include "cm_conn.h"
 
 class TableInfo;
 
-void trim_space(char* str);
-int init_map_table_conf();
-bool init_unixsocket_addr();
 int GetTableIdx(void* Key, int FieldType, TableInfo* dbConfig);
-int GetDbIdx(void* Key, int FieldType, TableInfo* dbConfig);
 
-class DTCConfig{
-public:
-	DTCConfig();
-	~DTCConfig();
-
-	int SaveTableConf();
-	int InitBizIdConf();
-};
-
-class dbconfig
+class ConfigHelper 
 {
 private:
-	std::string config_path;
 	std::string m_data;
+	YAML::Node table;
+	YAML::Node dtc;
+
 public:
-	dbconfig(/* args */);
-	~dbconfig();
-	bool InitSystemConfig();
+	DBHost hot_instance;
+	DBHost full_instance;
+
+public:
+	ConfigHelper ();
+	~ConfigHelper ();
+
     int GetIntValue(const char* key, int default_value = 0);
     std::string GetStringValue(const char* key, std::string default_value = "");
 	std::vector<int> GetIntArray(const char* key);
-private:
-	void LoadConfigFile();
+
+	bool load_dtc_config();
+	
+	bool load_hot_inst_info();
+	bool load_full_inst_info();
 };
 
 #endif

@@ -5,21 +5,20 @@
 #include "process_task.h"
 #include "task_request.h"
 #include "global.h"
-#include "DBConn.h"
+#include "cm_conn.h"
 
 class CTransactionThread : public CThread
 {
 private:
 	int m_thread_id;
 	TransThreadQueue* m_trans_queue;
-	DBHost	m_db_host_conf;
-	CDBConn m_db_conn;
+	MysqlConn m_db_conn;
 
 public:
-	CTransactionThread(const char *name, TransThreadQueue* trans_queue, int thread_id);
+	CTransactionThread(const char *name, TransThreadQueue* trans_queue, int thread_id, DBHost* dbconfig);
 	virtual ~CTransactionThread();
 
-	int ShardingsphereInit();
+	int init_mysql_connection(DBHost* dbconfig);
 
 protected:
 	virtual void* Process(void);
