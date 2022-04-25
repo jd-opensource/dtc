@@ -49,9 +49,10 @@ int DaemonBase::DaemonStart(int back)
 	sigaction(SIGHUP, &sa, NULL);
 
 	signal(SIGPIPE, SIG_IGN);
-	//signal(SIGCHLD,SIG_IGN);
+	signal(SIGCHLD,SIG_IGN);
 
 	sigemptyset(&sset);
+	sigaddset(&sset, SIGTERM);
 	sigaddset(&sset, SIGSEGV);
 	sigaddset(&sset, SIGBUS);
 	sigaddset(&sset, SIGABRT);

@@ -1,5 +1,4 @@
 #include <unistd.h>
-
 #include "hwc.h"
 
 WatchDogHWC::WatchDogHWC(WatchDog *o, int sec)
@@ -14,11 +13,13 @@ WatchDogHWC::~WatchDogHWC(void)
 
 void WatchDogHWC::exec(void)
 {
-	char* argv[4];
-
+	char* argv[6];
+	// ./hwcserver -d /etc/dtc/dtc.yaml -t /etc/dtc/table.yaml
 	argv[0] = watchdog_object_name_;
-    argv[1] = "../conf/dtc.yaml";
-	argv[2] = "../conf/table.yaml";
-	argv[2] = "1";
+	argv[1] = (char*)"-d";
+    argv[2] = "/etc/dtc/dtc.yaml";
+	argv[3] = (char*)"-t";
+	argv[4] = "/etc/dtc/table.yaml";
+	argv[5] = NULL;
 	execv(argv[0], argv);
 }

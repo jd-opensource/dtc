@@ -17,25 +17,21 @@ DTC::Server CComm::master;
 CRegistor CComm::registor;
 ConnectorProcess CComm::mysql_process_;
 
-const char *CComm::version = "0.2";
-char *CComm::config_file = NULL;
-int CComm::backend = 1;
-int CComm::fixed = 0;
-int CComm::purge = 0;
+const char *CComm::version = "hwc.0.1";
+char* CComm::dtc_conf = "../conf/dtc.yaml";
+char* CComm::table_conf = "../conf/table.yaml";
+int CComm::backend = 0;
 int CComm::normal = 1;
-int CComm::skipfull = 0;
 
 void CComm::show_usage(int argc, char **argv)
 {
     fprintf(stderr, "Usage: %s [OPTION]...\n"
         "Sync DTC/Bitmap master data to DTC/bitmap slave.\n\n" 
         "\t -n, --normal   normal running mode.\n"
-        "\t -s, --skipfull  running inc mode without full sync.\n"
-        "\t -f, --fixed    when something wrong, use this argument to fix error.\n"
-        "\t -p, --purge    when switch slave, use this argument to purge dirty data.\n"
         "\t -b, --backend  runing in background.\n"
         "\t -v, --version  show version.\n"
-        "\t -c, --config_file enter config file path.\n"
+        "\t -d, --dtc_conf dtc config file path.\n"
+        "\t -t, --table_conf table config file path.\n"
         "\t -h, --help     display this help and exit.\n\n", argv[0]);
     return;
 }
@@ -56,53 +52,42 @@ void CComm::parse_argv(int argc, char **argv)
     int option_index = 0, c = 0;
     static struct option long_options[] = {
         {"normal", 0, 0, 'n'},
-        {"skipfull", 0, 0, 's'},
-        {"fixed", 0, 0, 'f'},
-        {"purge", 0, 0, 'p'},
         {"backend", 0, 0, 'b'},
         {"version", 0, 0, 'v'},
+        {"table_conf", 0, 0, 't'},
         {"help", 0, 0, 'h'},
-        {"config_file", 1, 0, 'c'},
+        {"dtc_conf", 1, 0, 'd'},
         {0, 0, 0, 0},
     };
 
     while ((c =
-        getopt_long(argc, argv, "nfpbvhsc:", long_options,
+        getopt_long(argc, argv, "nbvt:hd:", long_options,
                 &option_index)) != -1) {
         switch (c) {
         case 'n':
             normal = 1;
             break;
-
-        case 's':
-            skipfull = 1;
-            break;
-
-        case 'f':
-            fixed = 1;
-            break;
-
-        case 'p':
-            purge = 1;
-            break;
-
         case 'b':
             backend = 1;
             break;;
-
         case 'v':
             show_version(argc, argv);
             exit(0);
             break;
-
         case 'h':
             show_usage(argc, argv);
             exit(0);
             break;
-        case 'c':
+        case 't':
             if (optarg)
                 {
-                    config_file = optarg;
+                    table_conf = optarg;
+                }
+            break;
+        case 'd':
+            if (optarg)
+                {
+                    dtc_conf = optarg;
                 }
             break;
         case '?':
@@ -113,11 +98,6 @@ void CComm::parse_argv(int argc, char **argv)
     }
 
     if (optind < argc) {
-        show_usage(argc, argv);
-        exit(-1);
-    }
-
-    if (fixed && purge) {
         show_usage(argc, argv);
         exit(-1);
     }

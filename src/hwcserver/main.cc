@@ -14,10 +14,10 @@ extern "C" {
 int main(int argc, char **argv)
 {
 	init_proc_title(argc, argv);
-	// CComm::parse_argv(argc, argv);
+	CComm::parse_argv(argc, argv);
 	init_log4cplus();
 	
-	log4cplus_info("Hello hot_backup.");
+	log4cplus_info("Hello hwcserver.");
 	HwcStateManager* pStateManager = new HwcStateManager();
 	pStateManager->Start();
 

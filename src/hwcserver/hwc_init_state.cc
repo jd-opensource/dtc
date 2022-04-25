@@ -45,14 +45,12 @@ void InitState::Exit()
 void InitState::HandleEvent()
 {
     // 解析yaml配置文件
-    std::string table_file = "../conf/table.yaml";
-    std::string cache_file = "../conf/dtc.yaml";
-
+    log4cplus_debug("dtc conf file:%s , table conf file:%s" , CComm::dtc_conf ,CComm::table_conf);
 	DTCConfig* p_dtc_config = new DTCConfig();
-	if (p_dtc_config->parse_config(table_file.c_str(), "DATABASE_CONF", false) == -1)
+	if (p_dtc_config->parse_config(CComm::table_conf, "DATABASE_CONF", false) == -1)
 		return -1;
 
-	if (p_dtc_config->parse_config(cache_file.c_str(), "cache", false))
+	if (p_dtc_config->parse_config(CComm::dtc_conf, "cache", false))
 		return -1;
 
 	DbConfig* p_db_Config = DbConfig::Load(p_dtc_config , 1);

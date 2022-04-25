@@ -45,13 +45,11 @@ public:
 	static DTC::Server master;
 	static ConnectorProcess mysql_process_;
 
-	static const char *version;
-	static char *config_file;
+	static const char* version;
+	static char* dtc_conf;
+	static char* table_conf;
 	static int backend;
-	static int fixed;
-	static int purge;
 	static int normal;
-	static int skipfull;
 };
 
 #endif
