@@ -183,7 +183,7 @@ void CThread::RunningThread ()
 
 void CThread::PrepareInternal (void)
 {
-	pid = gettid();
+	pid = _gettid_();
 	log4cplus_info("###deubg internal");
 	log4cplus_info("thread %s[%d] started", taskname, pid);
 	sigset_t sset;
