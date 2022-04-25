@@ -45,8 +45,8 @@ enum enum_select_types {
 
 const MetaSelections meta_selections[] = {
 	{"select dtctables" , E_SELECT_DTC_TABLES 	, NULL},
-	{"select dtcyaml" 	, E_SELECT_DTC_YAML 	, "../conf/dtc.yaml"},
-	{"select tableyaml" , E_SELECT_TABLE_YAML 	, "../conf/table.yaml"}
+	{"select dtcyaml" 	, E_SELECT_DTC_YAML 	, "/etc/dtc/dtc.yaml"},
+	{"select tableyaml" , E_SELECT_TABLE_YAML 	, "/etc/dtc/table.yaml"}
 };
 
 enum enum_field_types { MYSQL_TYPE_DECIMAL, MYSQL_TYPE_TINY,
@@ -1142,7 +1142,7 @@ int net_send_ok(int affectedRow)
 			     0x00 };
 }
 
-int is_desc_tables(DtcJob *job , char* p_filepath)
+int is_desc_tables(DtcJob *job , char*& p_filepath)
 {
 	std::string sql = job->mr.get_sql();
 
