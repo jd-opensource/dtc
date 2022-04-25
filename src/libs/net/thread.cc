@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sched.h>
+#include <sys/types.h>
 
 #include "thread.h"
 #include "memcheck.h"
