@@ -1263,7 +1263,7 @@ int Packet::yaml_config_result(DtcJob *job , const char* p_filename)
 	return 0;
 };
 
-int Packet::load_table(const char* p_filename, char* file , int& i_length)
+int Packet::load_table(const char* p_filename, char*& file , int& i_length)
 {
 	int fd = -1;
 
