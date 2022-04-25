@@ -83,13 +83,13 @@ class HelperClientList : public ListObject<HelperClientList> {
 };
 
 ConnectorGroup::ConnectorGroup(const char *s, const char *name_, int hc, int qs,
-                   int statIndex , int i_group_id)
+                   int statIndex , int i_has_hwc)
     : JobAskInterface<DTCJobOperation>(NULL), queueSize(qs), helperCount(0),
       helperMax(hc), readyHelperCnt(0), fallback(NULL),
       average_delay(0),/*默认时延为0*/
       hblogoutput_(owner),
       writeBinlogReply(),
-      i_group_id_(i_group_id)
+      i_has_hwc_(i_has_hwc)
 {
     sockpath = strdup(s);
     freeHelper.InitList();
@@ -268,7 +268,7 @@ int ConnectorGroup::do_attach(
     owner = thread;
     hblogoutput_.set_owner_thread(owner);
     for (int i = 0; i < helperMax; i++) {
-        helperList[i].helper = new ConnectorClient(owner, this, i);
+        helperList[i].helper = new ConnectorClient(owner, this, i , i_has_hwc_);
         helperList[i].helper->reconnect();
     }
 

@@ -80,7 +80,7 @@ class ConnectorClient : public EpollBase, private TimerObject {
     public:
 	friend class ConnectorGroup;
 
-	ConnectorClient(EpollOperation *, ConnectorGroup *hg, int id);
+	ConnectorClient(EpollOperation *, ConnectorGroup *hg, int id , int i_enable_check);
 	virtual ~ConnectorClient();
 
 	int attach_task(DTCJobOperation *, Packet *);
@@ -158,5 +158,6 @@ class ConnectorClient : public EpollBase, private TimerObject {
 	uint64_t connectErrorCnt;
 	int ready;
 	stopwatch_usec_t stopWatch;
+	int i_enable_check_;
 };
 #endif

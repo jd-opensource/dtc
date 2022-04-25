@@ -42,7 +42,7 @@ class ConnectorGroup : private TimerObject,
                public JobAskInterface<DTCJobOperation> {
     public:
     ConnectorGroup(const char *sockpath, const char *name, int hc, int qs,
-               int statIndex , int i_group_id = 0);
+               int statIndex , int i_has_hwc = 0);
     ~ConnectorGroup();
 
     void BindHbLogDispatcher(JobAskInterface<DTCJobOperation>* p_task_dispatcher) {
@@ -134,7 +134,7 @@ private:
 
     ChainJoint<DTCJobOperation> hblogoutput_; // hblog task output 
     WriteBinLogReplay writeBinlogReply; // hb replay
-    int i_group_id_;
+    int i_has_hwc_;
 
     public:
     ConnectorGroup *fallback;

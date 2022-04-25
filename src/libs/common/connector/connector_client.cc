@@ -25,9 +25,11 @@
 #include "connector/connector_group.h"
 #include "socket/unix_socket.h"
 #include "table/table_def_manager.h"
+#include "mysqld_error.h"
 
-ConnectorClient::ConnectorClient(EpollOperation *o, ConnectorGroup *hg, int idx)
+ConnectorClient::ConnectorClient(EpollOperation *o, ConnectorGroup *hg, int idx , int i_enable_check)
     : EpollBase(o)
+    , i_enable_check_(i_enable_check)
 {
     packet = NULL;
     job = NULL;
@@ -412,7 +414,7 @@ int ConnectorClient::recv_response()
     case DecodeDone:
         {   
             log4cplus_info("response is done");
-            #if 0
+            #if 0 // just for test
             int i_ret = client_notify_helper_check();
             if (i_ret) {
                 log4cplus_error("client_notify_helper_check fail");
@@ -421,20 +423,27 @@ int ConnectorClient::recv_response()
                 return 0;
             }
             #else
-            // 正常写请求返回成功，写binlog
-            if (job->request_code() != DRequest::Get 
-                && (job->result_code() >= 0)) {
-                // for temp test
-                #if 0
-                if (DRequest::Insert == job->request_code()) {
-                    job->mr.m_sql = "insert into table_hwc values(17, 'kaka' , 'shenzheng' ,112 ,112)";
-                } else if (DRequest::Update == job->request_code()) {
-                    job->mr.m_sql = "update table_hwc set name = 'lulu' where uid = 17";
-                } else if (DRequest::Delete == job->request_code()) {
-                    job->mr.m_sql = "delete from table_hwc where uid = 17";
+            if (i_enable_check_ 
+            && (job->request_code() != DRequest::Get)) {
+                switch (job->result_code()) {
+                case 0: {
+                        helperGroup->WriteHBLog(job);
+                    }
+                    break;
+                case -ER_ERROR_ON_WRITE:
+                case -ER_OUTOFMEMORY:
+                case -ER_UNKNOWN_COM_ERROR:
+                case -ER_SERVER_SHUTDOWN: {
+                        log4cplus_info("start enter into CheckState");
+                        int i_ret = client_notify_helper_check();
+                        if (i_ret) {
+                            log4cplus_error("client_notify_helper_check fail");
+                        }
+                    }
+                    break;
+                default:
+                    break;
                 }
-                #endif
-                helperGroup->WriteHBLog(job);
             }
             #endif
         }
@@ -540,7 +549,6 @@ void ConnectorClient::output_notify(void)
         }
         return;
     } else if (stage == HelperSendNotifyCheckState) {
-        log4cplus_info("line:%d",__LINE__);
         if (send_notify_helper_check() < 0) {
             DELETE(packet);
             reconnect();
@@ -581,17 +589,21 @@ void ConnectorClient::job_timer_procedure(void)
     case HelperRecvRepState:
         {
             stopWatch.stop();
-            if (DRequest::Get == job->request_code()
-                || client_notify_helper_check() != 0) {
-                DELETE(packet);
-                DELETE(check_job);
-                helperGroup->record_process_time(job->request_code(),
-                         stopWatch);
-                log4cplus_error("helper index[%d] do_execute timeout.", helperIdx);
-                set_error(-EC_UPSTREAM_ERROR, "ConnectorGroup::Timeout",
-                "helper do_execute timeout");
-                reconnect();
+            if (i_enable_check_
+            && (DRequest::Get != job->request_code())) {
+                if (!client_notify_helper_check()) {
+                    break;
+                }
             }
+            
+            DELETE(packet);
+            DELETE(check_job);
+            helperGroup->record_process_time(job->request_code(),
+                    stopWatch);
+            log4cplus_error("helper index[%d] do_execute timeout.", helperIdx);
+            set_error(-EC_UPSTREAM_ERROR, "ConnectorGroup::Timeout",
+                    "helper do_execute timeout");
+            reconnect();
         }
         break;
     case HelperSendNotifyCheckState:
@@ -658,7 +670,6 @@ int ConnectorClient::client_notify_helper_reload_config()
 
 int ConnectorClient::client_notify_helper_check()
 {
-    log4cplus_info("line:%d",__LINE__);
     if (job->request_code() != DRequest::Get) {
         check_job = new DTCJobOperation(
                 TableDefinitionManager::instance()->get_cur_table_def());
@@ -666,18 +677,7 @@ int ConnectorClient::client_notify_helper_check()
         check_job->set_request_code(DRequest::Get);
         check_job->set_request_key(job->request_key());
         check_job->build_packed_key();
-        
-        #if 0
-        if (DRequest::Insert == job->request_code()) {
-            check_job->mr.m_sql = "insert into table_hwc values(17, 'kaka' , 'shenzheng' ,112 ,112)";
-        } else if (DRequest::Update == job->request_code()) {
-            check_job->mr.m_sql = "update table_hwc set name = 'lulu' where uid = 17";
-        } else if (DRequest::Delete == job->request_code()) {
-            check_job->mr.m_sql = "delete from table_hwc where uid = 17";
-        }
-        #else
         check_job->mr.m_sql = job->mr.m_sql; // sql is deep copy
-        #endif
 
         DTCFieldSet* p_dtc_field_set = check_job->request_fields();
         DELETE(p_dtc_field_set);
@@ -687,14 +687,13 @@ int ConnectorClient::client_notify_helper_check()
             check_job->num_fields() + 1);
         check_job->set_request_fields(p_dtc_field_set);
 
-        log4cplus_info("line:%d",__LINE__);
         packet = new Packet;
         if (packet->encode_forward_request(check_job) != 0) {
             log4cplus_error("job=[%d]request error: %m", check_job->Role());
             set_error(-EC_BAD_SOCKET, __FUNCTION__ , "forward requset failed");
             return -1;
         }
-        log4cplus_info("line:%d",__LINE__);
+
         if (0 != attach_poller()) {
             log4cplus_error(
                 "notify check data helper [%d] attach poller failed!",
@@ -702,13 +701,11 @@ int ConnectorClient::client_notify_helper_check()
             set_error(-EC_BAD_SOCKET, __FUNCTION__ , "check data helper attach poller failed");
             return -1;
         }
-        log4cplus_info("line:%d",__LINE__);
         disable_input();
         enable_output();
         stage = HelperSendNotifyCheckState;
         return send_notify_helper_check();
     }
-    log4cplus_info("line:%d",__LINE__);
     return 0;
 }
 
@@ -742,10 +739,8 @@ int ConnectorClient::send_notify_helper_reload_config()
 
 int ConnectorClient::send_notify_helper_check()
 {
-    log4cplus_info("line:%d",__LINE__);
     int ret = packet->Send(netfd);
     if (SendResultDone == ret) {
-        log4cplus_info("line:%d",__LINE__);
         DELETE(packet);
         check_job->prepare_decode_reply();
         receiver.attach(netfd);
@@ -755,13 +750,11 @@ int ConnectorClient::send_notify_helper_check()
         disable_output();
         enable_input();
     } else {
-        log4cplus_info("line:%d",__LINE__);
         stage = HelperSendNotifyCheckState;
         enable_output();
     }
 
     attach_timer(helperGroup->recvList);
-    log4cplus_info("line:%d",__LINE__);
     return delay_apply_events();
 }
 
@@ -823,7 +816,6 @@ ERROR_RETURN:
 
 int ConnectorClient::recv_notify_helper_check()
 {
-    log4cplus_info("line:%d",__LINE__);
     int ret = check_job->do_decode(receiver);
     switch (ret) {
     default:
@@ -848,17 +840,15 @@ int ConnectorClient::recv_notify_helper_check()
     }
     case DecodeDone: {
         switch (check_job->result_code()) {
-        case 0:
-            {
-                log4cplus_info("line:%d",__LINE__);
-                if (helperGroup->WriteHBLog(check_job , 1) != 0) {
-                    set_error(-EC_UPSTREAM_ERROR, __FUNCTION__ ,
-                         "write hb log failed");
-                    reconnect();
-                    break;
-                }
+        case 0: {
+            if (helperGroup->WriteHBLog(check_job , 1) != 0) {
                 set_error(-EC_UPSTREAM_ERROR, __FUNCTION__ ,
-                         "need check data");
+                    "write hb log failed");
+                reconnect();
+                break;
+            }
+            set_error(-EC_UPSTREAM_ERROR, __FUNCTION__ ,
+                    "need check data");
             }
             break;
         default: {

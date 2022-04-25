@@ -237,6 +237,10 @@ int DataConnectorAskChain::build_helper_object(int idx)
 		return -1;
 	}
 
+	DTCConfig* p_dtc_conf = dbConfig[idx]->cfgObj;
+	int i_has_hwc = p_dtc_conf ? p_dtc_conf->get_int_val("cache", "EnableHwc", 1) : 1;
+	log4cplus_info("enable hwc:%d" , i_has_hwc);
+
 	/* build helper object */
 	for (int i = 0; i < dbConfig[idx]->machineCnt; i++) {
 		if (dbConfig[idx]->mach[i].helperType == DUMMY_HELPER)
@@ -264,7 +268,7 @@ int DataConnectorAskChain::build_helper_object(int idx)
 					name, dbConfig[idx]->mach[i].gprocs[j],
 					dbConfig[idx]->mach[i].gqueues[j],
 					DTC_SQL_USEC_ALL,
-					i);
+					i_has_hwc);
 
 			if (j >= GROUPS_PER_ROLE)
 				groups[idx][i * GROUPS_PER_MACHINE + j]
