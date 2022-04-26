@@ -7,7 +7,7 @@ CTransactionGroup::CTransactionGroup(int thread_num): m_thread_num(thread_num), 
 
 int CTransactionGroup::Initialize(DBHost* dbconfig)
 {
-	if(!dbconfig)
+	if(!dbconfig ||!dbconfig->Host)
 		return -1;
 
 	m_trans_queue = new TransThreadQueue*[m_thread_num];
@@ -18,7 +18,7 @@ int CTransactionGroup::Initialize(DBHost* dbconfig)
 		char thread_name[256] = {0};
 		m_trans_queue[i] = new TransThreadQueue;
 		
-		snprintf(thread_name, sizeof(thread_name), "%s@%d", "transaction", i);
+		snprintf(thread_name, sizeof(thread_name), "%s:%d@%d", dbconfig->Host, dbconfig->Port, i);
 		m_trans_thread[i] = new CTransactionThread(thread_name, m_trans_queue[i], i, dbconfig);
 		m_trans_thread[i]->InitializeThread();
 	}

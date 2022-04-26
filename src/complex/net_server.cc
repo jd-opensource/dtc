@@ -11,7 +11,8 @@
 #include "task_request.h"
 #include "transaction_group.h"
 
-extern CTransactionGroup* transactionGroup;
+extern CTransactionGroup* FullDBGroup;
+extern CTransactionGroup* HotDBGroup;
 
 CNetServerProcess::CNetServerProcess(PollerBase * o) :
     CTaskDispatcher<CTaskRequest>(o),
@@ -29,13 +30,27 @@ void CNetServerProcess::TaskNotify(CTaskRequest * cur)
     log4cplus_debug("CNetServerProcess::TaskNotify start");
     //there is a race condition here:
     //curr may be deleted during process (in task->ReplyNotify())
-
+	CTransactionGroup* group = NULL;
 	CTaskRequest * request = cur;
-	if(request == NULL){
+	int level = 0;
+
+	if(request == NULL)
 		return;
+
+	//TODO: Parsing input, adapting thread groups.
+	if(level == 3)
+		group = FullDBGroup;
+	else if(level == 2)
+		group = HotDBGroup;
+	else 
+	{
+		char err[260] = {0};
+		sprintf(err, "layer level error:%d.", level);
+		request->setResult(err);
+		request->ReplyNotify();
 	}
 	
-	if(transactionGroup->Push(request) != 0)
+	if(group->Push(request) != 0)
 	{
 		request->setResult("transaction insert queue failed.");
 		request->ReplyNotify();

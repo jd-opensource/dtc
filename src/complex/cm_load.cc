@@ -159,7 +159,7 @@ bool ConfigHelper::load_full_inst_info()
 
 int ConfigHelper::GetIntValue(const char* key, int default_value)
 {
-	return 0;
+	return default_value;
 }
 
 std::vector<int> ConfigHelper::GetIntArray(const char* key)

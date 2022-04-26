@@ -20,14 +20,7 @@
 
 Context context;
 
-volatile int crash_signo = 0;
 int background = 1;
-
-#define PATH_MAX 1024
-
-const char progname[] = "dbproxy";
-const char version[] = ".";
-const char usage_argv[] = "";
 
 ConfigHelper  g_config;
 
@@ -37,12 +30,12 @@ CNetServerProcess *netserverProcess;
 
 static PollerBase* workerThread;
 
-CTransactionGroup* transactionGroup;
+CTransactionGroup* FullDBGroup = NULL;
+CTransactionGroup* HotDBGroup = NULL;
 
-static int Startup_Thread()
+static int start_main_thread()
 {
-	
-	workerThread = new PollerBase("worker");
+	workerThread = new PollerBase("complex");
 	if (workerThread->InitializeThread () == -1)
 		return -1;
 
@@ -56,7 +49,19 @@ static int Startup_Thread()
 		
 	workerThread->RunningThread();
 	agentListener->Run();
+
 	return 0;
+}
+
+static void stop_main_thread()
+{
+	if(workerThread)
+		workerThread->interrupt();
+	
+	DELETE(agentListener);
+	DELETE(agentProcess);
+	DELETE(netserverProcess);
+	DELETE(workerThread);
 }
 
 int GetIdxVal(const char *key,
@@ -89,14 +94,14 @@ int init_config(void)
 	return 0;
 }
 
-static int DaemonStart()
+static int set_background_mode()
 {
 	int ret = background ? daemon (1, 0) : 0;
 
 	return ret;
 }
 
-void dbproxy_create_pid() {
+void cm_create_pid() {
 	ofstream pid_file;
 	pid_file.open(DEF_PID_FILE, ios::out | ios::trunc);
 	if (pid_file.is_open()) {
@@ -108,7 +113,7 @@ void dbproxy_create_pid() {
 	}
 }
 
-void dbproxy_delete_pid() {
+void cm_delete_pid() {
 	unlink(DEF_PID_FILE);
 }
 
@@ -123,30 +128,36 @@ void catch_signal(int32_t signal) {
 	}
 }
 
-void dbproxy_run_pre()
+void register_signal()
 {
 	if (SIG_ERR == signal(SIGTERM, catch_signal))
 		log4cplus_info("set stop signal handler error. errno:%d,errmsg:%s.", errno, strerror(errno));
 	if (SIG_ERR == signal(SIGINT, catch_signal))
 		log4cplus_info("set stop signal handler error. errno:%d,errmsg:%s.", errno, strerror(errno));
 	signal(SIGPIPE, SIG_IGN);
-
-	dbproxy_create_pid();
 }
 
-int start_db_thread_group(DBHost* dbconfig)
+int start_db_thread_group(DBHost* dbconfig, std::string level)
 {
 	const int thread_num  = g_config.GetIntValue("TransThreadNum", 10);
+	CTransactionGroup* group = NULL;
 	log4cplus_debug("transaction thread count:%d", thread_num);
 
-	transactionGroup = new CTransactionGroup(thread_num);
-	if(transactionGroup->Initialize(dbconfig))
+	if(level == "L3")
+		group = FullDBGroup;
+	else if(level == "L2")
+		group = HotDBGroup;
+	else
+		return -2;
+
+	group = new CTransactionGroup(thread_num);
+	if(group->Initialize(dbconfig))
 	{
 		log4cplus_error("init thread group failed");
 		return -1;
 	}
 
-	transactionGroup->RunningThread();
+	group->RunningThread();
 
 	return 0;
 }
@@ -156,51 +167,47 @@ int main(int argc, char* argv[])
 	int ret = 0;
 
 	init_log4cplus();
-	log4cplus_info("%s v%s: starting....", progname, version);
+	log4cplus_info("complex main entry.");
 
     if(init_config() == -1)
 		return -1;
 
-    if(DaemonStart () < 0)
+    if(set_background_mode () < 0)
     	return -1;
 
-	dbproxy_run_pre();
+	register_signal();
 
-	if(start_db_thread_group(&g_config.full_instance))
+	cm_create_pid();
+
+	//full database instance.
+	int res = start_db_thread_group(&g_config.full_instance, "L3");
+	if(res != 0)
 	{
-		log4cplus_error("start fulldb thread group faield, exit.");
+		log4cplus_error("start fulldb thread group faield, exit. %d", res);
 		return -1;
 	}
 
-	if(start_db_thread_group(&g_config.hot_instance))
+	//hot database instance.
+	res = start_db_thread_group(&g_config.hot_instance, "L2");
+	if(res != 0)
 	{
-		log4cplus_error("start hotdb thread group faield, exit.");
+		log4cplus_error("start hotdb thread group faield, exit. %d", res);
 		return -1;
 	}
 
-    Startup_Thread();
-    log4cplus_info("%s v%s: running...", progname, version);
+    start_main_thread();
+
+    log4cplus_info("complex main running.");
     while(!context.stop_flag){
     	sleep(10);
     }
-
-    log4cplus_info("%s v%s: stoppping...", progname, version);
+    log4cplus_info("complex main stoping.");
 	
-	if(workerThread)
-	{
-		workerThread->interrupt();
-	}
-	
-	DELETE(agentListener);
-	DELETE(agentProcess);
-	DELETE(netserverProcess);
-	DELETE(workerThread);
+	stop_main_thread();
 
-    log4cplus_info("%s v%s: stopped", progname, version);
+	cm_delete_pid();
 
-	dbproxy_delete_pid();
+	log4cplus_info("complex main end.");
 
     return ret;
 }
-
-/* ends here */
