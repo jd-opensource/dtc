@@ -6,6 +6,7 @@
 #include "task_request.h"
 #include "global.h"
 #include "cm_conn.h"
+#include "../libs/net/value.h"
 
 class TransactionTask
 {
@@ -18,15 +19,14 @@ public:
 
 	int BuildTransactionInfo();
 	void BuildAdaptSql(TransactionInfo* trans_info, int idx);
-	int TransactionProcess();
 
 	std::vector<TransactionInfo> GetTransactionInfo() { return m_trans_info; }
 
-	int HandleReadOper();
-	int HandleWriteOper();
+	int request_db_query(std::string request_sql, CTaskRequest *request);
 
 	std::string GetErrorMessage() {return m_errmsg;}
 	void SetErrorMessage(std::string msg) {m_errmsg = msg;}
+	CBufferChain* encode_mysql_protocol(CTaskRequest *request);
 
 private:
 	std::string m_oper;
@@ -34,8 +34,7 @@ private:
 	std::string m_errmsg;
 	MysqlConn* m_DBConn;
 	
-	int SaveRow();
-	int ParseJson(const char *sz_json, int json_len);
+	int save_row(CTaskRequest *request);
 };
 
 #endif

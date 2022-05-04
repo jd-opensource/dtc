@@ -36,8 +36,8 @@ public:
 	MYSQL_RES *Res;
 	MYSQL_ROW Row;
 	MYSQL_FIELD *Fields;
-	int ResNum;
-	int FieldNum;
+	int row_num;
+	int field_num;
 	int NeedFree;
 
 protected:

@@ -109,21 +109,32 @@ bool parse_packet(uchar *input_raw_packet, int input_packet_length,
 			r->keys[0].end = NULL;
 			return false;
 		} else if (ret == 1) {
+			//not dtc operation (insert/delete/alter/select)
 			log_debug("CMD_SQL_PASS_OK");
 			r->admin = CMD_SQL_PASS_OK;
 			return true;
 		} else if (ret == 2) {
+			//never at here right now.
 			r->admin = CMD_SQL_PASS_NULL;
 			return true;
 		}
-
-		log_debug("my_get_route_key parse success. %d, %d",
+		else if(ret == 0){
+			//forward to dtc.
+			log_debug("my_get_route_key parse success. %d, %d",
 			  start_offset, end_offset);
-		r->keys[0].start = input_raw_packet + start_offset;
-		r->keys[0].end = input_raw_packet + end_offset;
-		r->admin = CMD_NOP;
+			r->keys[0].start = input_raw_packet + start_offset;
+			r->keys[0].end = input_raw_packet + end_offset;
+			r->admin = CMD_NOP;
 
-		break;
+			break;
+		}
+		else{
+			//error.
+			log_error("my_get_route_key return value:%d", ret);
+			r->keys[0].start = NULL;
+			r->keys[0].end = NULL;
+			return false;
+		}
 	}
 	case COM_FIELD_LIST: {
 		/*

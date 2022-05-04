@@ -77,13 +77,6 @@ public:
 
 	virtual ~CTaskRequest();
 
-//	inline CTaskRequest(const CTaskRequest &rq) { CTaskRequest(); Copy(rq); }
-
-//	int Copy(const CTaskRequest &rq);
-//	int Copy(const CTaskRequest &rq, const CValue *newkey);
-//	int Copy(const CRowValue &);
-//	int Copy(NCRequest &, const CValue *);
-
 public:
 	void Clean();
 	// msecond: absolute ms time
@@ -94,9 +87,6 @@ public:
 		// client gone, always expired
 		if(OwnerInfo<void>() == NULL)
 			return 1;
-		// flush cmd never time out
-//		if(requestType == TaskTypeCommit)
-//			return 0;
 		return expire_time <= now;
 	}
 	uint32_t Timestamp(void) const { return timestamp; }
@@ -128,6 +118,11 @@ private:
 	std::string result;
 	uint32_t seq_number;
 	uint16_t request_cmd;
+	std::string m_sql;
+	uint8_t mysql_seq_id;
+
+	char* send_buff;
+	int send_len;
 
 public:
 	/* for agent request */
@@ -143,23 +138,33 @@ public:
 	inline void setResult(const std::string &value){
 		result = value;
 	}
-	inline void SetSeqNumber(uint32_t seq_nb){
+	inline void set_seq_number(uint32_t seq_nb){
 		seq_number = seq_nb;
 	}
 	inline void SetReqCmd(uint16_t cmd){
 		request_cmd = cmd;
 	}
-	inline std::string GetResultString(void)const{
-		return result;
+	uint8_t get_seq_num() {
+		return mysql_seq_id;
 	}
-	inline uint32_t GetSeqNumber(void) const{
+
+	const char* get_result(void);
+	int get_result_len()
+	{
+		if(send_buff && send_len > 0)
+			return send_len;
+		else
+			return result.length();
+	}
+
+	inline uint32_t get_seq_number(void) const{
 		return seq_number;
 	}
 	inline uint16_t GetReqCmd(void) const{
 		return request_cmd;
 	}
 	bool copyOnePacket(const char *packet, int pktLen);
-	std::string buildRequsetString();
+	std::string parse_request_sql();
 	bool IsAgentRequestCompleted();
 	void DoneOneAgentSubRequest();
 
@@ -168,6 +173,9 @@ public:
 	int AgentSubTaskCount();
 	void CopyReplyForAgentSubTask();
 	CTaskRequest * CurrAgentSubTask(int index);
+
+	int get_db_layer_level();
+	int do_mysql_protocol_parse();
 
 	bool IsCurrSubTaskProcessed(int index);
 private:

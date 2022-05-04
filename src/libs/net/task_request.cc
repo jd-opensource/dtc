@@ -3,13 +3,13 @@
 
 #include "memcheck.h"
 #include "task_request.h"
-//#include "task_pkey.h"
 #include "poll_thread.h"
 #include "log.h"
-//#include "compiler.h"
-//#include "keylist.h"
 #include "agent_multi_request.h"
-//#include "agent_client.h"
+
+#include "../common/my/my_command.h"
+#include "../common/my/my_comm.h"
+#include "../common/protocol.h"
 
 CTaskRequest::~CTaskRequest() 
 { 
@@ -103,10 +103,105 @@ bool CTaskRequest::copyOnePacket(const char *packet, int pktLen)
 
 }
 
-std::string CTaskRequest::buildRequsetString(){
-	std::string request(recvBuff,recvLen);
-	return request;
+int CTaskRequest::do_mysql_protocol_parse()
+{
+	char *p = recvBuff;
+	int raw_len = recvLen;
 
+	if (p == NULL || raw_len < MYSQL_HEADER_SIZE) {
+		log4cplus_error("receive size small than package header.");
+		return -1;
+	}
+
+	int input_packet_length = uint3korr(p);
+	log4cplus_debug("uint3korr:0x%x 0x%x 0x%x, len:%d", p[0], p[1], p[2],
+			input_packet_length);
+	p += 3;
+	this->mysql_seq_id = (uint8_t)(*p); // mysql sequence id
+	p++;
+	log4cplus_debug("mysql_seq_id:%d, packet len:%d", this->mysql_seq_id,
+			input_packet_length);
+
+	if (sizeof(MYSQL_HEADER_SIZE) + input_packet_length > raw_len) {
+		log4cplus_error(
+			"mysql header len %d is different with actual len %d.",
+			input_packet_length, raw_len);
+		return -2;
+	}
+
+	enum enum_server_command cmd = (enum enum_server_command)(uchar)p[0];
+	if (cmd != COM_QUERY) {
+		log4cplus_error("cmd type error:%d", cmd);
+		return -3;
+	}
+
+	input_packet_length --;
+	p++;
+
+	if (*p == 0x0) {
+		p++;
+		input_packet_length--;
+	}
+
+	if (*p == 0x01) {
+		p++;
+		input_packet_length--;
+	}
+	m_sql.assign(p, input_packet_length);
+	log4cplus_debug("sql: \"%s\"", m_sql.c_str());
+
+	return 0;
+}
+
+const char* CTaskRequest::get_result(void)
+{
+	if(send_buff && send_len > 0)
+		return send_buff;
+	else
+		return result.c_str();
+}
+
+//TODO: parse request sql.
+std::string CTaskRequest::parse_request_sql()
+{
+	if(recvLen < sizeof(struct DTC_HEADER_V2))
+		return "";
+
+	if(!recvBuff)
+		return "";
+	
+	struct DTC_HEADER_V2* header = (struct DTC_HEADER_V2*)recvBuff;
+	if(!header)
+		return "";
+
+	if (header->version != 2)
+		return "";
+
+	if(!do_mysql_protocol_parse())
+		return m_sql;
+
+	return "";
+}
+
+int CTaskRequest::get_db_layer_level()
+{
+	if(recvLen < sizeof(struct DTC_HEADER_V2))
+		return 0;
+
+	if(!recvBuff)
+		return 0;
+	
+	struct DTC_HEADER_V2* header = (struct DTC_HEADER_V2*)recvBuff;
+	if(!header)
+		return 0;
+
+	if (header->version != 2)
+		return 0;
+
+	if(header->layer >3 || header->layer < 1)
+		return 0;
+
+	return header->layer;
 }
 
 bool CTaskRequest::IsAgentRequestCompleted()

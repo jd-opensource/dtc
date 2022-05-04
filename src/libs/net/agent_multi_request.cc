@@ -78,7 +78,6 @@ error case: set this task processed
 void CAgentMultiRequest::DecodeOneRequest(char * packetstart, int packetlen, int index)
 {
 	CTaskRequest * task = NULL;
-//	RequestCmd cmd;
 
 	task = new CTaskRequest();
 	if(NULL == task)
@@ -107,7 +106,9 @@ void CAgentMultiRequest::DecodeOneRequest(char * packetstart, int packetlen, int
 
 
 	task->SetReqCmd(ntohs(h->cmd));
-	task->SetSeqNumber(ntohl(h->seq_num));
+
+	task->set_seq_number(ntohl(h->seq_num));
+
 	if(task->GetReqCmd() <= SERVICE_NONE || task->GetReqCmd() >= SERVICE_OTHER){
 		taskList[index].processed = 1;
 	}

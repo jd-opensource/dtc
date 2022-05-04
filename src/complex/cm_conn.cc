@@ -302,13 +302,13 @@ int MysqlConn::UseResult()
 			return(-1);
 		}
 		else {
-			ResNum = 0;
+			row_num = 0;
 			return(-1);
 		}
 	}
 	
-	ResNum = mysql_num_rows(Res);
-	if(ResNum<0){
+	row_num = mysql_num_rows(Res);
+	if(row_num < 0){
 		dberr = mysql_errno(&Mysql);
 		snprintf(achErr, sizeof(achErr)-1, "mysql num rows error: %s", mysql_error(&Mysql));
 		mysql_free_result(Res);
@@ -316,8 +316,8 @@ int MysqlConn::UseResult()
 		return(-1);
 	}
 
-	FieldNum = mysql_num_fields(Res);
-	if(ResNum<0){
+	field_num = mysql_num_fields(Res);
+	if(row_num<0){
 		dberr = mysql_errno(&Mysql);
 		snprintf(achErr, sizeof(achErr)-1, "mysql field rows error: %s", mysql_error(&Mysql));
 		mysql_free_result(Res);

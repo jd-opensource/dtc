@@ -16,8 +16,8 @@ int CPacket::EncodeResult(CTaskRequest &task, int mtu)
 
 	header.magic = htons(0xFDFC);
 	header.cmd = htons(task.GetReqCmd());
-	header.len = htonl(task.GetResultString().length());
-	header.seq_num = htonl(task.GetSeqNumber());
+	header.len = htonl(task.get_result_len());
+	header.seq_num = htonl(task.get_seq_number());
 	bytes = EncodeHeader(header);
 	const int len = bytes;
 
@@ -50,14 +50,15 @@ int CPacket::EncodeResult(CTaskRequest &task, int mtu)
 	v->iov_len = len;
 	memcpy(p, &header, sizeof(header));
 	p += sizeof(header);
-	memcpy(p,task.GetResultString().c_str(),task.GetResultString().length());//copy the result string to the packet
+
+	memcpy(p, task.get_result(), task.get_result_len());//copy the result string to the packet
 
 	return len;
 }
 
 void CPacket::FreeResultBuff()
 {
-        CBufferChain * resbuff = buf->nextBuffer;
+	CBufferChain * resbuff = buf->nextBuffer;
 	buf->nextBuffer = NULL;
 
 	while(resbuff) {

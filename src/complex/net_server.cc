@@ -38,6 +38,7 @@ void CNetServerProcess::TaskNotify(CTaskRequest * cur)
 		return;
 
 	//TODO: Parsing input, adapting thread groups.
+	level = request->get_db_layer_level();
 	if(level == 3)
 		group = FullDBGroup;
 	else if(level == 2)
