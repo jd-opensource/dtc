@@ -513,6 +513,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	//agent sql route, rule engine
 	int layer = rule_sql_match(str.data, g_dtc_key);;
 	log_debug("rule layer: %d", layer);
+	return layer;
 
 	if (check_cmd_operation(&str))
 		return 1;

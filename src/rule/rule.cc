@@ -47,14 +47,17 @@ extern "C" int rule_sql_match(const char* szsql, const char* szkey)
     {
         if(re_is_cache_sql(&sql_ast, key))
         {
+            //L1: DTC cache.
             return 1;
         }
         else
         {
+            //L2: sharding hot database.
             return 2;
         }
     }
     else {
+        //L3: full database.
         return 3;
     }
 
