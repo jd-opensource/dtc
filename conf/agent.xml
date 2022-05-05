@@ -9,6 +9,9 @@
         <INSTANCE idc="LF" Role="replica" Enable="false" Addr="127.0.0.1:20000:1"/>
         <INSTANCE idc="LF" Role="master" Enable="true" Addr="dtc:20015:1"/>
       </CACHESHARDING>
+      <CACHESHARDING  Sid="999" ShardingReplicaEnable="false" ShardingName="complex">
+        <INSTANCE idc="LF" Role="master" Enable="true" Addr="127.0.0.1:3745:1"/>
+      </CACHESHARDING>
     </MODULE>
   </BUSINESS_MODULE>
 <VERSION value="2" />

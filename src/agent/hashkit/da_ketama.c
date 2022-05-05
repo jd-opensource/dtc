@@ -241,14 +241,19 @@ int ketama_update(struct server_pool *pool) {
 #endif
 
 uint32_t ketama_dispatch(struct continuum *continuum, uint32_t ncontinuum,
-		uint32_t hash) {
+		uint32_t hash, uint32_t layer) {
 	struct continuum *begin, *end, *left, *right, *middle;
 
 	ASSERT(continuum != NULL);
 	ASSERT(ncontinuum != 0);
 
 	begin = left = continuum;
-	end = right = continuum + ncontinuum;
+	// layer storage reserve for last one.
+	end = right = continuum + ncontinuum - 1;
+
+	// L2 and L3 server
+	if(layer == 2 || layer == 3)
+		return (end + 1)->index;
 
 	while (left < right) {
 		middle = left + (right - left) / 2;
