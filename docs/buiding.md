@@ -1,4 +1,4 @@
-* gcc/g++ 4.8
+* gcc/g++ 4.9
 * cmake
 * 安装gflags:<br />
     gflags是google开源的一套命令行参数解析工具，支持从环境变量和配置文件读取参数：

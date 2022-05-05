@@ -146,6 +146,7 @@ struct msg {
 	uint8_t pkt_nr; /* mysql sequence id */
 	enum enum_server_command command; /* mysql request command type */
 	enum enum_agent_admin admin;
+	uint8_t layer;
 	union COM_DATA data;
 
 	int err; /* errno on error? */

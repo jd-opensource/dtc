@@ -31,6 +31,7 @@
 #include "da_stats.h"
 #include <sys/utsname.h>
 #include <sched.h>
+#include "../rule/rule.h"
 
 #define DA_VERSION_MAJOR	2
 #define DA_VERSION_MINOR	0
@@ -468,12 +469,21 @@ static int da_set_sched_affinity(int run_cupmask)
 static int da_pre_run(struct instance *dai) {
 	int status;
 	struct sig_handler *sh;
+	char dtckey[50] = {0};
 	//init system time
 	tv_update_date(-1, -1);
 	//init log
 	da_log_init(dai);
 
 	log_info("DTC AGENT init.");
+
+#if 0
+	if(re_load_table_key(dtckey) < 0)
+	{
+		log_error("load dtc define error.");
+		return -1;
+	}
+#endif
 
 	if (daemonize) {
 		status = da_daemonize(1);
@@ -625,6 +635,7 @@ int main(int argc, char **argv) {
 	struct instance dai;
 
 	set_default_options(&dai);
+
 	dai.argv = argv;
 
 	status = get_options(argc, argv, &dai);
