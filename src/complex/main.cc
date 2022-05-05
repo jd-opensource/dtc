@@ -20,7 +20,7 @@
 
 Context context;
 
-int background = 1;
+int background = 0;
 
 ConfigHelper  g_config;
 
@@ -118,10 +118,14 @@ void cm_delete_pid() {
 }
 
 void catch_signal(int32_t signal) {
+	log4cplus_error("catch signal: %d.", signal);
 	switch (signal) {
 	case SIGTERM:
 		context.stop_flag = true;
 		log4cplus_error("catch a stop signal.");
+		break;
+	case SIGINT:
+		exit(0);
 		break;
 	default:
 		break;

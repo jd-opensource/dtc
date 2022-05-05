@@ -70,7 +70,6 @@ PollerBase * CPollThreadGroup::GetPollThread(int threadIdx)
 
 void CPollThreadGroup::Start(int numThreads, int mp)
 {
-	log4cplus_info("###deubg start");
 	char threadName[256];
 	this->numThreads = numThreads;
 
@@ -89,13 +88,11 @@ void CPollThreadGroup::Start(int numThreads, int mp)
 
 void CPollThreadGroup::RunningThreads()
 {
-	log4cplus_info("###deubg running");
 	if (pollThreads == NULL)
 		return;
 
 	for (int i = 0; i < this->numThreads; i++)
 	{
-		log4cplus_info("###deubg running %d", i);
 		pollThreads[i]->RunningThread();
 	}
 }

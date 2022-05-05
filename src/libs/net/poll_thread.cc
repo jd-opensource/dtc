@@ -42,7 +42,6 @@ int PollerBase::Initialize(void)
 
 void * PollerBase::Process (void)
 {
-	log4cplus_info("###deubg pollthread process");
 	while (!Stopping())
 	{
 		// if previous event loop has no events,

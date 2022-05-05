@@ -125,7 +125,6 @@ void CThread::AutoConfig(void) {
 
 int CThread::InitializeThread (void)
 {
-	log4cplus_info("###deubg init thread");
 	int ret = Initialize();
 	if(ret < 0)
 		return -1;
@@ -162,7 +161,6 @@ int CThread::InitializeThread (void)
 
 void CThread::RunningThread ()
 {
-	log4cplus_info("###deubg runningthread");
 	switch(tasktype) {
 		case -1:
 			// error
@@ -184,7 +182,6 @@ void CThread::RunningThread ()
 void CThread::PrepareInternal (void)
 {
 	pid = _gettid_();
-	log4cplus_info("###deubg internal");
 	log4cplus_info("thread %s[%d] started", taskname, pid);
 	sigset_t sset;
 	sigemptyset(&sset);

@@ -4,3 +4,9 @@ cache:
    DTCID: 20015
    MAX_USE_MEM_MB: 100
    DTC_MODE: 1
+
+vhot:
+    addr: 127.0.0.1:3307
+    username: root
+    password: root
+    database: sharding
