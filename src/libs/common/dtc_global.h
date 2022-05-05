@@ -20,6 +20,7 @@
 #define TABLE_CONF_NAME "/etc/dtc/table.yaml"
 #define CACHE_CONF_NAME "/etc/dtc/dtc.yaml"
 #define ALARM_CONF_FILE "/etc/dtc/dtcalarm.conf"
+
 class DTCGlobal : private noncopyable {
     public:
 	DTCGlobal(void);

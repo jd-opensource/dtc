@@ -16,7 +16,7 @@
 */
 #include <signal.h>
 #include <string.h>
-#include "main.h"
+#include "main_entry.h"
 #include "daemon/daemon.h"
 #include "log/log.h"
 #include "proc_title.h"
@@ -35,7 +35,7 @@ static const char *recovery_Info_str[] = {
 	"None", "Crash", "CrashDebug", "Killed", "Error", "Always"};
 
 
-WatchDogEntry::WatchDogEntry(WatchDogUnit *watchdog, int (*e)(void *), void *args, int recovery)
+MainEntry::MainEntry(WatchDogUnit *watchdog, int (*e)(void *), void *args, int recovery)
 	: WatchDogObject(watchdog), entry(e), args_(args), recovery_(recovery), core_count_(0)
 {
 	strncpy(watchdog_object_name_, "main", sizeof(watchdog_object_name_));
@@ -47,25 +47,29 @@ WatchDogEntry::WatchDogEntry(WatchDogUnit *watchdog, int (*e)(void *), void *arg
 	log4cplus_info("Main Process Recovery Mode: %s", recovery_Info_str[recovery_]);
 }
 
-WatchDogEntry::~WatchDogEntry(void)
+MainEntry::~MainEntry(void)
 {
 }
 
-int WatchDogEntry::dtc_fork(int enCoreDump)
+int MainEntry::fork_main(int enCoreDump)
 {
 	if ((watchdog_object_pid_ = fork()) == 0) {
+		//child process in.
 		if (enCoreDump)
 			init_core_dump();
 		exit(entry(args_));
 	}
+
     /* cann't fork main process */
 	if (watchdog_object_pid_ < 0)
 		return -1; 
+
+	//parent process in.
 	attach_watch_dog();
 	return watchdog_object_pid_;
 }
 
-void WatchDogEntry::killed_notify(int signo, int coredumped)
+void MainEntry::killed_notify(int signo, int coredumped)
 {
 	int corenable = 0;
 
@@ -77,14 +81,14 @@ void WatchDogEntry::killed_notify(int signo, int coredumped)
 		if (core_count_ == 1 && recovery_ >= 2)
 			corenable = 1;
 		sleep(2);
-		if (dtc_fork(corenable) < 0)
+		if (fork_main(corenable) < 0)
 			/* main fork error, stopping all children */
 			stop = 1;
 	}
 	report_kill_alarm(signo, coredumped);
 }
 
-void WatchDogEntry::exited_notify(int retval)
+void MainEntry::exited_notify(int retval)
 {
 	if (recovery_ < 4 || retval == 0)
 		/* main cache exited, stopping all children */
@@ -92,7 +96,7 @@ void WatchDogEntry::exited_notify(int retval)
 	else {
 		/* sync sleep */
 		sleep(2); 
-		if (dtc_fork() < 0)
+		if (fork_main() < 0)
 			/* main fork error, stopping all children */
 			stop = 1;
 	}

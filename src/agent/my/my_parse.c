@@ -366,6 +366,10 @@ int my_fragment(struct msg *r, uint32_t ncontinuum, struct msg_tqh *frag_msgq)
 		r->idx = msg_backend_idx(r, (uint8_t *)&randomkey,
 					 sizeof(uint64_t));
 		return 0;
+	}
+	else if(r->layer == 2 || r->layer == 3) {
+		r->idx = msg_backend_idx(r, NULL, 0);
+		return 0;
 	} else {
 		if (r->keyCount == 0) {
 			log_error(" request msg id: %" PRIu64
@@ -499,6 +503,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	int dtc_key_len = da_strlen(g_dtc_key);
 	struct string str;
 	int ret = 0;
+	int layer = 0;
 	string_init(&str);
 	string_copy(&str, sql, sql_len);
 
@@ -509,6 +514,11 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 		return -9;
 
 	log_debug("sql: %s", str.data);
+
+	//agent sql route, rule engine
+	layer = rule_sql_match(str.data, g_dtc_key);
+	log_debug("rule layer: %d", layer);
+	return layer;
 
 	if (check_cmd_operation(&str))
 		return 1;

@@ -17,7 +17,7 @@
 #include <signal.h>
 
 #include "daemons.h"
-#include "main.h"
+#include "main_entry.h"
 #include "stattool.h"
 #include "listener/listener.h"
 #include "helper.h"
@@ -26,7 +26,7 @@
 #include "log/log.h"
 #include "daemon/daemon.h"
 /* 打开看门狗 */
-int start_watch_dog(int (*entry)(void *), void *args)
+int start_dtc(int (*entry)(void *), void *args)
 {
 	int delay = 5;
 	dbConfig->set_helper_path(getpid());
@@ -46,7 +46,7 @@ int start_watch_dog(int (*entry)(void *), void *args)
 		    0) {
 			WatchDogStatTool *stat_tool =
 				new WatchDogStatTool(wdog, delay);
-			if (stat_tool->dtc_fork() < 0)
+			if (stat_tool->new_proc_fork() < 0)
 				/* cann't fork reporter */
 				return -1;
 			log4cplus_info("fork stat reporter");
@@ -83,7 +83,7 @@ int start_watch_dog(int (*entry)(void *), void *args)
 						"create WatchDogHelper object failed, msg:%m");
 					return -1;
 				}
-				if (h->dtc_fork() < 0 || h->verify() < 0)
+				if (h->new_proc_fork() < 0 || h->verify() < 0)
 					return -1;
 				nh++;
 			}
@@ -97,9 +97,9 @@ int start_watch_dog(int (*entry)(void *), void *args)
 						"killed", "error", "always",
 						NULL }),
 			2);
-		WatchDogEntry *dtc =
-			new WatchDogEntry(wdog, entry, args, recovery);
-		if (dtc->dtc_fork() < 0)
+		MainEntry *dtc =
+			new MainEntry(wdog, entry, args, recovery);
+		if (dtc->fork_main() < 0)
 			return -1;
 		wdog->run_loop();
 		exit(0);

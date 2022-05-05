@@ -1036,7 +1036,8 @@ struct conf *conf_create(char *filename) {
 	cf->fh = NULL;
 
 	return cf;
-	error: fclose(cf->fh);
+error: 
+	fclose(cf->fh);
 	cf->fh = NULL;
 	conf_destroy(cf);
 	return NULL;
