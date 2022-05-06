@@ -46,25 +46,17 @@ public:
 	    if(buf)
 		buf->Clean();
 	}
-//	int Send(int fd);
-//	int SendTo(int fd, void *name, int namelen);
-//	int SendTo(int fd, CSocketAddress *addr) {
-//		return addr==NULL ? Send(fd) : SendTo(fd, (void *)addr->addr, (int)addr->alen);
-//	}
 
 	/* for agent_sender */
 	int Bytes(void);
 	void FreeResultBuff();
 	const struct iovec * IOVec() { return v; }
-        int VecCount() { return nv; }
-        void SendDoneOneVec() { sendedVecCount++; }
-        bool IsSendDone() { return sendedVecCount == nv; }
+	int VecCount() { return nv; }
+	void SendDoneOneVec() { sendedVecCount++; }
+	bool IsSendDone() { return sendedVecCount == nv; }
 
 
 	static int EncodeHeader(const CPacketHeader &header);
-//	int EncodeForwardRequest(CTaskRequest &);
-//	int EncodePassThru(CTask &);
-//	int EncodeFetchData(CTaskRequest &);
 
 	// encode result, for helper/server reply
 	// side effect:
@@ -84,9 +76,6 @@ public:
 	int EncodeResult(CTaskRequest *task, int mtu=0) {
 		return EncodeResult(*task, mtu);
 	}
-//	int EncodeForwardRequest(CTaskRequest* task) {
-//		return EncodeForwardRequest(*task);
-//	}
 
 	/* for agent */
 	int EncodeAgentRequest(NCRequest & rq, const CValue * kptr);

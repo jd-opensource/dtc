@@ -139,6 +139,10 @@ int do_split_rules()
 int re_load_rule()
 {
     log4cplus_debug("load rule start...");
+
+    if(rule_ast.isValid() && rule_ast.size() > 0)
+        return 0;
+
     std::string rules = do_get_rule();
     if(rules.length() <= 0)
         return -1;

@@ -424,6 +424,7 @@ CBufferChain* TransactionTask::encode_mysql_protocol(CTaskRequest *request)
 {
 	CBufferChain *bc = NULL;
 	CBufferChain *pos = NULL;
+	log4cplus_debug("encode_mysql_protocol entry.");
 
 	uint8_t pkt_nr = request->get_seq_num();
 	pkt_nr++;
@@ -453,12 +454,14 @@ CBufferChain* TransactionTask::encode_mysql_protocol(CTaskRequest *request)
 	if (!pos)
 		return NULL;
 
+	log4cplus_debug("encode_mysql_protocol leave.");
 	return bc;
 }
 
 int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *request)
 {
 	std::string m_Sql = request_sql;
+	log4cplus_debug("request_db_query entry.");
 	
 	if(m_DBConn->Ping() != 0)
 	{
@@ -494,68 +497,19 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 	}
 
 	CBufferChain* rb = encode_mysql_protocol(request);
+	if(rb)
+		request->set_buffer_chain(rb);
 
 	m_DBConn->FreeResult();
-	return 0;
-}
-
-void TransactionTask::BuildAdaptSql(TransactionInfo* trans_info, int idx)
-{
-	char szidx[8] = {0};
-	sprintf(szidx, "%d", idx);
-	std::string new_tablename = trans_info->tablename_prefix;
-	if(idx >= 0)
-		new_tablename += szidx;
-
-	if(trans_info->sql.find(trans_info->tablename_prefix) != std::string::npos)
-		trans_info->adapt_sql = trans_info->sql.replace(trans_info->sql.find(trans_info->tablename_prefix), trans_info->tablename_prefix.length(), new_tablename);
-
-	return ;
-}
-
-int TransactionTask::BuildTransactionInfo()
-{
-#if 0
-	for(unsigned int i = 0; i < m_data.size(); i++)
-	{
-		TransactionInfo ti;
-		ti.tablename_prefix = m_data[i]["tablename"].asString();
-		ti.sql = m_data[i]["sql"].asString();
-		int idx = 0;
-		
-		if(m_data[i]["key"].isString())
-		{
-			ti.key_type = DField::String;
-			ti.szkey = m_data[i]["key"].asString();
-
-			idx = GetTableIdx((void*)m_data[i]["key"].asString().c_str(), ti.key_type, &g_table_set[ti.tablename_prefix]);
-		}
-		else if(m_data[i]["key"].isInt() || m_data[i]["key"].isInt64())
-		{
-			ti.ikey = m_data[i]["key"].asInt64();
-			ti.key_type = DField::Signed;
-			idx = GetTableIdx(&ti.ikey, ti.key_type, &g_table_set[ti.tablename_prefix]);
-		}
-		else if(m_data[i]["key"].isUInt() || m_data[i]["key"].isUInt64())
-		{
-			ti.ukey = m_data[i]["key"].asUInt64();
-			ti.key_type = DField::Unsigned;
-			idx = GetTableIdx(&ti.ukey, ti.key_type, &g_table_set[ti.tablename_prefix]);
-		}
-
-		BuildAdaptSql(&ti, idx);
-
-		m_trans_info.push_back(ti);
-	}
-#endif
+	log4cplus_debug("request_db_query leave.");
 	return 0;
 }
 
 int TransactionTask::Process(CTaskRequest *request) {
-	log4cplus_debug("TransactionTask::Process begin.");
+	log4cplus_debug("complex: pop task process begin.");
 
 	string request_sql = request->parse_request_sql();
-	log4cplus_debug("sql: %s", request_sql.c_str());
+	log4cplus_debug("pop sql: %s", request_sql.c_str());
 	if (request_sql.length() <= 0)
 	{
 		log4cplus_debug("request sql error.");
@@ -567,9 +521,6 @@ int TransactionTask::Process(CTaskRequest *request) {
 
 	int ret = request_db_query(request_sql, request);
 
-	//write result to client.
-	request->setResult("");
-
-	log4cplus_debug("TransactionTask::Process end.");
+	log4cplus_debug("complex: pop task process end.");
 	return 0;
 }

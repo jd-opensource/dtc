@@ -1,10 +1,13 @@
 #include "re_match.h"
 #include "re_comm.h"
 #include "log.h"
+#include "re_cache.h"
 
 using namespace hsql;
 using namespace std;
 hsql::SQLParserResult sql_ast;
+
+#define SPECIFIC_L3_SCHEMA "L3"
 
 //legitimacy check.
 int do_check_sql()
@@ -19,6 +22,7 @@ int re_parse_sql(std::string sql, hsql::SQLParserResult* sql_ast)
     hsql::SQLParser::parse(sql, sql_ast);
     if (!sql_ast->isValid() || sql_ast->size() <= 0)
     {
+        log4cplus_debug("valid:%d, size:%d, %s", sql_ast->isValid(), sql_ast->size(), sql.c_str());
         return -1; 
     }
     log4cplus_debug("input sql parse end");

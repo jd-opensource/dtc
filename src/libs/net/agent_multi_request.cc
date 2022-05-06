@@ -6,8 +6,8 @@
 
 int PacketBodyLen(CPacketHeader & header)
 {
-        int pktbodylen = ntohl(header.len);
-        return pktbodylen;
+	int pktbodylen = ntohl(header.len);
+	return pktbodylen;
 }
 
 CAgentMultiRequest::CAgentMultiRequest(CTaskRequest * o):
@@ -79,6 +79,9 @@ void CAgentMultiRequest::DecodeOneRequest(char * packetstart, int packetlen, int
 {
 	CTaskRequest * task = NULL;
 
+	if(!packetstart || packetlen <= 0)
+		return ;
+
 	task = new CTaskRequest();
 	if(NULL == task)
 	{
@@ -87,13 +90,13 @@ void CAgentMultiRequest::DecodeOneRequest(char * packetstart, int packetlen, int
 		return;
 	}
 
-	if((uint)packetlen <= sizeof(CPacketHeader)){
+	if((uint)packetlen <= sizeof(DTC_HEADER_V2)){
 		compleTask++;
 		delete task;
 		return;
 	}
 
-	if(!task->copyOnePacket(packetstart + sizeof(CPacketHeader), packetlen - sizeof(CPacketHeader))){
+	if(!task->copyOnePacket(packetstart + sizeof(DTC_HEADER_V2), packetlen - sizeof(DTC_HEADER_V2))){
 		log4cplus_error("not enough mem for buf copy, client wont recv response");
 		compleTask++;
 		delete task;
@@ -102,16 +105,13 @@ void CAgentMultiRequest::DecodeOneRequest(char * packetstart, int packetlen, int
 	task->SetOwnerInfo(this, index, NULL);
 	task->SetOwnerClient(this->ownerClient);
 	task->ResponseTimerStart();
-	CPacketHeader *h = (CPacketHeader *)packetstart;
+	DTC_HEADER_V2 *h = (DTC_HEADER_V2 *)packetstart;
+	task->set_dtc_header_id(h->id);
+	task->set_layer(h->layer);
 
-
-	task->SetReqCmd(ntohs(h->cmd));
-
-	task->set_seq_number(ntohl(h->seq_num));
-
-	if(task->GetReqCmd() <= SERVICE_NONE || task->GetReqCmd() >= SERVICE_OTHER){
+	/*if(task->GetReqCmd() <= SERVICE_NONE || task->GetReqCmd() >= SERVICE_OTHER){
 		taskList[index].processed = 1;
-	}
+	}*/
 	taskList[index].task = task;
 
 	return;
@@ -124,11 +124,12 @@ int CAgentMultiRequest::DecodeAgentRequest()
     taskList = new DecodedTask[packetCnt];
     if(NULL == taskList)
     {
-	log4cplus_error("no mem new taskList");
-	return -1;
+		log4cplus_error("no mem new taskList:%d", packetCnt);
+		return -1;
     }
     memset((void *)taskList, 0, sizeof(DecodedTask) * packetCnt);
 
+	log4cplus_debug("packetCnt:%d", packetCnt);
     /* whether can work, reply on input buffer's correctness */
     for(int i = 0; i < packetCnt; i++)
     {
@@ -136,14 +137,14 @@ int CAgentMultiRequest::DecodeAgentRequest()
         int packetlen;
 
         packetstart = packets.ptr + cursor;
-        packetlen = PacketBodyLen(*(CPacketHeader *)packetstart) + sizeof(CPacketHeader);
+        packetlen = ((DTC_HEADER_V2 *)packetstart)->packet_len;
         if(packetlen < 2 || packetlen > packets.len - cursor){
         	log4cplus_error("decode packet len error");
         	return -1;
         }
 
         DecodeOneRequest(packetstart, packetlen, i);
-	
+
         cursor += packetlen;
     }
 

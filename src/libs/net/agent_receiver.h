@@ -38,7 +38,7 @@ class CAgentReceiver
 	int RecvOnce();
 	int RealRecv();	
 	int RecvAgain();
-	int DecodeHeader(CPacketHeader * header);
+	int DecodeHeader(DTC_HEADER_V2 * header);
 	void SetRecvedInfo(RecvedPacket & packet);
 	int CountPacket();
 };

@@ -140,7 +140,7 @@ bool ConfigHelper::load_hot_inst_info()
 	hot_instance.ConnTimeout = 10;
 	hot_instance.ReadTimeout = 10;
 
-	log4cplus_debug("hot Host:%s:%d, user:%s, pwd:%s, dbname:%s",
+	log4cplus_debug("hot Host:%s:%d, user:%s, pwd:%s, db:%s",
 		hot_instance.Host, hot_instance.Port, hot_instance.User, hot_instance.Password, hot_instance.DbName);
 	return true;
 }

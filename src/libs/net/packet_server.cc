@@ -12,48 +12,69 @@
 
 int CPacket::EncodeResult(CTaskRequest &task, int mtu)
 {
-	CPacketHeader header;
+	int nrp = 0, lrp = 0;
+	log4cplus_debug("encode result entry.");
 
-	header.magic = htons(0xFDFC);
-	header.cmd = htons(task.GetReqCmd());
-	header.len = htonl(task.get_result_len());
-	header.seq_num = htonl(task.get_seq_number());
-	bytes = EncodeHeader(header);
-	const int len = bytes;
+	DTC_HEADER_V2 dtc_header = { 0 };
+	dtc_header.version = 2;
+	dtc_header.id = task.get_dtc_header_id();
+	dtc_header.packet_len = 0;
+	dtc_header.admin = 0;
+
+	CBufferChain* rb = task.get_buffer_chain();
+	if (!rb)
+		return -3;
+
+	rb->Count(nrp, lrp);
+	log4cplus_debug("dtc header id: %d, packet nrp: %d, lrp: %d", dtc_header.id, nrp, lrp);
 
 	/* pool, exist and large enough, use. else free and malloc */
-	int total_len = sizeof(CBufferChain)+sizeof(struct iovec)+len;
-	if(buf == NULL)
-	{
-	    buf = (CBufferChain *)MALLOC(total_len);
-	    if(buf==NULL)
-	    {
-		return -ENOMEM;
-	    }
-        buf->totalBytes = total_len - sizeof(CBufferChain);
-	}else if(buf && buf->totalBytes < total_len - (int)sizeof(CBufferChain))
-	{
-	    FREE_IF(buf);
-	    buf = (CBufferChain *)MALLOC(total_len);
-	    if(buf==NULL)
-	    {
-		 return -ENOMEM;
-	    }
-        buf->totalBytes = total_len - sizeof(CBufferChain);
+	int first_packet_len = sizeof(CBufferChain) +
+			       sizeof(struct iovec) * (nrp + 1) +
+			       sizeof(dtc_header);
+	if (buf == NULL) {
+		buf = (CBufferChain *)MALLOC(first_packet_len);
+		if (buf == NULL) {
+			return -ENOMEM;
+		}
+		buf->totalBytes = first_packet_len - sizeof(CBufferChain);
+		buf->nextBuffer = NULL;
+	} else if (buf && first_packet_len - (int)sizeof(CBufferChain) >
+				  buf->totalBytes) {
+		FREE_IF(buf);
+		buf = (CBufferChain *)MALLOC(first_packet_len);
+		if (buf == NULL) {
+			return -ENOMEM;
+		}
+		buf->totalBytes = first_packet_len - sizeof(CBufferChain);
+		buf->nextBuffer = NULL;
 	}
 
-	buf->nextBuffer = NULL;
+	//设置要发送的第一个包
+	char *p = buf->data + sizeof(struct iovec) * (nrp + 1);
 	v = (struct iovec *)buf->data;
-	nv = 1;
-	char *p = buf->data + sizeof(struct iovec);
 	v->iov_base = p;
-	v->iov_len = len;
-	memcpy(p, &header, sizeof(header));
-	p += sizeof(header);
+	v->iov_len = sizeof(dtc_header);
+	nv = nrp + 1;
+	buf->usedBytes = sizeof(struct iovec) * (nrp + 1) + sizeof(dtc_header);
 
-	memcpy(p, task.get_result(), task.get_result_len());//copy the result string to the packet
+	//修改第一个包的内容
+	memcpy(p, &dtc_header, sizeof(dtc_header));
+	p += sizeof(dtc_header);
+	if (p - (char *)v->iov_base != sizeof(dtc_header))
+		fprintf(stderr, "%s(%d): BAD ENCODER len=%ld must=%d\n",
+			__FILE__, __LINE__, (long)(p - (char *)v->iov_base),
+			sizeof(dtc_header));
 
-	return len;
+	buf->nextBuffer = rb;
+	for (int i = 1; i <= nrp; i++, rb = rb->nextBuffer) {
+		v[i].iov_base = rb->data;
+		v[i].iov_len = rb->usedBytes;
+	}
+
+	log4cplus_debug("encode result leave.");
+
+	return 0;
 }
 
 void CPacket::FreeResultBuff()

@@ -44,7 +44,7 @@ static int start_main_thread()
 	agentListener = new CAgentListenPkg();
 
 	agentProcess->BindDispatcher(netserverProcess);	
-	if(agentListener->Bind(g_config.GetStringValue("ListenAddr").c_str(), agentProcess) < 0)
+	if(agentListener->Bind("*:2002/tcp", agentProcess) < 0)
 		return -1;
 		
 	workerThread->RunningThread();
@@ -145,14 +145,7 @@ int start_db_thread_group(DBHost* dbconfig, std::string level)
 {
 	const int thread_num  = g_config.GetIntValue("TransThreadNum", 10);
 	CTransactionGroup* group = NULL;
-	log4cplus_debug("transaction thread count:%d", thread_num);
-
-	if(level == "L3")
-		group = FullDBGroup;
-	else if(level == "L2")
-		group = HotDBGroup;
-	else
-		return -2;
+	log4cplus_debug("transaction thread count:%d, level:%s", thread_num, level.c_str());
 
 	group = new CTransactionGroup(thread_num);
 	if(group->Initialize(dbconfig))
@@ -160,6 +153,13 @@ int start_db_thread_group(DBHost* dbconfig, std::string level)
 		log4cplus_error("init thread group failed");
 		return -1;
 	}
+
+	if(level == "L3")
+		FullDBGroup = group;
+	else if(level == "L2")
+		HotDBGroup = group;
+	else
+		return -2;
 
 	group->RunningThread();
 

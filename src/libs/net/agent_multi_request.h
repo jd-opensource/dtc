@@ -17,7 +17,7 @@ class CAgentMultiRequest: public CListObject<CAgentMultiRequest>
 	CAgentMultiRequest(CTaskRequest * o);
 	virtual ~CAgentMultiRequest();
 
-        int DecodeAgentRequest();
+	int DecodeAgentRequest();
 	inline int PacketCount() { return packetCnt; }
 	inline CTaskRequest * CurrTask(int index) { return taskList[index].task; }
 	void CopyReplyForSubTask();
@@ -26,8 +26,10 @@ class CAgentMultiRequest: public CListObject<CAgentMultiRequest>
 	void CompleteTask(int index);
 	inline void DetachFromOwnerClient() { ListDel(); }
 	inline bool IsCurrTaskProcessed(int index) { return taskList[index].processed == 1; }
-	inline void SaveRecvedResult(char * buff, int len, int pktcnt) 
-	{ packets.Set(buff, len); packetCnt = pktcnt;}
+	inline void SaveRecvedResult(char * buff, int len, int pktcnt) 	{
+		packets.Set(buff, len); 
+		packetCnt = pktcnt;
+	}
 
     private:
 	CBinary packets;

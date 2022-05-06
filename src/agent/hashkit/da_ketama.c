@@ -246,14 +246,17 @@ uint32_t ketama_dispatch(struct continuum *continuum, uint32_t ncontinuum,
 
 	ASSERT(continuum != NULL);
 	ASSERT(ncontinuum != 0);
-
+	log_debug("###############################ketama_dispatch");
 	begin = left = continuum;
 	// layer storage reserve for last one.
 	end = right = continuum + ncontinuum - 1;
 
 	// L2 and L3 server
 	if(layer == 2 || layer == 3)
+	{
+		log_debug("ncontinuum: %d, layer: %d, idx: %d\n", ncontinuum, layer, (end+1)->index);
 		return (end + 1)->index;
+	}
 
 	while (left < right) {
 		middle = left + (right - left) / 2;
@@ -267,5 +270,7 @@ uint32_t ketama_dispatch(struct continuum *continuum, uint32_t ncontinuum,
 	if (right == end) {
 		right = begin;
 	}
+
+	log_debug("ncontinuum: %d, layer: %d, idx: %d\n", ncontinuum, layer, right->index);
 	return right->index;
 }

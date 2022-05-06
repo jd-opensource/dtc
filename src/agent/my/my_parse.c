@@ -513,18 +513,23 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	if (!string_upper(&str))
 		return -9;
 
-	log_debug("sql: %s", str.data);
+	log_debug("sql: %s, key: %s", str.data, g_dtc_key);
 
 	//agent sql route, rule engine
 	layer = rule_sql_match(str.data, g_dtc_key);
 	log_debug("rule layer: %d", layer);
-	return layer;
+
+	if(layer != 1)
+	{
+		ret = layer;
+		goto done;
+	}
 
 	if (check_cmd_operation(&str))
-		return 1;
+		return -2;
 
 	if (check_cmd_select(&str))
-		return 2;
+		return -2;
 
 	i = _check_condition(&str);
 	if (i < 0) {
@@ -566,7 +571,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 									*end_offset =
 										k +
 										1;
-									ret = 0;
+									ret = layer;
 									goto done;
 								}
 							}

@@ -35,8 +35,11 @@ extern "C" int rule_sql_match(const char* szsql, const char* szkey)
     if(ret != 0)
     {
         log4cplus_error("load rule error:%d", ret);
-        return 0;
+        return -5;
     }
+
+    if(sql.find("INSERT INTO") != sql.npos || sql.find("insert into") != sql.npos)
+        return 1;
 
     hsql::SQLParserResult sql_ast;
     if(re_parse_sql(sql, &sql_ast) != 0)

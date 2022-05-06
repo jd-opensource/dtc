@@ -294,7 +294,7 @@ uint64_t MysqlConn::InsertID()
 int MysqlConn::UseResult()
 {
 	Res = mysql_store_result(&Mysql);
-	if(Res==NULL){
+	if(Res == NULL){
 		if(mysql_errno(&Mysql)!=0){
 			dberr = mysql_errno(&Mysql);
 			snprintf(achErr, sizeof(achErr)-1, "mysql store result error: %s", mysql_error(&Mysql));
@@ -316,14 +316,18 @@ int MysqlConn::UseResult()
 		return(-1);
 	}
 
+	log4cplus_debug("mysql query result %d rows.", row_num);
+
 	field_num = mysql_num_fields(Res);
-	if(row_num<0){
+	if(field_num < 0){
 		dberr = mysql_errno(&Mysql);
 		snprintf(achErr, sizeof(achErr)-1, "mysql field rows error: %s", mysql_error(&Mysql));
 		mysql_free_result(Res);
 		Close();
 		return(-1);
 	}
+
+	log4cplus_debug("mysql query %d fields.", field_num);
 
 	NeedFree=1;
 

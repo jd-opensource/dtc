@@ -27,7 +27,7 @@ CNetServerProcess::~CNetServerProcess()
 
 void CNetServerProcess::TaskNotify(CTaskRequest * cur)
 {
-    log4cplus_debug("CNetServerProcess::TaskNotify start");
+    log4cplus_debug("complex: packet receiving.");
     //there is a race condition here:
     //curr may be deleted during process (in task->ReplyNotify())
 	CTransactionGroup* group = NULL;
@@ -39,6 +39,7 @@ void CNetServerProcess::TaskNotify(CTaskRequest * cur)
 
 	//TODO: Parsing input, adapting thread groups.
 	level = request->get_db_layer_level();
+	log4cplus_debug("complex: packet db layer:%d.", level);
 	if(level == 3)
 		group = FullDBGroup;
 	else if(level == 2)

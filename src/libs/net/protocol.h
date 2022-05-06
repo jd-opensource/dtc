@@ -6,6 +6,15 @@
 #define MAXFIELDS_PER_TABLE	255
 #define MAXPACKETSIZE	(64<<20)
 
+struct DTC_HEADER_V2 {
+	uint8_t version;
+	uint8_t admin;
+	uint8_t layer;
+	uint8_t reserved[1];
+	uint32_t packet_len;
+	uint64_t id;
+};
+
 struct CPacketHeader {
 	uint16_t magic;//0xFDFC
 	uint16_t cmd;

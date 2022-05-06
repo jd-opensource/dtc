@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 {
     printf("hello dtc, ./bin KEY SQL\n");
     std::string key = "";
-    std::string sql = argv[1];
+    std::string sql = argv[2];
     char szkey[50] = {0};
 
     if(re_load_table_key(szkey) < 0)

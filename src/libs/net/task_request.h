@@ -3,13 +3,9 @@
 
 #include <string>
 #include "request_base_all.h"
-//#include "task_base.h"
 #include "stopwatch.h"
-//#include "hotbacktask.h"
-//class CDecoderUnit;
-//class CMultiRequest;
-//class NCKeyValueList;
-//class NCRequest;
+#include "value.h"
+
 class CAgentMultiRequest;
 class CClientAgent;
 
@@ -64,14 +60,16 @@ public:
 		timestamp(0),
 		expire_time(0),
 		agentMultiReq(NULL),
-                ownerClient(NULL),
-                recvBuff(NULL),
-                recvLen(0),
-                recvPacketCnt(0),
-				seq_number(0),
-				request_cmd(0),
+		ownerClient(NULL),
+		recvBuff(NULL),
+		recvLen(0),
+		recvPacketCnt(0),
+		seq_number(0),
+		request_cmd(0),
 		resourceId(0),
-		resourceSeq(0)
+		resourceSeq(0),
+		dtc_header_id(0),
+		cb(NULL), layer(0)
 	{
 	};
 
@@ -120,6 +118,9 @@ private:
 	uint16_t request_cmd;
 	std::string m_sql;
 	uint8_t mysql_seq_id;
+	uint64_t dtc_header_id;
+	CBufferChain* cb;
+	int layer;
 
 	char* send_buff;
 	int send_len;
@@ -148,6 +149,30 @@ public:
 		return mysql_seq_id;
 	}
 
+	int get_layer() const{
+		return layer;
+	}
+
+	void set_layer(int layer) {
+		this->layer = layer;
+	}
+
+	uint64_t get_dtc_header_id() const{
+		return dtc_header_id;
+	}
+
+	void set_dtc_header_id(uint64_t id) {
+		dtc_header_id = id;
+	}
+
+	CBufferChain* get_buffer_chain() const{
+		return cb;
+	}
+
+	void set_buffer_chain(CBufferChain* cb) {
+		this->cb = cb;
+	}
+
 	const char* get_result(void);
 	int get_result_len()
 	{
@@ -155,6 +180,11 @@ public:
 			return send_len;
 		else
 			return result.length();
+	}
+
+	void set_result(const char* buff, int len) {
+		send_buff = buff;
+		send_len = len;
 	}
 
 	inline uint32_t get_seq_number(void) const{

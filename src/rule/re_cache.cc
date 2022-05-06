@@ -4,7 +4,9 @@
 
 using namespace hsql;
 
-#define SPECIFIC_CACHE_SCHEMA "dtc"
+#define SPECIFIC_L1_SCHEMA "L1"
+#define SPECIFIC_L2_SCHEMA "L2"
+#define SPECIFIC_L3_SCHEMA "L3"
 
 int is_single_talbe()
 {
@@ -185,8 +187,10 @@ bool re_is_cache_sql(SQLParserResult* sql_ast, std::string key)
         return false;
 
     std::string schema = get_schema(sql_ast);
-    if(schema == std::string(SPECIFIC_CACHE_SCHEMA))
+    if(schema == std::string(SPECIFIC_L1_SCHEMA))
         return true;
+    else if(schema == std::string(SPECIFIC_L2_SCHEMA))
+        return false;
 
     StatementType type = sql_ast->getStatement(0)->type();
 

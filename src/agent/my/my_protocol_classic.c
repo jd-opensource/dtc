@@ -103,10 +103,14 @@ bool parse_packet(uchar *input_raw_packet, int input_packet_length,
 
 		int layer = my_get_route_key(p, input_packet_length,
 					   &start_offset, &end_offset);
+		//if(layer <= 0 || layer > 3)
+		//	layer = 3;
+
 		if (layer < 0) {
 			log_error("my_get_route_key return value: %d", layer);
 			r->keys[0].start = NULL;
 			r->keys[0].end = NULL;
+			r->admin = CMD_SQL_PASS_OK;
 			return false;
 		} else if (layer == 3) {	//forward to full database.
 			log_debug("L3");
@@ -136,6 +140,7 @@ bool parse_packet(uchar *input_raw_packet, int input_packet_length,
 			log_error("layer error: %d", layer);
 			r->keys[0].start = NULL;
 			r->keys[0].end = NULL;
+			r->admin = CMD_SQL_PASS_OK;
 			return false;
 		}
 	}

@@ -217,7 +217,7 @@ int CClientAgent::RecvRequest()
     if(packets.err < 0)
         return -1;
     else if(packets.pktCnt == 0)
-	return 0;
+	    return 0;
 
     recvbuff = packets.buff;
     recvlen = packets.len;

@@ -81,16 +81,16 @@ RecvedPacket CAgentReceiver::Recv()
 
     if((err = RealRecv()) < 0 )
     {
-	packet.err = -1;
-	return packet;
+		packet.err = -1;
+		return packet;
     }
     else if(err == 0)
-	return packet;
+		return packet;
 
     if((err = RecvAgain()) < 0)
     {
-	packet.err = -1;
-	return packet;
+		packet.err = -1;
+		return packet;
     }
 
     SetRecvedInfo(packet);
@@ -149,24 +149,25 @@ int CAgentReceiver::RecvAgain()
 	return rv;
 }
 
-int CAgentReceiver::DecodeHeader(CPacketHeader * header)
+int CAgentReceiver::DecodeHeader(DTC_HEADER_V2 * header)
 {
-    if(ntohs(header->magic) != 0xFDFC)
-    { // version not supported
-        log4cplus_error("magic incorrect: %X ", ntohs(header->magic));
-        return -1;
-    }
-
     int pktbodylen = 0;
-    pktbodylen = ntohl(header->len);
 
+	if(header->version != 2)
+	{
+		log4cplus_error("dtc header version error: %d", header->version);
+    	return -1;
+	}
+
+    pktbodylen = header->packet_len;
+	log4cplus_debug("version: %d, pkt len: %d, id: %d, layer: %d, admin: %d", header->version, header->packet_len, header->id, header->layer, header->admin);
     if(pktbodylen > MAXPACKETSIZE)
     {
     	log4cplus_error("packet len > MAXPACKETSIZE 20M");
     	return -1;
     }
 
-    return pktbodylen;
+    return pktbodylen - sizeof(DTC_HEADER_V2);
 }
 
 int CAgentReceiver::CountPacket()
@@ -182,21 +183,21 @@ int CAgentReceiver::CountPacket()
     while(1)
     {
         int pktbodylen = 0;
-        CPacketHeader * header = NULL;
+        DTC_HEADER_V2* header = NULL;
 
-        if(leftlen < (int)sizeof(CPacketHeader))
+        if(leftlen < (int)sizeof(DTC_HEADER_V2))
             break;
 
-        header = (CPacketHeader *)pos;
+        header = (DTC_HEADER_V2 *)pos;
         pktbodylen = DecodeHeader(header);
         if(pktbodylen < 0)
         	return -1;
 
-        if(leftlen < (int)sizeof(CPacketHeader) + pktbodylen)
+        if(leftlen < (int)sizeof(DTC_HEADER_V2) + pktbodylen)
             break;
 
-	pos += sizeof(CPacketHeader) + pktbodylen;
-        leftlen -= sizeof(CPacketHeader) + pktbodylen;
+		pos += sizeof(DTC_HEADER_V2) + pktbodylen;
+        leftlen -= sizeof(DTC_HEADER_V2) + pktbodylen;
         pktCnt++;
     }
 
@@ -214,8 +215,8 @@ void CAgentReceiver::SetRecvedInfo(RecvedPacket & packet)
 {
     if(CountPacket() < 0)
     {
-	packet.err = -1;
-	return;
+		packet.err = -1;
+		return;
     }
 
     /* not even ont packet recved, do nothing */

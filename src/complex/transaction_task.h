@@ -17,9 +17,6 @@ public:
 
 	int Process(CTaskRequest *request);
 
-	int BuildTransactionInfo();
-	void BuildAdaptSql(TransactionInfo* trans_info, int idx);
-
 	std::vector<TransactionInfo> GetTransactionInfo() { return m_trans_info; }
 
 	int request_db_query(std::string request_sql, CTaskRequest *request);
@@ -35,6 +32,7 @@ private:
 	MysqlConn* m_DBConn;
 	
 	int save_row(CTaskRequest *request);
+	
 };
 
 #endif

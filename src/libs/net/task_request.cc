@@ -14,7 +14,7 @@
 CTaskRequest::~CTaskRequest() 
 { 
 
-        if(agentMultiReq)
+    if(agentMultiReq)
 	{
         delete agentMultiReq;
 		agentMultiReq = NULL;
@@ -52,8 +52,6 @@ int CTaskRequest::PrepareProcess(void) {
 	}
 	return 0;
 }
-
-
 
 /* for agent request */
 int CTaskRequest::DecodeAgentRequest()
@@ -100,11 +98,12 @@ bool CTaskRequest::copyOnePacket(const char *packet, int pktLen)
 	}else{
 		return false;
 	}
-
 }
 
 int CTaskRequest::do_mysql_protocol_parse()
 {
+	log4cplus_debug("do_mysql_protocol_parse entry.");
+
 	char *p = recvBuff;
 	int raw_len = recvLen;
 
@@ -150,6 +149,7 @@ int CTaskRequest::do_mysql_protocol_parse()
 	m_sql.assign(p, input_packet_length);
 	log4cplus_debug("sql: \"%s\"", m_sql.c_str());
 
+	log4cplus_debug("do_mysql_protocol_parse leave.");
 	return 0;
 }
 
@@ -164,44 +164,32 @@ const char* CTaskRequest::get_result(void)
 //TODO: parse request sql.
 std::string CTaskRequest::parse_request_sql()
 {
-	if(recvLen < sizeof(struct DTC_HEADER_V2))
-		return "";
+	log4cplus_debug("parse_request_sql entry, %p, %d", recvBuff, recvLen);
 
 	if(!recvBuff)
 		return "";
-	
-	struct DTC_HEADER_V2* header = (struct DTC_HEADER_V2*)recvBuff;
-	if(!header)
-		return "";
-
-	if (header->version != 2)
-		return "";
 
 	if(!do_mysql_protocol_parse())
+	{
+		log4cplus_debug("parse_request_sql leave");
 		return m_sql;
+	}
 
+	log4cplus_debug("parse_request_sql leave");
 	return "";
 }
 
 int CTaskRequest::get_db_layer_level()
 {
-	if(recvLen < sizeof(struct DTC_HEADER_V2))
+	log4cplus_debug("get_db_layer_level entry.");
+
+	int level = get_layer();
+
+	if(level >3 || level < 1)
 		return 0;
 
-	if(!recvBuff)
-		return 0;
-	
-	struct DTC_HEADER_V2* header = (struct DTC_HEADER_V2*)recvBuff;
-	if(!header)
-		return 0;
-
-	if (header->version != 2)
-		return 0;
-
-	if(header->layer >3 || header->layer < 1)
-		return 0;
-
-	return header->layer;
+	log4cplus_debug("get_db_layer_level leave.");
+	return level;
 }
 
 bool CTaskRequest::IsAgentRequestCompleted()
