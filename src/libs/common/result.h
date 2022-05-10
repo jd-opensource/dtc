@@ -140,6 +140,10 @@ class ResultSet : public DTCFieldSet {
 	{
 		return init.len;
 	}
+	char* data(void) const
+	{
+		return init.ptr;
+	}
 };
 
 class ResultWriter {

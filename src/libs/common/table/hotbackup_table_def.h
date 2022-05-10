@@ -27,7 +27,8 @@ class DTCHotBackup {
 	       SYNC_DELETE = 16,
 	       SYNC_CLEAR = 32,
 	       SYNC_COLEXPAND = 64,
-	       SYNC_COLEXPAND_CMD = 128 };
+	       SYNC_COLEXPAND_CMD = 128,
+		   SYNC_NONE = 256 };
 
 	//flag
 	enum { NON_VALUE = 1,

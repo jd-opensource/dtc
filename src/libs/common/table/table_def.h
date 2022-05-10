@@ -101,7 +101,7 @@ class TableAttribute : public SimpleSection {
 		set_tag(1, get_tag(1) ? (get_tag(1)->u64 & tmp) : tmp);
 	}
 };
-
+// dbconfig field statistics
 class DTCTableDefinition {
     private:
 	FieldDefinition *fieldList;
@@ -109,7 +109,7 @@ class DTCTableDefinition {
 	TableAttribute attr;
 	int maxFields;
 	int usedFields;
-	int numFields;
+	int numFields; // start at 0
 	int keyFields;
 	DTCBinary tableName;
 	char hash[16];
@@ -124,7 +124,8 @@ class DTCTableDefinition {
 	DTCBinary packedTableDefinition;
 	DTCBinary packedFullFieldSet;
 	DTCBinary packedFieldSet; // field[0] not include
-	uint8_t *uniqFields;
+	uint8_t* uniqFields; 
+	uint8_t* rawFields; // ram always starts at 1, exclude key field id
 	int m_row_size; //bits
 	uint16_t maxKeySize; // max real key size, maybe 0-256. (256 is valid)
 	int16_t hasAutoInc; // the autoinc field id, -1:none 0-254, fieldid
@@ -430,6 +431,10 @@ class DTCTableDefinition {
 	{
 		return uniqFieldCnt;
 	}
+	uint8_t* raw_fields_list() const
+	{
+		return rawFields;
+	}
 	uint8_t *uniq_fields_list()
 	{
 		return uniqFields;
@@ -460,6 +465,7 @@ class DTCTableDefinition {
 	}
 
 	int set_key_fields(int n = 1);
+	// 0: string or binary
 	int key_format(void) const
 	{
 		return keyFormat;
@@ -473,7 +479,7 @@ class DTCTableDefinition {
 	{
 		DTCValue key;
 		key.bin.ptr = (char *)pk;
-		key.bin.len = key_format() ?: (*(unsigned char *)pk + 1);
+		key.bin.len = key_format() ? key_format() : (*(unsigned char *)pk + 1);
 		return key;
 	}
 
@@ -482,7 +488,7 @@ class DTCTableDefinition {
 		      int bsize, int boffset);
 #endif
 };
-
+// DTCTableDefinition adapter interface
 class TableReference {
     private:
 	DTCTableDefinition *table_definition_;

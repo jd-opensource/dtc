@@ -57,6 +57,7 @@ void GuardNotify::job_answer_procedure(DTCJobOperation *job)
 DataConnectorAskChain::DataConnectorAskChain()
 	: JobAskInterface<DTCJobOperation>(NULL), hasDummyMachine(0),
 	  guardReply(NULL), tableNo(0), guard(NULL)
+	  , p_task_dispatcher_(NULL)
 {
 	dbConfig[0] = NULL;
 	dbConfig[1] = NULL;
@@ -236,6 +237,10 @@ int DataConnectorAskChain::build_helper_object(int idx)
 		return -1;
 	}
 
+	DTCConfig* p_dtc_conf = dbConfig[idx]->cfgObj;
+	int i_has_hwc = p_dtc_conf ? p_dtc_conf->get_int_val("cache", "EnableHwc", 1) : 1;
+	log4cplus_info("enable hwc:%d" , i_has_hwc);
+
 	/* build helper object */
 	for (int i = 0; i < dbConfig[idx]->machineCnt; i++) {
 		if (dbConfig[idx]->mach[i].helperType == DUMMY_HELPER)
@@ -248,6 +253,7 @@ int DataConnectorAskChain::build_helper_object(int idx)
 		for (int j = 0; j < GROUPS_PER_MACHINE; j++) {
 			if (dbConfig[idx]->mach[i].gprocs[j] == 0)
 				continue;
+			log4cplus_debug("start worker sequence: %d", j);
 
 			char name[24];
 			snprintf(name, sizeof(name), "%d%c%d", i,
@@ -261,7 +267,9 @@ int DataConnectorAskChain::build_helper_object(int idx)
 						.path,
 					name, dbConfig[idx]->mach[i].gprocs[j],
 					dbConfig[idx]->mach[i].gqueues[j],
-					DTC_SQL_USEC_ALL);
+					DTC_SQL_USEC_ALL,
+					i_has_hwc);
+
 			if (j >= GROUPS_PER_ROLE)
 				groups[idx][i * GROUPS_PER_MACHINE + j]
 					->fallback =
@@ -650,10 +658,15 @@ int DataConnectorAskChain::do_attach(PollerBase *thread, int idx)
 {
 	if (idx == 0)
 		JobAskInterface<DTCJobOperation>::attach_thread(thread);
-	for (int i = 0; i < dbConfig[idx]->machineCnt * GROUPS_PER_MACHINE;
-	     i++) {
-		if (groups[idx][i])
+	for (int i = 0; 
+		i < dbConfig[idx]->machineCnt * GROUPS_PER_MACHINE;
+	    i++) {
+		if (groups[idx][i]) {
 			groups[idx][i]->do_attach(owner, &task_queue_allocator);
+
+			assert(p_task_dispatcher_ != NULL);
+			groups[idx][i]->BindHbLogDispatcher(p_task_dispatcher_);
+		}
 	}
 	return 0;
 }

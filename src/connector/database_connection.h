@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-
+// mysql include files
 #define list_add my_list_add
 #include "mysql.h"
 #undef list_add

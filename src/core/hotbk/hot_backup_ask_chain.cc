@@ -114,7 +114,9 @@ THBResult HotBackupAskChain::read_hb_log_process(DTCJobOperation &job)
 {
 	log4cplus_debug("read Hb log begin ");
 	JournalID hb_jid = job.versionInfo.hot_backup_id();
+	log4cplus_debug("request serial:%d , offset:%d",hb_jid.serial , hb_jid.offset);
 	JournalID write_jid = hbLog_.get_writer_jid();
+	log4cplus_debug("local write serial:%d , offset:%d" , write_jid.serial , write_jid.offset);
 
 	if (hb_jid.GE(write_jid)) {
 		taskPendList_.add2_list(&job);
