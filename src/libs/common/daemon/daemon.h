@@ -32,7 +32,7 @@ extern int background;
 extern const char project_name[];
 extern const char version[];
 extern const char usage_argv[];
-extern char cache_file[256];
+//extern char cache_file[256];
 extern char table_file[256];
 extern void show_version(void);
 extern void show_usage(void);

@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 		return DTC_CODE_FAILED;
 	Thread::set_auto_config_instance(
 		g_dtc_config->get_auto_config_instance("cache"));
-	if (start_watch_dog(init_thread, NULL) < 0)
+	if (start_dtc(init_thread, NULL) < 0)
 		return DTC_CODE_FAILED;
 
 	if (init_thread(NULL))

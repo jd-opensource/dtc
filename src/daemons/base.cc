@@ -31,7 +31,7 @@ WatchDogDaemon::~WatchDogDaemon(void)
 {
 }
 
-int WatchDogDaemon::dtc_fork()
+int WatchDogDaemon::new_proc_fork()
 {
 	/* an error detection pipe */
 	// int err, fd[2];
@@ -47,6 +47,7 @@ int WatchDogDaemon::dtc_fork()
 	if (watchdog_object_pid_ == -1)
 		return watchdog_object_pid_;
 	if (watchdog_object_pid_ == 0) {
+		// child process in.
 		/* close pipe if exec succ */
 		close(fd[0]);
 		fcntl(fd[1], F_SETFD, FD_CLOEXEC);
@@ -56,6 +57,8 @@ int WatchDogDaemon::dtc_fork()
 		unused = write(fd[1], &err, sizeof(err));
 		exit(-1);
 	}
+
+	// parent process in.
 	close(fd[1]);
 	if (read(fd[0], &err, sizeof(err)) == sizeof(err)) {
 		errno = err;
@@ -69,7 +72,7 @@ int WatchDogDaemon::dtc_fork()
 void WatchDogDaemon::job_timer_procedure()
 {
 	log4cplus_debug("enter timer procedure");
-	if (dtc_fork() < 0)
+	if (new_proc_fork() < 0)
 		if (timer_list_)
 			attach_timer(timer_list_);
 	log4cplus_debug("leave timer procedure");

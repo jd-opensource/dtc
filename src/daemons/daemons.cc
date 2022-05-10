@@ -21,10 +21,18 @@
 #include "daemons.h"
 #include "daemon/daemon.h"
 #include "log/log.h"
+#include "dtc_global.h"
+
+char daemons_cache_file[256] = CACHE_CONF_NAME;
+char daemons_table_file[256] = TABLE_CONF_NAME;
+
 
 WatchDogPipe::WatchDogPipe()
 {
 	int fd[2];
+	int unused;
+
+	unused = pipe(fd);
 	netfd = fd[0];
 	peerfd_ = fd[1];
 	fcntl(netfd, F_SETFL, O_NONBLOCK);
