@@ -1145,6 +1145,11 @@ int net_send_ok(int affectedRow)
 int is_desc_tables(DtcJob *job , char*& p_filepath)
 {
 	std::string sql = job->mr.get_sql();
+	if (sql.empty()) {
+		sql = std::string(job->mr.raw , job->mr.raw_len);
+	}
+	
+	log4cplus_debug("req sql:%s" , sql.c_str());
 
 	uint32_t ui_size = (sizeof(meta_selections) / sizeof(MetaSelections));
 	for (int i = 0; i < ui_size; i++) {
@@ -1215,16 +1220,19 @@ int Packet::yaml_config_result(DtcJob *job , const char* p_filename)
 	char* p_buf = NULL;
 	int i_len = 0;
 	int i_ret = load_table(p_filename , p_buf , i_len);
-
+	if (p_buf != NULL) {
+		log4cplus_debug("p_filename:%s , buflen:%d" , p_filename , i_len);
+	}
+    
 	if (i_ret != 0) { return -EFAULT; }
 
-	int packet_len = sizeof(BufferChain) + sizeof(iovec) +
-			 sizeof(DTC_HEADER_V2) + sizeof(uint8_t) + i_len;
-
+	int send_len = sizeof(DTC_HEADER_V2) + i_len;
+	int packet_len = sizeof(BufferChain) + sizeof(iovec) + send_len;
+	
 	DTC_HEADER_V2 header = { 0 };
 	header.version = 2;
 	header.id = job->request_peerid();
-	header.packet_len = packet_len;
+	header.packet_len = send_len;
 	header.admin = CMD_KEY_DEFINE;
 
 	if (buf == NULL) {
@@ -1248,13 +1256,10 @@ int Packet::yaml_config_result(DtcJob *job , const char* p_filename)
 	char *p = buf->data + sizeof(struct iovec);
 	v = (struct iovec *)buf->data;
 	v->iov_base = p;
-	v->iov_len = sizeof(header) + sizeof(uint8_t) + i_len;
+	v->iov_len = send_len;
 
 	memcpy(p, &header, sizeof(header));
 	p += sizeof(header);
-
-	*p = (uint8_t)i_len;
-	p++;
 
 	memcpy(p, p_buf, i_len);
 	FREE_CLEAR(p_buf);
