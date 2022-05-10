@@ -1122,6 +1122,7 @@ BufferChain *Packet::encode_mysql_protocol(DtcJob *job)
 	pos = encode_field_def(job, bc, pkt_nr);
 	if (!pos)
 		return NULL;
+	//Different MYSQL Version.
 	//pos = encode_eof(pos, ++pkt_nr);
 	//if (!pos)
 	//	return NULL;
