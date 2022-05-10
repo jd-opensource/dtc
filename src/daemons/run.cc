@@ -106,7 +106,7 @@ int start_dtc(int (*entry)(void *), void *args)
     usleep(100 * 1000);
     if (g_dtc_config->get_int_val("cache", "EnableHwc", 1) > 0) {
             WatchDogHWC* p_hwc_wd = new WatchDogHWC(wdog, delay);
-            if (p_hwc_wd->fork_main() < 0) {
+            if (p_hwc_wd->new_proc_fork() < 0) {
                 log4cplus_error("fork hwc server fail");
                 return -1;
             }
