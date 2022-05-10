@@ -21,11 +21,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
-
-#include <task_base.h>
+// local include files
 #include "database_connection.h"
-#include <dbconfig.h>
-#include <buffer.h>
+// common include files
+#include "task/task_base.h"
+#include "config/dbconfig.h"
+#include "buffer.h"
 
 class ConnectorProcess {
     private:
@@ -68,7 +69,7 @@ class ConnectorProcess {
 	void sql_append_comparator(uint8_t op);
 
 	int config_db_by_struct(const DbConfig *do_config);
-	int internal_init(int GroupID, int bSlave);
+	int machine_init(int GroupID, int bSlave);
 
 	int select_field_concate(const DTCFieldSet *Needed);
 	inline int format_sql_value(const DTCValue *Value, int iFieldType);
@@ -81,7 +82,7 @@ class ConnectorProcess {
 	int default_value_concate(const DTCFieldValue *UpdateInfo);
 	int save_row(RowValue *Row, DtcJob *Task);
 
-	void try_ping(void);
+	
 	int process_select(DtcJob *Task);
 	int process_insert(DtcJob *Task);
 	int process_insert_rb(DtcJob *Task);
@@ -90,9 +91,8 @@ class ConnectorProcess {
 	int process_delete(DtcJob *Task);
 	int process_delete_rb(DtcJob *Task);
 	int process_replace(DtcJob *Task);
-	int process_reload_config(DtcJob *Task);
-
-    public:
+ 	int process_reload_config(DtcJob *Task);
+public:
 	ConnectorProcess();
 
 	void use_matched_rows(void)
@@ -101,6 +101,9 @@ class ConnectorProcess {
 	}
 	int do_init(int GroupID, const DbConfig *do_config,
 		    DTCTableDefinition *tdef, int slave);
+
+	int try_ping(void);
+
 	void init_ping_timeout(void);
 	int check_table();
 
@@ -117,6 +120,7 @@ class ConnectorProcess {
 		proc_timeout = secs;
 	}
 
+	int process_statement_query(const DTCValue* key, std::string& s_sql);
 	~ConnectorProcess();
 };
 

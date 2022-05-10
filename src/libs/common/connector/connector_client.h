@@ -16,10 +16,10 @@
 #ifndef __HELPER_CLIENT_H__
 #define __HELPER_CLIENT_H__
 
-#include "../poll/poller.h"
-#include "../packet/packet.h"
-#include "../timer/timer_list.h"
-#include "../task/task_request.h"
+#include "poll/poller.h"
+#include "packet/packet.h"
+#include "timer/timer_list.h"
+#include "task/task_request.h"
 #include "stop_watch.h"
 
 enum HelperState {
@@ -32,6 +32,8 @@ enum HelperState {
 	HelperRecvVerifyState,
 	HelperSendNotifyReloadConfigState,
 	HelperRecvNotifyReloadConfigState,
+	HelperSendNotifyCheckState,
+	HelperRecvNotifyCheckState,
 };
 
 class ConnectorGroup;
@@ -78,7 +80,7 @@ class ConnectorClient : public EpollBase, private TimerObject {
     public:
 	friend class ConnectorGroup;
 
-	ConnectorClient(EpollOperation *, ConnectorGroup *hg, int id);
+	ConnectorClient(EpollOperation *, ConnectorGroup *hg, int id , int i_enable_check);
 	virtual ~ConnectorClient();
 
 	int attach_task(DTCJobOperation *, Packet *);
@@ -98,6 +100,10 @@ class ConnectorClient : public EpollBase, private TimerObject {
 	int client_notify_helper_reload_config();
 	int send_notify_helper_reload_config();
 	int recv_notify_helper_reload_config();
+
+	int client_notify_helper_check();
+	int send_notify_helper_check();
+	int recv_notify_helper_check();
 
 	int Ready();
 	int connect_error();
@@ -136,6 +142,7 @@ class ConnectorClient : public EpollBase, private TimerObject {
 
 	SimpleReceiver receiver;
 	DTCJobOperation *job;
+	DTCJobOperation* check_job;
 	Packet *packet;
 
 	DTCJobOperation *verify_task;
@@ -151,5 +158,6 @@ class ConnectorClient : public EpollBase, private TimerObject {
 	uint64_t connectErrorCnt;
 	int ready;
 	stopwatch_usec_t stopWatch;
+	int i_enable_check_;
 };
 #endif

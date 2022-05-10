@@ -127,11 +127,11 @@ struct DbConfig {
 
 	static struct DbConfig *load_buffered(char *buf);
 	static struct DbConfig *Load(const char *file);
-	static struct DbConfig *Load(DTCConfig *);
+	static struct DbConfig *Load(DTCConfig * , int i_server_type = 0);
 	static bool build_path(char *path, int n, int pid, int group, int role,
 			       int type);
 	void destory(void);
-	void dump_db_config(FILE *);
+	void dump_db_config(const struct DbConfig *cf);
 	void set_helper_path(int);
 	DTCTableDefinition *build_table_definition(void);
 	int load_key_hash(DTCConfig *);
@@ -140,8 +140,9 @@ struct DbConfig {
 	int find_new_mach(DbConfig *config, std::vector<int> &newMach,
 			  std::map<int, int> &machMap);
 
-    private:
-	int parse_db_config(DTCConfig *);
+private:
+	int parse_db_config(DTCConfig* raw, int i_server_type = 0);
+	int convert_case_sensitivity(std::string& s_val);
 };
 
 #endif

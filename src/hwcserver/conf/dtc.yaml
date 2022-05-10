@@ -1,0 +1,7 @@
+cache:
+    LOG_LEVEL: debug
+    BIND_ADDR: '*:20015/tcp'
+    DTCID: 20015
+    MAX_USE_MEM_MB: 100
+    DTC_MODE: 0
+    rule: (create_time >= NowYear()-2 or update_time >= NowDay() - 30) and flag = True

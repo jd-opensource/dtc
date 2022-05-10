@@ -225,7 +225,7 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 		return;
 	}
 
-	serialNr = header->id;
+	peerid = header->id;
 
 	//offset DTC Header.
 	p = p + sizeof(DTC_HEADER_V2);
@@ -456,14 +456,29 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 	//1.versionInfo
 	this->versionInfo.set_serial_nr(mr->get_pkt_nr());
 
+	char* p_table_name = mr->get_table_name();
+	if(NULL != p_table_name) {
+		this->versionInfo.set_table_name(p_table_name);
+	}
+	this->versionInfo.set_key_type(table_definition()->key_type());
+
 	//2.requestInfo
-	DTCValue key;
+	static DTCValue key;
 	if (mr->get_key(&key, table_definition()->key_name())) {
 		requestInfo.set_key(key);
 		set_request_key(&key);
 	}
 	log4cplus_debug("key type:%d %d", mr->get_request_type(), key.s64);
 	set_request_code(mr->get_request_type());
+
+	if (requestCode == DRequest::result_code ||
+	    requestCode == DRequest::DTCResultSet) {
+		replyCode = requestCode;
+		// replyFlags = header.flags;
+	} else {
+		// requestFlags = header.flags;
+		requestType = cmd2type[requestCode];
+	}
 
 	//limit
 	if (mr->get_limit_count()) {

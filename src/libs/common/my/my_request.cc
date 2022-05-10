@@ -245,3 +245,35 @@ std::vector<std::string> MyRequest::get_need_array()
 
 	return need;
 }
+
+char* MyRequest::get_table_name()
+{
+	if (m_result.size() < 1)
+		return NULL;
+
+	int t = m_result.getStatement(0)->type();
+
+	if (hsql::StatementType::kStmtInsert == t) {
+		hsql::InsertStatement *stmt = get_result()->getStatement(0);
+		if(stmt && stmt->tableName)
+			return stmt->tableName;
+	} else {
+		if (hsql::StatementType::kStmtUpdate == t) {
+			hsql::UpdateStatement *stmt =
+				get_result()->getStatement(0);
+			if(stmt && stmt->table)
+				return stmt->table->name;
+		} else if (hsql::StatementType::kStmtSelect == t) {
+			hsql::SelectStatement *stmt =
+				get_result()->getStatement(0);
+			if(stmt && stmt->fromTable)
+				return stmt->fromTable->name;
+		} else if (hsql::StatementType::kStmtDelete == t) {
+			hsql::DeleteStatement *stmt =
+				get_result()->getStatement(0);
+			if(stmt)
+				return stmt->tableName;
+		}
+	}
+	return NULL;
+}
