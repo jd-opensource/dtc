@@ -24,8 +24,8 @@ void InitState::Enter()
     assert(p_hwc_state_manager_);
 
     if (CComm::registor.Init()) {
-        p_hwc_state_manager_->ChangeState(E_HWC_STATE_FAULT);
         log4cplus_error("init dump controller file error.");
+        p_hwc_state_manager_->ChangeState(E_HWC_STATE_FAULT);
         return;
     }
 

@@ -8,6 +8,8 @@ using namespace std;
 hsql::SQLParserResult sql_ast;
 
 #define SPECIFIC_L3_SCHEMA "L3"
+#define SPECIFIC_L1_SCHEMA "L1"
+#define SPECIFIC_L2_SCHEMA "L2"
 
 //legitimacy check.
 int do_check_sql()
@@ -340,6 +342,7 @@ int re_match_sql(hsql::SQLParserResult* sql_ast, vector<vector<hsql::Expr*> > ex
     hsql::Expr* input_expr = NULL;
     int ret = -1;
     int statment_num = 0;
+    std::string schema;
 
     log4cplus_debug("sql match start..");
     if(!sql_ast)
@@ -352,6 +355,18 @@ int re_match_sql(hsql::SQLParserResult* sql_ast, vector<vector<hsql::Expr*> > ex
     if(statment_num > 1)
     {
         ret = -2;
+        goto RESULT;
+    }
+
+    schema = get_schema(sql_ast);
+    if(schema == std::string(SPECIFIC_L1_SCHEMA) || schema == std::string(SPECIFIC_L2_SCHEMA))
+    {
+        ret = 0;
+        goto RESULT;
+    }
+    else if(schema == std::string(SPECIFIC_L3_SCHEMA))
+    {
+        ret = 3;
         goto RESULT;
     }
 
@@ -398,10 +413,8 @@ int re_match_sql(hsql::SQLParserResult* sql_ast, vector<vector<hsql::Expr*> > ex
         {
             if(input_expr->isType(kExprOperator) && input_expr->opType == kOpAnd)
             {
-                log4cplus_debug("1111111111, %d", ep.condition_num);
                 if(ep.condition_num == 1)
                 {
-                    log4cplus_debug("2222222222");
                     if(do_match_expr(input_expr->expr, ep.rule) || do_match_expr(input_expr->expr2, ep.rule))
                     {
                         ret = 0;
@@ -410,7 +423,6 @@ int re_match_sql(hsql::SQLParserResult* sql_ast, vector<vector<hsql::Expr*> > ex
                 }
                 else if(ep.condition_num > 1)
                 {
-                    log4cplus_debug("3333333333333");
                     if(ep.rule->isType(kExprOperator) && ep.rule->opType == kOpAnd)
                     {
                         if((do_match_expr(input_expr->expr, ep.rule->expr) && do_match_expr(input_expr->expr2, ep.rule->expr2)) ||

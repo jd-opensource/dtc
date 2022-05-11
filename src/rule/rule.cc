@@ -39,7 +39,11 @@ extern "C" int rule_sql_match(const char* szsql, const char* szkey)
     }
 
     if(sql.find("INSERT INTO") != sql.npos || sql.find("insert into") != sql.npos)
+    {
+        log4cplus_debug("INSERT request, force direct to L1.");
+        //L1: DTC cache.
         return 1;
+    }
 
     hsql::SQLParserResult sql_ast;
     if(re_parse_sql(sql, &sql_ast) != 0)
