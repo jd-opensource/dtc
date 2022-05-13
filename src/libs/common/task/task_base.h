@@ -174,7 +174,6 @@ class DtcJob : public TableReference {
 
     protected: // working data
 	uint64_t serialNr; /* derived from packet */
-	uint64_t peerid;
 	const DTCValue *key; /* derived from packet */
 	const DTCValue *rkey; /* processing */
 	/* resultWriter only create once in job entire life */
@@ -195,7 +194,6 @@ class DtcJob : public TableReference {
 	       PFLAG_BLACKHOLED = 0x80,
 	};
 	uint8_t processFlags; /* processing */
-	int8_t pac_version;
 
     protected:
 	// return total packet size
@@ -218,10 +216,10 @@ class DtcJob : public TableReference {
 		  role(r), dataTableDef(tdef), hotbackupTableDef(NULL),
 		  replicateTableDef(NULL), updateInfo(NULL),
 		  conditionInfo(NULL), fieldList(NULL), result(NULL),
-		  serialNr(0), peerid(0),key(NULL), rkey(NULL), resultWriter(NULL),
+		  serialNr(0), key(NULL), rkey(NULL), resultWriter(NULL),
 		  resultWriterReseted(0), requestCode(0), requestType(0),
 		  requestFlags(0), replyCode(0), replyFlags(0),
-		  processFlags(PFLAG_ALLROWS) , pac_version(0)
+		  processFlags(PFLAG_ALLROWS)
 	{
 	}
 
@@ -351,21 +349,13 @@ class DtcJob : public TableReference {
 	{
 		updateInfo = ui;
 	}
-	const DTCFieldSet *request_fields(void)
+	const DTCFieldSet *request_fields(void) const
 	{
 		return fieldList;
-	}
-	void set_request_fields(const DTCFieldSet* p_dtc_field_set)
-	{
-		fieldList = p_dtc_field_set;
 	}
 	const uint64_t request_serial(void) const
 	{
 		return serialNr;
-	}
-	const uint64_t request_peerid(void) const
-	{
-		return peerid;
 	}
 
 	// result key
@@ -406,14 +396,13 @@ class DtcJob : public TableReference {
 	void decode_packet_v2(char *packetIn, int packetLen, int type);
 
 	int build_field_type_r(int sql_type, char *field_name);
-	int8_t get_pac_version() { return pac_version; }
 
 	DecodeResult do_decode(char *packetIn, int packetLen, int type)
 	{
-		pac_version = select_version(packetIn, packetLen);
-		if (pac_version == 1)
+		int8_t ver = select_version(packetIn, packetLen);
+		if (ver == 1)
 			decode_packet_v1(packetIn, packetLen, type);
-		else if (pac_version == 2)
+		else if (ver == 2)
 			decode_packet_v2(packetIn, packetLen, type);
 
 		return get_decode_result();
@@ -421,10 +410,10 @@ class DtcJob : public TableReference {
 
 	DecodeResult do_decode(const char *packetIn, int packetLen)
 	{
-		pac_version = select_version(packetIn, packetLen);
-		if (pac_version == 1)
+		int8_t ver = select_version(packetIn, packetLen);
+		if (ver == 1)
 			decode_packet_v1((char *)packetIn, packetLen, 0);
-		else if (pac_version == 2)
+		else if (ver == 2)
 			decode_packet_v2((char *)packetIn, packetLen, 0);
 
 		return get_decode_result();

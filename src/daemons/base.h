@@ -34,7 +34,7 @@ public:
 	WatchDogDaemon(WatchDog *watchdog, int sec);
 	~WatchDogDaemon();
 
-	virtual int new_proc_fork();
+	virtual int dtc_fork();
 	virtual void exec() = 0;
 };
 

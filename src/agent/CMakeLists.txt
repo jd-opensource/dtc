@@ -22,22 +22,20 @@ INCLUDE_DIRECTORIES(
     ./event 
     ./hashkit 
     ./proto
-    ../libs/mxml/include
-    ../rule)
+    ../libs/mxml/include)
 
 LINK_DIRECTORIES(
     ${PROJECT_SOURCE_DIR}/src/libs/mxml/libs
     ${PROJECT_SOURCE_DIR}/src/libs/hsql/libs
-    ${PROJECT_SOURCE_DIR}/build/src/rule/
 )
 
 LINK_LIBRARIES(rt) 
 LINK_LIBRARIES(libmxml.a)
 LINK_LIBRARIES(pthread)
-LINK_LIBRARIES(librule.so)
 
 ADD_DEFINITIONS ("-D_GNU_SOURCE")
+#ADD_DEFINITIONS("-DDA_ASSERT_PANIC")
 
 ADD_EXECUTABLE(dtcagent ${SRC_LIST})
 
-TARGET_LINK_LIBRARIES(dtcagent libmxml.a librule.so)
+TARGET_LINK_LIBRARIES(dtcagent libmxml.a)

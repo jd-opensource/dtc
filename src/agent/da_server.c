@@ -110,27 +110,12 @@ static uint32_t server_pool_hash(struct server_pool *pool, uint8_t *key,
 uint32_t server_pool_idx(struct server_pool *pool, uint8_t *key,
 		uint32_t keylen) {
 	ASSERT(array_n(&pool->server) != 0);
-	//ASSERT(key != NULL && keylen != 0);
+	ASSERT(key != NULL && keylen != 0);
+
 	uint32_t hash, idx;
+	hash = server_pool_hash(pool, key, keylen);
+	idx = ketama_dispatch(pool->continuum, pool->ncontinuum, hash);
 
-	if(key == NULL && keylen == 0)
-	{
-		log_debug("server_pool_idx 2\n");
-		return array_n(&pool->server) - 1;
-
-		hash = server_pool_hash(pool, key, keylen);
-		idx = ketama_dispatch(pool->continuum, pool->ncontinuum, hash, 2);
-	}
-	else
-	{
-		log_debug("server_pool_idx 1\n");
-		return 0;
-
-		hash = server_pool_hash(pool, key, keylen);
-		idx = ketama_dispatch(pool->continuum, pool->ncontinuum, hash, 1);
-	}
-
-	log_debug("server_pool_idx keylen:%d, key:%p, server num: %d, idx: %d\n", keylen, key, array_n(&pool->server), idx);
 	ASSERT(idx < array_n(&pool->server));
 	return idx;
 }
@@ -447,6 +432,7 @@ struct conn *server_pool_conn(struct context *ctx, struct server_pool *pool,
 
 		return conn;
 	}
+
 	else
 	{
 		ci = get_instance_from_server(server);

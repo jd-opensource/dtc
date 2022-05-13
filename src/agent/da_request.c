@@ -340,8 +340,6 @@ int dtc_header_add(struct msg *msg, enum enum_agent_admin admin)
 #endif
 	dtc_header.id = msg->id;
 	dtc_header.packet_len = mbuf_length(mbuf) + sizeof(dtc_header);
-	dtc_header.layer = msg->layer;
-
 	mbuf_copy(new_buf, &dtc_header, sizeof(dtc_header));
 	mbuf_copy(new_buf, mbuf->start, mbuf_length(mbuf));
 
@@ -405,23 +403,17 @@ void req_process(struct context *ctx, struct conn *c_conn, struct msg *msg)
 	case NEXT_FORWARD:
 		dtc_header_add(msg, CMD_NOP);
 		log_debug(
-			"FORWARD. msg len: %d, msg id: %d",
+			"req process will forward to dtc. msg len: %d, msg id: %d",
 			msg->mlen, msg->id);
 		req_forward(ctx, c_conn, msg);
 		break;
 	case NEXT_RSP_OK:
-		log_debug(
-			"RSP OK. msg len: %d, msg id: %d",
-			msg->mlen, msg->id);
 		if (net_send_ok(msg, c_conn) <
 		    0) /* default resp login success. */
 			return;
 		req_make_loopback(ctx, c_conn, msg);
 		break;
 	case NEXT_RSP_ERROR:
-		log_debug(
-			"RSP ERROR. msg len: %d, msg id: %d",
-			msg->mlen, msg->id);
 		if (net_send_error(msg, c_conn) <
 		    0) /* default resp login success. */
 			return;

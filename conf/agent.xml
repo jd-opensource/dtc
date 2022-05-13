@@ -7,10 +7,7 @@
         Preconnect="true" Server_Connections="1" Hash="chash" Timeout="3000" ReplicaEnable="true" ModuleIDC="LF" MainReport="false" InstanceReport="false" AutoRemoveReplica="true" TopPercentileEnable="false" TopPercentileDomain="127.0.0.1" TopPercentilePort="20020">
       <CACHESHARDING  Sid="293" ShardingReplicaEnable="true" ShardingName="test">
         <INSTANCE idc="LF" Role="replica" Enable="false" Addr="127.0.0.1:20000:1"/>
-        <INSTANCE idc="LF" Role="master" Enable="true" Addr="dtc:20015:1"/>
-      </CACHESHARDING>
-      <CACHESHARDING  Sid="999" ShardingReplicaEnable="false" ShardingName="complex">
-        <INSTANCE idc="LF" Role="master" Enable="true" Addr="127.0.0.1:3745:1"/>
+        <INSTANCE idc="LF" Role="master" Enable="true" Addr="127.0.0.1:20015:1"/>
       </CACHESHARDING>
     </MODULE>
   </BUSINESS_MODULE>

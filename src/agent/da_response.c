@@ -298,7 +298,7 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 				dtc_header_remove(msg);
 				rsp_forward(ctx, c_conn, req);
 				break;
-			case CMD_KEY_DEFINE:	// get key define config from dtc server.
+			case CMD_KEY_DEFINE:
 				ret = key_define_handle(msg);
 				if(ret < 0)
 				{

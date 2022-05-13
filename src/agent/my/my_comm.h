@@ -42,8 +42,7 @@ enum enum_agent_admin {
 struct DTC_HEADER_V2 {
 	uint8_t version;
 	uint8_t admin;
-	uint8_t layer;
-	uint8_t reserved[1];
+	uint8_t reserved[2];
 	uint32_t packet_len;
 	uint64_t id;
 };

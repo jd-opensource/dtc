@@ -175,8 +175,8 @@ static void stats_aggregate_reset(struct stats_file_item *item_list,
 static void stats_aggregate(struct stats *st) {
 	uint32_t i;
 	if (st->aggregate == 0) {
-		//log_debug("skip aggregate of shadow %p  as generator is slow",
-		//		st->shadow.elem);
+		log_debug("skip aggregate of shadow %p  as generator is slow",
+				st->shadow.elem);
 		for (i = 0; i < array_n(&st->aggregator); i++) {
 			uint32_t j;
 			struct stats_file_pool *stfp;
@@ -787,19 +787,19 @@ void stats_swap(struct stats *st) {
 	}
 
 	if (st->aggregate == 1) {
-		//log_debug("skip swap of current %p shadow %p as aggregator "
-		//		"is busy", st->current.elem, st->shadow.elem);
+		log_debug("skip swap of current %p shadow %p as aggregator "
+				"is busy", st->current.elem, st->shadow.elem);
 		return;
 	}
 
 	if (st->updated == 0) {
-		//log_debug("skip swap of current %p shadow %p as there is "
-		//		"nothing new", st->current.elem, st->shadow.elem);
+		log_debug("skip swap of current %p shadow %p as there is "
+				"nothing new", st->current.elem, st->shadow.elem);
 		return;
 	}
 
-	//log_debug("swap stats current %p shadow %p", st->current.elem,
-	//		st->shadow.elem);
+	log_debug("swap stats current %p shadow %p", st->current.elem,
+			st->shadow.elem);
 
 	//shadow has been reset
 	array_swap(&st->current, &st->shadow);

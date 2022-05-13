@@ -100,8 +100,6 @@ class MyRequest {
 
 	uint32_t get_update_num_fields();
 
-	char* get_table_name();
-
     public:
 	char *raw;
 	int raw_len;

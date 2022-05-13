@@ -3,12 +3,20 @@
 FILE(GLOB SRC_LIST ./*.cc)
 
 INCLUDE_DIRECTORIES (
-    ./
-    ../core
+    .
     ../daemons
-    ../libs/common
     ../libs/stat
+    ../libs/common
+    ../libs/common/log
+    ../libs/common/config
+    ../libs/common/daemon
+    ../libs/common/socket
+    ../libs/common/listener
+    ../libs/common/task
+    ../core
+    ../core/buffer
     ../libs/rocksdb/include/
+    ../core/mem
     ../libs/log4cplus/include/
     ../libs/zlib/include64
     ../libs/yaml-cpp/include/

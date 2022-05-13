@@ -24,11 +24,6 @@
 #include "table/hotbackup_table_def.h"
 
 TableDefinitionManager::TableDefinitionManager()
-	: _hotbackup(NULL)
-	, _buf(NULL)
-	, _table(NULL)
-	, _dbconfig(NULL)
-	, _save_dbconfig(NULL)
 {
 	_cur = 0;
 	_new = 0;
@@ -125,7 +120,6 @@ bool TableDefinitionManager::save_db_config()
 
 DTCTableDefinition *TableDefinitionManager::load_buffered_table(const char *buf)
 {
-	log4cplus_debug("cyj001");
 	DTCTableDefinition *table = NULL;
 	char *bufLocal = (char *)MALLOC(strlen(buf) + 1);
 	memset(bufLocal, 0, strlen(buf) + 1);

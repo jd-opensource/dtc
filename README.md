@@ -40,9 +40,9 @@ docker pull dtc8/server:latest
 docker run -i -t --name dtc-server -p 127.0.0.1:20015:20015 dtc8/server:latest
 ```
 
-For more compile information, click [Building](docs/building.md).<br/>
+For more compile information, see [Building](docs/building.md).<br/>
 Trying a demo, visit [QuickStart](docs/quickstart.md).
 
 ## License
 JD.com © Copyright 2022 [JD.com](https://ir.jd.com/), Inc.<br/>
-[Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0). Visit [LICENSE](./LICENSE) for more details.
+[Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0). visit for more details [LICENSE](./LICENSE).

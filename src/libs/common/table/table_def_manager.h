@@ -56,9 +56,6 @@ class TableDefinitionManager {
 	const char *table_file_buffer();
 	bool release_table_file_def_and_buffer();
 	bool renew_table_file_def(const char *buf, int len);
-	const DbConfig* get_db_config() const {
-		return _dbconfig;
-	};
 
     private:
 	int _cur;

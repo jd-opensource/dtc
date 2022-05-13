@@ -30,7 +30,6 @@
 #include "config/dbconfig.h"
 #include "version.h"
 #include "table/table_def_manager.h"
-#include "daemons.h"
 
 DTCConfig *g_dtc_config = NULL;
 DTCTableDefinition *g_table_def[2] = { NULL, NULL };
@@ -39,14 +38,8 @@ DbConfig *dbConfig = NULL;
 volatile int stop = 0;
 volatile int crash_signo = 0;
 int background = 1;
-const char stat_project_name[] = "daemon";
-const char stat_usage_argv[] = "";
-
-#define TABLE_CONF_NAME "/etc/dtc/table.yaml"
-#define CACHE_CONF_NAME "/etc/dtc/dtc.yaml"
-
-char d_cache_file[256] = CACHE_CONF_NAME;
-char d_table_file[256] = TABLE_CONF_NAME;
+extern const char project_name[];
+extern const char usage_argv[];
 
 pthread_t mainthreadid;
 
@@ -54,12 +47,12 @@ bool flatMode;
 //打印版本信息
 void show_version_detail()
 {
-	printf("%s version: %s\n", stat_project_name, version_detail);
+	printf("%s version: %s\n", project_name, version_detail);
 }
 //打印编译信息
 void show_comp_date()
 {
-	printf("%s compile date: %s %s\n", stat_project_name, compdatestr,
+	printf("%s compile date: %s %s\n", project_name, compdatestr,
 	       comptimestr);
 }
 
@@ -67,8 +60,8 @@ void show_usage()
 {
 	show_version_detail();
 	show_comp_date();
-	printf("Usage:\n    %s  [-d] [-h] [-v] [-V]%s\n", stat_project_name,
-	       stat_usage_argv);
+	printf("Usage:\n    %s  [-d] [-h] [-v] [-V]%s\n", project_name,
+	       usage_argv);
 }
 
 //获取初始信息（输入参数、编译信息等）
@@ -82,10 +75,10 @@ int load_entry_parameter(int argc, char **argv)
 			background = 0;
 			break;
 		case 'f':
-			strncpy(d_cache_file, optarg, sizeof(d_cache_file) - 1);
+			strncpy(cache_file, optarg, sizeof(cache_file) - 1);
 			break;
 		case 't':
-			strncpy(d_table_file, optarg, sizeof(d_table_file) - 1);
+			strncpy(table_file, optarg, sizeof(table_file) - 1);
 			break;
 		case 'h':
 			show_usage();
@@ -105,15 +98,15 @@ int load_entry_parameter(int argc, char **argv)
 	}
 
 	//init_log("dtcd");
-	log4cplus_info("%s v%s: starting....", stat_project_name, version);
-	strcpy(d_table_file, "/etc/dtc/table.yaml");
-	strcpy(d_cache_file, "/etc/dtc/dtc.yaml");
+	log4cplus_info("%s v%s: starting....", project_name, version);
+	strcpy(table_file, "/etc/dtc/table.yaml");
+	strcpy(cache_file, "/etc/dtc/dtc.yaml");
 	g_dtc_config = new DTCConfig;
 	//load config file and copy it to ../stat
-	if (g_dtc_config->parse_config(d_table_file, "DATABASE_CONF", true) == -1)
+	if (g_dtc_config->parse_config(table_file, "DATABASE_CONF", true) == -1)
 		return -1;
 
-	if (g_dtc_config->parse_config(d_cache_file, "cache", true))
+	if (g_dtc_config->parse_config(cache_file, "cache", true))
 		return -1;
 
 	dbConfig = DbConfig::Load(g_dtc_config);
@@ -125,7 +118,7 @@ int load_entry_parameter(int argc, char **argv)
 		return -1;
 
 	DTCTableDefinition *t;
-	if ((t = TableDefinitionManager::instance()->load_table(d_table_file)) ==
+	if ((t = TableDefinitionManager::instance()->load_table(table_file)) ==
 	    NULL)
 		return -1;
 	TableDefinitionManager::instance()->set_cur_table_def(t, 0);

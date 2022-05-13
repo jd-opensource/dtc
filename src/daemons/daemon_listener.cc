@@ -105,7 +105,7 @@ void WatchDogListener::input_notify()
 				return;
 			}
 			WatchDogHelper *helper = (WatchDogHelper *)obj;
-			if (helper->new_proc_fork() < 0 || helper->verify() < 0) {
+			if (helper->dtc_fork() < 0 || helper->verify() < 0) {
 				log4cplus_error("fork helper error");
 				return;
 			}

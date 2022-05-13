@@ -11,4 +11,4 @@ RUN mkdir -p $logpath
 COPY dtcagent $basepath/bin/dtcagent
 COPY agent.xml $confpath/agent.xml
 
-CMD ["/usr/local/dtc/bin/agent-main","-v","7"]
+CMD ["/usr/local/dtc/bin/dtcagent","-v","7"]

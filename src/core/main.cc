@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 		return DTC_CODE_FAILED;
 	Thread::set_auto_config_instance(
 		g_dtc_config->get_auto_config_instance("cache"));
-	if (start_dtc(init_thread, NULL) < 0)
+	if (start_watch_dog(init_thread, NULL) < 0)
 		return DTC_CODE_FAILED;
 
 	if (init_thread(NULL))
@@ -343,13 +343,12 @@ static int single_thread_mode_initiazation()
 
 static int multiple_thread_mode_initiazation()
 {
-	if (init_hotbackup_chain_thread())
-		return DTC_CODE_FAILED;
 	if (init_data_connector_chain_thread() < 0)
 		return DTC_CODE_FAILED;
 	if (init_remote_dtc_chain_thread() < 0)
 		return DTC_CODE_FAILED;
-	
+	if (init_hotbackup_chain_thread())
+		return DTC_CODE_FAILED;
 
 	if (g_datasource_mode == DTC_MODE_DATABASE_ONLY) {
 		g_data_connector_ask_instance->disable_commit_group();

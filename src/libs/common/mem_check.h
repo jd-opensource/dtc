@@ -97,7 +97,7 @@ extern char *strdup_debug(const char *, const char *, int);
 	})
 #endif
 #define CALLOC(x, y) calloc(x, y)
-#define STRDUP(x) (x) ? strdup(x) : NULL
+#define STRDUP(x) strdup(x)
 #endif
 
 #if __cplusplus

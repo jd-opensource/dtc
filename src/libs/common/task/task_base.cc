@@ -225,23 +225,17 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 		return;
 	}
 
-	peerid = header->id;
+	serialNr = header->id;
 
 	//offset DTC Header.
 	p = p + sizeof(DTC_HEADER_V2);
 
 	mr.set_packet_info(p, packetLen - sizeof(DTC_HEADER_V2));
-
-	struct timeval tv1, tv2;
-	gettimeofday(&tv1, NULL);
-
 	if (!mr.load_sql()) {
 		log4cplus_error("load sql error");
 		stage = DecodeStageDataError;
 		return;
 	}
-	gettimeofday(&tv2, NULL);
-	log4cplus_debug("load sql used time:%d us", tv2.tv_usec- tv1.tv_usec);
 
 	decode_request_v2(&mr);
 
@@ -456,29 +450,14 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 	//1.versionInfo
 	this->versionInfo.set_serial_nr(mr->get_pkt_nr());
 
-	char* p_table_name = mr->get_table_name();
-	if(NULL != p_table_name) {
-		this->versionInfo.set_table_name(p_table_name);
-	}
-	this->versionInfo.set_key_type(table_definition()->key_type());
-
 	//2.requestInfo
-	static DTCValue key;
+	DTCValue key;
 	if (mr->get_key(&key, table_definition()->key_name())) {
 		requestInfo.set_key(key);
 		set_request_key(&key);
 	}
 	log4cplus_debug("key type:%d %d", mr->get_request_type(), key.s64);
 	set_request_code(mr->get_request_type());
-
-	if (requestCode == DRequest::result_code ||
-	    requestCode == DRequest::DTCResultSet) {
-		replyCode = requestCode;
-		// replyFlags = header.flags;
-	} else {
-		// requestFlags = header.flags;
-		requestType = cmd2type[requestCode];
-	}
 
 	//limit
 	if (mr->get_limit_count()) {

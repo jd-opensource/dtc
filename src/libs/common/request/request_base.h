@@ -107,9 +107,6 @@ template <typename T> class ChainJoint : private TimerObject {
 	{
 		return owner;
 	}
-	void set_owner_thread(PollerBase* out_owner) {
-		owner = out_owner;
-	}
 	inline void register_next_chain(JobAskInterface<T> *instance)
 	{
 		if (owner == instance->get_owner_thread()) {
