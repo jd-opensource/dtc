@@ -128,13 +128,13 @@ int DataConf::ParseConfig(ConfigParam& config_param){
 
      const char* hot_db_name = g_dtc_config->get_str_val("data_lifecycle", "HotDBName");
     if(NULL == hot_db_name){
-        hot_db_name = "HOT";
+        hot_db_name = "L2";
     }
     config_param.hot_db_name_ = hot_db_name;
 
      const char* cold_db_name = g_dtc_config->get_str_val("data_lifecycle", "ColdDBName");
     if(NULL == cold_db_name){
-        cold_db_name = "COLD";
+        cold_db_name = "L3";
     }
     config_param.cold_db_name_ = cold_db_name;
 
@@ -145,7 +145,7 @@ int DataConf::ParseConfig(ConfigParam& config_param){
     }
     config_param.key_field_name_ = key_field_name;
 
-    const char* table_name = g_dtc_config->get_str_val("TABLE_CONF", "table_name");
+    const char* table_name = g_dtc_config->get_str_val("HOT_TABLE_CONF", "table_name");
     if(NULL == table_name){
         log4cplus_error("table_name not defined.");
         return DTC_CODE_PARSE_CONFIG_ERR;

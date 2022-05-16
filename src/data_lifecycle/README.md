@@ -17,7 +17,7 @@
 dtc.yaml文件：
 
 ```
-cache：
+data_lifecycle:
    SingleQueryCount: 10 // 单次查询的记录条数
    DataSQLRule: 'status = 0' // 定义数据规则的mysql语句
    OperateTimeRule: '00 01 * * * ?' // 定义处理时机的时间规则，采用croncpp的格式，见https://github.com/mariusbancila/croncpp
