@@ -4,8 +4,12 @@
 #include "dtc_global.h"
 #include "config.h"
 #include "global.h"
+#include "daemon.h"
+#include "dbconfig.h"
 
 extern DTCConfig *g_dtc_config;
+extern DbConfig *dbConfig;
+extern char cache_file[256];
 char agent_file[256] = "/etc/dtc/agent.xml";
 
 DataConf::DataConf(){
@@ -90,6 +94,7 @@ int DataConf::LoadConfig(int argc, char *argv[]){
         log4cplus_error("DataConf ParseConf error.");
         return DTC_CODE_LOAD_CONFIG_ERR;
     }
+    dbConfig = new DbConfig();
     return 0;
 }
 

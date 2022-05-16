@@ -1,4 +1,5 @@
 AUX_SOURCE_DIRECTORY(. SRC_LIST)
+AUX_SOURCE_DIRECTORY(. main)
 list(REMOVE_ITEM SRC_LIST "./cron_test.cc")
 
 INCLUDE_DIRECTORIES (
@@ -39,9 +40,24 @@ LINK_DIRECTORIES (
     ${PROJECT_SOURCE_DIR}/src/libs/google_test/lib
 )
 
+LINK_LIBRARIES(liblog4cplus.a) 
+LINK_LIBRARIES(libsqlparser.a)
+LINK_LIBRARIES(libyaml-cpp.a)
+LINK_LIBRARIES(libz64.a)
+LINK_LIBRARIES(pthread)
+LINK_LIBRARIES(nsl)
+LINK_LIBRARIES(stdc++)
+LINK_LIBRARIES(dl)
+LINK_LIBRARIES(z)
+LINK_LIBRARIES(libdtcd.a)
+LINK_LIBRARIES(libcommon.a)
+LINK_LIBRARIES(libdaemons.a)
+LINK_LIBRARIES(libstat.a)
+LINK_LIBRARIES(libmysqlclient.a)
+
 ADD_DEFINITIONS ("-g -fPIC -fpermissive -std=gnu++11 -DOMN_PLATFORM_UNIX -Wl,--no-undefined -Xlinker -zmuldefs")
 ADD_EXECUTABLE (data_lifecycle_manager ${SRC_LIST} ../connector/database_connection.cc)
-TARGET_LINK_LIBRARIES(data_lifecycle_manager dtcd daemons stat common log4cplus yaml-cpp z64 sqlparser mysqlclient mxml dl pthread)
+TARGET_LINK_LIBRARIES(data_lifecycle_manager libdtcd.a libdaemons.a libstat.a libcommon.a liblog4cplus.a libyaml-cpp.a libz64.a libsqlparser.a libmysqlclient.a libmxml.a)
 
 if(jdtestOpen)
     cmake_minimum_required(VERSION 2.8.8)

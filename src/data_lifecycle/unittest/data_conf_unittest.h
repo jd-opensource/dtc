@@ -3,6 +3,7 @@
 
 #include "../data_conf.h"
 #include "gtest/gtest.h"
+#include <stdio.h>
 
 class DataConfTest : public testing::Test {
 protected:
@@ -23,6 +24,7 @@ TEST_F(DataConfTest, CONF_) {
     int argc = 1;
     char* argv[] = {};
     int ret = data_conf_->LoadConfig(argc, argv);
+    printf("ret: %d\n", ret);
     EXPECT_EQ(0, ret);
     ConfigParam config_param;
     ret = data_conf_->ParseConfig(config_param);

@@ -4,6 +4,7 @@
 #include "dtc_global.h"
 #include "config.h"
 #include "proc_title.h"
+#include "dbconfig.h"
 
 const char data_project_name[] = "data_lifecycle_manager";
 
@@ -31,14 +32,16 @@ int main(int argc, char *argv[]){
         return DTC_CODE_INIT_DAEMON_ERR;
     }
     p_data_manager->DoProcess();
-    if(NULL != p_data_manager){
+    /*if(NULL != p_data_manager){
         delete p_data_manager;
     }
     if(NULL != g_dtc_config){
         delete g_dtc_config;
-    }
+    }*/
     log4cplus_info("%s v%s: stopped", data_project_name, version);
-    log4cplus::deinitialize();
-    daemon_cleanup();
+    //Logger::shutdown();
+    //daemon_cleanup();
+    //DaemonCrashed(1);
+    // log4cplus::deinitialize();
     return 0;
 }

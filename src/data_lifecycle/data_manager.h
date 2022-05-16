@@ -27,8 +27,9 @@ public:
     int DoProcess();
     int DoTaskOnce();
     void SetTimeRule(const std::string& time_rule);
-    void SetDataRule(const std::string& data_rule);
-private:
+    void SetDataRule(const std::string& data_rule){
+    data_rule_ = data_rule;
+    }
     virtual int GetLastId(uint64_t& last_delete_id, std::string& last_invisible_time);
     std::string ConstructQuerySql(uint64_t last_delete_id, std::string last_invisible_time);
     virtual int DoQuery(const std::string& query_sql, std::vector<QueryInfo>& query_info_vec);

@@ -56,7 +56,7 @@ int DataManager::DoProcess(){
     try{
         std::time_t now = std::time(0);
         next_process_time_ = cron::cron_next(cron, now);
-        log4cplus_debug("now: %d, next_process_time_: %d", now, next_process_time_);
+        log4cplus_debug("now: %d, next_process_time_: v%d", now, next_process_time_);
     }
     catch (cron::bad_cronexpr const & ex){
         log4cplus_error("bad_cronexpr: %s", ex.what());
@@ -89,18 +89,19 @@ int DataManager::DoTaskOnce(){
         std::string last_invisible_time;
         int ret = GetLastId(last_delete_id, last_invisible_time);
         if(0 != ret){
-            log4cplus_error("GetLastId error, ret: %d", ret);
+            printf("GetLastId error, ret: %d\n", ret);
             return DTC_CODE_MYSQL_QRY_ERR;
         }
         std::string query_sql = ConstructQuerySql(last_delete_id, last_invisible_time);
         std::vector<QueryInfo> query_info_vec;
         ret = DoQuery(query_sql, query_info_vec);
         if(0 != ret){
-            log4cplus_error("DoQuery error, ret: %d", ret);
+            printf("DoQuery error, ret: %d\n", ret);
             return DTC_CODE_MYSQL_QRY_ERR;
         }
+        printf("query_info_vec.size: %d\n", (int)query_info_vec.size());
         if(query_info_vec.size() == 0){
-            log4cplus_debug("query result empty, end the procedure.");
+            printf("query result empty, end the procedure.\n");
             break;
         }
         for(auto iter = query_info_vec.begin(); iter != query_info_vec.end(); iter++){
@@ -110,6 +111,7 @@ int DataManager::DoTaskOnce(){
             bool success_flag = true;
             for(auto del_iter = sql_set.begin(); del_iter != sql_set.end(); del_iter++){
                 ret = DoDelete(*del_iter);
+                printf("DoDelete ret: %d\n", ret);
                 if(0 != ret){
                     success_flag = false;
                 }
@@ -118,7 +120,7 @@ int DataManager::DoTaskOnce(){
             last_invisible_time_ = iter->invisible_time;
             if(false == success_flag){
                 UpdateLastDeleteId();
-                log4cplus_error("DoDelete error, ret: %d", ret);
+                printf("DoDelete error, ret: %d\n", ret);
                 return DTC_CODE_MYSQL_DEL_ERR;
             }
         }
@@ -129,10 +131,6 @@ int DataManager::DoTaskOnce(){
 
 void DataManager::SetTimeRule(const std::string& time_rule){
     operate_time_rule_ = time_rule;
-}
-
-void DataManager::SetDataRule(const std::string& data_rule){
-    data_rule_ = data_rule;
 }
 
 int DataManager::GetLastId(uint64_t& last_delete_id, std::string& last_invisible_time){
@@ -167,7 +165,7 @@ std::string DataManager::ConstructQuerySql(uint64_t last_delete_id, std::string 
         << " where (" << data_rule_
         << ") and (invisible_time>'" << last_invisible_time
         << "' or (invisible_time='" << last_invisible_time
-        << "' and id>=" << last_delete_id
+        << "' and id>" << last_delete_id
         << ")) order by invisible_time,id limit " << single_query_cnt_;
     log4cplus_debug("query sql: %s", ss_sql.str().c_str());
     return ss_sql.str();
@@ -176,7 +174,7 @@ std::string DataManager::ConstructQuerySql(uint64_t last_delete_id, std::string 
 int DataManager::DoQuery(const std::string& query_sql, std::vector<QueryInfo>& query_info_vec){
     int ret = db_conn_->do_query(cold_db_name_.c_str(), query_sql.c_str());
     if(0 != ret){
-        log4cplus_debug("query error, ret: %d, err msg: %s", ret, db_conn_->get_err_msg());
+        printf("query error, ret: %d, err msg: %s\n", ret, db_conn_->get_err_msg());
         return ret;
     }
     if(0 == db_conn_->use_result()){
@@ -184,7 +182,7 @@ int DataManager::DoQuery(const std::string& query_sql, std::vector<QueryInfo>& q
             ret = db_conn_->fetch_row();
             if (ret != 0) {
                 db_conn_->free_result();
-                log4cplus_error("db fetch row error: %s", db_conn_->get_err_msg());
+                printf("db fetch row error: %s\n", db_conn_->get_err_msg());
                 return ret;
             }
             QueryInfo query_info;

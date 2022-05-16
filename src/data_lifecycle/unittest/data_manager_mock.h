@@ -35,7 +35,7 @@ TEST_F(DataManagerTest , DoProcessTest){
     std::vector<QueryInfo> query_info_vec;
     QueryInfo info;
     info.id = 1;
-    info.invisible_time = "2022-03-01 15:00:00";
+    info.invisible_time = "2022-03-01 15:00:43";
     info.key_info = "1";
     query_info_vec.push_back(info);
     EXPECT_CALL(data_manager_mock_ , DoQuery(testing::_, testing::_)).Times(AnyNumber())
@@ -52,9 +52,15 @@ TEST_F(DataManagerTest , DoProcessTest){
         .WillRepeatedly(Return(0));
     data_manager_->SetTimeRule("0 */1 * * * ?");
     data_manager_->SetDataRule("status = 0");
+    uint64_t last_delete_id;
+    std::string last_invisible_time;
+    printf("1\n");
     EXPECT_NE(0, data_manager_->DoTaskOnce());
+    printf("2\n");
     EXPECT_NE(0, data_manager_->DoTaskOnce());
+    printf("3\n");
     EXPECT_NE(0, data_manager_->DoTaskOnce());
+    printf("4\n");
     EXPECT_EQ(0, data_manager_->DoTaskOnce());
 }
 UNITEST_NAMESPACE_END
