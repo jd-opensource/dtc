@@ -92,7 +92,7 @@ int DTCConfig::parse_buffered_config(char *buf, const char *fn,
     int ret_code = -1;
     try {
         printf("open config file:%s\n", fn);
-        if (defsec && strcmp(defsec, "cache") == 0) {
+        if (defsec && strcmp(defsec, "cache") == 0 || strcmp(defsec, "data_lifecycle") == 0) {
             cache_config_ = YAML::Load(buf);
         } else {
             table_config_ = YAML::Load(buf);
@@ -111,7 +111,7 @@ int DTCConfig::parse_config(const char *fn, const char *defsec, bool bakconfig)
 
     try {
         printf("open config file:%s\n", fn);
-        if (strcmp(defsec, "cache") == 0) {
+        if (strcmp(defsec, "cache") == 0 || strcmp(defsec, "data_lifecycle") == 0) {
             cache_config_ = YAML::LoadFile(fn);
         } else {
             table_config_ = YAML::LoadFile(fn);
@@ -161,7 +161,7 @@ bool DTCConfig::has_key(const char *sec, const char *key)
  * ******************************************/
 const char *DTCConfig::get_str_val(const char *sec, const char *key)
 {
-    if (strcmp(sec, "cache") == 0) {
+    if (strcmp(sec, "cache") == 0 || strcmp(sec, "data_lifecycle") == 0) {
         if (cache_config_[sec]) {
             if (cache_config_[sec][key]) {
                 std::string s_cache = cache_config_[sec][key]
@@ -187,29 +187,10 @@ const char *DTCConfig::get_str_val(const char *sec, const char *key)
     return NULL;
 }
 
-const YAML::Node& DTCConfig::get_array_node(const char* sec , const char* key)
-{
-    if (strcmp(sec, "cache") == 0) {
-        if (cache_config_[sec]) {
-            if (YAML::NodeType::Sequence == cache_config_[sec][key].Type()) {
-                printf("in cache , array size: %d" , (int)cache_config_[sec][key].size());
-                return cache_config_[sec][key];
-            }
-        }
-    }
-    else if (YAML::NodeType::Sequence == table_config_[sec].Type()) {
-        printf("%s array size: %d" , sec , (int)table_config_[sec].size());
-        return table_config_[sec];
-    }
-
-    static YAML::Node o_empty_node;
-    return o_empty_node;
-}
-
 int DTCConfig::get_int_val(const char *sec, const char *key, int def)
 {
     const char *val = NULL;
-    if (strcmp(sec, "cache") == 0) {
+    if (strcmp(sec, "cache") == 0 || strcmp(sec, "data_lifecycle") == 0) {
         if (cache_config_[sec]) {
             if (cache_config_[sec][key]) {
                 std::string result = cache_config_[sec][key]
@@ -241,7 +222,7 @@ unsigned long long DTCConfig::get_size_val(const char *sec, const char *key,
                        unsigned long long def, char unit)
 {
     const char *val = NULL;
-    if (strcmp(sec, "cache") == 0) {
+    if (strcmp(sec, "cache") == 0 || strcmp(sec, "data_lifecycle") == 0) {
         if (cache_config_[sec]) {
             if (cache_config_[sec][key]) {
                 std::string result = cache_config_[sec][key]
@@ -308,7 +289,7 @@ int DTCConfig::get_idx_val(const char *sec, const char *key,
                const char *const *array, int nDefault)
 {
     const char *val = NULL;
-    if (strcmp(sec, "cache") == 0) {
+    if (strcmp(sec, "cache") == 0 || strcmp(sec, "data_lifecycle") == 0) {
         if (cache_config_[sec]) {
             if (cache_config_[sec][key]) {
                 std::string result = cache_config_[sec][key]
@@ -487,10 +468,10 @@ int AutoConfigSection::get_idx_val(const char *key, const char *inst,
 const char *AutoConfigSection::get_str_val(const char *key, const char *inst)
 {
     const char *ret;
-	GlobalLock();
-	ret = parent->get_str_val(section, findkey(key, inst));
-	GlobalUnlock();
-	return ret;
+    GlobalLock();
+    ret = parent->get_str_val(section, findkey(key, inst));
+    GlobalUnlock();
+    return ret;
 }
 
 AutoConfig *DTCConfig::get_auto_config_instance(const char *section)
