@@ -324,6 +324,8 @@ int DbConfig::convert_case_sensitivity(
 int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
 {
     std::string s_lower_prefix("");
+    if(!raw)
+        return -1;
 
     switch (i_server_type)
     {

@@ -3,7 +3,7 @@ cache:
    BIND_ADDR: '*:20015/tcp'
    DTCID: 20015
    MAX_USE_MEM_MB: 100
-   DTC_MODE: 1
+   DTC_MODE: 1 #1: cache only, 0: database in addition.
 vhot:
    addr: 127.0.0.1:3307
    username: root
