@@ -344,7 +344,7 @@ static void show_usage(void) {
 	write_stderr(
 			"  -v, --verbosity=N      		: set logging level (default: 3, min: 1, max: 7)" CRLF
 			"  -o, --output=S         		: set logging dir (default: ../log/)" CRLF
-			"  -c, --conf-file=S      		: set configuration file (default: ../conf/agent.xml)" CRLF
+			"  -c, --conf-file=S      		: set configuration file (default: /etc/dtc/agent.xml)" CRLF
 			"  -e, --event-max-timeout=S	: set epoll max timeout(ms)(default: (30*1000)ms)" CRLF
 			"  -i, --stats_interval=S	    : set stats aggregator interval(ms)(default: (10*1000)ms)" CRLF
 			"  -p, --pid-file=S       		: set pid file (default: off)" CRLF

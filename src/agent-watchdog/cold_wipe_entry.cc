@@ -31,8 +31,9 @@ DataLifeCycleEntry::~DataLifeCycleEntry(void)
 
 void DataLifeCycleEntry::exec()
 {
-	char *argv[2];
-	argv[1] = NULL;
+	char *argv[3];
+	argv[2] = NULL;
 	argv[0] = (char *)cold_wipe_name;
+	argv[1] = (char*)"-d";
 	execv(argv[0], argv);
 }

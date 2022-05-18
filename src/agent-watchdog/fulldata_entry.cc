@@ -17,7 +17,7 @@
 #include "fulldata_entry.h"
 #include <unistd.h>
 
-const char *fulldata_name = "full_data";
+const char *fulldata_name = "complexity";
 
 FullDataEntry::FullDataEntry(WatchDog *watchdog, int sec)
 	: WatchDogDaemon(watchdog, sec)

@@ -3,6 +3,7 @@ Bin文件目录：/usr/local/dtc<br/>
 配置文件目录：/etc/dtc<br/>
 日志目录：/var/log/<br/>
 统计数据目录：/usr/local/dtc/stat/<br/>
+binlog数据目录：/usr/local/log/<br/>
 
 ## DTC模式
 
