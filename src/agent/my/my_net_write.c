@@ -34,7 +34,7 @@ int net_write(struct msg *dmsg, uint8_t* buf, size_t len, uint8_t pkt_nr)
 
 	ASSERT(len < MAX_PACKET_LENGTH);
 
-	int3store(header, (uint)len);
+	int_conv_3(header, (uint)len);
 	header[3] = pkt_nr;
 	log_debug("net_write header:0x%x 0x%x 0x%x 0x%x", header[0], header[1], header[2], header[3]);
 

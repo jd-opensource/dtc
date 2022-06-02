@@ -112,8 +112,8 @@ int CTaskRequest::do_mysql_protocol_parse()
 		return -1;
 	}
 
-	int input_packet_length = uint3korr(p);
-	log4cplus_debug("uint3korr:0x%x 0x%x 0x%x, len:%d", p[0], p[1], p[2],
+	int input_packet_length = uint_trans_3(p);
+	log4cplus_debug("uint_trans_3:0x%x 0x%x 0x%x, len:%d", p[0], p[1], p[2],
 			input_packet_length);
 	p += 3;
 	this->mysql_seq_id = (uint8_t)(*p); // mysql sequence id

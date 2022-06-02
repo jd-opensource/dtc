@@ -649,7 +649,7 @@ void encode_mysql_header(BufferChain *r, int len, uint8_t pkt_num)
 {
 	//Packet Lenght + Packet Number
 	char t[3];
-	int3store(t, len);
+	int_conv_3(t, len);
 	memcpy(r->data, t, 3);
 	*(r->data + 3) = pkt_num;
 }
