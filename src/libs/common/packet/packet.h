@@ -103,8 +103,10 @@ class Packet {
 	// 	if no result key set, set result key to request key
 	int encode_result(DtcJob &, int mtu = 0, uint32_t ts = 0);
 	int encode_result_v2(DtcJob &, int mtu = 0, uint32_t ts = 0);
+	int encode_result_mysql(DtcJob &, int mtu = 0, uint32_t ts = 0);
 	int desc_tables_result(DtcJob *job);
 	int yaml_config_result(DtcJob *job , const char* p_filename);
+	int greeting_result();
     
 	int demo_result(DtcJob *job);
 	int encode_result(DTCJobOperation &, int mtu = 0);

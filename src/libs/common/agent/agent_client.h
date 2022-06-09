@@ -52,6 +52,15 @@ class AgentResultQueue {
 	}
 };
 
+typedef enum conn_stage{
+  CONN_STAGE_UNLOGIN = 0,
+  CONN_STAGE_LOGGING_IN,
+  CONN_STAGE_SWITCH_NATIVE_PASSWD,
+  CONN_STAGE_LOGGED_IN,
+  
+  CONN_STAGE_DEFAULT
+}conn_stage_t;
+
 class PollerBase;
 class JobEntranceAskChain;
 class AgentReceiver;
@@ -76,10 +85,16 @@ class ClientAgent : public EpollBase, public TimerObject {
 	virtual void input_notify();
 	virtual void output_notify();
 
+	void send_greeting_info();
+
+	conn_stage_t get_login_stage() {return stage;}
+	void set_login_stage(conn_stage_t t) {stage = t;}
+
     private:
 	PollerBase *ownerThread;
 	JobEntranceAskChain *owner;
 	TimerList *tlist;
+	conn_stage_t stage;
 
 	AgentReceiver *receiver;
 	AgentSender *sender;

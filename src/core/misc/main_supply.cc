@@ -574,7 +574,6 @@ int init_data_connector_ask_chain(PollerBase *thread)
 		return DTC_CODE_FAILED;
 	}
 	//get helper timeout
-	log4cplus_info("cyj:%d" , __LINE__);
 	int timeout = g_dtc_config->get_int_val("cache", "HelperTimeout", 30);
 	int retry = g_dtc_config->get_int_val("cache", "HelperRetryTimeout", 1);
 	int connect =
@@ -583,7 +582,6 @@ int init_data_connector_ask_chain(PollerBase *thread)
 	g_data_connector_ask_instance->set_timer_handler(
 		thread->get_timer_list(timeout),
 		thread->get_timer_list(connect), thread->get_timer_list(retry));
-	log4cplus_info("cyj:%d" , __LINE__);
 	g_data_connector_ask_instance->do_attach(thread);
 	if (g_datasource_mode == DTC_MODE_DATABASE_ONLY) {
 		g_data_connector_ask_instance->disable_commit_group();

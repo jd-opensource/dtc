@@ -66,6 +66,7 @@ void AgentReply::job_answer_procedure(DTCJobOperation *job)
 
 	ClientAgent *client = job->owner_client();
 	if (client == NULL) {
+		log4cplus_error("client agent gone.");
 		/* client gone, finish this job */
 		job->done_one_agent_sub_request();
 		return;
@@ -123,11 +124,33 @@ void AgentReply::job_answer_procedure(DTCJobOperation *job)
 
 static AgentReply agent_reply;
 
+void ClientAgent::send_greeting_info()
+{
+	Packet *packet = new Packet();
+	if (packet == NULL) {
+		log4cplus_error("no mem new Packet");
+		return;
+	}
+
+	packet->greeting_result();
+
+	this->add_packet(packet);
+	if (this->send_result() < 0) {
+		log4cplus_error("cliengAgent send_result error");
+		return;
+	}
+
+	this->stage = CONN_STAGE_LOGGING_IN;
+
+	return ;
+}
+
 /* sender and receiver should inited ok */
 ClientAgent::ClientAgent(PollerBase *o, JobEntranceAskChain *u, int fd)
 	: EpollBase(o, fd), ownerThread(o), owner(u), tlist(NULL)
 {
 	tlist = u->get_timer_list();
+	this->stage = CONN_STAGE_UNLOGIN;
 	sender = new AgentSender(fd);
 	if (NULL == sender) {
 		log4cplus_error("no mem to new sender");
@@ -211,6 +234,7 @@ DTCJobOperation *ClientAgent::parse_job_message(char *recvbuff, int recvlen,
 						int pktcnt, uint8_t pktver)
 {
 	DTCJobOperation *job;
+	log4cplus_debug("parse_job_message entry.");
 
 	job = new DTCJobOperation(
 		TableDefinitionManager::instance()->get_cur_table_def());
@@ -241,6 +265,7 @@ DTCJobOperation *ClientAgent::parse_job_message(char *recvbuff, int recvlen,
 
 	remember_request(job);
 
+	log4cplus_debug("parse_job_message leave.");
 	return job;
 }
 

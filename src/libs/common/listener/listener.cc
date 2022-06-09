@@ -55,7 +55,7 @@ int DTCListener::do_bind(int blog, int rbufsz, int wbufsz)
 		return 0;
 
 	if ((netfd = socket_bind(sockaddr, blog, rbufsz, wbufsz, 1 /*reuse*/,
-				 1 /*nodelay*/, 1 /*defer_accept*/)) == -1)
+				 1 /*nodelay*/, 0 /*defer_accept*/)) == -1)
 		return -1;
 
 	bind = 1;
