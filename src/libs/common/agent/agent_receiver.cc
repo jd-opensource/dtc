@@ -153,6 +153,7 @@ int AgentReceiver::recv_again()
 
 int AgentReceiver::decode_header_v1(DTC_HEADER_V1 *header)
 {
+	log4cplus_debug("decode_header_v1 entry.");
 	if (header->version != 1) { // version not supported
 		log4cplus_error("version incorrect: %d", header->version);
 		return -1;
@@ -184,7 +185,36 @@ int AgentReceiver::decode_header_v1(DTC_HEADER_V1 *header)
 		return -1;
 	}
 
+	log4cplus_debug("decode_header_v1 leave.");
 	return pktbodylen;
+}
+
+int AgentReceiver::count_packet_mysql()
+{
+	char *pos = buffer;
+	int leftlen = offset;
+
+	pktCnt = 0;
+
+	if (pos == NULL || leftlen == 0)
+		return 0;
+
+	DTC_HEADER_V2 *header = NULL;
+
+	while (1) {
+		DTC_HEADER_V2 *header = NULL;
+
+		if (leftlen < (uint8_t)buffer[0])
+			break;
+
+		pos += leftlen;
+		leftlen = 0;
+		pktCnt = 1;
+	}
+
+	pktTail = pos - buffer;
+
+	return 0;
 }
 
 int AgentReceiver::count_packet_v2()
@@ -258,20 +288,46 @@ return value:
 void AgentReceiver::set_recved_info(RecvedPacket &packet)
 {
 	uint8_t ver = (uint8_t)(buffer[0]);
-
-	if (ver == 1) {
-		if (count_packet_v1() < 0) {
-			packet.err = -1;
-			return;
+	if( ver == 1)
+	{
+		if(offset == 5)
+		{
+			ver = 0;
+			if (count_packet_mysql() < 0) {
+				packet.err = -1;
+				return;
+			}
 		}
-	} else if (ver == 2) {
-		if (count_packet_v2() < 0) {
-			packet.err = -1;
-			return;
+		else{
+			if (count_packet_v1() < 0) {
+				packet.err = -1;
+				return;
+			}
+		}
+		
+	}
+	else if(ver == 2)
+	{
+		if(offset == 6)
+		{
+			ver = 0;
+			if (count_packet_mysql() < 0) {
+				packet.err = -1;
+				return;
+			}
+		}
+		else{
+			if (count_packet_v2() < 0) {
+				packet.err = -1;
+				return;
+			}
 		}
 	} else {
-		log4cplus_error("parse dtc protocol version error:%d", ver);
-		return;
+		ver = 0;
+		if (count_packet_mysql() < 0) {
+			packet.err = -1;
+			return;
+		}
 	}
 
 	/* not even ont packet recved, do nothing */
@@ -289,6 +345,7 @@ void AgentReceiver::set_recved_info(RecvedPacket &packet)
 	if (pktTail < offset)
 		memcpy(tmpbuff, buffer + pktTail, offset - pktTail);
 
+	log4cplus_debug("ver: %d, len:%d, cnt:%d", ver, pktTail, pktCnt);
 	packet.buff = buffer;
 	packet.len = pktTail;
 	packet.pktCnt = pktCnt;

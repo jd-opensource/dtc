@@ -92,9 +92,14 @@ void AgentMultiRequest::DecodeOneRequest(char *packetstart, int packetlen,
 		compleTask++;
 		return;
 	}
-
+	
+	job->set_owner_info(this, index, NULL);
+	log4cplus_debug("owner client:%p", this->owner_client_);
+	job->set_owner_client(this->owner_client_);
+	job->set_job_owner_client(this->owner_client_);
 	job->set_hotbackup_table(
 		TableDefinitionManager::instance()->get_hot_backup_table_def());
+
 	decoderes = job->do_decode(packetstart, packetlen, 2);
 	switch (decoderes) {
 	default:
@@ -116,9 +121,6 @@ void AgentMultiRequest::DecodeOneRequest(char *packetstart, int packetlen,
 		}
 		break;
 	}
-
-	job->set_owner_info(this, index, NULL);
-	job->set_owner_client(this->owner_client_);
 
 	taskList[index].job = job;
 
@@ -151,6 +153,10 @@ int AgentMultiRequest::decode_agent_request()
 				    sizeof(DTC_HEADER_V1);
 		} else if (packetVersion == 2) {
 			packetlen = ((DTC_HEADER_V2 *)packetstart)->packet_len;
+		}
+		else if(packetVersion == 0)
+		{
+			packetlen = uint_trans_3((const uchar*)packetstart) + sizeof(MYSQL_HEADER_SIZE);
 		}
 
 		log4cplus_debug("packet len: %d", packetlen);

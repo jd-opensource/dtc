@@ -56,6 +56,7 @@ class AgentReceiver {
 	void set_recved_info(RecvedPacket &packet);
 	int count_packet_v1();
 	int count_packet_v2();
+	int count_packet_mysql();
 };
 
 #endif
