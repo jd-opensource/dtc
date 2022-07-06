@@ -21,7 +21,7 @@
 
 #include "stat_dtc.h"
 #include "namespace.h"
-#include "pt_malloc.h"
+#include "mem/pt_malloc.h"
 #include "shmem.h"
 #include "global.h"
 #include "node/node_list.h"

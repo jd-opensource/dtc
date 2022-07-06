@@ -38,6 +38,6 @@ void AgentEntry::exec()
 	argv[3] = (char *)"-p";
 	argv[4] = (char *)"agent.pid";
 	argv[5] = NULL;
-	argv[0] = (char *)"agent-main";
+	argv[0] = (char *)agent_name;
 	execv(argv[0], argv);
 }

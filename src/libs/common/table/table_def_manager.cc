@@ -24,6 +24,11 @@
 #include "table/hotbackup_table_def.h"
 
 TableDefinitionManager::TableDefinitionManager()
+	: _hotbackup(NULL)
+	, _buf(NULL)
+	, _table(NULL)
+	, _dbconfig(NULL)
+	, _save_dbconfig(NULL)
 {
 	_cur = 0;
 	_new = 0;
@@ -129,7 +134,8 @@ DTCTableDefinition *TableDefinitionManager::load_buffered_table(const char *buf)
 		_dbconfig = NULL;
 	}
 	_dbconfig = DbConfig::load_buffered(bufLocal);
-	FREE(bufLocal);
+	if(bufLocal)
+		FREE(bufLocal);
 	if (!_dbconfig) {
 		log4cplus_error("new dbconfig error");
 		return table;
@@ -143,7 +149,7 @@ DTCTableDefinition *TableDefinitionManager::load_buffered_table(const char *buf)
 
 DTCTableDefinition *TableDefinitionManager::load_table(const char *file)
 {
-	char *buf;
+	char *buf = NULL;
 	int fd, len, readlen;
 	DTCTableDefinition *ret = NULL;
 	if (!file || file[0] == '\0' || (fd = open(file, O_RDONLY)) < 0) {
@@ -163,7 +169,7 @@ DTCTableDefinition *TableDefinitionManager::load_table(const char *file)
 	// should copy one, as load_buffered_table will modify buf
 	strncpy(buf, _buf, len);
 	buf[len] = '\0';
-	log4cplus_debug("read file to buf, len: %d", len);
+	log4cplus_debug("read file(%s) to buf, len: %d", file, len);
 	ret = load_buffered_table(buf);
 	if (!ret)
 		FREE_CLEAR(_buf);

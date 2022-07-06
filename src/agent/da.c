@@ -31,6 +31,7 @@
 #include "da_stats.h"
 #include <sys/utsname.h>
 #include <sched.h>
+#include "../rule/rule.h"
 
 #define DA_VERSION_MAJOR	2
 #define DA_VERSION_MINOR	0
@@ -343,7 +344,7 @@ static void show_usage(void) {
 	write_stderr(
 			"  -v, --verbosity=N      		: set logging level (default: 3, min: 1, max: 7)" CRLF
 			"  -o, --output=S         		: set logging dir (default: ../log/)" CRLF
-			"  -c, --conf-file=S      		: set configuration file (default: ../conf/agent.xml)" CRLF
+			"  -c, --conf-file=S      		: set configuration file (default: /etc/dtc/agent.xml)" CRLF
 			"  -e, --event-max-timeout=S	: set epoll max timeout(ms)(default: (30*1000)ms)" CRLF
 			"  -i, --stats_interval=S	    : set stats aggregator interval(ms)(default: (10*1000)ms)" CRLF
 			"  -p, --pid-file=S       		: set pid file (default: off)" CRLF
@@ -468,12 +469,21 @@ static int da_set_sched_affinity(int run_cupmask)
 static int da_pre_run(struct instance *dai) {
 	int status;
 	struct sig_handler *sh;
+	char dtckey[50] = {0};
 	//init system time
 	tv_update_date(-1, -1);
 	//init log
 	da_log_init(dai);
 
 	log_info("DTC AGENT init.");
+
+#if 0
+	if(re_load_table_key(dtckey) < 0)
+	{
+		log_error("load dtc define error.");
+		return -1;
+	}
+#endif
 
 	if (daemonize) {
 		status = da_daemonize(1);

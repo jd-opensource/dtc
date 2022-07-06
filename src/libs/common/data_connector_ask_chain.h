@@ -36,6 +36,10 @@ class DataConnectorAskChain : public JobAskInterface<DTCJobOperation> {
 	DataConnectorAskChain();
 	~DataConnectorAskChain();
 
+	void BindHbLogDispatcher(JobAskInterface<DTCJobOperation>* p_task_dispatcher) {
+		p_task_dispatcher_ = p_task_dispatcher;
+	};
+
 	int load_config(struct DbConfig *cfg, int ks, int idx = 0);
 	int renew_config(struct DbConfig *cfg);
 	void collect_notify_helper_reload_config(DTCJobOperation *job);
@@ -90,20 +94,18 @@ class DataConnectorAskChain : public JobAskInterface<DTCJobOperation> {
 	std::vector<int> newDb;
 	std::map<int, int> new2old;
 	int tableNo;
+	JobAskInterface<DTCJobOperation>* p_task_dispatcher_;
 
-    public:
+public:
 	KeyHelper *guard;
 
-    private:
+private:
 	StatCounter statQueueCurCount; /*所有组当前总的队列大小*/
 	StatCounter statQueueMaxCount; /*所有组配置总的队列大小*/
-	StatCounter
-		statReadQueueCurMaxCount; /*所有机器所有主读组当前最大的队列大小*/
+	StatCounter statReadQueueCurMaxCount; /*所有机器所有主读组当前最大的队列大小*/
 	StatCounter statWriteQueueMaxCount; /*所有机器所有写组当前最大的队列大小*/
-	StatCounter
-		statCommitQueueCurMaxCount; /*所有机器所有提交组当前最大的队列大小*/
-	StatCounter
-		statSlaveReadQueueMaxCount; /*所有机器所有备读组当前最大的队列大小*/
+	StatCounter statCommitQueueCurMaxCount; /*所有机器所有提交组当前最大的队列大小*/
+	StatCounter statSlaveReadQueueMaxCount; /*所有机器所有备读组当前最大的队列大小*/
 };
 
 #endif

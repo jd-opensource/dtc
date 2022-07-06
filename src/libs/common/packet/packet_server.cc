@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <new>
@@ -29,8 +30,24 @@
 #include "../log/log.h"
 //#include "mysql/field_types.h"
 
-const char *req_string = "select dtctables";
+struct MetaSelections{
+	const char* p_req_string;
+	int i_select_type;
+	const char* p_val;
+};
 
+enum enum_select_types {
+	E_SELECT_NONE,
+	E_SELECT_DTC_TABLES,
+	E_SELECT_DTC_YAML,
+	E_SELECT_TABLE_YAML
+};
+
+const MetaSelections meta_selections[] = {
+	{"select dtctables" , E_SELECT_DTC_TABLES 	, NULL},
+	{"select dtcyaml" 	, E_SELECT_DTC_YAML 	, "/etc/dtc/dtc.yaml"},
+	{"select tableyaml" , E_SELECT_TABLE_YAML 	, "/etc/dtc/table.yaml"}
+};
 
 enum enum_field_types { MYSQL_TYPE_DECIMAL, MYSQL_TYPE_TINY,
 			MYSQL_TYPE_SHORT,  MYSQL_TYPE_LONG,
@@ -632,7 +649,7 @@ void encode_mysql_header(BufferChain *r, int len, uint8_t pkt_num)
 {
 	//Packet Lenght + Packet Number
 	char t[3];
-	int3store(t, len);
+	int_conv_3(t, len);
 	memcpy(r->data, t, 3);
 	*(r->data + 3) = pkt_num;
 }
@@ -939,7 +956,12 @@ BufferChain *encode_row_data(DtcJob *job, BufferChain *bc, uint8_t &pkt_nr)
 		int row_len = 0;
 		for (int j = 0; j < result_field.size(); j++) {
 			int id = tdef->field_id(result_field[j].c_str());
-			DTCValue *v = pstRow->field_value(id);
+			DTCValue* v;
+			if (0 == id) {
+				v = job->request_key();
+			} else {
+				v = pstRow->field_value(id);
+			}
 			int field_type = pstRow->field_type(id);
 			switch (field_type) {
 			case DField::Signed: {
@@ -992,7 +1014,12 @@ BufferChain *encode_row_data(DtcJob *job, BufferChain *bc, uint8_t &pkt_nr)
 		//copy fields content
 		for (int j = 0; j < result_field.size(); j++) {
 			int id = tdef->field_id(result_field[j].c_str());
-			DTCValue *v = pstRow->field_value(id);
+			DTCValue* v;
+			if (0 == id) {
+				v = job->request_key();
+			} else {
+				v = pstRow->field_value(id);
+			}
 			int field_type = pstRow->field_type(id);
 			int num_len = 0;
 			switch (field_type) {
@@ -1095,6 +1122,7 @@ BufferChain *Packet::encode_mysql_protocol(DtcJob *job)
 	pos = encode_field_def(job, bc, pkt_nr);
 	if (!pos)
 		return NULL;
+	//Different MYSQL Version.
 	//pos = encode_eof(pos, ++pkt_nr);
 	//if (!pos)
 	//	return NULL;
@@ -1115,13 +1143,61 @@ int net_send_ok(int affectedRow)
 			     0x00 };
 }
 
-bool is_desc_tables(DtcJob *job)
+int is_desc_tables(DtcJob *job , char*& p_filepath)
 {
 	std::string sql = job->mr.get_sql();
-	if (sql == string(req_string))
-		return true;
+	if (sql.empty()) {
+		sql = std::string(job->mr.raw , job->mr.raw_len);
+	}
+	
+	log4cplus_debug("req sql:%s" , sql.c_str());
 
-	return false;
+	uint32_t ui_size = (sizeof(meta_selections) / sizeof(MetaSelections));
+	for (int i = 0; i < ui_size; i++) {
+		if (sql == string(meta_selections[i].p_req_string)) {
+			p_filepath = meta_selections[i].p_val;
+			return meta_selections[i].i_select_type; 
+		}
+	}
+
+	return E_SELECT_NONE;
+}
+
+int Packet::greeting_result()
+{
+	log4cplus_debug("greeting_result entry.");
+	uint8_t greeting_info[78] = {0x4a, 0x00, 0x00, 0x00, 0x0a, 0x38, 0x2e, 0x30, 0x2e, 0x32, 0x36, 0x00, 0x0a, 0x00, 0x00, 0x00, 0x6f, 0x3c, 0x36, 0x36, 0x03, 0x68, 0x38, 0x46, 0x00, 0xff, 0xf7, 0xff, 0x02, 0x00, 0xff, 0x8f, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6a, 0x2a, 0x0a, 0x60, 0x5c, 0x68, 0x50, 0x34, 0x6b, 0x0e, 0x27, 0x73, 0x00, 0x6d, 0x79, 0x73, 0x71, 0x6c, 0x5f, 0x6e, 0x61, 0x74, 0x69, 0x76, 0x65, 0x5f, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x00};
+	nv = 1;
+	int content_len = 78;
+	int packet_len = sizeof(BufferChain) + sizeof(struct iovec) +
+			content_len + 2;
+
+	if (buf == NULL) {
+		buf = (BufferChain *)MALLOC(packet_len);
+		if (buf == NULL) {
+			return -ENOMEM;
+		}
+		buf->totalBytes = packet_len - sizeof(BufferChain);
+		buf->nextBuffer = NULL;
+	} else if (buf &&
+		   packet_len - (int)sizeof(BufferChain) > buf->totalBytes) {
+		FREE_IF(buf);
+		buf = (BufferChain *)MALLOC(packet_len);
+		if (buf == NULL) {
+			return -ENOMEM;
+		}
+		buf->totalBytes = packet_len - sizeof(BufferChain);
+		buf->nextBuffer = NULL;
+	}
+
+	char *p = buf->data + sizeof(struct iovec);
+	v = (struct iovec *)buf->data;
+	v->iov_base = p;
+	v->iov_len = content_len;
+	memcpy(p, greeting_info, content_len);
+
+	log4cplus_debug("greeting_result leave.");
+	return 0;
 }
 
 int Packet::desc_tables_result(DtcJob *job)
@@ -1135,7 +1211,7 @@ int Packet::desc_tables_result(DtcJob *job)
 			 sizeof(header) + content_len + 2;
 
 	header.version = 2;
-	header.id = job->request_serial();
+	header.id = job->request_peerid();
 	header.packet_len = packet_len;
 	header.admin = CMD_KEY_DEFINE;
 
@@ -1171,20 +1247,127 @@ int Packet::desc_tables_result(DtcJob *job)
 	memcpy(p, tdef->field_name(0), content_len);
 
 	log4cplus_debug("desc_tables_result leave.");
+	return 0;
 }
+
+int Packet::yaml_config_result(DtcJob *job , const char* p_filename)
+{
+	log4cplus_debug("yaml_config_result entry.");
+	nv = 1;
+
+	char* p_buf = NULL;
+	int i_len = 0;
+	int i_ret = load_table(p_filename , p_buf , i_len);
+	if (p_buf != NULL) {
+		log4cplus_debug("p_filename:%s , buflen:%d" , p_filename , i_len);
+	}
+    
+	if (i_ret != 0) { return -EFAULT; }
+
+	int send_len = sizeof(DTC_HEADER_V2) + i_len;
+	int packet_len = sizeof(BufferChain) + sizeof(iovec) + send_len;
+	
+	DTC_HEADER_V2 header = { 0 };
+	header.version = 2;
+	header.id = job->request_peerid();
+	header.packet_len = send_len;
+	header.admin = CMD_KEY_DEFINE;
+
+	if (buf == NULL) {
+		buf = (BufferChain *)MALLOC(packet_len);
+		if (buf == NULL) {
+			return -ENOMEM;
+		}
+		buf->totalBytes = packet_len - sizeof(BufferChain);
+		buf->nextBuffer = NULL;
+	} else if (buf &&
+		   packet_len - (int)sizeof(BufferChain) > buf->totalBytes) {
+		FREE_IF(buf);
+		buf = (BufferChain *)MALLOC(packet_len);
+		if (buf == NULL) {
+			return -ENOMEM;
+		}
+		buf->totalBytes = packet_len - sizeof(BufferChain);
+		buf->nextBuffer = NULL;
+	}
+
+	char *p = buf->data + sizeof(struct iovec);
+	v = (struct iovec *)buf->data;
+	v->iov_base = p;
+	v->iov_len = send_len;
+
+	memcpy(p, &header, sizeof(header));
+	p += sizeof(header);
+
+	memcpy(p, p_buf, i_len);
+	FREE_CLEAR(p_buf);
+
+	log4cplus_debug("yaml_config_result leave.");
+	return 0;
+};
+
+int Packet::load_table(const char* p_filename, char*& file , int& i_length)
+{
+	int fd = -1;
+
+	if (!p_filename 
+	|| p_filename[0] == '\0' 
+	|| (fd = open(p_filename, O_RDONLY)) < 0) {
+		log4cplus_error("open config file error");
+		return -1;
+	}
+
+	lseek(fd, 0L, SEEK_SET);
+	i_length = lseek(fd, 0L, SEEK_END);
+	lseek(fd, 0L, SEEK_SET);
+	// Attention: memory init here ,need release outside
+	file = (char *)MALLOC(i_length + 1);
+	int readlen = read(fd, file, i_length);
+	if (readlen < 0 || readlen == 0)
+		return -1;
+	file[i_length] = '\0';
+	close(fd);
+	i_length++; // add finish flag length
+	log4cplus_debug("read file to buf, len: %d", i_length);
+	return 0;
+};
 
 int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 {
 	log4cplus_debug("encode_result_v2 entry.");
 	const DTCTableDefinition *tdef = job.table_definition();
 
-	if (is_desc_tables(&job)) {
-		return desc_tables_result(&job);
+	char* p_file_path = NULL;
+	switch (is_desc_tables(&job , p_file_path))
+	{
+	case E_SELECT_DTC_TABLES:
+	    {
+			return desc_tables_result(&job);
+		}
+		break;
+	case E_SELECT_DTC_YAML:
+		{
+			return yaml_config_result(&job , p_file_path);
+		}
+		break;
+	case E_SELECT_TABLE_YAML:
+		{
+			return yaml_config_result(&job , p_file_path);
+		}
+		break;
+	case E_SELECT_NONE:
+	default:
+		break;
 	}
+
+	// if (is_desc_tables(&job)) {
+	// 	return desc_tables_result(&job);
+	// }
 
 	// rp指向返回数据集
 	ResultPacket *rp =
 		job.result_code() >= 0 ? job.get_result_packet() : NULL;
+	log4cplus_info("result code:%d" , job.result_code());
 	BufferChain *rb = NULL;
 	int nrp = 0, lrp = 0, off = 0;
 	bool bok = false;
@@ -1195,6 +1378,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	/* rp may exist but no result */
 	if (rp && (rp->numRows || rp->totalRows)) {
 		//rb指向数据结果集缓冲区起始位置
+		log4cplus_info("line:%d" ,__LINE__);
 		rb = rp->bc;
 		if (rb)
 			rb->Count(nrp, lrp);
@@ -1203,6 +1387,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 		lrp -= off;
 		job.resultInfo.set_total_rows(rp->totalRows);
 	} else {
+		log4cplus_info("line:%d" ,__LINE__);
 		nrp = 1;
 		bok = true;
 		if (rp && rp->totalRows == 0 && rp->bc) {
@@ -1227,7 +1412,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	if (ts) {
 		job.resultInfo.set_time_info(ts);
 	}
-	job.versionInfo.set_serial_nr(job.request_serial() + 1);
+	job.versionInfo.set_serial_nr(job.request_peerid() + 1);
 
 	if (job.result_key() == NULL && job.request_key() != NULL)
 		job.set_result_key(*job.request_key());
@@ -1242,7 +1427,8 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 
 	DTC_HEADER_V2 dtc_header = { 0 };
 	dtc_header.version = 2;
-	dtc_header.id = job.request_serial();
+	dtc_header.id = job.request_peerid();
+	log4cplus_info("dtc_header.id:%d , job.request_serial():%d" , dtc_header.id , job.request_peerid());
 	dtc_header.packet_len = 0;
 	dtc_header.admin = CMD_NOP;
 
@@ -1254,7 +1440,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 			1 /*eof*/;
 	}
 
-
+	log4cplus_info("line:%d" ,__LINE__);
 	/* pool, exist and large enough, use. else free and malloc */
 	int first_packet_len = sizeof(BufferChain) +
 			       sizeof(struct iovec) * (nrp + 1) +
@@ -1310,10 +1496,139 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	return 0;
 }
 
+
+int Packet::encode_result_mysql(DtcJob &job, int mtu, uint32_t ts)
+{
+	log4cplus_debug("encode_result_mysql entry.");
+	const DTCTableDefinition *tdef = job.table_definition();
+
+	// rp指向返回数据集
+	ResultPacket *rp =
+		job.result_code() >= 0 ? job.get_result_packet() : NULL;
+	log4cplus_info("result code:%d" , job.result_code());
+	BufferChain *rb = NULL;
+	int nrp = 0, lrp = 0, off = 0;
+	bool bok = false;
+	if (mtu <= 0) {
+		mtu = MAXPACKETSIZE;
+	}
+
+	/* rp may exist but no result */
+	if (rp && (rp->numRows || rp->totalRows)) {
+		//rb指向数据结果集缓冲区起始位置
+		log4cplus_info("line:%d" ,__LINE__);
+		rb = rp->bc;
+		if (rb)
+			rb->Count(nrp, lrp);
+		off = 5 - encoded_bytes_length(rp->numRows);
+		encode_length(rb->data + off, rp->numRows);
+		lrp -= off;
+		job.resultInfo.set_total_rows(rp->totalRows);
+	} else {
+		log4cplus_info("line:%d" ,__LINE__);
+		nrp = 1;
+		bok = true;
+		if (rp && rp->totalRows == 0 && rp->bc) {
+			FREE(rp->bc);
+			rp->bc = NULL;
+		}
+		job.resultInfo.set_total_rows(0);
+		if (job.result_code() == 0) {
+			job.set_error(0, NULL, NULL);
+		}
+		//任务出现错误的时候，可能结果集里面还有值，此时需要将结果集的buffer释放掉
+		else if (job.result_code() < 0) {
+			ResultPacket *resultPacket = job.get_result_packet();
+			if (resultPacket) {
+				if (resultPacket->bc) {
+					FREE(resultPacket->bc);
+					resultPacket->bc = NULL;
+				}
+			}
+		}
+	}
+	if (ts) {
+		job.resultInfo.set_time_info(ts);
+	}
+	job.versionInfo.set_serial_nr(job.request_peerid() + 1);
+
+	if (job.result_key() == NULL && job.request_key() != NULL)
+		job.set_result_key(*job.request_key());
+
+	//转换内容包
+	int err = job.decode_result_set(rb->data + off, lrp);
+	if (err) {
+		log4cplus_debug("decode result null: %d", err);
+	} else {
+		log4cplus_debug("decode_result_set success");
+	}
+
+	if(bok == false)
+	{
+		nrp = 1 /*fields count info*/ +
+			job.mr.get_need_array().size() /*fields def*/ + 0 /*eof*/ +
+			(job.result ? job.result->total_rows() : 0) /*row data*/ +
+			1 /*eof*/;
+	}
+
+	log4cplus_info("line:%d" ,__LINE__);
+	/* pool, exist and large enough, use. else free and malloc */
+	int first_packet_len = sizeof(BufferChain) +
+			       sizeof(struct iovec) * nrp ;
+	if (buf == NULL) {
+		buf = (BufferChain *)MALLOC(first_packet_len);
+		if (buf == NULL) {
+			return -ENOMEM;
+		}
+		buf->totalBytes = first_packet_len - sizeof(BufferChain);
+		buf->nextBuffer = NULL;
+	} else if (buf && first_packet_len - (int)sizeof(BufferChain) >
+				  buf->totalBytes) {
+		FREE_IF(buf);
+		buf = (BufferChain *)MALLOC(first_packet_len);
+		if (buf == NULL) {
+			return -ENOMEM;
+		}
+		buf->totalBytes = first_packet_len - sizeof(BufferChain);
+		buf->nextBuffer = NULL;
+	}
+	//设置要发送的第一个包
+	v = (struct iovec *)buf->data;
+	nv = nrp ;
+	buf->usedBytes = sizeof(struct iovec) * (nrp);
+
+	rb = NULL;
+	if(bok == true)
+		rb = encode_mysql_ok(&job);
+	else
+		rb = encode_mysql_protocol(&job);
+	if (!rb)
+		return -3;
+
+	buf->nextBuffer = rb;
+	for (int i = 0; i < nrp; i++, rb = rb->nextBuffer) {
+		v[i].iov_base = rb->data;
+		v[i].iov_len = rb->usedBytes;
+	}
+
+	log4cplus_debug("encode_result_mysql leave.");
+	return 0;
+}
+
 int Packet::encode_result(DTCJobOperation &job, int mtu)
 {
-	//return encode_result((DtcJob &)job, mtu, job.Timestamp());
-	return encode_result_v2((DtcJob &)job, mtu, job.Timestamp());
+	log4cplus_debug("encode_result entry.");
+	if (1 == job.get_pac_version()) {
+		return encode_result((DtcJob &)job, mtu, job.Timestamp());
+	} else if (2 == job.get_pac_version()) {
+		return encode_result_v2((DtcJob &)job, mtu, job.Timestamp());
+	} else if (0 == job.get_pac_version()) {
+		return encode_result_mysql((DtcJob &)job, mtu, job.Timestamp());
+	} else {
+		log4cplus_error("illegal packet version");
+		return -1;
+	}
+	log4cplus_debug("encode_result leave.");
 }
 
 void Packet::free_result_buff()

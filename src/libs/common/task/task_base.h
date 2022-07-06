@@ -31,6 +31,7 @@
 #include "../field/field_api.h"
 
 class NCRequest;
+class ClientAgent;
 
 enum DecodeResult {
 	DecodeFatalError, // no response needed
@@ -174,6 +175,7 @@ class DtcJob : public TableReference {
 
     protected: // working data
 	uint64_t serialNr; /* derived from packet */
+	uint64_t peerid;
 	const DTCValue *key; /* derived from packet */
 	const DTCValue *rkey; /* processing */
 	/* resultWriter only create once in job entire life */
@@ -194,6 +196,7 @@ class DtcJob : public TableReference {
 	       PFLAG_BLACKHOLED = 0x80,
 	};
 	uint8_t processFlags; /* processing */
+	int8_t pac_version;
 
     protected:
 	// return total packet size
@@ -207,6 +210,7 @@ class DtcJob : public TableReference {
 
     private:
 	int8_t select_version(char *packetIn, int packetLen);
+	ClientAgent* _client_owner;
 
     public:
 	DtcJob(DTCTableDefinition *tdef = NULL, TaskRole r = TaskRoleServer,
@@ -216,10 +220,10 @@ class DtcJob : public TableReference {
 		  role(r), dataTableDef(tdef), hotbackupTableDef(NULL),
 		  replicateTableDef(NULL), updateInfo(NULL),
 		  conditionInfo(NULL), fieldList(NULL), result(NULL),
-		  serialNr(0), key(NULL), rkey(NULL), resultWriter(NULL),
+		  serialNr(0), peerid(0),key(NULL), rkey(NULL), resultWriter(NULL),
 		  resultWriterReseted(0), requestCode(0), requestType(0),
 		  requestFlags(0), replyCode(0), replyFlags(0),
-		  processFlags(PFLAG_ALLROWS)
+		  processFlags(PFLAG_ALLROWS) , pac_version(0)
 	{
 	}
 
@@ -349,13 +353,21 @@ class DtcJob : public TableReference {
 	{
 		updateInfo = ui;
 	}
-	const DTCFieldSet *request_fields(void) const
+	const DTCFieldSet *request_fields(void)
 	{
 		return fieldList;
+	}
+	void set_request_fields(const DTCFieldSet* p_dtc_field_set)
+	{
+		fieldList = p_dtc_field_set;
 	}
 	const uint64_t request_serial(void) const
 	{
 		return serialNr;
+	}
+	const uint64_t request_peerid(void) const
+	{
+		return peerid;
 	}
 
 	// result key
@@ -394,27 +406,33 @@ class DtcJob : public TableReference {
 	//     type 2: use external packet
 	void decode_packet_v1(char *packetIn, int packetLen, int type);
 	void decode_packet_v2(char *packetIn, int packetLen, int type);
+	void decode_mysql_packet(char *packetIn, int packetLen, int type);
 
 	int build_field_type_r(int sql_type, char *field_name);
+	int8_t get_pac_version() { return pac_version; }
 
 	DecodeResult do_decode(char *packetIn, int packetLen, int type)
 	{
-		int8_t ver = select_version(packetIn, packetLen);
-		if (ver == 1)
+		pac_version = select_version(packetIn, packetLen);
+		if (pac_version == 1)
 			decode_packet_v1(packetIn, packetLen, type);
-		else if (ver == 2)
+		else if (pac_version == 2)
 			decode_packet_v2(packetIn, packetLen, type);
+		else if(pac_version == 0)
+			decode_mysql_packet(packetIn, packetLen, type);
 
 		return get_decode_result();
 	}
 
 	DecodeResult do_decode(const char *packetIn, int packetLen)
 	{
-		int8_t ver = select_version(packetIn, packetLen);
-		if (ver == 1)
+		pac_version = select_version(packetIn, packetLen);
+		if (pac_version == 1)
 			decode_packet_v1((char *)packetIn, packetLen, 0);
-		else if (ver == 2)
+		else if (pac_version == 2)
 			decode_packet_v2((char *)packetIn, packetLen, 0);
+		else if(pac_version == 0)
+			decode_mysql_packet(packetIn, packetLen, 0);
 
 		return get_decode_result();
 	};
@@ -666,6 +684,9 @@ class DtcJob : public TableReference {
 	}
 	// Process Internal Results
 	int process_internal_result(uint32_t ts = 0);
+
+	void set_job_owner_client(ClientAgent* ca) {_client_owner = ca;}
+	ClientAgent* get_job_owner_client() { return _client_owner;}
 };
 
 extern int packet_body_len_v1(DTC_HEADER_V1 &header);

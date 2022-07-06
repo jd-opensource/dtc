@@ -15,10 +15,12 @@ INCLUDE_DIRECTORIES(
     ../libs/log4cplus/include
     ../libs/zlib/include64
     ../libs/yaml-cpp/include
-    ../libs/hsql/include)
+    ../libs/hsql/include
+    ../libs/mysql/include/)
 
 #添加.so/.a文件搜索路径，相当于gcc -L
 LINK_DIRECTORIES(
+    ${PROJECT_SOURCE_DIR}/src/libs/mysql/libs
     ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/libs
     ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/libs
     ${PROJECT_SOURCE_DIR}/src/libs/zlib/lib/
@@ -28,6 +30,7 @@ LINK_DIRECTORIES(
     ${PROJECT_SOURCE_DIR}/build/src/daemons)
 
 #添加链接库，相当于gcc -l
+LINK_LIBRARIES(libmysqlclient.a)
 LINK_LIBRARIES(liblog4cplus.a)
 LINK_LIBRARIES(libsqlparser.a) 
 LINK_LIBRARIES(libcommon.a)
@@ -45,4 +48,4 @@ ADD_DEFINITIONS("-g -rdynamic -fPIC -D_CORE_ -fpermissive -std=gnu++11 -D_GLIBCX
 ADD_EXECUTABLE(dtcd ${SRC_LIST})
 
 #将目标文件与库文件链接
-TARGET_LINK_LIBRARIES(dtcd libdaemons.a libstat.a libsqlparser.a libcommon.a libyaml-cpp.a liblog4cplus.a libz64.a)
+TARGET_LINK_LIBRARIES(dtcd libdaemons.a libstat.a libsqlparser.a libcommon.a libyaml-cpp.a liblog4cplus.a libz64.a libmysqlclient.a)

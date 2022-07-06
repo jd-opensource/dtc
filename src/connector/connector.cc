@@ -23,19 +23,23 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <sched.h>
-#include <dtc_global.h>
-#include <version.h>
-#include <proc_title.h>
-#include <log.h>
-#include <config.h>
+// local include files
 #include "mysql_operation.h"
-#include "buffer_pond.h"
-#include <daemon.h>
-#include <listener.h>
-#include <socket_addr.h>
-#include <unix_socket.h>
-#include "daemon_listener.h"
+// common include files
+#include "dtc_global.h"
+#include "version.h"
+#include "proc_title.h"
 #include "dtcutils.h"
+#include "log/log.h"
+#include "config/config.h"
+#include "daemon/daemon.h"
+#include "listener/listener.h"
+#include "socket/socket_addr.h"
+#include "socket/unix_socket.h"
+// core include files
+#include "buffer/buffer_pond.h"
+// daemons include files
+#include "daemon_listener.h"
 
 const char progname[] = "connector";
 
@@ -285,6 +289,7 @@ int check_db_table(int gid, int role)
 int main(int argc, char **argv)
 {
 	init_proc_title(argc, argv);
+	init_log4cplus();
 	if (load_entry_parameter(argc, argv) < 0)
 		return -1;
 	check_db_version();
@@ -311,13 +316,17 @@ int main(int argc, char **argv)
 	}
 	int usematch = g_dtc_config->get_int_val("cache",
 						 "UseMatchedAsAffectedRows", 1);
+
 	int backlog = g_dtc_config->get_int_val("cache", "MaxListenCount", 256);
+
 	int helperTimeout =
 		g_dtc_config->get_int_val("cache", "HelperTimeout", 30);
+
 	if (helperTimeout > 1)
 		proc_timeout = helperTimeout - 1;
 	else
 		proc_timeout = 0;
+		
 	addr = argv[1];
 	if (dbConfig->checkTable &&
 	    check_db_table(helperArgs.gid, helperArgs.role) != 0) {

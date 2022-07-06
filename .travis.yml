@@ -39,6 +39,7 @@ after_success:
 - cp build/src/agent/agent-main dockerfiles/agent/
 - cp conf/agent.xml dockerfiles/agent/
 - cp build/src/connector/connector dockerfiles/server/
+- cp build/src/hwcserver/hwcserver dockerfiles/server/
 
 - cd dockerfiles/server/
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin

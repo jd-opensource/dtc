@@ -7,10 +7,12 @@ ARG logpath=/var/log/dtc
 RUN mkdir -p $basepath/bin
 RUN mkdir -p $basepath/data
 RUN mkdir -p $basepath/stat
+RUN mkdir -p $basepath/log
 RUN mkdir -p $confpath
 RUN mkdir -p $logpath
 
 COPY dtcd $basepath/bin/dtcd
+COPY hwcserver $basepath/bin/hwcserver
 COPY connector $basepath/bin/connector
 COPY table.yaml $confpath/table.yaml
 COPY dtc.yaml $confpath/dtc.yaml

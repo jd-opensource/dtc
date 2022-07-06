@@ -55,14 +55,19 @@ void WatchDogHelper::exec()
 
 	int listenfd = socket(unaddr.sun_family, SOCK_STREAM, 0);
 	bind(listenfd, (sockaddr *)&unaddr, len);
-	listen(listenfd, backlog_);
+	int i_ret = listen(listenfd, backlog_);
+	if (i_ret == 0) {
+		log4cplus_info("backlog_:%d" , backlog_);
+	}
+	
 	/* relocate listenfd to stdin */
 	dup2(listenfd, 0);
 	close(listenfd);
+    log4cplus_info("exec path:%s" , path_);
 
 	char *argv[9];
 	int argc = 0;
-
+  
 	argv[argc++] = NULL;
 	argv[argc++] = (char *)"-d";
 	if (strcmp(daemons_cache_file, CACHE_CONF_NAME)) {
@@ -70,18 +75,18 @@ void WatchDogHelper::exec()
 		argv[argc++] = daemons_cache_file;
 	}
 	if (conf_ == DBHELPER_TABLE_NEW) {
-		argv[argc++] = (char *)"-t";
+		argv[argc++] = (char *)"-t";// 4
 		char tableName[64];
 		snprintf(tableName, 64, "../conf/table%d.yaml", num_);
-		argv[argc++] = tableName;
+		argv[argc++] = tableName; // 5
 	} else if (conf_ == DBHELPER_TABLE_ORIGIN &&
 		   strcmp(daemons_table_file, TABLE_CONF_NAME)) {
 		argv[argc++] = (char *)"-t";
 		argv[argc++] = daemons_table_file;
 	}
-	argv[argc++] = watchdog_object_name_ + 6;
-	argv[argc++] = (char *)"-";
-	argv[argc++] = NULL;
+	argv[argc++] = watchdog_object_name_ + 6; // 6 : 0m
+	argv[argc++] = (char *)"-"; // 7
+	argv[argc++] = NULL; // 8
 	Thread *helperThread =
 		new Thread(watchdog_object_name_, Thread::ThreadTypeProcess);
 	helperThread->initialize_thread();
@@ -94,6 +99,7 @@ int WatchDogHelper::verify()
 {
 	struct sockaddr_un unaddr;
 	int len = init_unix_socket_address(&unaddr, path_);
+	log4cplus_info("verify path:%s" , path_);
 	/* delay 100ms and verify socket */
 	usleep(100 * 1000);
 	int s = socket(unaddr.sun_family, SOCK_STREAM, 0);

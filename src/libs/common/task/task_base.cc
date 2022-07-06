@@ -22,6 +22,7 @@
 #include <stdio.h>
 
 #include "table/table_def_manager.h"
+#include "agent/agent_client.h"
 #include "task_base.h"
 #include "../decode/decode.h"
 #include "protocol.h"
@@ -29,6 +30,7 @@
 #include "../log/log.h"
 #include "algorithm/md5.h"
 #include "../my/my_request.h"
+#include "../my/my_command.h"
 
 #include "../../hsql/include/SQLParser.h"
 #include "../../hsql/include/SQLParserResult.h"
@@ -183,15 +185,82 @@ int8_t DtcJob::select_version(char *packetIn, int packetLen)
 	}
 
 	ver = (int8_t)(packetIn[0]);
-	log4cplus_debug("incoming dtc packet version:%d", ver);
-	if (ver != 1 && ver != 2) {
-		log4cplus_error("dtc packet version error:%d, pkt len:%d", ver,
-				packetLen);
-		stage = DecodeStageFatalError;
-		return -3;
+	if(ver == 1 && packetLen != 5)
+	{
+		log4cplus_debug("request ver:%d", ver);
+		return 1;
+	}
+	else if(ver == 2 && packetLen != 6)
+	{
+		log4cplus_debug("request ver:%d", ver);
+		return 2;
+	}
+	else 
+	{
+		log4cplus_debug("request ver:%d", 0);
+		return 0;
 	}
 
-	return ver;
+	log4cplus_debug("request ver: error");
+	return -3;
+}
+
+void DtcJob::decode_mysql_packet(char *packetIn, int packetLen, int type)
+{
+	if(_client_owner == NULL)
+	{
+		log4cplus_error("get client owner null error.");
+		return ;
+	}
+
+	char* p = packetIn;
+	p += 3;
+	this->mr.pkt_nr = (uint8_t)(*p); // mysql sequence id
+	log4cplus_debug("pkt_nr:%d", this->mr.pkt_nr);
+
+	if(_client_owner->get_login_stage() == CONN_STAGE_LOGGING_IN)
+	{
+		//send ok resp.
+		_client_owner->set_login_stage(CONN_STAGE_LOGGED_IN);
+	}
+	else if(_client_owner->get_login_stage() == CONN_STAGE_LOGGED_IN)
+	{
+		switch (stage) {
+		default:
+			break;
+		case DecodeStageFatalError:
+		case DecodeStageDataError:
+		case DecodeStageDone:
+			return;
+		}
+
+		enum enum_server_command cmd = (enum enum_server_command)(uchar)(packetIn+sizeof(MYSQL_HEADER_SIZE));
+		if (cmd == COM_PING) 
+		{
+			log4cplus_debug("cmd PING.");
+			return;
+		}
+
+		mr.set_packet_info(packetIn, packetLen);
+
+		struct timeval tv1, tv2;
+		gettimeofday(&tv1, NULL);
+
+		if (!mr.load_sql()) {
+			log4cplus_error("load sql error");
+			stage = DecodeStageDataError;
+			return;
+		}
+		gettimeofday(&tv2, NULL);
+		log4cplus_debug("load sql used time:%d us", tv2.tv_usec- tv1.tv_usec);
+
+		decode_request_v2(&mr);
+
+		stage = DecodeStageDone;
+
+	}
+
+	return ;
 }
 
 // Decode data from packet
@@ -225,7 +294,7 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 		return;
 	}
 
-	serialNr = header->id;
+	peerid = header->id;
 
 	//offset DTC Header.
 	p = p + sizeof(DTC_HEADER_V2);
@@ -256,6 +325,7 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 //     type 2: use external packet
 void DtcJob::decode_packet_v1(char *packetIn, int packetLen, int type)
 {
+	log4cplus_debug("decode_packet_v1 entry.");
 	DTC_HEADER_V1 header;
 #if __BYTE_ORDER == __BIG_ENDIAN
 	DTC_HEADER_V1 out[1];
@@ -310,6 +380,7 @@ void DtcJob::decode_packet_v1(char *packetIn, int packetLen, int type)
 	}
 
 	decode_request_v1(*out, buf);
+	log4cplus_debug("decode_packet_v1 leave.");
 	return;
 }
 
@@ -456,14 +527,29 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 	//1.versionInfo
 	this->versionInfo.set_serial_nr(mr->get_pkt_nr());
 
+	char* p_table_name = mr->get_table_name();
+	if(NULL != p_table_name) {
+		this->versionInfo.set_table_name(p_table_name);
+	}
+	this->versionInfo.set_key_type(table_definition()->key_type());
+
 	//2.requestInfo
-	DTCValue key;
+	static DTCValue key;
 	if (mr->get_key(&key, table_definition()->key_name())) {
 		requestInfo.set_key(key);
 		set_request_key(&key);
 	}
 	log4cplus_debug("key type:%d %d", mr->get_request_type(), key.s64);
 	set_request_code(mr->get_request_type());
+
+	if (requestCode == DRequest::result_code ||
+	    requestCode == DRequest::DTCResultSet) {
+		replyCode = requestCode;
+		// replyFlags = header.flags;
+	} else {
+		// requestFlags = header.flags;
+		requestType = cmd2type[requestCode];
+	}
 
 	//limit
 	if (mr->get_limit_count()) {

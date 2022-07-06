@@ -34,7 +34,7 @@ AgentListener::~AgentListener()
 int AgentListener::do_bind(int blog)
 {
 	if ((netfd = socket_bind(&addr, blog, 0, 0, 1 /*reuse*/, 1 /*nodelay*/,
-				 1 /*defer_accept*/)) == -1)
+				 0 /*defer_accept*/)) == -1)
 		return -1;
 	return 0;
 }
@@ -78,7 +78,8 @@ void AgentListener::input_notify()
 			log4cplus_error("no mem for new client agent");
 			break;
 		}
-
+		
+		client->send_greeting_info();
 		client->attach_thread();
 		client->input_notify();
 	}
