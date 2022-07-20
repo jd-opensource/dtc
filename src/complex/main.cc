@@ -35,7 +35,7 @@ CTransactionGroup* HotDBGroup = NULL;
 
 static int start_main_thread()
 {
-	workerThread = new PollerBase("complex");
+	workerThread = new PollerBase("async-connector");
 	if (workerThread->InitializeThread () == -1)
 		return -1;
 
@@ -171,7 +171,7 @@ int main(int argc, char* argv[])
 	int ret = 0;
 
 	init_log4cplus();
-	log4cplus_info("complex main entry.");
+	log4cplus_info("async-connector main entry.");
 
     if(init_config() == -1)
 		return -1;
@@ -201,17 +201,17 @@ int main(int argc, char* argv[])
 
     start_main_thread();
 
-    log4cplus_info("complex main running.");
+    log4cplus_info("async-connector main running.");
     while(!context.stop_flag){
     	sleep(10);
     }
-    log4cplus_info("complex main stoping.");
+    log4cplus_info("async-connector main stoping.");
 	
 	stop_main_thread();
 
 	cm_delete_pid();
 
-	log4cplus_info("complex main end.");
+	log4cplus_info("async-connector main end.");
 
     return ret;
 }
