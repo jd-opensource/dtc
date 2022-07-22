@@ -1,0 +1,61 @@
+# 
+# DTC configure file. v2
+#
+props:
+  log.level: debug
+  listener.bind: '*:20015/tcp'
+  dtc.mode: CACHE.ONLY/CACHE.DATASOURCE
+  shm.id: 20015
+  shm.mem.size: 100 #MB
+  #hash.custom: yes/no/enable/disable
+  #hash.custom.module: ../lib/key-hash.so
+  #hash.custom.functon: StringHash(1.128)
+
+data_lifecycle:
+  single.query.count: 10
+  lifecycle.tablename: 'data_lifecycle_table'
+  rule.sql: 'status = 0'
+  rule.cron: '00 01 * * * ?'
+
+connection: &connection
+  addr: 127.0.0.1:3306
+  user: uesrname
+  pwd: password 
+
+primary:
+  table: &table name
+  cache:
+    field:
+      - {name: uid, type: signed/unsigned/float/string/binary, size: 4}
+      - {name: name, type: binary, size: 50}
+      - {name: city, type: string, size: 50}
+      - {name: sex, type: signed, size: 4}
+      - {name: age, type: signed, size: 4}
+  hot:
+    logic:
+      {db: L2, <<: *table, <<: *connection}
+    real:
+      - {addr: mysql-01.local:3306, user: uesrname, pwd: password, db: L2}
+      - {addr: mysql-02.local:3306, user: uesrname, pwd: password, db: L2}
+      - {addr: mysql-03.local:3306, user: uesrname, pwd: password, db: L2}
+    sharding:
+      table.count: 5
+      table.begin: 0
+  full:
+    #logic:
+    #  {db: L3, <<: *table, <<: *connection}
+    real:
+      {addr: 127.0.0.1:3306, user: uesrname, pwd: password, db: L3}
+
+extension:
+  - logic:
+      {db: January, table: Monday, <<: *connection}
+    real:
+      - {addr: mysql-01.local:3306, user: uesrname, pwd: password, db: January}
+    #sharding:
+    #  table.count: 5
+    #  table.begin: 0
+  - logic:
+      {db: February, table: Tuesday, <<: *connection}
+    real:
+      - {addr: mysql-01.local:3306, user: uesrname, pwd: password, db: February}
