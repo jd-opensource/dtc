@@ -63,8 +63,8 @@ int DTCConfig::Dump(const char *fn, bool dec)
     if (fp == NULL)
         return -1;
     //fprintf(fp, "##### ORIGINAL FILE %s #####\n", filename_.c_str());
-    for (YAML::const_iterator ite = table_config_.begin();
-         ite != table_config_.end(); ++ite) {
+    for (YAML::const_iterator ite = dtc_config.begin();
+         ite != dtc_config.end(); ++ite) {
         YAML::Node inception_sec = ite->first;
         std::string sec = inception_sec.as<std::string>();
         fprintf(fp, "%s:\n", sec.c_str());
@@ -98,11 +98,7 @@ int DTCConfig::parse_buffered_config(char *buf, const char *fn,
     }
 
     try {
-        if (defsec && (strcmp(defsec, "cache") == 0 || strcmp(defsec, "data_lifecycle") == 0)) {
-            cache_config_ = YAML::Load(buf);
-        } else {
-            table_config_ = YAML::Load(buf);
-        }
+        dtc_config = YAML::Load(buf);
         ret_code = 0;
     } catch (const YAML::Exception &e) {
         printf("config file error:%s\n", e.what());
@@ -118,11 +114,7 @@ int DTCConfig::parse_config(const char *fn, const char *defsec, bool bakconfig)
 
     try {
         printf("open config file:%s\n", fn);
-        if (defsec && (strcmp(defsec, "cache") == 0 || strcmp(defsec, "data_lifecycle") == 0)) {
-            cache_config_ = YAML::LoadFile(fn);
-        } else {
-            table_config_ = YAML::LoadFile(fn);
-        }
+        dtc_config = YAML::LoadFile(fn);
         ret_code = 0;
     } catch (const YAML::Exception &e) {
         printf("config file error:%s\n", e.what());
@@ -141,48 +133,15 @@ int DTCConfig::parse_config(const char *fn, const char *defsec, bool bakconfig)
     return ret_code;
 }
 
-bool DTCConfig::has_section(const char *sec)
-{
-    YAML::Node inception = table_config_[sec];
-    if (inception && inception.IsMap())
-        return true;
-    else
-        return false;
-}
-
-bool DTCConfig::has_key(const char *sec, const char *key)
-{
-    if (!table_config_[sec])
-        return false;
-
-    YAML::Node inception = table_config_[sec][key];
-    if (inception && inception.IsScalar())
-        return true;
-    else
-        return false;
-}
-
 const char *DTCConfig::get_str_val(const char *sec, const char *key)
 {
-    if (sec && (strcmp(sec, "cache") == 0 || strcmp(sec, "data_lifecycle") == 0)) {
-        if (cache_config_[sec]) {
-            if (cache_config_[sec][key]) {
-                std::string s_cache = cache_config_[sec][key]
-                                 .as<std::string>();
-                if (s_cache.length() > 0) {
-                    return strdup(s_cache.c_str());
-                }
-            }
-        }
-    } else {
-        if (table_config_[sec]) {
-            if (table_config_[sec][key]) {
-                std::string s_cache = table_config_[sec][key]
-                                 .as<std::string>();
-                if (s_cache.length() > 0) {
-                    log4cplus_info("cache str:%s", s_cache.c_str());
-                    return strdup(s_cache.c_str());
-                }
+    if (dtc_config[sec]) {
+        if (dtc_config[sec][key]) {
+            std::string s_cache = dtc_config[sec][key]
+                                .as<std::string>();
+            if (s_cache.length() > 0) {
+                log4cplus_info("cache str:%s", s_cache.c_str());
+                return strdup(s_cache.c_str());
             }
         }
     }
@@ -193,24 +152,13 @@ const char *DTCConfig::get_str_val(const char *sec, const char *key)
 int DTCConfig::get_int_val(const char *sec, const char *key, int def)
 {
     const char *val = NULL;
-    if (sec && (strcmp(sec, "cache") == 0 || strcmp(sec, "data_lifecycle") == 0)) {
-        if (cache_config_[sec]) {
-            if (cache_config_[sec][key]) {
-                std::string result = cache_config_[sec][key]
-                                 .as<std::string>();
-                if (result.length() > 0) {
-                    val = result.c_str();
-                }
-            }
-        }
-    } else {
-        if (table_config_[sec]) {
-            if (table_config_[sec][key]) {
-                std::string result = table_config_[sec][key]
-                                 .as<std::string>();
-                if (result.length() > 0) {
-                    val = result.c_str();
-                }
+
+    if (dtc_config[sec]) {
+        if (dtc_config[sec][key]) {
+            std::string result = dtc_config[sec][key]
+                                .as<std::string>();
+            if (result.length() > 0) {
+                val = result.c_str();
             }
         }
     }
@@ -225,24 +173,13 @@ unsigned long long DTCConfig::get_size_val(const char *sec, const char *key,
                        unsigned long long def, char unit)
 {
     const char *val = NULL;
-    if (sec && (strcmp(sec, "cache") == 0 || strcmp(sec, "data_lifecycle") == 0)) {
-        if (cache_config_[sec]) {
-            if (cache_config_[sec][key]) {
-                std::string result = cache_config_[sec][key]
-                                 .as<std::string>();
-                if (result.length() > 0) {
-                    val = result.c_str();
-                }
-            }
-        }
-    } else {
-        if (table_config_[sec]) {
-            if (table_config_[sec][key]) {
-                std::string result = table_config_[sec][key]
-                                 .as<std::string>();
-                if (result.length() > 0) {
-                    val = result.c_str();
-                }
+
+    if (dtc_config[sec]) {
+        if (dtc_config[sec][key]) {
+            std::string result = dtc_config[sec][key]
+                                .as<std::string>();
+            if (result.length() > 0) {
+                val = result.c_str();
             }
         }
     }
@@ -292,27 +229,17 @@ int DTCConfig::get_idx_val(const char *sec, const char *key,
                const char *const *array, int nDefault)
 {
     const char *val = NULL;
-    if (sec && (strcmp(sec, "cache") == 0 || strcmp(sec, "data_lifecycle") == 0)) {
-        if (cache_config_[sec]) {
-            if (cache_config_[sec][key]) {
-                std::string result = cache_config_[sec][key]
-                                 .as<std::string>();
-                if (result.length() > 0) {
-                    val = result.c_str();
-                }
-            }
-        }
-    } else {
-        if (table_config_[sec]) {
-            if (table_config_[sec][key]) {
-                std::string result = table_config_[sec][key]
-                                 .as<std::string>();
-                if (result.length() > 0) {
-                    val = result.c_str();
-                }
+
+    if (dtc_config[sec]) {
+        if (dtc_config[sec][key]) {
+            std::string result = dtc_config[sec][key]
+                                .as<std::string>();
+            if (result.length() > 0) {
+                val = result.c_str();
             }
         }
     }
+
     if (val == NULL)
         return nDefault;
 

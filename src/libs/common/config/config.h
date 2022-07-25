@@ -36,10 +36,7 @@ class DTCConfig {
 	int get_idx_val(const char *, const char *, const char *const *,
 			int = 0);
 	const char *get_str_val(const char *sec, const char *key);
-	const YAML::Node& get_array_node(const char* sec , const char* key = NULL);
 
-	bool has_section(const char *sec);
-	bool has_key(const char *sec, const char *key);
 	int Dump(const char *fn, bool dec = false);
 	int parse_config(const char *f = 0, const char *s = 0,
 			 bool bakconfig = false);
@@ -47,8 +44,7 @@ class DTCConfig {
 				  const char *s = 0, bool bakconfig = false);
 
     private:
-	YAML::Node table_config_;
-	YAML::Node cache_config_;
+	YAML::Node dtc_config;
 };
 
 #endif
