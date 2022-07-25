@@ -13,7 +13,6 @@ class ConfigHelper
 {
 private:
 	std::string m_data;
-	YAML::Node table;
 	YAML::Node dtc;
 
 public:

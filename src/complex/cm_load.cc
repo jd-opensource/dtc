@@ -19,7 +19,6 @@
 #include "cm_conn.h"
 #include "log.h"
 
-#define TABLE_CONF_NAME "/etc/dtc/table.yaml"
 #define CACHE_CONF_NAME "/etc/dtc/dtc.yaml"
 
 using namespace std;
@@ -38,7 +37,6 @@ using namespace std;
 std::map<string, TableInfo> g_table_set;
 
 
-/* 前置空格已经过滤了 */
 static char* skip_blank(char *p)
 {
 	char *iter = p;
@@ -78,21 +76,6 @@ bool ConfigHelper::load_dtc_config()
 		log4cplus_error("load dtc file error:%s", e.what());
 		return false;
 	}
-
-	try 
-	{
-        table = YAML::LoadFile(TABLE_CONF_NAME);
-		if(table.IsNull())
-		{
-			log4cplus_error("table null");
-			return false;
-		}
-	}
-	catch (const YAML::Exception &e) 
-	{
-		log4cplus_error("load table file error:%s", e.what());
-		return false;
-	}
 	
 	if(!load_full_inst_info())
 	{
@@ -113,16 +96,13 @@ bool ConfigHelper::load_hot_inst_info()
 {
 	memset(&hot_instance, 0, sizeof(DBHost));
 
-	if(!dtc["vhot"])
+	if( !dtc["primary"]["hot"]["logic"]["connection"]["addr"] || 
+		!dtc["primary"]["hot"]["logic"]["connection"]["user"] ||
+		!dtc["primary"]["hot"]["logic"]["connection"]["pwd"] ||
+		!dtc["primary"]["hot"]["logic"]["db"])
 		return false;
 
-	if( !dtc["vhot"]["addr"] || 
-		!dtc["vhot"]["username"] ||
-		!dtc["vhot"]["password"] ||
-		!dtc["vhot"]["database"])
-		return false;
-
-	const char* addr = dtc["vhot"]["addr"].as<string>().c_str();
+	const char* addr = dtc["primary"]["hot"]["logic"]["connection"]["addr"].as<string>().c_str();
 	const char* p = strrchr(addr, ':');
 	if(p == NULL){
 		strncpy(hot_instance.Host, addr, sizeof(hot_instance.Host)-1 );
@@ -133,9 +113,9 @@ bool ConfigHelper::load_hot_inst_info()
 		hot_instance.Port = atoi(p+1);
 	}
 	
-	strncpy(hot_instance.User, dtc["vhot"]["username"].as<string>().c_str(), sizeof(hot_instance.User)-1 );
-	strncpy(hot_instance.Password, dtc["vhot"]["password"].as<string>().c_str(), sizeof(hot_instance.Password)-1 );
-	strncpy(hot_instance.DbName, dtc["vhot"]["database"].as<string>().c_str(), sizeof(hot_instance.DbName)-1 );
+	strncpy(hot_instance.User, dtc["primary"]["hot"]["logic"]["connection"]["user"].as<string>().c_str(), sizeof(hot_instance.User)-1 );
+	strncpy(hot_instance.Password, dtc["primary"]["hot"]["logic"]["connection"]["pwd"].as<string>().c_str(), sizeof(hot_instance.Password)-1 );
+	strncpy(hot_instance.DbName, dtc["primary"]["hot"]["logic"]["db"].as<string>().c_str(), sizeof(hot_instance.DbName)-1 );
 	
 	hot_instance.ConnTimeout = 10;
 	hot_instance.ReadTimeout = 10;
@@ -149,16 +129,16 @@ bool ConfigHelper::load_full_inst_info()
 {
 	memset(&full_instance, 0, sizeof(DBHost));
 
-	if(!table["COLD_MACHINE1"] || !table["DATABASE_CONF"])
+	if(!dtc["COLD_MACHINE1"] || !dtc["DATABASE_CONF"])
 		return false;
 
-	if( !table["COLD_MACHINE1"]["database_address"] || 
-		!table["COLD_MACHINE1"]["database_username"] ||
-		!table["COLD_MACHINE1"]["database_password"] ||
-		!table["DATABASE_CONF"]["cold_database_name"])
+	if( !dtc["primary"]["full"]["logic"]["connection"]["addr"] || 
+		!dtc["primary"]["full"]["logic"]["connection"]["user"] ||
+		!dtc["primary"]["full"]["logic"]["connection"]["pwd"] ||
+		!dtc["primary"]["full"]["logic"]["db"])
 		return false;
 
-	const char* addr = table["COLD_MACHINE1"]["database_address"].as<string>().c_str();
+	const char* addr = dtc["primary"]["full"]["logic"]["connection"]["addr"].as<string>().c_str();
 	const char* p = strrchr(addr, ':');
 	if(p == NULL){
 		strncpy(full_instance.Host, addr, sizeof(full_instance.Host)-1 );
@@ -169,9 +149,9 @@ bool ConfigHelper::load_full_inst_info()
 		full_instance.Port = atoi(p+1);
 	}
 
-	strncpy(full_instance.User, table["COLD_MACHINE1"]["database_username"].as<string>().c_str(), sizeof(full_instance.User)-1 );
-	strncpy(full_instance.Password, table["COLD_MACHINE1"]["database_password"].as<string>().c_str(), sizeof(full_instance.Password)-1 );
-	strncpy(full_instance.DbName, table["DATABASE_CONF"]["cold_database_name"].as<string>().c_str(), sizeof(full_instance.DbName)-1 );
+	strncpy(full_instance.User, dtc["primary"]["full"]["logic"]["connection"]["user"].as<string>().c_str(), sizeof(full_instance.User)-1 );
+	strncpy(full_instance.Password, dtc["primary"]["full"]["logic"]["connection"]["pwd"].as<string>().c_str(), sizeof(full_instance.Password)-1 );
+	strncpy(full_instance.DbName, dtc["primary"]["full"]["logic"]["db"].as<string>().c_str(), sizeof(full_instance.DbName)-1 );
 
 	full_instance.ConnTimeout = 10;
 	full_instance.ReadTimeout = 10;
