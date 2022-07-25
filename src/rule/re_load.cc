@@ -23,7 +23,7 @@ std::string do_get_rule()
 		return "";
 	}
 
-    YAML::Node node = config["primary"]["layered"];
+    YAML::Node node = config["primary"]["layered.rule"];
     if(node)
     {
         std::string rules = node.as<string>();
