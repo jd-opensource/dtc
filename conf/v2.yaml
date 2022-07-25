@@ -24,6 +24,7 @@ connection: &connection
 
 primary:
   table: &table name
+  layered: '(a>1 and a<3) or uid = 0'
   cache:
     field:
       - {name: uid, type: signed/unsigned/float/string/binary, size: 4}
