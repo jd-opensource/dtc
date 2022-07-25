@@ -33,7 +33,7 @@ primary:
       - {name: age, type: signed, size: 4}
   hot:
     logic:
-      {db: L2, <<: *table, <<: *connection}
+      {db: L2, table: *table, connection: *connection}
     real:
       - {addr: mysql-01.local:3306, user: uesrname, pwd: password, db: L2}
       - {addr: mysql-02.local:3306, user: uesrname, pwd: password, db: L2}
@@ -42,20 +42,20 @@ primary:
       table.count: 5
       table.begin: 0
   full:
-    #logic:
-    #  {db: L3, <<: *table, <<: *connection}
+    logic:
+      {db: L3, table: *table, connection: *connection}
     real:
       {addr: 127.0.0.1:3306, user: uesrname, pwd: password, db: L3}
 
 extension:
   - logic:
-      {db: January, table: Monday, <<: *connection}
+      {db: January, table: Monday, connection: *connection}
     real:
       - {addr: mysql-01.local:3306, user: uesrname, pwd: password, db: January}
     #sharding:
     #  table.count: 5
     #  table.begin: 0
   - logic:
-      {db: February, table: Tuesday, <<: *connection}
+      {db: February, table: Tuesday, connection: *connection}
     real:
       - {addr: mysql-01.local:3306, user: uesrname, pwd: password, db: February}
