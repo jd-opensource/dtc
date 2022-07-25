@@ -20,22 +20,8 @@
 #include <string.h>
 #include <string>
 #include <map>
+#include "auto_config.h"
 #include "yaml-cpp/yaml.h"
-
-class AutoConfig {
-    public:
-	AutoConfig(){};
-	virtual ~AutoConfig(){};
-	virtual int get_int_val(const char *key, const char *inst,
-				int def = 0) = 0;
-	virtual unsigned long long get_size_val(const char *key,
-						const char *inst,
-						unsigned long long def = 0,
-						char unit = 0) = 0;
-	virtual int get_idx_val(const char *, const char *, const char *const *,
-				int = 0) = 0;
-	virtual const char *get_str_val(const char *key, const char *inst) = 0;
-};
 
 class DTCConfig {
     public:
