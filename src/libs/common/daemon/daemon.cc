@@ -110,10 +110,10 @@ int load_entry_parameter(int argc, char **argv)
 	strcpy(d_cache_file, "/etc/dtc/dtc.yaml");
 	g_dtc_config = new DTCConfig;
 	//load config file and copy it to ../stat
-	if (g_dtc_config->parse_config(d_table_file, "DATABASE_CONF", true) == -1)
+	if (g_dtc_config->load_yaml_file(d_table_file, true) == -1)
 		return -1;
 
-	if (g_dtc_config->parse_config(d_cache_file, "cache", true))
+	if (g_dtc_config->load_yaml_file(d_cache_file, true))
 		return -1;
 
 	dbConfig = DbConfig::Load(g_dtc_config);

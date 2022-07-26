@@ -47,10 +47,10 @@ void InitState::HandleEvent()
     // 解析yaml配置文件
     log4cplus_debug("dtc conf file:%s , table conf file:%s" , CComm::dtc_conf ,CComm::table_conf);
 	DTCConfig* p_dtc_config = new DTCConfig();
-	if (p_dtc_config->parse_config(CComm::table_conf, "DATABASE_CONF", false) == -1)
+	if (p_dtc_config->load_yaml_file(CComm::table_conf,  false) == -1)
 		return -1;
 
-	if (p_dtc_config->parse_config(CComm::dtc_conf, "cache", false))
+	if (p_dtc_config->load_yaml_file(CComm::dtc_conf, false))
 		return -1;
 
 	DbConfig* p_db_Config = DbConfig::Load(p_dtc_config , 1);

@@ -86,14 +86,13 @@ int DTCConfig::Dump(const char *fn, bool dec)
     return 0;
 }
 
-int DTCConfig::parse_buffered_config(char *buf, const char *fn,
-                     const char *defsec, bool bakconfig)
+int DTCConfig::load_yaml_buffer(char *buf)
 {
     int ret_code = -1;
 
     if(!buf)
     {
-        log4cplus_debug("buffer null.");
+        log4cplus_error("yaml content don't allow null.");
         return ret_code;
     }
 
@@ -101,14 +100,14 @@ int DTCConfig::parse_buffered_config(char *buf, const char *fn,
         dtc_config = YAML::Load(buf);
         ret_code = 0;
     } catch (const YAML::Exception &e) {
-        printf("config file error:%s\n", e.what());
-        log4cplus_debug("config file error:%s\n", e.what());
+        printf("load yaml buf error:%s\n", e.what());
+        log4cplus_debug("load yaml buf error:%s\n", e.what());
         return ret_code;
     }
     return ret_code;
 }
 
-int DTCConfig::parse_config(const char *fn, const char *defsec, bool bakconfig)
+int DTCConfig::load_yaml_file(const char *fn, bool bakconfig)
 {
     int ret_code = -1;
 

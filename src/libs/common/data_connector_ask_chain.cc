@@ -344,7 +344,7 @@ DbConfig *DataConnectorAskChain::get_db_config(DTCJobOperation *job)
 			strlen(row[3].bin.ptr), row[3].bin.ptr);
 	char *buf = row[3].bin.ptr;
 	config = new DTCConfig();
-	if (config->parse_buffered_config(buf, NULL, "DATABASE_CONF", false) !=
+	if (config->load_yaml_buffer(buf) !=
 	    0) {
 		log4cplus_error(
 			"table.yaml illeagl when migrate db, parse error");

@@ -38,10 +38,10 @@ class DTCConfig {
 	const char *get_str_val(const char *sec, const char *key);
 
 	int Dump(const char *fn, bool dec = false);
-	int parse_config(const char *f = 0, const char *s = 0,
-			 bool bakconfig = false);
-	int parse_buffered_config(char *buf, const char *fn = 0,
-				  const char *s = 0, bool bakconfig = false);
+	int load_yaml_file(const char *f = 0, bool bakconfig = false);
+	int load_yaml_buffer(char *buf);
+
+	YAML::Node get_config_node() { return dtc_config;}
 
     private:
 	YAML::Node dtc_config;

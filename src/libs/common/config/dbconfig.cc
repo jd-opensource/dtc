@@ -321,62 +321,100 @@ int DbConfig::convert_case_sensitivity(
     return i;
 }
 
-int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
+int get_db_machine_count()
 {
-    std::string s_lower_prefix("");
-    if(!raw)
+    return 1;
+}
+
+int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server_type)
+{
+    std::string layer("");
+    if(!dtc_config)
         return -1;
 
     switch (i_server_type)
     {
     case 0:
-        s_lower_prefix = "hot_";
+        layer = "hot";
         break;
     case 1:
-        s_lower_prefix = "cold_";
+        layer = "full";
         break;
     default:
-        log4cplus_error("%s", "invalid field prefix");
+        log4cplus_error("%s: %d.", "invalid layer", i_server_type);
         return -1;
     }
-    
-    std::string s_upper_prefix(s_lower_prefix);
-    int i_ret = convert_case_sensitivity(s_upper_prefix);
+        
+    log4cplus_info("layered storage: %s.", layer.c_str());
 
-    if (i_ret != s_upper_prefix.length()) {
-        log4cplus_error("convert case sensitivity faill");
-        return -1;
-    }
-    
-    log4cplus_info("upper prefix:%s , lower prefix:%s" , s_upper_prefix.c_str() , s_lower_prefix.c_str());
-
-    char sectionStr[256];
     const char *cp;
     char *p;
+    YAML::Node node = dtc_config;
 
     //DB section
-    machineCnt = raw->get_int_val("DATABASE_CONF", (s_lower_prefix + "server_count").c_str(), 1);
-    if (machineCnt <= 0) {
-        log4cplus_error("%s", "invalid server_count");
-        return -1;
+    if(dtc_config["primary"][layer])    //cache.datasource mode
+    {
+        machineCnt = get_db_machine_count();
+        if (machineCnt <= 0) {
+            log4cplus_error("%s", "invalid server_count");
+            return -1;
+        }
     }
-    depoly = raw->get_int_val("DATABASE_CONF", (s_lower_prefix + "deploy").c_str(), 0);
-
-    cp = raw->get_str_val("DATABASE_CONF", (s_lower_prefix + "database_name").c_str());
-    if (cp == NULL || cp[0] == '\0') {
-        log4cplus_error("[DATABASE_CONF].database_name not defined");
-        return -1;
+    else{
+        machineCnt = 0;
     }
 
-    dbName = STRDUP(cp);
+    //Depoly
+    if(dtc_config["primary"][layer]) //cache.datasource mode
+    {
+        node = dtc_config["primary"][layer]["real"];
+        if(node.size() == 1) //single db
+        {
+            if(dtc_config["primary"][layer]["sharding"] && dtc_config["primary"][layer]["sharding"]["table.count"].as<int>() > 1)
+                depoly = SINGLE_DB_SHARDING_TAB;
+            else
+                depoly = SINGLE;
+        }
+        else if(node.size() > 1) //multi db
+        {
+            if(dtc_config["primary"][layer]["sharding"] && dtc_config["primary"][layer]["sharding"]["table.count"].as<int>() > 1)
+                depoly = SHARDING_DB_SHARDING_TAB;
+            else
+                depoly = SHARDING_DB_ONE_TAB;
+        }
+        else
+        {
+            log4cplus_error("%s", "invalid server_count");
+            return -1;
+        }
+    }
+    else
+    {
+        depoly = SINGLE;
+    }
 
-    dstype = raw->get_int_val("DATABASE_CONF", (s_lower_prefix +"DataSourceType").c_str(), 0);
+    //DB Name
+    if(dtc_config["primary"][layer]) //cache.datasource mode
+    {
+        node = dtc_config["primary"][layer]["real"][0]["db"];
+        if(!node)
+        {
+            log4cplus_error("primary.layer.real db not defined");
+            return -1;
+        }
+        else
+        {
+            dbName = STRDUP(node.as<string>().c_str());   //TODO: prefix splitting string.
+        }
+    }
 
-    checkTable = raw->get_int_val("DATABASE_CONF", (s_lower_prefix + "CheckTableConfig").c_str(), 1);
+    dstype = 0;
+    checkTable = 1;
 
+    //TODO: string key supporting.
     // key-hash dll
-    if (load_key_hash(raw) != 0)
-        return -1;
+    //if (load_key_hash(raw) != 0)
+    //    return -1;
 
     if ((depoly & 1) == 0) {
         if (strchr(dbName, '%') != NULL) {
@@ -389,16 +427,10 @@ int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
         dbMod = 1;
         dbFormat = dbName;
     } else {
-        cp = raw->get_str_val("DATABASE_CONF", (s_lower_prefix + "database_number").c_str());
-        if (sscanf(cp ?: "", "(%u,%u)", &dbDiv, &dbMod) != 2 ||
-            dbDiv == 0 || dbMod == 0) {
-            log4cplus_error(
-                "invalid [DATABASE_CONF].database_number = %s",
-                cp);
-            return -1;
-        }
+        dbDiv = 1;
+        dbMod = dtc_config["primary"][layer]["real"].size();
 
-        if (dbMod > 1000000) {
+        if (dbMod > 100) {
             log4cplus_error(
                 "invalid [DATABASE_CONF].DbMod = %s, mod value too large",
                 cp);
@@ -415,21 +447,14 @@ int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
         }
     }
 
-    // super group
-    int enableSuperMach = raw->get_int_val("SUPER_MACHINE", "Enable", 0);
-    if (enableSuperMach) {
-        log4cplus_error(
-            "SUPER_MACHINE don't support anymore, please change to HelperType=DTC");
-        return -1;
-    }
-
     //Table section
-    cp = raw->get_str_val((s_upper_prefix + "TABLE_CONF").c_str(), "table_name");
-    if (cp == NULL || cp[0] == '\0') {
+    node = dtc_config["primary"][layer]["logic"]["table"];
+    if(!node)
+    {
         log4cplus_error("[TABLE_CONF].table_name not defined");
         return -1;
     }
-    tblName = STRDUP(cp);
+    tblName = STRDUP(node.as<string>().c_str());
 
     if ((depoly & 2) == 0) {
         if (strchr(tblName, '%') != NULL) {
@@ -442,9 +467,10 @@ int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
         tblMod = 1;
         tblFormat = tblName;
     } else {
-        cp = raw->get_str_val((s_upper_prefix + "TABLE_CONF").c_str(), "TableNum");
-        if (sscanf(cp ?: "", "(%u,%u)", &tblDiv, &tblMod) != 2 ||
-            tblDiv == 0 || tblMod == 0) {
+        tblDiv = dtc_config["primary"][layer]["real"].size();
+        tblMod = dtc_config["primary"][layer]["sharding"]["table.count"].as<int>();
+
+        if(tblDiv == 0 || tblMod == 0) {
             log4cplus_error("invalid [TABLE_CONF].TableNum = %s",
                     cp);
             return -1;
@@ -461,8 +487,7 @@ int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
         }
     }
 
-    database_max_count =
-        raw->get_int_val("DATABASE_CONF", (s_lower_prefix + "database_max_count").c_str(), 1);
+    database_max_count = dtc_config["primary"][layer]["real"].size();
     if (database_max_count < 0 || database_max_count > 10000) {
         log4cplus_error("%s", "invalid [DATABASE_CONF].DbMax");
         return -1;
@@ -474,40 +499,26 @@ int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
         database_max_count = dbMod;
     }
 
-    fieldCnt = raw->get_int_val((s_upper_prefix + "TABLE_CONF").c_str(), "field_count", 0);
+    fieldCnt = dtc_config["primary"]["cache"]["field"].size();
     if (fieldCnt <= 0 || fieldCnt > 240) {
         log4cplus_error("invalid [TABLE_CONF].field_count");
         return -1;
     }
 
-    keyFieldCnt = raw->get_int_val((s_upper_prefix + "TABLE_CONF").c_str(), "key_count", 1);
+    keyFieldCnt = 1;
     if (keyFieldCnt <= 0 || keyFieldCnt > 32 || keyFieldCnt > fieldCnt) {
         log4cplus_error("invalid [TABLE_CONF].key_count");
         return -1;
     }
     log4cplus_info("keyFieldCnt:%d" , keyFieldCnt);
 
-    idxFieldCnt = raw->get_int_val((s_upper_prefix + "TABLE_CONF").c_str(), "IndexFieldCount", 0);
+    idxFieldCnt = 0;
     if (keyFieldCnt < 0 || keyFieldCnt + idxFieldCnt > fieldCnt) {
         log4cplus_error("invalid [TABLE_CONF].IndexFieldCount");
         return -1;
     }
 
-    cp = raw->get_str_val((s_upper_prefix + "TABLE_CONF").c_str(), "ServerOrderBySQL");
-    if (cp && cp[0] != '\0') {
-        int n = strlen(cp) - 1;
-        if (cp[0] != '"' || cp[n] != '"') {
-            log4cplus_error(
-                "dbConfig error, [TABLE_CONF].ServerOrderBySQL must quoted");
-            return -1;
-        }
-        ordSql = (char *)MALLOC(n);
-        memcpy(ordSql, cp + 1, n - 1);
-        ordSql[n - 1] = '\0';
-    }
-    ordIns = raw->get_idx_val(
-        (s_upper_prefix + "TABLE_CONF").c_str(), "ServerOrderInsert",
-        ((const char *const[]){ "last", "first", "purge", NULL }), 0);
+    ordIns = 0;
     if (ordIns < 0) {
         log4cplus_error("bad [TABLE_CONF].ServerOrderInsert");
         return -1;
@@ -523,80 +534,32 @@ int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
     for (int i = 0; i < machineCnt; i++) {
         struct MachineConfig *m = &mach[i];
 
-        snprintf(sectionStr, sizeof(sectionStr), (s_upper_prefix + "MACHINE%d").c_str(), i + 1);
-        m->helperType = (HELPERTYPE)raw->get_idx_val(
-            sectionStr, "HelperType",
-            ((const char *const[]){ "DUMMY", "DTC", "MYSQL", "TDB",
-                        "CUSTOM", NULL }),
-            2);
+        m->helperType = MYSQL_HELPER;
 
-        if (m->helperType == DUMMY_HELPER) {
-            m->role[0].addr = "DUMMY";
-        } else {
-            //master
-            m->role[0].addr = STRDUP(raw->get_str_val(sectionStr,
-                               "database_address"));
-            m->role[0].user = STRDUP(raw->get_str_val(sectionStr,
-                               "database_username"));
-            m->role[0].pass = STRDUP(raw->get_str_val(sectionStr,
-                               "database_password"));
-            m->role[0].optfile = STRDUP(
-                raw->get_str_val(sectionStr, "MyCnf"));
-            log4cplus_info("addr:%s,user:%s" , m->role[0].addr , m->role[0].user);
+        //master
+        m->role[0].addr = STRDUP(dtc_config["primary"][layer]["real"][i]["addr"].as<string>().c_str());
+        m->role[0].user = STRDUP(dtc_config["primary"][layer]["real"][i]["user"].as<string>().c_str());
+        m->role[0].pass = STRDUP(dtc_config["primary"][layer]["real"][i]["pwd"].as<string>().c_str());
+        m->role[0].optfile = STRDUP("/etc/dtc/my.conf");
+        log4cplus_info("addr:%s,user:%s" , m->role[0].addr , m->role[0].user);
 
-            //slave
-            m->role[1].addr = STRDUP(
-                raw->get_str_val(sectionStr, "DbAddr1"));
-            m->role[1].user = STRDUP(
-                raw->get_str_val(sectionStr, "DbUser1"));
-            m->role[1].pass = STRDUP(
-                raw->get_str_val(sectionStr, "DbPass1"));
-            m->role[1].optfile = STRDUP(
-                raw->get_str_val(sectionStr, "MyCnf"));
-
-            /* master DB settings */
-            if (m->role[0].addr == NULL) {
-                log4cplus_error("missing [%s].database_address",
-                        sectionStr);
-                return -1;
-            }
-            if (m->role[0].user == NULL)
-                m->role[0].user = "";
-            if (m->role[0].pass == NULL)
-                m->role[0].pass = "";
-            if (m->role[0].optfile == NULL)
-                m->role[0].optfile = "";
-
-            m->mode = raw->get_idx_val(
-                sectionStr, "Workload",
-                ((const char *const[]){
-                    "master", "slave", "database", "table",
-                    "key", /*"fifo",*/ NULL }),
-                0);
-
-            if (m->mode < 0) {
-                log4cplus_error("bad [%s].Workload",
-                        sectionStr);
-                return -1;
-            }
-            if (m->mode > 0) {
-                if (m->role[1].addr == NULL) {
-                    log4cplus_error("missing [%s].DbAddr1",
-                            sectionStr);
-                    return -1;
-                }
-                if (m->role[1].user == NULL)
-                    m->role[1].user = m->role[0].user;
-                if (m->role[1].pass == '\0')
-                    m->role[1].pass = m->role[0].pass;
-                if (m->role[1].optfile == NULL)
-                    m->role[1].optfile = m->role[0].optfile;
-            }
+        /* master DB settings */
+        if (m->role[0].addr == NULL) {
+            log4cplus_error("missing database_address");
+            return -1;
         }
+        if (m->role[0].user == NULL)
+            m->role[0].user = "";
+        if (m->role[0].pass == NULL)
+            m->role[0].pass = "";
+        if (m->role[0].optfile == NULL)
+            m->role[0].optfile = "";
 
-        cp = raw->get_str_val(sectionStr, "database_index");
-        if (!cp || !cp[0])
-            cp = "[0-0]";
+        m->mode = 0;
+                
+        char szindex[255] = {0};
+        sprintf(szindex, "[0-%d]", dtc_config["primary"][layer]["real"].size());
+        cp = szindex;
 
         m->dbCnt = ParseDbLine(cp, m->dbIdx);
 
@@ -610,22 +573,22 @@ int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
         }
 
         /* Helper number alter */
-        m->gprocs[0] = raw->get_int_val(sectionStr, "Procs", 10);
+        m->gprocs[0] = raw->get_int_val(NULL, "Procs", 10);
         if (m->gprocs[0] < 1)
             m->gprocs[0] = 0;
-        m->gprocs[1] = raw->get_int_val(sectionStr, "WriteProcs", 10);
+        m->gprocs[1] = raw->get_int_val(NULL, "WriteProcs", 10);
         if (m->gprocs[1] < 1)
             m->gprocs[1] = 0;
-        m->gprocs[2] = raw->get_int_val(sectionStr, "CommitProcs", 10);
+        m->gprocs[2] = raw->get_int_val(NULL, "CommitProcs", 10);
         if (m->gprocs[2] < 1)
             m->gprocs[2] = 0;
 
         /* Helper Queue Size */
-        m->gqueues[0] = raw->get_int_val(sectionStr, "QueueSize", 0);
+        m->gqueues[0] = raw->get_int_val(NULL, "QueueSize", 0);
         m->gqueues[1] =
-            raw->get_int_val(sectionStr, "WriteQueueSize", 0);
+            raw->get_int_val(NULL, "WriteQueueSize", 0);
         m->gqueues[2] =
-            raw->get_int_val(sectionStr, "CommitQueueSize", 0);
+            raw->get_int_val(NULL, "CommitQueueSize", 0);
         if (m->gqueues[0] <= 0)
             m->gqueues[0] = 1000;
         if (m->gqueues[1] <= 0)
@@ -686,33 +649,34 @@ int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
     for (int i = 0; i < fieldCnt; i++) {
         struct FieldConfig *f = &field[i];
 
-        snprintf(sectionStr, sizeof(sectionStr), "FIELD%d", i + 1);
-        f->name = STRDUP(raw->get_str_val(sectionStr, "field_name"));
+        f->name = STRDUP(dtc_config["primary"]["cache"]["field"][i]["name"].as<string>().c_str());
         if (f->name == NULL) {
-            log4cplus_error("field name missing for %s",
-                    sectionStr);
+            log4cplus_error("field name missing for %d",
+                    i);
             return -1;
         }
-        f->type = raw->get_int_val(sectionStr, "field_type", -1);
-        if (f->type < 0) {
-            f->type = raw->get_idx_val(
-                sectionStr, "field_type",
-                ((const char *const[]){
-                    "int", "signed", "unsigned", "float",
-                    "string", "binary", NULL }),
-                -1);
-            if (f->type == 0)
-                f->type = 1;
-        }
+        f->type = -1;
+        string type = dtc_config["primary"]["cache"]["field"][i]["type"].as<string>();
+        if(type == "signed")
+            f->type = 1;
+        else if(type == "unsigned")
+            f->type = 2;
+        else if(type == "float")
+            f->type = 3;
+        else if(type == "string")
+            f->type = 4;
+        else if(type == "binary")
+            f->type = 5;
+
         if (f->type <= 0 || f->type > 5) {
-            log4cplus_error("Invalid value [%s].field_type",
-                    sectionStr);
+            log4cplus_error("Invalid value [%d].field_type",
+                    i);
             return -1;
         }
-        f->size = raw->get_int_val(sectionStr, "field_size", -1);
+        f->size = dtc_config["primary"]["cache"]["field"][i]["size"].as<int>();
         if (f->size == -1) {
-            log4cplus_error("field size missing for %s",
-                    sectionStr);
+            log4cplus_error("field size missing for %d",
+                    i);
             return -1;
         }
 
@@ -725,7 +689,7 @@ int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
                 return -1;
             }
             const char *idx_order =
-                raw->get_str_val(sectionStr, "Order");
+                raw->get_str_val(NULL, "Order");
             if (idx_order && strcasecmp(idx_order, "DESC") == 0)
                 f->flags |= DB_FIELD_FLAGS_DESC_ORDER;
             else
@@ -739,11 +703,11 @@ int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
         }
 
         if (i >= keyFieldCnt &&
-            raw->get_int_val(sectionStr, "ReadOnly", 0) > 0)
+            raw->get_int_val(NULL, "ReadOnly", 0) > 0)
             f->flags |= DB_FIELD_FLAGS_READONLY;
-        if (raw->get_int_val(sectionStr, "field_unique", 0) > 0)
+        if (raw->get_int_val(NULL, "field_unique", 0) > 0)
             f->flags |= DB_FIELD_FLAGS_UNIQ;
-        if (raw->get_int_val(sectionStr, "Volatile", 0) > 0) {
+        if (raw->get_int_val(NULL, "Volatile", 0) > 0) {
             if (i < keyFieldCnt) {
                 log4cplus_error(
                     "field%d: key field can't be volatile",
@@ -758,7 +722,7 @@ int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
             }
             f->flags |= DB_FIELD_FLAGS_VOLATILE;
         }
-        if (raw->get_int_val(sectionStr, "Discard", 0) > 0) {
+        if (raw->get_int_val(NULL, "Discard", 0) > 0) {
             if (i < keyFieldCnt) {
                 log4cplus_error(
                     "field%d: key field can't be discard",
@@ -793,7 +757,7 @@ int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
         }
 
         /* ATTN: must be last one */
-        cp = raw->get_str_val(sectionStr, "DefaultValue");
+        cp = raw->get_str_val(NULL, "DefaultValue");
         if (cp && !strcmp(cp, "auto_increment")) {
             if (f->type != DField::Unsigned &&
                 f->type != DField::Signed) {
@@ -1116,7 +1080,7 @@ int DbConfig::parse_db_config(DTCConfig* raw, int i_server_type = 0)
 struct DbConfig *DbConfig::load_buffered(char *buf)
 {
     DTCConfig *raw = new DTCConfig();
-    if (raw->parse_buffered_config(buf) < 0) {
+    if (raw->load_yaml_buffer(buf) < 0) {
         delete raw;
         return NULL;
     }
@@ -1125,7 +1089,7 @@ struct DbConfig *DbConfig::load_buffered(char *buf)
         (struct DbConfig *)calloc(1, sizeof(struct DbConfig));
     dbConfig->cfgObj = raw;
 
-    if (dbConfig->parse_db_config(raw) == -1) {
+    if (dbConfig->get_dtc_config(raw->get_config_node(), raw, HOT) == -1) {
         dbConfig->destory();
         dbConfig = NULL;
     }
@@ -1136,7 +1100,7 @@ struct DbConfig *DbConfig::load_buffered(char *buf)
 struct DbConfig *DbConfig::Load(const char *file)
 {
     DTCConfig *raw = new DTCConfig();
-    if (raw->parse_config(file) < 0) {
+    if (raw->load_yaml_file(file) < 0) {
         delete raw;
         return NULL;
     }
@@ -1145,7 +1109,7 @@ struct DbConfig *DbConfig::Load(const char *file)
         (struct DbConfig *)calloc(1, sizeof(struct DbConfig));
     dbConfig->cfgObj = raw;
 
-    if (dbConfig->parse_db_config(raw) == -1) {
+    if (dbConfig->get_dtc_config(raw->get_config_node(), raw, HOT) == -1) {
         dbConfig->destory();
         dbConfig = NULL;
     }
@@ -1159,7 +1123,7 @@ struct DbConfig *DbConfig::Load(DTCConfig *raw , int i_server_type)
         (struct DbConfig *)calloc(1, sizeof(struct DbConfig));
     dbConfig->cfgObj = raw;
 
-    if (dbConfig->parse_db_config(raw , i_server_type) == -1) {
+    if (dbConfig->get_dtc_config(raw->get_config_node(), raw, i_server_type) == -1) {
         dbConfig->destory();
         dbConfig = NULL;
     }
