@@ -62,7 +62,6 @@ int DTCConfig::Dump(const char *fn, bool dec)
     FILE *fp = fopen(fn, "w");
     if (fp == NULL)
         return -1;
-    //fprintf(fp, "##### ORIGINAL FILE %s #####\n", filename_.c_str());
     for (YAML::const_iterator ite = dtc_config.begin();
          ite != dtc_config.end(); ++ite) {
         YAML::Node inception_sec = ite->first;
