@@ -45,6 +45,11 @@ extern "C" int rule_sql_match(const char* szsql, const char* szkey)
         return 1;
     }
 
+    if(sql == "show databases" || sql == "SHOW DATABASES")
+    {
+        return 3;
+    }
+
     hsql::SQLParserResult sql_ast;
     if(re_parse_sql(sql, &sql_ast) != 0)
         return -1;
