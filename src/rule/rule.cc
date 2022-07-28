@@ -10,11 +10,15 @@
 #include "log.h"
 #include "yaml-cpp/yaml.h"
 
+#define SPECIFIC_L1_SCHEMA "L1"
+#define SPECIFIC_L2_SCHEMA "L2"
+#define SPECIFIC_L3_SCHEMA "L3"
+
 using namespace std;
 
 extern vector<vector<hsql::Expr*> > expr_rules;
 
-extern "C" int rule_sql_match(const char* szsql, const char* szkey)
+extern "C" int rule_sql_match(const char* szsql, const char* szkey, const char* dbname)
 {
     if(!szsql || !szkey)
         return -1;
@@ -30,7 +34,27 @@ extern "C" int rule_sql_match(const char* szsql, const char* szkey)
     cout<<"sql: "<<sql<<endl;
 
     init_log4cplus();
-    
+
+    if(sql == "show databases" || sql == "SHOW DATABASES" || sql == "select database()" || sql == "SELECT DATABASE()")
+    {
+        return 3;
+    }
+
+    if(sql == "show tables" || sql == "SHOW TABLES")
+    {
+        if(dbname == NULL || strlen(dbname) == 0)
+            return -6;
+        else
+            return 3;
+    }
+
+    if(dbname != NULL && strlen(dbname) > 0 && 
+        std::string(dbname) != SPECIFIC_L1_SCHEMA && 
+        std::string(dbname) != SPECIFIC_L2_SCHEMA)
+    {
+        return 3;
+    }
+
     int ret = re_load_rule();
     if(ret != 0)
     {
@@ -43,11 +67,6 @@ extern "C" int rule_sql_match(const char* szsql, const char* szkey)
         log4cplus_debug("INSERT request, force direct to L1.");
         //L1: DTC cache.
         return 1;
-    }
-
-    if(sql == "show databases" || sql == "SHOW DATABASES")
-    {
-        return 3;
     }
 
     hsql::SQLParserResult sql_ast;

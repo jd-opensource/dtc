@@ -319,7 +319,7 @@ static void req_make_loopback(struct context *ctx, struct conn *conn,
 	return;
 }
 
-int dtc_header_add(struct msg *msg, enum enum_agent_admin admin)
+int dtc_header_add(struct msg *msg, enum enum_agent_admin admin, char* dbname)
 {
 	struct DTC_HEADER_V2 dtc_header = { 0 };
 
@@ -339,10 +339,14 @@ int dtc_header_add(struct msg *msg, enum enum_agent_admin admin)
 	dtc_header.id = msg->id;
 #endif
 	dtc_header.id = msg->id;
-	dtc_header.packet_len = mbuf_length(mbuf) + sizeof(dtc_header);
+
+	dtc_header.dbname_len = dbname ? strlen(dbname) : 0;
+	dtc_header.packet_len = mbuf_length(mbuf) + sizeof(dtc_header) + dtc_header.dbname_len;
 	dtc_header.layer = msg->layer;
 
 	mbuf_copy(new_buf, &dtc_header, sizeof(dtc_header));
+	if(dbname)
+		mbuf_copy(new_buf, dbname, dtc_header.dbname_len);
 	mbuf_copy(new_buf, mbuf->start, mbuf_length(mbuf));
 
 	mbuf_remove(&msg->buf_q, mbuf);
@@ -403,7 +407,7 @@ void req_process(struct context *ctx, struct conn *c_conn, struct msg *msg)
 	int oper = my_do_command(msg);
 	switch (oper) {
 	case NEXT_FORWARD:
-		dtc_header_add(msg, CMD_NOP);
+		dtc_header_add(msg, CMD_NOP, c_conn->dbname);
 		log_debug(
 			"FORWARD. msg len: %d, msg id: %d",
 			msg->mlen, msg->id);
@@ -766,7 +770,7 @@ void request_dtc_key_define(struct context *ctx, struct conn *c)
 		log_error("error code:%d", ret);
 		return;
 	}
-	ret = dtc_header_add(msg, CMD_KEY_DEFINE);
+	ret = dtc_header_add(msg, CMD_KEY_DEFINE, NULL);
 	if (ret) {
 		log_error("error code:%d %p", ret, msg);
 		return;
@@ -780,7 +784,7 @@ void request_dtc_key_define(struct context *ctx, struct conn *c)
 	req_forward(ctx, c, msg);
 }
 
-void error_reply(struct msg *msg, struct conn *conn, struct context *ctx)
+void error_reply(struct msg *msg, struct conn *conn, struct context *ctx, int errcode)
 {
 	if (net_send_error(msg, conn) < 0)
 		return;

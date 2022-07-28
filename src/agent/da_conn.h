@@ -81,7 +81,8 @@ struct conn {
   uint32_t type;   /*front conn,back conn,or listener*/
   uint32_t events; /*the event need process*/
   uint32_t flag;   /*epool flag*/
-  conn_stage_t stage;
+  conn_stage_t stage; /* authorization stage */
+  char dbname[250]; /* use db info */
 
   struct rbtree msg_tree; /*tree for message search*/
   struct rbnode msg_rbs;  /*sentinel for msg_tree	*/

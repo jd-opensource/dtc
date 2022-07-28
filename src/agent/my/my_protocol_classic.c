@@ -1,5 +1,6 @@
 #include "my_protocol_classic.h"
 #include "my_com_data.h"
+#include "da_conn.h"
 
 static inline char *strend(char *s)
 {
@@ -15,6 +16,30 @@ bool parse_packet(uchar *input_raw_packet, int input_packet_length,
 	log_debug("input_raw_packet:%p, input_packet_length:%d, cmd:%d",
 		  input_raw_packet, input_packet_length, cmd);
 	switch (cmd) {
+	case COM_INIT_DB: {
+		uint8_t *p = input_raw_packet;
+		log_debug("len: %d", input_packet_length);
+
+		if (*p == 0x0) {
+			log_debug("len: %d", input_packet_length);
+			p++;
+			input_packet_length--;
+		}
+
+		if (*p == 0x1) {
+			log_debug("len: %d", input_packet_length);
+			p++;
+			input_packet_length--;
+		}
+
+		if(input_packet_length > 0 && input_packet_length < 250)
+		{
+			memcpy(r->owner->dbname, p, input_packet_length);
+			return true;
+		}
+
+		break;
+	}
 	case COM_QUERY: {
 		int start_offset, end_offset;
 
@@ -36,7 +61,7 @@ bool parse_packet(uchar *input_raw_packet, int input_packet_length,
 		log_debug("len: %d", input_packet_length);
 
 		int layer = my_get_route_key(p, input_packet_length,
-					   &start_offset, &end_offset);
+					   &start_offset, &end_offset, r->owner->dbname);
 		//if(layer <= 0 || layer > 3)
 		//	layer = 3;
 
