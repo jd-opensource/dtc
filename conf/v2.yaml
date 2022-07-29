@@ -18,7 +18,7 @@ data_lifecycle:
 
 connection: &connection
   addr: 127.0.0.1:3306
-  user: uesrname
+  user: username
   pwd: password 
 
 primary:
@@ -35,9 +35,9 @@ primary:
     logic:
       {db: &db L2, table: *table, connection: *connection}
     real:
-      - {addr: mysql-01.local:3306, user: uesrname, pwd: password, db: {prefix: &prefix [*db, _], start: 0, last: 10}}
-      - {addr: mysql-02.local:3306, user: uesrname, pwd: password, db: {prefix: *prefix, start: 11, last: 25}}
-      - {addr: mysql-03.local:3306, user: uesrname, pwd: password, db: {prefix: *prefix, start: 26, last: 29}}
+      - {addr: mysql-01.local:3306, user: username, pwd: password, db: {prefix: &prefix [*db, _], start: 0, last: 10}}
+      - {addr: mysql-02.local:3306, user: username, pwd: password, db: {prefix: *prefix, start: 11, last: 25}}
+      - {addr: mysql-03.local:3306, user: username, pwd: password, db: {prefix: *prefix, start: 26, last: 29}}
     sharding:
       key: *key
       table: {prefix: [*table, _], start: 0, last: 9}
@@ -45,14 +45,14 @@ primary:
     logic:
       {db: L3, table: *table, connection: *connection}
     real:
-      - {addr: 127.0.0.1:3306, user: uesrname, pwd: password, db: L3}
+      - {addr: 127.0.0.1:3306, user: username, pwd: password, db: L3}
 
 extension:
   - logic:
       {db: January, table: Monday, connection: *connection}
     real:
-      - {addr: mysql-01.local:3306, user: uesrname, pwd: password, db: January}
+      - {addr: mysql-01.local:3306, user: username, pwd: password, db: January}
   - logic:
       {db: February, table: Tuesday, connection: *connection}
     real:
-      - {addr: mysql-01.local:3306, user: uesrname, pwd: password, db: February}
+      - {addr: mysql-01.local:3306, user: username, pwd: password, db: February}

@@ -10,6 +10,7 @@ using namespace std;
 char conf_file[256] = {0};
 YAML::Node dtc_config;
 std::map<std::string, std::vector<YAML::Node>> dbmap;
+std::string get_merge_string(YAML::Node node);
 
 int load_dtc_config(int argc, char *argv[])
 {
@@ -64,7 +65,7 @@ int load_node_to_map()
 
 int yaml_dump_schema_name(FILE *fp, std::string logic_db_name)
 {
-    fprintf(fp, "schemaName: %s\n", logic_db_name.c_str());
+    fprintf(fp, "databaseName: %s\n", logic_db_name.c_str());
     return 0;
 }
 
@@ -75,18 +76,45 @@ int yaml_dump_data_sources(FILE *fp, std::vector<YAML::Node> vec)
     for(vt = vec.begin(); vt != vec.end(); vt++)
     {
         YAML::Node node = *vt;
-        fprintf(fp, "  %s:\n", node["logic"]["db"].as<string>().c_str());
+        for(int i = 0; i < node["real"].size(); i++)
+        {
+            if(node["real"][i]["db"].IsScalar())  //single db
+            {
+                fprintf(fp, "  %s:\n", node["real"][i]["db"].as<string>().c_str());
+                fprintf(fp, "    url: jdbc:mysql://%s/%s?serverTimezone=UTC&useSSL=false&zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=UTF-8\n",
+                    node["real"][i]["addr"].as<string>().c_str(), node["real"][i]["db"].as<string>().c_str());
 
-        fprintf(fp, "    url: jdbc:mysql://%s/%s?serverTimezone=UTC&useSSL=false&zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=UTF-8\n",
-            node["real"]["addr"].as<string>().c_str(),
-            node["real"]["db"].as<string>().c_str());
-        fprintf(fp, "    username: %s\n", node["real"]["user"].as<string>().c_str());
-        fprintf(fp, "    password: %s\n", node["real"]["pwd"].as<string>().c_str());
+                fprintf(fp, "    username: %s\n", node["real"][i]["user"].as<string>().c_str());
+                fprintf(fp, "    password: %s\n", node["real"][i]["pwd"].as<string>().c_str());
+                fprintf(fp, "    connectionTimeoutMilliseconds: %d\n", 30000);
+                fprintf(fp, "    idleTimeoutMilliseconds: %d\n", 60000);
+                fprintf(fp, "    maxLifetimeMilliseconds: %d\n", 1800000);
+                fprintf(fp, "    maxPoolSize: %d\n", 50);
+            }
+            else    //multi db
+            {
+                for(int j = node["real"][i]["db"]["start"].as<int>(); j <= node["real"][i]["db"]["last"].as<int>(); j++)
+                {
+                    char szdb[250] = {0};
+                    sprintf(szdb, "%s%d", get_merge_string(node["real"][i]["db"]["prefix"]).c_str(), j);
+                    fprintf(fp, "  %s:\n", szdb);
 
-        fprintf(fp, "    connectionTimeoutMilliseconds: %d\n", 30000);
-        fprintf(fp, "    idleTimeoutMilliseconds: %d\n", 60000);
-        fprintf(fp, "    maxLifetimeMilliseconds: %d\n", 1800000);
-        fprintf(fp, "    maxPoolSize: %d\n", 50);
+                    fprintf(fp, "    url: jdbc:mysql://%s/%s?serverTimezone=UTC&useSSL=false&zeroDateTimeBehavior=convertToNull&useUnicode=true&characterEncoding=UTF-8\n",
+                        node["real"][i]["addr"].as<string>().c_str(), szdb);
+
+                    fprintf(fp, "    username: %s\n", node["real"][i]["user"].as<string>().c_str());
+                    fprintf(fp, "    password: %s\n", node["real"][i]["pwd"].as<string>().c_str());
+                    fprintf(fp, "    connectionTimeoutMilliseconds: %d\n", 30000);
+                    fprintf(fp, "    idleTimeoutMilliseconds: %d\n", 60000);
+                    fprintf(fp, "    maxLifetimeMilliseconds: %d\n", 1800000);
+                    fprintf(fp, "    maxPoolSize: %d\n", 50);
+                }
+            }
+            
+            
+        }
+
+
     }
     return 0;
 }
@@ -191,7 +219,7 @@ int yaml_dump_sharding_rule(FILE *fp, std::vector<YAML::Node> vec)
     }
 
     fprintf(fp, "  bindingTables:\n");
-    fprintf(fp, "    - %s:\n", binding_table.c_str());
+    fprintf(fp, "    - %s\n", binding_table.c_str());
 
     return 0;
 }
@@ -204,11 +232,9 @@ int dump_single_conf_file(std::string logic_db_name, std::vector<YAML::Node> vec
     FILE *fp = fopen(filename.c_str(), "w");
     if (fp == NULL)
         return -1;
-
     yaml_dump_schema_name(fp, logic_db_name);
     yaml_dump_data_sources(fp, vec);
     yaml_dump_sharding_rule(fp, vec);
-    
     fclose(fp);
     return 0;
 }
@@ -220,8 +246,7 @@ int dump_shardingsphere_conf_files()
     {
         std::string logic_db_name = (*it).first;
         std::vector<YAML::Node> vec = (*it).second;
-        dump_single_conf_file(logic_db_name, vec);
-        
+        dump_single_conf_file(logic_db_name, vec);        
     }
 
     return 0;
