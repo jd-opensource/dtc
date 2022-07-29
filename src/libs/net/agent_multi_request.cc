@@ -96,7 +96,8 @@ void CAgentMultiRequest::DecodeOneRequest(char * packetstart, int packetlen, int
 		return;
 	}
 
-	if(!task->copyOnePacket(packetstart + sizeof(DTC_HEADER_V2), packetlen - sizeof(DTC_HEADER_V2))){
+	if(!task->copyOnePacket(packetstart + sizeof(DTC_HEADER_V2) + ((DTC_HEADER_V2*)packetstart)->dbname_len, 
+			packetlen - sizeof(DTC_HEADER_V2) - ((DTC_HEADER_V2*)packetstart)->dbname_len)){
 		log4cplus_error("not enough mem for buf copy, client wont recv response");
 		compleTask++;
 		delete task;
@@ -108,6 +109,7 @@ void CAgentMultiRequest::DecodeOneRequest(char * packetstart, int packetlen, int
 	DTC_HEADER_V2 *h = (DTC_HEADER_V2 *)packetstart;
 	task->set_dtc_header_id(h->id);
 	task->set_layer(h->layer);
+	task->set_dbname(packetstart + sizeof(DTC_HEADER_V2), ((DTC_HEADER_V2*)packetstart)->dbname_len);
 
 	/*if(task->GetReqCmd() <= SERVICE_NONE || task->GetReqCmd() >= SERVICE_OTHER){
 		taskList[index].processed = 1;

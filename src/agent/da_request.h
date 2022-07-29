@@ -50,7 +50,7 @@ bool req_error(struct conn *conn, struct msg *msg);
 static void req_forward(struct context *ctx, struct conn *c_conn,
 			struct msg *msg);
 
-void error_reply(struct msg *msg, struct conn *conn, struct context *ctx);
+void error_reply(struct msg *msg, struct conn *conn, struct context *ctx, int errcode);
 
 void request_dtc_key_define(struct context *ctx, struct conn *c);
 

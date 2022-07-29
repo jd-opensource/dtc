@@ -364,11 +364,16 @@ static int msg_parse(struct context *ctx, struct conn *conn, struct msg *msg) {
 		log_debug("msg id:%"PRIu64" need parse again!",msg->id);
 		status = 0;
 		break;
+	
+	case MSG_PARSE_ERROR_NO_SELECTED_DB:
+		status = 0;
+		error_reply(msg, conn, ctx, MY_ERR_NO_DB_SELECTED);
+		break;
 
 	default:
 		log_error("parser get some trouble:%d", msg->parse_res);
 		status = 0;
-		error_reply(msg, conn, ctx);
+		error_reply(msg, conn, ctx, 0);
 		break;
 	}
 

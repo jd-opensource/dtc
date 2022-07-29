@@ -117,6 +117,7 @@ private:
 	uint32_t seq_number;
 	uint16_t request_cmd;
 	std::string m_sql;
+	std::string dbname;
 	uint8_t mysql_seq_id;
 	uint64_t dtc_header_id;
 	CBufferChain* cb;
@@ -155,6 +156,20 @@ public:
 
 	void set_layer(int layer) {
 		this->layer = layer;
+	}
+
+	std::string get_dbname() const{
+		return dbname;
+	}
+
+	void set_dbname(char* name, int len) {
+		if(len > 250 || name == NULL)
+			return ;
+		char* n = new char[len+1];
+		memset(n, 0, len+1);
+		memcpy(n, name, len);
+		this->dbname = n;
+		delete n;
 	}
 
 	uint64_t get_dtc_header_id() const{
