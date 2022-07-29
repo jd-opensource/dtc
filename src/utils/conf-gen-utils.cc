@@ -200,7 +200,7 @@ int yaml_dump_sharding_rule(FILE *fp, std::vector<YAML::Node> vec)
 
 int dump_single_conf_file(std::string logic_db_name, std::vector<YAML::Node> vec)
 {
-    std::string filename = logic_db_name + ".yaml";
+    std::string filename = "config-" + logic_db_name + ".yaml";
     FILE *fp = fopen(filename.c_str(), "w");
     if (fp == NULL)
         return -1;
