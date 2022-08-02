@@ -68,7 +68,7 @@ bool TableDefinitionManager::renew_cur_table_def()
 
 bool TableDefinitionManager::save_new_table_conf()
 {
-	_save_dbconfig->cfgObj->Dump("../conf/table.yaml", false);
+	_save_dbconfig->cfgObj->Dump("/etc/dtc/table.yaml", false);
 	_save_dbconfig->destory();
 	_save_dbconfig = NULL;
 	return true;
@@ -133,6 +133,7 @@ DTCTableDefinition *TableDefinitionManager::load_buffered_table(const char *buf)
 		_dbconfig->destory();
 		_dbconfig = NULL;
 	}
+	log4cplus_debug("YAML 2 AAAAAAA");
 	_dbconfig = DbConfig::load_buffered(bufLocal);
 	if(bufLocal)
 		FREE(bufLocal);

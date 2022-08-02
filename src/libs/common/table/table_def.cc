@@ -309,7 +309,6 @@ int DTCTableDefinition::set_key_fields(int n)
 		case DField::Unsigned: //整数
 		case DField::Float: //浮点数
 			maxSize += field_size(i);
-			log4cplus_info("cyj001:%d" , maxSize);
 			break;
 		case DField::String: //以null结尾的字符串
 		case DField::Binary: //二进制数据
@@ -329,7 +328,6 @@ int DTCTableDefinition::set_key_fields(int n)
 	if (uniqFieldCnt == n && keysAsUniqField > 0)
 		keysAsUniqField = 1; /* EXACT */
 	if (nvar == 0) { // not string , binary
-		log4cplus_info("cyj002:%d" , maxKeySize);
 		if (maxKeySize >= 256) 
 			return -1;
 		keyFormat = maxSize; // key 总大小

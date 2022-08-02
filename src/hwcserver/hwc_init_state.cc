@@ -52,11 +52,11 @@ void InitState::HandleEvent()
 
 	if (p_dtc_config->load_yaml_file(CComm::dtc_conf, false))
 		return -1;
-
+log4cplus_info("00000-4444444444");
 	DbConfig* p_db_Config = DbConfig::Load(p_dtc_config , 1);
 	if (p_db_Config == NULL)
 		return -1;
-
+log4cplus_info("00000-5555555");
     DTCTableDefinition* p_dtc_tab_def = p_db_Config->build_table_definition();
 
     TableDefinitionManager::instance()->set_cur_table_def(p_dtc_tab_def , 0);

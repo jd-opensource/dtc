@@ -78,7 +78,7 @@ class KeyRouteAskChain : public JobAskInterface<DTCJobOperation> {
 
 	std::string key_list_file_name(const std::string &name)
 	{
-		return "../data/" + name + ".migrated";
+		return "/var/log/dtc/data/" + name + ".migrated";
 	}
 
 	std::string select_node(const char *key);

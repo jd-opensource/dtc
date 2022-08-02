@@ -23,6 +23,8 @@
 #include "auto_config.h"
 #include "yaml-cpp/yaml.h"
 
+int str2int(const char *strval, int def);
+
 class DTCConfig {
     public:
 	DTCConfig(){};
@@ -36,6 +38,7 @@ class DTCConfig {
 	int get_idx_val(const char *, const char *, const char *const *,
 			int = 0);
 	const char *get_str_val(const char *sec, const char *key);
+	unsigned long long conv_size_val(const char* val, int ndefault, char unit);
 
 	int Dump(const char *fn, bool dec = false);
 	int load_yaml_file(const char *f = 0, bool bakconfig = false);

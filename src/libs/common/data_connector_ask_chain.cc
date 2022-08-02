@@ -238,7 +238,7 @@ int DataConnectorAskChain::build_helper_object(int idx)
 	}
 
 	DTCConfig* p_dtc_conf = dbConfig[idx]->cfgObj;
-	int i_has_hwc = p_dtc_conf ? p_dtc_conf->get_int_val("cache", "EnableHwc", 1) : 1;
+	int i_has_hwc = p_dtc_conf ? p_dtc_conf->get_int_val("cache", "EnableHwc", 0) : 0;
 	log4cplus_info("enable hwc:%d" , i_has_hwc);
 
 	/* build helper object */
@@ -296,15 +296,19 @@ int DataConnectorAskChain::build_master_group_mapping(int idx)
 	for (int i = 0; i < dbConfig[idx]->database_max_count; i++)
 		groupMap[idx][i] = GMAP_NONE;
 
+	log4cplus_info("machine cnt:%d", dbConfig[idx]->machineCnt);
 	/* build master group mapping */
 	for (int i = 0; i < dbConfig[idx]->machineCnt; i++) {
 		int gm_id = i;
+		log4cplus_info("helper type:%d", dbConfig[idx]->mach[i].helperType);
 		if (dbConfig[idx]->mach[i].helperType == DUMMY_HELPER) {
 			gm_id = GMAP_DUMMY;
 			hasDummyMachine = 1;
 		} else if (dbConfig[idx]->mach[i].procs == 0) {
+			log4cplus_error("procs=0 at idx:%d, i: %d", idx, i);
 			continue;
 		}
+		log4cplus_info("mach[%d].dbCnt: %d", i, dbConfig[idx]->mach[i].dbCnt);
 		for (int j = 0; j < dbConfig[idx]->mach[i].dbCnt; j++) {
 			const int db = dbConfig[idx]->mach[i].dbIdx[j];
 			if (groupMap[idx][db] >= 0) {
@@ -317,6 +321,7 @@ int DataConnectorAskChain::build_master_group_mapping(int idx)
 		}
 	}
 	for (int i = 0; i < dbConfig[idx]->database_max_count; ++i) {
+		log4cplus_info("database_max_count:%d, idx: %d", dbConfig[idx]->database_max_count, idx);
 		if (groupMap[idx][i] == GMAP_NONE) {
 			log4cplus_error(
 				"db completeness check error, db %d not found",
@@ -344,6 +349,7 @@ DbConfig *DataConnectorAskChain::get_db_config(DTCJobOperation *job)
 			strlen(row[3].bin.ptr), row[3].bin.ptr);
 	char *buf = row[3].bin.ptr;
 	config = new DTCConfig();
+	log4cplus_debug("YAML AAAAAAAA");
 	if (config->load_yaml_buffer(buf) !=
 	    0) {
 		log4cplus_error(
@@ -353,6 +359,7 @@ DbConfig *DataConnectorAskChain::get_db_config(DTCJobOperation *job)
 		delete config;
 		return NULL;
 	}
+	log4cplus_info("00000-11111111111");
 	if ((newdb = DbConfig::Load(config)) == NULL) {
 		log4cplus_error(
 			"table.yaml illeagl when migrate db, load error");
@@ -360,6 +367,7 @@ DbConfig *DataConnectorAskChain::get_db_config(DTCJobOperation *job)
 			       "table.yaml illegal, load error");
 		return NULL;
 	}
+	log4cplus_info("00000-222222222222");
 	return newdb;
 }
 
@@ -414,7 +422,7 @@ int DataConnectorAskChain::migrate_db(DTCJobOperation *job)
 
 	// save new table.yaml as table%d.conf
 	char tableName[64];
-	snprintf(tableName, 64, "../conf/table%d.conf", tableNo);
+	snprintf(tableName, 64, "/etc/dtc/table%d.conf", tableNo);
 	log4cplus_debug("table.yaml: %s", tableName);
 	if (dbConfig[1]->cfgObj->Dump(tableName, true) != 0) {
 		log4cplus_error("save table.yaml as table2.conf error");
@@ -487,7 +495,7 @@ int DataConnectorAskChain::switch_db(DTCJobOperation *job)
 	dbConfig[1]->destory();
 	dbConfig[1] = NULL;
 	// write conf file
-	dbConfig[0]->cfgObj->Dump("../conf/table.yaml", false);
+	dbConfig[0]->cfgObj->Dump("/etc/dtc/table.yaml", false);
 	Cleanup();
 
 	return 0;

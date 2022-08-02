@@ -115,11 +115,11 @@ int load_entry_parameter(int argc, char **argv)
 
 	if (g_dtc_config->load_yaml_file(d_cache_file, true))
 		return -1;
-
+log4cplus_info("YAML2 1111-111111111");
 	dbConfig = DbConfig::Load(g_dtc_config);
 	if (dbConfig == NULL)
 		return -1;
-
+log4cplus_info("YAML2 1111-222222222222");
 	g_table_def[0] = dbConfig->build_table_definition();
 	if (g_table_def[0] == NULL)
 		return -1;
@@ -237,8 +237,8 @@ int init_core_dump(void)
 	struct rlimit rlim;
 
 	/* allow core dump  100M */
-	rlim.rlim_cur = 100UL << 20;
-	rlim.rlim_max = 100UL << 20;
+	rlim.rlim_cur = 100UL << 30;
+	rlim.rlim_max = 100UL << 30;
 	//设置core文件的最大字节数
 	if (setrlimit(RLIMIT_CORE, &rlim) == -1) {
 		//如果设置失败，将软限制设置为硬限制，并重新设置

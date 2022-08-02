@@ -1317,6 +1317,7 @@ int Packet::load_table(const char* p_filename, char*& file , int& i_length)
 		return -1;
 	}
 
+	printf("open file:%s\n", p_filename);
 	lseek(fd, 0L, SEEK_SET);
 	i_length = lseek(fd, 0L, SEEK_END);
 	lseek(fd, 0L, SEEK_SET);

@@ -102,7 +102,8 @@ enum Depoly{
 	SHARDING_DB_SHARDING_TAB = 3
 };
 
-struct DbConfig {
+class DbConfig {
+public:
 	DTCConfig *cfgObj;
 	char *dbName;
 	char *dbFormat;
@@ -151,6 +152,10 @@ struct DbConfig {
 	bool Compare(DbConfig *config, bool compareMach = false);
 	int find_new_mach(DbConfig *config, std::vector<int> &newMach,
 			  std::map<int, int> &machMap);
+	static int get_dtc_mode(YAML::Node dtc_config);
+	static std::string get_shm_size(YAML::Node dtc_config);
+	static int get_shm_id(YAML::Node dtc_config);
+	static std::string get_bind_addr(YAML::Node dtc_config);
 
 private:
 	int get_dtc_config(YAML::Node dtc_config, DTCConfig* raw,int i_server_type);

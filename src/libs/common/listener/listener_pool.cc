@@ -78,23 +78,19 @@ int ListenerPool::do_bind(DTCConfig *gc, JobAskInterface<DTCJobOperation> *out)
 	for (int i = 0; i < MAXLISTENERS; i++) {
 		const char *errmsg;
 		char bindStr[32];
-		char bindPort[32];
 		int rbufsz;
 		int wbufsz;
 
 		if (i == 0) {
-			snprintf(bindStr, sizeof(bindStr), "BIND_ADDR");
-			snprintf(bindPort, sizeof(bindPort), "BindPort");
+			snprintf(bindStr, sizeof(bindStr), "listener.bind");
 		} else {
-			snprintf(bindStr, sizeof(bindStr), "BIND_ADDR%d", i);
-			snprintf(bindPort, sizeof(bindPort), "BindPort%d", i);
+			snprintf(bindStr, sizeof(bindStr), "listener.bind.%d", i);
 		}
 
-		const char *addrStr = gc->get_str_val("cache", bindStr);
-		if (addrStr == NULL)
+		std::string addrStr = gc->get_config_node()["props"][bindStr].as<std::string>();
+		if (addrStr.length() == 0)
 			continue;
-		errmsg = sockaddr[i].set_address(
-			addrStr, gc->get_str_val("cache", bindPort));
+		errmsg = sockaddr[i].set_address(addrStr.c_str(), (const char*)NULL);
 		if (errmsg) {
 			log4cplus_error("bad BIND_ADDR%d/BindPort%d: %s\n", i,
 					i, errmsg);

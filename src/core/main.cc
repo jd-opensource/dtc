@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 	if (load_entry_parameter(argc, argv) < 0)
 		return DTC_CODE_FAILED;
 
-	if (g_dtc_config->get_int_val("cache", "EnableCoreDump", 0))
+	if (g_dtc_config->get_int_val("cache", "EnableCoreDump", 1))
 		init_core_dump();
 
 	if (init_config_info())

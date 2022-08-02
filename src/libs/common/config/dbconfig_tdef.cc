@@ -20,6 +20,7 @@
 DTCTableDefinition *DbConfig::build_table_definition(void)
 {
 	DTCTableDefinition *tdef = new DTCTableDefinition(fieldCnt);
+	log4cplus_debug("build table tblName:%s", tblName);
 	tdef->set_table_name(tblName);
 	for (int i = 0; i < fieldCnt; i++) {
 		if (tdef->add_field(i, field[i].name, field[i].type,

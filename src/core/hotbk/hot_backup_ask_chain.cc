@@ -81,7 +81,7 @@ void HotBackupAskChain::job_ask_procedure(DTCJobOperation *job_operation)
 bool HotBackupAskChain::do_init(uint64_t total, off_t max_size)
 {
 	log4cplus_debug("total: %lu, max_size: %ld", total, max_size);
-	if (hbLog_.init("../log/hblog", "hblog", total, max_size)) {
+	if (hbLog_.init("/var/log/dtc/hblog", "hblog", total, max_size)) {
 		log4cplus_error("hotback process for hblog init failed");
 		return false;
 	}

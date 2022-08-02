@@ -613,7 +613,7 @@ bool KeyRouteAskChain::migration_inprogress()
 	return false;
 }
 
-static const char *state_file_name = "../data/cluster.stat";
+static const char *state_file_name = "/var/log/dtc/data/cluster.stat";
 
 void KeyRouteAskChain::save_state_to_file()
 {

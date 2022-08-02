@@ -94,9 +94,11 @@ int DTCConfig::load_yaml_buffer(char *buf)
         log4cplus_error("yaml content don't allow null.");
         return ret_code;
     }
-
+    log4cplus_debug("yaml buf:%s", buf);
     try {
+        log4cplus_info("00000-33333333333");
         dtc_config = YAML::Load(buf);
+        log4cplus_info("00000-444444444444");
         ret_code = 0;
     } catch (const YAML::Exception &e) {
         printf("load yaml buf error:%s\n", e.what());
@@ -122,9 +124,9 @@ int DTCConfig::load_yaml_file(const char *fn, bool bakconfig)
     if (bakconfig) {
         char bak_config[1024];
         int err = 0;
-        system("mkdir -p /usr/local/dtc/stat/");
+        system("mkdir -p /etc/dtc/stat/");
         snprintf(bak_config, sizeof(bak_config),
-             "cp %s /usr/local/dtc/stat/", fn);
+             "cp %s /etc/dtc/stat/", fn);
         if (err == 0)
             err = system(bak_config);
     }
@@ -133,57 +135,22 @@ int DTCConfig::load_yaml_file(const char *fn, bool bakconfig)
 
 const char *DTCConfig::get_str_val(const char *sec, const char *key)
 {
-    if (dtc_config[sec]) {
-        if (dtc_config[sec][key]) {
-            std::string s_cache = dtc_config[sec][key]
-                                .as<std::string>();
-            if (s_cache.length() > 0) {
-                log4cplus_info("cache str:%s", s_cache.c_str());
-                return strdup(s_cache.c_str());
-            }
-        }
-    }
-
     return NULL;
 }
 
 int DTCConfig::get_int_val(const char *sec, const char *key, int def)
 {
-    const char *val = NULL;
-
-    if (dtc_config[sec]) {
-        if (dtc_config[sec][key]) {
-            std::string result = dtc_config[sec][key]
-                                .as<std::string>();
-            if (result.length() > 0) {
-                val = result.c_str();
-            }
-        }
-    }
-
-    if (val == NULL)
-        return def;
-
-    return str2int(val, def);
+    return def;
 }
 
-unsigned long long DTCConfig::get_size_val(const char *sec, const char *key,
-                       unsigned long long def, char unit)
+unsigned long long DTCConfig::conv_size_val(const char* val, int ndefault, char unit)
 {
-    const char *val = NULL;
-
-    if (dtc_config[sec]) {
-        if (dtc_config[sec][key]) {
-            std::string result = dtc_config[sec][key]
-                                .as<std::string>();
-            if (result.length() > 0) {
-                val = result.c_str();
-            }
-        }
+    if (val == NULL)
+    {
+        log4cplus_error("val is null");
+        return ndefault;
     }
-
-    if (val == NULL || !isdigit(val[0]))
-        return def;
+        
 
     const char *p;
     double a = strtod(val, (char **)&p);
@@ -223,38 +190,14 @@ unsigned long long DTCConfig::get_size_val(const char *sec, const char *key,
     return (unsigned long long)a;
 }
 
+unsigned long long DTCConfig::get_size_val(const char *sec, const char *key,
+                       unsigned long long def, char unit)
+{
+    return def;
+}
+
 int DTCConfig::get_idx_val(const char *sec, const char *key,
                const char *const *array, int nDefault)
 {
-    const char *val = NULL;
-
-    if (dtc_config[sec]) {
-        if (dtc_config[sec][key]) {
-            std::string result = dtc_config[sec][key]
-                                .as<std::string>();
-            if (result.length() > 0) {
-                val = result.c_str();
-            }
-        }
-    }
-
-    if (val == NULL)
-        return nDefault;
-
-    if (isdigit(val[0])) {
-        char *p;
-        int n = strtol(val, &p, 0);
-        if (*p == '\0') {
-            for (int i = 0; array[i]; ++i) {
-                if (n == i)
-                    return i;
-            }
-        }
-    }
-
-    for (int i = 0; array[i]; ++i) {
-        if (!strcasecmp(val, array[i]))
-            return i;
-    }
-    return -1;
+    return nDefault;
 }

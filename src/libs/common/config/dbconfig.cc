@@ -29,6 +29,7 @@
 #include "../table/table_def.h"
 #include "config.h"
 #include <libgen.h>
+#include "../../../core/global.h"
 
 #define HELPERPATHFORMAT "@dtcd[%d]helper%d%c"
 #define DTC_EXPIRE_TIME_FIELD "_dtc_sys_expiretime"
@@ -134,46 +135,47 @@ int DbConfig::load_key_hash(DTCConfig *raw)
     keyHashConfig.keyHashRightBegin = 0;
 
     /* not enable key-hash */
-    if (raw->get_int_val("DATABASE_CONF", "enable_key_hash", 0) == 0) {
+    std::string hashopen = raw->get_config_node()["props"]["hash.custom"].as<std::string>();
+    if (str2int(hashopen.c_str(), 0) == 0) {
         log4cplus_debug("key-hash plugin disable");
         return 0;
     }
 
     /* read key_hash_module */
-    const char *so = raw->get_str_val("DATABASE_CONF", "key_hash_module");
-    if (NULL == so || 0 == so[0]) {
+    std::string so = raw->get_config_node()["props"]["hash.custom.module"].as<std::string>();
+    if (so.length() == 0) {
         log4cplus_info(
             "not set key-hash plugin name, use default value");
-        so = (char *)DEFAULT_KEY_HASH_SO_NAME;
+        so = DEFAULT_KEY_HASH_SO_NAME;
     }
 
     /* read key_hash_function */
-    const char *var =
-        raw->get_str_val("DATABASE_CONF", "key_hash_function");
-    if (NULL == var || 0 == var[0]) {
+    std::string var =
+        raw->get_config_node()["props"]["hash.custom.functon"].as<std::string>();
+    if (var.length() == 0) {
         log4cplus_error("not set key-hash plugin function name");
-        var = (char *)DEFAULT_KEY_HASH_FUNCTION;
+        var = DEFAULT_KEY_HASH_FUNCTION;
     }
 
     char *fun = 0;
     int isfunalloc = 0;
-    const char *iter = strchr(var, '(');
+    const char *iter = strchr(var.c_str(), '(');
     if (NULL == iter) {
         /* 
          * 按照整个buffer来处理
          */
         keyHashConfig.keyHashLeftBegin = 1;
         keyHashConfig.keyHashRightBegin = -1;
-        fun = (char *)var;
+        fun = (char *)var.c_str();
     } else {
-        fun = strndup(var, (size_t)(iter - var));
+        fun = strndup(var.c_str(), (size_t)(iter - var.c_str()));
         isfunalloc = 1;
         if (sscanf(iter, "(%d, %d)", &keyHashConfig.keyHashLeftBegin,
                &keyHashConfig.keyHashRightBegin) != 2) {
             free(fun);
             log4cplus_error(
                 "key-hash plugin function format error, %s:%s",
-                so, var);
+                so.c_str(), var.c_str());
             return -1;
         }
 
@@ -186,11 +188,11 @@ int DbConfig::load_key_hash(DTCConfig *raw)
     /* 过滤fun中的空格*/
     fun = skip_blank(fun);
 
-    void *dll = dlopen(so, RTLD_NOW | RTLD_GLOBAL);
+    void *dll = dlopen(so.c_str(), RTLD_NOW | RTLD_GLOBAL);
     if (dll == (void *)NULL) {
         if (isfunalloc)
             free(fun);
-        log4cplus_error("dlopen(%s) error: %s", so, dlerror());
+        log4cplus_error("dlopen(%s) error: %s", so.c_str(), dlerror());
         return -1;
     }
 
@@ -199,7 +201,7 @@ int DbConfig::load_key_hash(DTCConfig *raw)
     if (keyHashConfig.keyHashFunction == NULL) {
         log4cplus_error(
             "key-hash plugin function[%s] not found in [%s]", fun,
-            so);
+            so.c_str());
         if (isfunalloc)
             free(fun);
         return -1;
@@ -209,7 +211,7 @@ int DbConfig::load_key_hash(DTCConfig *raw)
     keyHashConfig.keyHashEnable = 1;
 
     log4cplus_info("key-hash plugin %s->%s(%d, %d) %s",
-               basename((char *)so), fun,
+               basename((char *)so.c_str()), fun,
                keyHashConfig.keyHashLeftBegin,
                keyHashConfig.keyHashRightBegin,
                keyHashConfig.keyHashEnable ? "enable" : "disable");
@@ -326,11 +328,27 @@ int get_db_machine_count()
     return 1;
 }
 
+std::string get_merge_string(YAML::Node node)
+{
+    std::string str = "";
+    if(!node)
+        return str;
+
+    for(int i = 0; i < node.size(); i++)
+    {
+        str += node[i].as<string>();
+    }
+
+    return str;
+}
+
 int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server_type)
 {
     std::string layer("");
     if(!dtc_config)
         return -1;
+
+    log4cplus_info("primary table: %s", dtc_config["primary"]["table"].as<string>().c_str());
 
     switch (i_server_type)
     {
@@ -347,13 +365,12 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         
     log4cplus_info("layered storage: %s.", layer.c_str());
 
-    const char *cp;
+    const char *cp = NULL;
     char *p;
-    YAML::Node node = dtc_config;
-
+log4cplus_info("YAML2 7777777777777");
     //DB section
     if(dtc_config["primary"][layer])    //cache.datasource mode
-    {
+    {log4cplus_info("YAML2 7777777777777-1");
         machineCnt = get_db_machine_count();
         if (machineCnt <= 0) {
             log4cplus_error("%s", "invalid server_count");
@@ -363,21 +380,26 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
     else{
         machineCnt = 0;
     }
-
+log4cplus_info("YAML2 888888888888888888");
     //Depoly
     if(dtc_config["primary"][layer]) //cache.datasource mode
     {
-        node = dtc_config["primary"][layer]["real"];
+        log4cplus_info("YAML2 888888888888888888-1");
+        YAML::Node node = dtc_config["primary"][layer]["real"];
         if(node.size() == 1) //single db
         {
-            if(dtc_config["primary"][layer]["sharding"] && dtc_config["primary"][layer]["sharding"]["table.count"].as<int>() > 1)
+            log4cplus_info("YAML2 888888888888888888-222222222");
+            if(dtc_config["primary"][layer]["sharding"] && 
+                dtc_config["primary"][layer]["sharding"]["table"]["last"].as<int>() - dtc_config["primary"][layer]["sharding"]["table"]["start"].as<int>() + 1 > 1)
                 depoly = SINGLE_DB_SHARDING_TAB;
             else
                 depoly = SINGLE;
         }
         else if(node.size() > 1) //multi db
         {
-            if(dtc_config["primary"][layer]["sharding"] && dtc_config["primary"][layer]["sharding"]["table.count"].as<int>() > 1)
+            log4cplus_info("YAML2 888888888888888888-333333333333");
+            if(dtc_config["primary"][layer]["sharding"] && 
+            dtc_config["primary"][layer]["sharding"]["table"]["last"].as<int>() - dtc_config["primary"][layer]["sharding"]["table"]["start"].as<int>() + 1 > 1)
                 depoly = SHARDING_DB_SHARDING_TAB;
             else
                 depoly = SHARDING_DB_ONE_TAB;
@@ -392,22 +414,24 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
     {
         depoly = SINGLE;
     }
-
+log4cplus_info("YAML2 999999999999999");
     //DB Name
     if(dtc_config["primary"][layer]) //cache.datasource mode
-    {
-        node = dtc_config["primary"][layer]["real"][0]["db"];
+    {log4cplus_info("YAML2 AAAAAAAAAAAA");
+        YAML::Node node = dtc_config["primary"][layer]["real"][0]["db"];
         if(!node)
-        {
+        {log4cplus_info("YAML2 Bbbbbbbbbb");
             log4cplus_error("primary.layer.real db not defined");
             return -1;
         }
         else
-        {
-            dbName = STRDUP(node.as<string>().c_str());   //TODO: prefix splitting string.
+        {log4cplus_info("YAML2 CCCCCCCCCCCC");
+            if(node.IsScalar())
+                dbName = STRDUP(node.as<string>().c_str());
+            else
+                dbName = STRDUP(get_merge_string(node["prefix"]).c_str());
         }
     }
-
     dstype = 0;
     checkTable = 1;
 
@@ -416,92 +440,123 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
     //if (load_key_hash(raw) != 0)
     //    return -1;
 
-    if ((depoly & 1) == 0) {
-        if (strchr(dbName, '%') != NULL) {
-            log4cplus_error(
-                "Invalid [DATABASE_CONF].database_name, cannot contain symbol '%%'");
-            return -1;
-        }
-
-        dbDiv = 1;
-        dbMod = 1;
-        dbFormat = dbName;
-    } else {
-        dbDiv = 1;
-        dbMod = dtc_config["primary"][layer]["real"].size();
-
-        if (dbMod > 100) {
-            log4cplus_error(
-                "invalid [DATABASE_CONF].DbMod = %s, mod value too large",
-                cp);
-            return -1;
-        }
-
-        p = strchr(dbName, '%');
-        if (p) {
-            dbFormat = STRDUP(dbName);
-            *p = '\0';
-        } else {
-            dbFormat = (char *)MALLOC(strlen(dbName) + 3);
-            snprintf(dbFormat, strlen(dbName) + 3, "%s%%d", dbName);
-        }
-    }
-
-    //Table section
-    node = dtc_config["primary"][layer]["logic"]["table"];
-    if(!node)
+    if(dtc_config["primary"][layer])
     {
-        log4cplus_error("[TABLE_CONF].table_name not defined");
-        return -1;
-    }
-    tblName = STRDUP(node.as<string>().c_str());
+        if ((depoly & 1) == 0) {    //single db
+            log4cplus_info("YAML2 AAAAAAAAAAAA");
+            if (strchr(dbName, '%') != NULL) {
+                log4cplus_error(
+                    "Invalid [DATABASE_CONF].database_name, cannot contain symbol '%%'");
+                return -1;
+            }
 
-    if ((depoly & 2) == 0) {
-        if (strchr(tblName, '%') != NULL) {
-            log4cplus_error(
-                "Invalid table_name, cannot contain symbol '%%'");
-            return -1;
-        }
-
-        tblDiv = 1;
-        tblMod = 1;
-        tblFormat = tblName;
-    } else {
-        tblDiv = dtc_config["primary"][layer]["real"].size();
-        tblMod = dtc_config["primary"][layer]["sharding"]["table.count"].as<int>();
-
-        if(tblDiv == 0 || tblMod == 0) {
-            log4cplus_error("invalid [TABLE_CONF].TableNum = %s",
-                    cp);
-            return -1;
-        }
-
-        p = strchr(tblName, '%');
-        if (p) {
-            tblFormat = STRDUP(tblName);
-            *p = '\0';
+            dbDiv = 1;
+            dbMod = 1;
+            dbFormat = dbName;
         } else {
-            tblFormat = (char *)MALLOC(strlen(tblName) + 3);
-            snprintf(tblFormat, strlen(tblName) + 3, "%s%%d",
-                 tblName);
-        }
-    }
+            log4cplus_info("YAML2 BBBBBBBBBBbb");
+            dbDiv = 1;
+            dbMod = dtc_config["primary"][layer]["real"].size();
 
-    database_max_count = dtc_config["primary"][layer]["real"].size();
-    if (database_max_count < 0 || database_max_count > 10000) {
-        log4cplus_error("%s", "invalid [DATABASE_CONF].DbMax");
-        return -1;
+            if (dbMod > 100) {
+                log4cplus_error(
+                    "invalid [DATABASE_CONF].DbMod = %d, mod value too large",
+                    dbMod);
+                return -1;
+            }
+            log4cplus_info("YAML2 CCCCCCCCCCCCCc:%p",dbName);
+            p = strchr(dbName, '%');
+            if (p) {
+                dbFormat = STRDUP(dbName);
+                *p = '\0';
+            } else {
+                dbFormat = (char *)MALLOC(strlen(dbName) + 3);
+                snprintf(dbFormat, strlen(dbName) + 3, "%s%%d", dbName);
+            }
+        }
+
+        database_max_count = dtc_config["primary"][layer]["real"].size();
+        if (database_max_count < 0 || database_max_count > 10000) {
+            log4cplus_error("%s", "invalid [DATABASE_CONF].DbMax");
+            return -1;
+        }
+        if (database_max_count < (int)dbMod) {
+            log4cplus_warning(
+                "invalid [TABLE_CONF].DbMax too small, increase to %d",
+                dbMod);
+            database_max_count = dbMod;
+        }
+    
+        log4cplus_info("YAML2 11111111111111");
+        //Table section
+        YAML::Node node = dtc_config["primary"][layer]["logic"]["table"];
+        if(!node)
+        {
+            log4cplus_error("[TABLE_CONF].table_name not defined");
+            return -1;
+        }
+        tblName = STRDUP(node.as<string>().c_str());
+        log4cplus_info("YAML2 11111111111111:%s", tblName);
+        if ((depoly & 2) == 0) {
+            if (strchr(tblName, '%') != NULL) {
+                log4cplus_error(
+                    "Invalid table_name, cannot contain symbol '%%'");
+                return -1;
+            }
+
+            tblDiv = 1;
+            tblMod = 1;
+            tblFormat = tblName;
+        } else {
+            tblDiv = dtc_config["primary"][layer]["real"].size();
+            tblMod = dtc_config["primary"][layer]["sharding"]["table"]["last"].as<int>() - dtc_config["primary"][layer]["sharding"]["table"]["start"].as<int>() + 1;
+
+            if(tblDiv == 0 || tblMod == 0) {
+                log4cplus_error("invalid [TABLE_CONF].tblDiv = %d, tblMod = %d",
+                        tblDiv, tblMod);
+                return -1;
+            }
+
+            p = strchr(tblName, '%');
+            if (p) {
+                tblFormat = STRDUP(tblName);
+                *p = '\0';
+            } else {
+                tblFormat = (char *)MALLOC(strlen(tblName) + 3);
+                snprintf(tblFormat, strlen(tblName) + 3, "%s%%d",
+                    tblName);
+            }
+        }
+        log4cplus_info("YAML2 222222222222222222");
     }
-    if (database_max_count < (int)dbMod) {
-        log4cplus_warning(
-            "invalid [TABLE_CONF].DbMax too small, increase to %d",
-            dbMod);
-        database_max_count = dbMod;
+    else
+    {
+        //Table section
+        YAML::Node node = dtc_config["primary"]["table"];
+        if(!node)
+        {
+            log4cplus_error("[TABLE_CONF].table_name not defined");
+            return -1;
+        }
+        tblName = STRDUP(node.as<string>().c_str());
+        log4cplus_info("YAML2 11111111111111:%s", tblName);
+        if ((depoly & 2) == 0) 
+        {
+            if (strchr(tblName, '%') != NULL) {
+                log4cplus_error(
+                    "Invalid table_name, cannot contain symbol '%%'");
+                return -1;
+            }
+
+            tblDiv = 1;
+            tblMod = 1;
+            tblFormat = tblName;
+        }
     }
 
     fieldCnt = dtc_config["primary"]["cache"]["field"].size();
     if (fieldCnt <= 0 || fieldCnt > 240) {
-        log4cplus_error("invalid [TABLE_CONF].field_count");
+        log4cplus_error("invalid [TABLE_CONF].field_count:%d", fieldCnt);
         return -1;
     }
 
@@ -523,7 +578,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         log4cplus_error("bad [TABLE_CONF].ServerOrderInsert");
         return -1;
     }
-
+log4cplus_info("YAML2 333333333333333333");
     //Machine setction
     mach = (struct MachineConfig *)calloc(machineCnt,
                           sizeof(struct MachineConfig));
@@ -557,12 +612,13 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
 
         m->mode = 0;
                 
-        char szindex[255] = {0};
-        sprintf(szindex, "[0-%d]", dtc_config["primary"][layer]["real"].size());
-        cp = szindex;
-
-        m->dbCnt = ParseDbLine(cp, m->dbIdx);
-
+log4cplus_info("YAML2 33333333-11111111");
+        if(dtc_config["primary"][layer]["real"][i]["db"].IsScalar())
+            m->dbCnt = 1;
+        else
+            m->dbCnt = dtc_config["primary"][layer]["real"][i]["db"]["last"].as<int>() - 
+                        dtc_config["primary"][layer]["real"][i]["db"]["start"].as<int>() + 1;
+log4cplus_info("YAML2 33333333-222222222:%d", m->dbCnt);
         for (int j = 0; j < m->dbCnt; j++) {
             if (m->dbIdx[j] >= database_max_count) {
                 log4cplus_error(
@@ -571,7 +627,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
                 return -1;
             }
         }
-
+log4cplus_info("YAML2 33333333-333333333333");
         /* Helper number alter */
         m->gprocs[0] = raw->get_int_val(NULL, "Procs", 10);
         if (m->gprocs[0] < 1)
@@ -582,7 +638,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         m->gprocs[2] = raw->get_int_val(NULL, "CommitProcs", 10);
         if (m->gprocs[2] < 1)
             m->gprocs[2] = 0;
-
+log4cplus_info("YAML2 33333333-4444444444444");
         /* Helper Queue Size */
         m->gqueues[0] = raw->get_int_val(NULL, "QueueSize", 0);
         m->gqueues[1] =
@@ -601,7 +657,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             m->gqueues[1] = 2;
         if (m->gqueues[2] <= 1000)
             m->gqueues[2] = 1000;
-
+log4cplus_info("YAML2 33333333-5555555555555");
         if (m->dbCnt == 0) // database_index is NULL, no helper needed
         {
             m->gprocs[0] = 0;
@@ -609,7 +665,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             m->gprocs[2] = 0;
             m->mode = 0;
         }
-
+log4cplus_info("YAML2 33333333-666666666666666");
         switch (m->mode) {
         case BY_SLAVE:
         case BY_DB:
@@ -628,11 +684,11 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             m->gprocs[3] = 0;
             m->gqueues[3] = 0;
         }
-
+log4cplus_info("YAML2 33333333-777777777777777");
         m->procs = m->gprocs[0] + m->gprocs[1] + m->gprocs[2];
         procs += m->procs;
     }
-
+log4cplus_info("YAML2 44444444444444444444:%d", fieldCnt);
     //Field section
     field = (struct FieldConfig *)calloc(fieldCnt,
                          sizeof(struct FieldConfig));
@@ -647,6 +703,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
     compressflag = -1;
     expireTime = -1;
     for (int i = 0; i < fieldCnt; i++) {
+        log4cplus_info("YAML2 4444444-1111111111:%d", i);
         struct FieldConfig *f = &field[i];
 
         f->name = STRDUP(dtc_config["primary"]["cache"]["field"][i]["name"].as<string>().c_str());
@@ -669,8 +726,8 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             f->type = 5;
 
         if (f->type <= 0 || f->type > 5) {
-            log4cplus_error("Invalid value [%d].field_type",
-                    i);
+            log4cplus_error("Invalid value [%d].field_type:%s",
+                    i, type.c_str());
             return -1;
         }
         f->size = dtc_config["primary"]["cache"]["field"][i]["size"].as<int>();
@@ -679,7 +736,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
                     i);
             return -1;
         }
-
+log4cplus_info("YAML2 4444444-2222222222");
         if (i >= keyFieldCnt &&
             i < keyFieldCnt + idxFieldCnt) { // index field
             if (field[i].size > 255) {
@@ -688,9 +745,9 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
                     f->name);
                 return -1;
             }
-            const char *idx_order =
-                raw->get_str_val(NULL, "Order");
-            if (idx_order && strcasecmp(idx_order, "DESC") == 0)
+
+            std::string idx_order = dtc_config["primary"]["cache"]["order"].as<std::string>();
+            if (idx_order == "desc")
                 f->flags |= DB_FIELD_FLAGS_DESC_ORDER;
             else
                 log4cplus_debug("index field[%s] order: ASC",
@@ -701,7 +758,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
                     f->name);
             return -1;
         }
-
+log4cplus_info("YAML2 4444444-333333333333");
         if (i >= keyFieldCnt &&
             raw->get_int_val(NULL, "ReadOnly", 0) > 0)
             f->flags |= DB_FIELD_FLAGS_READONLY;
@@ -738,7 +795,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             f->flags |= DB_FIELD_FLAGS_DISCARD |
                     DB_FIELD_FLAGS_VOLATILE;
         }
-
+log4cplus_info("YAML2 4444444-4444444444");
         if (!strcmp(f->name, DTC_EXPIRE_TIME_FIELD)) {
             if (f->type != DField::Unsigned &&
                 f->type != DField::Signed) {
@@ -755,277 +812,276 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             }
             expireTime = i;
         }
-
+log4cplus_info("YAML2 4444444-5555555555");
         /* ATTN: must be last one */
-        cp = raw->get_str_val(NULL, "DefaultValue");
-        if (cp && !strcmp(cp, "auto_increment")) {
-            if (f->type != DField::Unsigned &&
-                f->type != DField::Signed) {
-                log4cplus_error(
-                    "field%d: auto_increment field byte must be unsigned",
-                    i + 1);
-                return -1;
-            }
-            if (autoinc >= 0) {
-                log4cplus_error(
-                    "field%d already defined as auto_increment",
-                    autoinc + 1);
-                return -1;
-            }
-            if ((f->flags & DB_FIELD_FLAGS_DISCARD)) {
-                log4cplus_error(
-                    "field%d: auto_increment can't be Discard",
-                    autoinc + 1);
-                return -1;
-            }
-            autoinc = i;
-            f->flags |= DB_FIELD_FLAGS_READONLY;
-        } else if (cp && !strcmp(cp, "lastmod")) {
-            if (i < keyFieldCnt) {
-                log4cplus_error("key field%d can't be lastmod",
+        if(dtc_config["primary"]["cache"]["field"][i]["default"])
+        {
+            YAML::Node default_node = dtc_config["primary"]["cache"]["field"][i]["default"];
+            std::string default_val = default_node.as<std::string>();
+            if (default_val == "auto_increment") {
+                if (f->type != DField::Unsigned &&
+                    f->type != DField::Signed) {
+                    log4cplus_error(
+                        "field%d: auto_increment field byte must be unsigned",
                         i + 1);
-                return -1;
-            }
-            if ((f->type != DField::Unsigned &&
-                 f->type != DField::Signed) ||
-                f->size < 4) {
-                log4cplus_error(
-                    "field%d: lastmod field byte must be unsigned & size>=4",
-                    i + 1);
-                return -1;
-            }
-            if ((f->flags & DB_FIELD_FLAGS_UNIQ)) {
-                log4cplus_error(
-                    "field%d: lastmod field byte can't be field_unique",
-                    i + 1);
-                return -1;
-            }
-            if ((f->flags & DB_FIELD_FLAGS_DISCARD)) {
-                log4cplus_error(
-                    "field%d: lastmod can't be Discard",
-                    autoinc + 1);
-                return -1;
-            }
-            if (lastmod >= 0) {
-                log4cplus_error(
-                    "field%d already defined as lastmod",
-                    lastmod + 1);
-                return -1;
-            }
-            lastmod = i;
-        } else if (cp && !strcmp(cp, "lastcmod")) {
-            if (i < keyFieldCnt) {
-                log4cplus_error("key field%d can't be lastcmod",
+                    return -1;
+                }
+                if (autoinc >= 0) {
+                    log4cplus_error(
+                        "field%d already defined as auto_increment",
+                        autoinc + 1);
+                    return -1;
+                }
+                if ((f->flags & DB_FIELD_FLAGS_DISCARD)) {
+                    log4cplus_error(
+                        "field%d: auto_increment can't be Discard",
+                        autoinc + 1);
+                    return -1;
+                }
+                autoinc = i;
+                f->flags |= DB_FIELD_FLAGS_READONLY;
+            } else if (default_val == "lastmod") {
+                if (i < keyFieldCnt) {
+                    log4cplus_error("key field%d can't be lastmod",
+                            i + 1);
+                    return -1;
+                }
+                if ((f->type != DField::Unsigned &&
+                    f->type != DField::Signed) ||
+                    f->size < 4) {
+                    log4cplus_error(
+                        "field%d: lastmod field byte must be unsigned & size>=4",
                         i + 1);
-                return -1;
-            }
-            if ((f->type != DField::Unsigned &&
-                 f->type != DField::Signed) ||
-                f->size < 4) {
-                log4cplus_error(
-                    "field%d: lastcmod field byte must be unsigned & size>=4",
-                    i + 1);
-                return -1;
-            }
-            if ((f->flags & DB_FIELD_FLAGS_UNIQ)) {
-                log4cplus_error(
-                    "field%d: lastcmod field byte can't be field_unique",
-                    i + 1);
-                return -1;
-            }
-            if ((f->flags & DB_FIELD_FLAGS_DISCARD)) {
-                log4cplus_error(
-                    "field%d: lastcmod can't be Discard",
-                    autoinc + 1);
-                return -1;
-            }
-            if (lastcmod >= 0) {
-                log4cplus_error(
-                    "field%d already defined as lastcmod",
-                    lastcmod + 1);
-                return -1;
-            }
-            lastcmod = i;
-        } else if (cp && !strcmp(cp, "lastacc")) {
-            if (i < keyFieldCnt) {
-                log4cplus_error("key field%d can't be lastacc",
+                    return -1;
+                }
+                if ((f->flags & DB_FIELD_FLAGS_UNIQ)) {
+                    log4cplus_error(
+                        "field%d: lastmod field byte can't be field_unique",
                         i + 1);
-                return -1;
-            }
-            if ((f->type != DField::Unsigned &&
-                 f->type != DField::Signed) ||
-                f->size != 4) {
-                log4cplus_error(
-                    "field%d: lastacc field byte must be unsigned & size==4",
-                    i + 1);
-                return -1;
-            }
-            if ((f->flags & DB_FIELD_FLAGS_UNIQ)) {
-                log4cplus_error(
-                    "field%d: lastacc field byte can't be field_unique",
-                    i + 1);
-                return -1;
-            }
-            if ((f->flags & DB_FIELD_FLAGS_DISCARD)) {
-                log4cplus_error(
-                    "field%d: lastacc can't be Discard",
-                    autoinc + 1);
-                return -1;
-            }
-            if (lastacc >= 0) {
-                log4cplus_error(
-                    "field%d already defined as lastacc",
-                    lastacc + 1);
-                return -1;
-            }
-            lastacc = i;
-        } else if (cp && !strcmp(cp, "compressflag")) {
-            if (i < keyFieldCnt) {
-                log4cplus_error(
-                    "key field%d can't be compressflag",
-                    i + 1);
-                return -1;
-            }
-            if ((f->type != DField::Unsigned &&
-                 f->type != DField::Signed) ||
-                f->size != 8) {
-                log4cplus_error(
-                    "field%d: compressflag field byte must be unsigned & size==8",
-                    i + 1);
-                return -1;
-            }
-            if ((f->flags & DB_FIELD_FLAGS_UNIQ)) {
-                log4cplus_error(
-                    "field%d: compressflag field byte can't be field_unique",
-                    i + 1);
-                return -1;
-            }
-            if ((f->flags & DB_FIELD_FLAGS_DISCARD)) {
-                log4cplus_error(
-                    "field%d: compressflag can't be Discard",
-                    i + 1);
-                return -1;
-            }
-            if (compressflag >= 0) {
-                log4cplus_error(
-                    "field%d already defined as compressflag",
-                    i + 1);
-                return -1;
-            }
-            compressflag = i;
-        } else {
-            if (i == 0 && cp) {
-                log4cplus_error(
-                    "specify DefaultValue for Field1 is invalid");
-                return -1;
-            }
-            switch (f->type) {
-            case DField::Unsigned:
-                f->dval.Set(!cp || !cp[0] ?
-                            0 :
-                            (uint64_t)strtoull(cp, NULL,
-                                       0));
-                break;
-            case DField::Signed:
-                f->dval.Set(
-                    !cp || !cp[0] ?
-                        0 :
-                        (int64_t)strtoll(cp, NULL, 0));
-                break;
-            case DField::Float:
-                f->dval.Set(!cp || !cp[0] ? 0.0 :
-                                strtod(cp, NULL));
-                break;
-            case DField::String:
-            case DField::Binary:
-                int len;
-                if (!cp || !cp[0]) {
-                    f->dval.Set(NULL, 0);
+                    return -1;
+                }
+                if ((f->flags & DB_FIELD_FLAGS_DISCARD)) {
+                    log4cplus_error(
+                        "field%d: lastmod can't be Discard",
+                        autoinc + 1);
+                    return -1;
+                }
+                if (lastmod >= 0) {
+                    log4cplus_error(
+                        "field%d already defined as lastmod",
+                        lastmod + 1);
+                    return -1;
+                }
+                lastmod = i;
+            } else if (default_val == "lastcmod") {
+                if (i < keyFieldCnt) {
+                    log4cplus_error("key field%d can't be lastcmod",
+                            i + 1);
+                    return -1;
+                }
+                if ((f->type != DField::Unsigned &&
+                    f->type != DField::Signed) ||
+                    f->size < 4) {
+                    log4cplus_error(
+                        "field%d: lastcmod field byte must be unsigned & size>=4",
+                        i + 1);
+                    return -1;
+                }
+                if ((f->flags & DB_FIELD_FLAGS_UNIQ)) {
+                    log4cplus_error(
+                        "field%d: lastcmod field byte can't be field_unique",
+                        i + 1);
+                    return -1;
+                }
+                if ((f->flags & DB_FIELD_FLAGS_DISCARD)) {
+                    log4cplus_error(
+                        "field%d: lastcmod can't be Discard",
+                        autoinc + 1);
+                    return -1;
+                }
+                if (lastcmod >= 0) {
+                    log4cplus_error(
+                        "field%d already defined as lastcmod",
+                        lastcmod + 1);
+                    return -1;
+                }
+                lastcmod = i;
+            } else if (default_val == "lastacc") {
+                if (i < keyFieldCnt) {
+                    log4cplus_error("key field%d can't be lastacc",
+                            i + 1);
+                    return -1;
+                }
+                if ((f->type != DField::Unsigned &&
+                    f->type != DField::Signed) ||
+                    f->size != 4) {
+                    log4cplus_error(
+                        "field%d: lastacc field byte must be unsigned & size==4",
+                        i + 1);
+                    return -1;
+                }
+                if ((f->flags & DB_FIELD_FLAGS_UNIQ)) {
+                    log4cplus_error(
+                        "field%d: lastacc field byte can't be field_unique",
+                        i + 1);
+                    return -1;
+                }
+                if ((f->flags & DB_FIELD_FLAGS_DISCARD)) {
+                    log4cplus_error(
+                        "field%d: lastacc can't be Discard",
+                        autoinc + 1);
+                    return -1;
+                }
+                if (lastacc >= 0) {
+                    log4cplus_error(
+                        "field%d already defined as lastacc",
+                        lastacc + 1);
+                    return -1;
+                }
+                lastacc = i;
+            } else if (default_val == "compressflag") {
+                if (i < keyFieldCnt) {
+                    log4cplus_error(
+                        "key field%d can't be compressflag",
+                        i + 1);
+                    return -1;
+                }
+                if ((f->type != DField::Unsigned &&
+                    f->type != DField::Signed) ||
+                    f->size != 8) {
+                    log4cplus_error(
+                        "field%d: compressflag field byte must be unsigned & size==8",
+                        i + 1);
+                    return -1;
+                }
+                if ((f->flags & DB_FIELD_FLAGS_UNIQ)) {
+                    log4cplus_error(
+                        "field%d: compressflag field byte can't be field_unique",
+                        i + 1);
+                    return -1;
+                }
+                if ((f->flags & DB_FIELD_FLAGS_DISCARD)) {
+                    log4cplus_error(
+                        "field%d: compressflag can't be Discard",
+                        i + 1);
+                    return -1;
+                }
+                if (compressflag >= 0) {
+                    log4cplus_error(
+                        "field%d already defined as compressflag",
+                        i + 1);
+                    return -1;
+                }
+                compressflag = i;
+            } else {
+                if (i == 0 && default_val.length() > 0) {
+                    log4cplus_error(
+                        "specify DefaultValue for Field1 is invalid");
+                    return -1;
+                }
+                switch (f->type) {
+                case DField::Unsigned:
+                    f->dval.Set(default_node.as<int>());
                     break;
-                } else if (cp[0] == '"') {
-                    /* Decode quoted string */
-                    cp++;
-                    len = strlen(cp);
-                    if (cp[len - 1] != '"') {
+                case DField::Signed:
+                    f->dval.Set(default_node.as<int>());
+                    break;
+                case DField::Float:
+                    f->dval.Set(default_node.as<float>());
+                    break;
+                case DField::String:
+                case DField::Binary:
+                    int len;
+                    cp = default_val.c_str();
+                    if (!cp || !cp[0]) {
+                        f->dval.Set(NULL, 0);
+                        break;
+                    } else if (cp[0] == '"') {
+                        /* Decode quoted string */
+                        cp++;
+                        len = strlen(cp);
+                        if (cp[len - 1] != '"') {
+                            log4cplus_error(
+                                "field%d: unmatched quoted default value",
+                                i + 1);
+                            return -1;
+                        }
+                        len--;
+                    } else if (cp[0] == '0' &&
+                        (cp[1] | 0x20) == 'x') {
+                        /* Decode hex value */
+                        int j = 2;
+                        len = 0;
+                        while (cp[j]) {
+                            char v;
+                            if (cp[j] == '-')
+                                continue;
+                            if (cp[j] >= '0' &&
+                                cp[j] <= '9')
+                                v = cp[j] - '0';
+                            else if (cp[j] >= 'a' &&
+                                cp[j] <= 'f')
+                                v = cp[j] - 'a' + 10;
+                            else if (cp[j] >= 'A' &&
+                                cp[j] <= 'F')
+                                v = cp[j] - 'A' + 10;
+                            else {
+                                log4cplus_error(
+                                    "field%d: invalid hex default value",
+                                    i + 1);
+                                return -1;
+                            }
+                            j++;
+                            if (cp[j] >= '0' &&
+                                cp[j] <= '9')
+                                v = (v << 4) + cp[j] -
+                                    '0';
+                            else if (cp[j] >= 'a' &&
+                                cp[j] <= 'f')
+                                v = (v << 4) + cp[j] -
+                                    'a' + 10;
+                            else if (cp[j] >= 'A' &&
+                                cp[j] <= 'F')
+                                v = (v << 4) + cp[j] -
+                                    'A' + 10;
+                            else {
+                                log4cplus_error(
+                                    "field%d: invalid hex default value",
+                                    i + 1);
+                                return -1;
+                            }
+                            j++;
+                            //buf[len++] = v;
+                            len++;
+                        }
+                    } else {
                         log4cplus_error(
-                            "field%d: unmatched quoted default value",
+                            "field%d: string default value must quoted or hex value",
                             i + 1);
                         return -1;
                     }
-                    len--;
-                } else if (cp[0] == '0' &&
-                       (cp[1] | 0x20) == 'x') {
-                    /* Decode hex value */
-                    int j = 2;
-                    len = 0;
-                    while (cp[j]) {
-                        char v;
-                        if (cp[j] == '-')
-                            continue;
-                        if (cp[j] >= '0' &&
-                            cp[j] <= '9')
-                            v = cp[j] - '0';
-                        else if (cp[j] >= 'a' &&
-                             cp[j] <= 'f')
-                            v = cp[j] - 'a' + 10;
-                        else if (cp[j] >= 'A' &&
-                             cp[j] <= 'F')
-                            v = cp[j] - 'A' + 10;
-                        else {
-                            log4cplus_error(
-                                "field%d: invalid hex default value",
-                                i + 1);
-                            return -1;
-                        }
-                        j++;
-                        if (cp[j] >= '0' &&
-                            cp[j] <= '9')
-                            v = (v << 4) + cp[j] -
-                                '0';
-                        else if (cp[j] >= 'a' &&
-                             cp[j] <= 'f')
-                            v = (v << 4) + cp[j] -
-                                'a' + 10;
-                        else if (cp[j] >= 'A' &&
-                             cp[j] <= 'F')
-                            v = (v << 4) + cp[j] -
-                                'A' + 10;
-                        else {
-                            log4cplus_error(
-                                "field%d: invalid hex default value",
-                                i + 1);
-                            return -1;
-                        }
-                        j++;
-                        //buf[len++] = v;
-                        len++;
-                    }
-                } else {
-                    log4cplus_error(
-                        "field%d: string default value must quoted or hex value",
-                        i + 1);
-                    return -1;
-                }
 
-                if (len > f->size) {
-                    log4cplus_error(
-                        "field%d: default value size %d truncated to %d",
-                        i + 1, len, f->size);
-                    return -1;
+                    if (len > f->size) {
+                        log4cplus_error(
+                            "field%d: default value size %d truncated to %d",
+                            i + 1, len, f->size);
+                        return -1;
+                    }
+                    if (len == 0)
+                        f->dval.Set(NULL, 0);
+                    else {
+                        char *p = (char *)MALLOC(len + 1);
+                        memcpy(p, cp, len);
+                        p[len] = '\0';
+                        f->dval.Set(p, len);
+                    }
+                    break;
                 }
-                if (len == 0)
-                    f->dval.Set(NULL, 0);
-                else {
-                    char *p = (char *)MALLOC(len + 1);
-                    memcpy(p, cp, len);
-                    p[len] = '\0';
-                    f->dval.Set(p, len);
-                }
-                break;
             }
         }
+        
     }
-
+log4cplus_info("YAML2 55555555555555");
     if (field[0].type == DField::Float) {
         log4cplus_error("%s", "FloatPoint key not supported");
         return -1;
@@ -1054,13 +1110,14 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             return -1;
         }
     }
-
+log4cplus_info("YAML2 666666666666668");
     // expire time only support uniq key
     if (expireTime != -1 && !(field[0].flags & DB_FIELD_FLAGS_UNIQ)) {
+        log4cplus_info("YAML2 666666666666669");
         log4cplus_error("%s", "expire time only support uniq key");
         return -1;
     }
-
+log4cplus_info("YAML2 66666666666666---11111");
     if (keyFieldCnt > 1) {
         for (int j = 0; j < keyFieldCnt; j++) {
             struct FieldConfig *f1 = &field[j];
@@ -1073,13 +1130,14 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             }
         }
     }
-
+log4cplus_info("YAML2 7777777777777777");
     return 0;
 }
 
 struct DbConfig *DbConfig::load_buffered(char *buf)
 {
     DTCConfig *raw = new DTCConfig();
+    log4cplus_debug("YAML AAAAAAAA");
     if (raw->load_yaml_buffer(buf) < 0) {
         delete raw;
         return NULL;
@@ -1088,11 +1146,13 @@ struct DbConfig *DbConfig::load_buffered(char *buf)
     DbConfig *dbConfig =
         (struct DbConfig *)calloc(1, sizeof(struct DbConfig));
     dbConfig->cfgObj = raw;
-
+log4cplus_info("YAML2 11111111111111");
     if (dbConfig->get_dtc_config(raw->get_config_node(), raw, HOT) == -1) {
+        log4cplus_error("get config error, destory now.");
         dbConfig->destory();
         dbConfig = NULL;
     }
+    log4cplus_info("YAML2 2222222222222");
 
     return dbConfig;
 }
@@ -1108,12 +1168,12 @@ struct DbConfig *DbConfig::Load(const char *file)
     DbConfig *dbConfig =
         (struct DbConfig *)calloc(1, sizeof(struct DbConfig));
     dbConfig->cfgObj = raw;
-
+log4cplus_info("YAML2 333333333");
     if (dbConfig->get_dtc_config(raw->get_config_node(), raw, HOT) == -1) {
         dbConfig->destory();
         dbConfig = NULL;
     }
-
+log4cplus_info("YAML2 444444444444");
     return dbConfig;
 }
 
@@ -1122,12 +1182,13 @@ struct DbConfig *DbConfig::Load(DTCConfig *raw , int i_server_type)
     DbConfig *dbConfig =
         (struct DbConfig *)calloc(1, sizeof(struct DbConfig));
     dbConfig->cfgObj = raw;
-
+log4cplus_info("YAML2 555555555555");
     if (dbConfig->get_dtc_config(raw->get_config_node(), raw, i_server_type) == -1) {
+        log4cplus_info("YAML2 5555555556666666666666");
         dbConfig->destory();
         dbConfig = NULL;
     }
-
+log4cplus_info("YAML2 6666666666666");
     return dbConfig;
 }
 
@@ -1140,6 +1201,38 @@ bool DbConfig::build_path(char *path, int n, int pid, int group, int role,
     snprintf(path, n - 1, HELPERPATHFORMAT, pid, group,
          MACHINEROLESTRING[role]);
     return true;
+}
+
+int DbConfig::get_dtc_mode(YAML::Node dtc_config)
+{
+    if(dtc_config["primary"]["hot"])
+        return DTC_MODE_DATABASE_ADDITION;
+    else 
+        return DTC_MODE_CACHE_ONLY;
+}
+
+std::string DbConfig::get_shm_size(YAML::Node dtc_config)
+{
+    if(dtc_config["props"]["shm.mem.size"])
+        return dtc_config["props"]["shm.mem.size"].as<string>();
+    else 
+        return "0";
+}
+
+int DbConfig::get_shm_id(YAML::Node dtc_config)
+{
+    if(dtc_config["props"]["shm.id"])
+        return dtc_config["props"]["shm.id"].as<int>();
+    else
+        return 0;
+}
+
+std::string DbConfig::get_bind_addr(YAML::Node dtc_config)
+{
+    if(dtc_config["props"]["listener.bind"])
+        return dtc_config["props"]["listener.bind"].as<std::string>();
+    else
+        return "";
 }
 
 void DbConfig::set_helper_path(int serverId)

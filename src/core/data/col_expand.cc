@@ -71,6 +71,7 @@ int DTCColExpand::initialization()
 
 int DTCColExpand::reload_table()
 {
+	log4cplus_debug("reload table entry");
 	if (TableDefinitionManager::instance()->get_cur_table_idx() ==
 	    col_expand_->curTable)
 		return DTC_CODE_SUCCESS;
@@ -87,6 +88,8 @@ int DTCColExpand::reload_table()
 	}
 	TableDefinitionManager::instance()->set_cur_table_def(
 		t, col_expand_->curTable);
+
+	log4cplus_debug("reload table leave");
 	return DTC_CODE_SUCCESS;
 }
 
@@ -123,6 +126,7 @@ int DTCColExpand::attach(MEM_HANDLE_T handle, int forceFlag)
 	}
 	// parse shm table.conf
 	DTCTableDefinition *t, *tt = NULL;
+	log4cplus_debug("YAML 2 AAAAAAAA");
 	t = TableDefinitionManager::instance()->load_buffered_table(
 		col_expand_->tableBuff[col_expand_->curTable %
 				       COL_EXPAND_BUFF_NUM]);
@@ -133,6 +137,7 @@ int DTCColExpand::attach(MEM_HANDLE_T handle, int forceFlag)
 		return DTC_CODE_FAILED;
 	}
 	if (col_expand_->expanding) {
+		log4cplus_debug("YAML 2 AAAAAAAA");
 		tt = TableDefinitionManager::instance()->load_buffered_table(
 			col_expand_->tableBuff[(col_expand_->curTable + 1) %
 					       COL_EXPAND_BUFF_NUM]);

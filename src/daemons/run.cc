@@ -26,6 +26,7 @@
 #include "config/dbconfig.h"
 #include "log/log.h"
 #include "daemon/daemon.h"
+#include "../core/global.h"
 /* 打开看门狗 */
 int start_dtc(int (*entry)(void *), void *args)
 {
@@ -34,7 +35,7 @@ int start_dtc(int (*entry)(void *), void *args)
     WatchDog *wdog = NULL;
     WatchDogListener *srv = NULL;
 
-	  if (g_dtc_config->get_int_val("cache", "DisableWatchDog", 0) == 0) {
+	  if (g_dtc_config->get_int_val("cache", "DisableWatchDog", 1) == 0) {
 		signal(SIGCHLD, SIG_DFL);
 		delay = g_dtc_config->get_int_val("cache", "WatchDogTime", 30);
 		if (delay < 5)
@@ -53,7 +54,8 @@ int start_dtc(int (*entry)(void *), void *args)
 			log4cplus_info("fork stat reporter");
 		}
 	}
-	if (g_dtc_config->get_int_val("cache", "DTC_MODE", 0) == 0) {
+	
+	if (DbConfig::get_dtc_mode(g_dtc_config->get_config_node()) == DTC_MODE_DATABASE_ADDITION) {
 		int nh = 0;
 		/* starting master helper */
 		for (int g = 0; g < dbConfig->machineCnt; ++g) {
@@ -104,7 +106,7 @@ int start_dtc(int (*entry)(void *), void *args)
 			return -1;
     // wait for dtc entry step to agentlisten
     usleep(100 * 1000);
-    if (g_dtc_config->get_int_val("cache", "EnableHwc", 1) > 0) {
+    if (g_dtc_config->get_int_val("cache", "EnableHwc", 0) > 0) {
             WatchDogHWC* p_hwc_wd = new WatchDogHWC(wdog, delay);
             if (p_hwc_wd->new_proc_fork() < 0) {
                 log4cplus_error("fork hwc server fail");
