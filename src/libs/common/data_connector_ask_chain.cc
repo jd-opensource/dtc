@@ -422,7 +422,7 @@ int DataConnectorAskChain::migrate_db(DTCJobOperation *job)
 
 	// save new table.yaml as table%d.conf
 	char tableName[64];
-	snprintf(tableName, 64, "/etc/dtc/table%d.conf", tableNo);
+	snprintf(tableName, 64, "/etc/dtc/dtc%d.conf", tableNo);
 	log4cplus_debug("table.yaml: %s", tableName);
 	if (dbConfig[1]->cfgObj->Dump(tableName, true) != 0) {
 		log4cplus_error("save table.yaml as table2.conf error");
@@ -495,7 +495,7 @@ int DataConnectorAskChain::switch_db(DTCJobOperation *job)
 	dbConfig[1]->destory();
 	dbConfig[1] = NULL;
 	// write conf file
-	dbConfig[0]->cfgObj->Dump("/etc/dtc/table.yaml", false);
+	dbConfig[0]->cfgObj->Dump("/etc/dtc/dtc.yaml", false);
 	Cleanup();
 
 	return 0;

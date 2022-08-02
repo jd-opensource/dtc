@@ -68,7 +68,7 @@ bool TableDefinitionManager::renew_cur_table_def()
 
 bool TableDefinitionManager::save_new_table_conf()
 {
-	_save_dbconfig->cfgObj->Dump("/etc/dtc/table.yaml", false);
+	_save_dbconfig->cfgObj->Dump("/etc/dtc/dtc.yaml", false);
 	_save_dbconfig->destory();
 	_save_dbconfig = NULL;
 	return true;

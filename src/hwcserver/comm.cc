@@ -19,7 +19,7 @@ ConnectorProcess CComm::mysql_process_;
 
 const char *CComm::version = "hwc.0.1";
 char* CComm::dtc_conf = "/etc/dtc/dtc.yaml";
-char* CComm::table_conf = "/etc/dtc/table.yaml";
+char* CComm::table_conf = "/etc/dtc/dtc.yaml";
 int CComm::backend = 0;
 int CComm::normal = 1;
 

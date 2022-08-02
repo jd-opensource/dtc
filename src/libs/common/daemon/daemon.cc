@@ -42,7 +42,7 @@ int background = 1;
 const char stat_project_name[] = "daemon";
 const char stat_usage_argv[] = "";
 
-#define TABLE_CONF_NAME "/etc/dtc/table.yaml"
+#define TABLE_CONF_NAME "/etc/dtc/dtc.yaml"
 #define CACHE_CONF_NAME "/etc/dtc/dtc.yaml"
 
 char d_cache_file[256] = CACHE_CONF_NAME;
@@ -106,7 +106,7 @@ int load_entry_parameter(int argc, char **argv)
 
 	//init_log("dtcd");
 	log4cplus_info("%s v%s: starting....", stat_project_name, version);
-	strcpy(d_table_file, "/etc/dtc/table.yaml");
+	strcpy(d_table_file, "/etc/dtc/dtc.yaml");
 	strcpy(d_cache_file, "/etc/dtc/dtc.yaml");
 	g_dtc_config = new DTCConfig;
 	//load config file and copy it to ../stat
