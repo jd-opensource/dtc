@@ -27,6 +27,7 @@ int load_dtc_config(int argc, char *argv[])
     }
 
     try {
+        log4cplus_info("loading file: %s", conf_file);
         dtc_config = YAML::LoadFile(conf_file);
 	} catch (const YAML::Exception &e) {
 		log4cplus_error("config file error:%s, %s\n", e.what(), conf_file);
@@ -36,30 +37,46 @@ int load_dtc_config(int argc, char *argv[])
     if(!dtc_config)
         return -1;
 
+    log4cplus_info("loading conf file successfully.");
     return 0;
 }
 
 int load_node_to_map()
 {
+    log4cplus_info("loading node to map.");
+    std::vector<YAML::Node> vec;
     //hot
-    std::vector<YAML::Node> vec = 
-        dbmap[dtc_config["primary"]["hot"]["logic"]["db"].as<string>()];
-    vec.push_back(dtc_config["primary"]["hot"]);
-    dbmap[dtc_config["primary"]["hot"]["logic"]["db"].as<string>()] = vec;
-
-    //full
-    vec = dbmap[dtc_config["primary"]["full"]["logic"]["db"].as<string>()];
-    vec.push_back(dtc_config["primary"]["full"]);
-    dbmap[dtc_config["primary"]["full"]["logic"]["db"].as<string>()] = vec;
-
-    //extension
-    for(int i = 0; i < dtc_config["extension"].size(); i++)
+    if(dtc_config["primary"]["hot"])
     {
-        vec = dbmap[dtc_config["extension"][i]["logic"]["db"].as<string>()];
-        vec.push_back(dtc_config["extension"][i]);
-        dbmap[dtc_config["extension"][i]["logic"]["db"].as<string>()] = vec;
+        log4cplus_info("loading hot.");
+        vec = 
+            dbmap[dtc_config["primary"]["hot"]["logic"]["db"].as<string>()];
+        vec.push_back(dtc_config["primary"]["hot"]);
+        dbmap[dtc_config["primary"]["hot"]["logic"]["db"].as<string>()] = vec;
     }
 
+    //full
+    if(dtc_config["primary"]["full"])
+    {
+        log4cplus_info("loading full.");
+        vec = dbmap[dtc_config["primary"]["full"]["logic"]["db"].as<string>()];
+        vec.push_back(dtc_config["primary"]["full"]);
+        dbmap[dtc_config["primary"]["full"]["logic"]["db"].as<string>()] = vec;
+    }
+
+    //extension
+    if(dtc_config["extension"])
+    {
+        log4cplus_info("loading extension.");
+        for(int i = 0; i < dtc_config["extension"].size(); i++)
+        {
+            vec = dbmap[dtc_config["extension"][i]["logic"]["db"].as<string>()];
+            vec.push_back(dtc_config["extension"][i]);
+            dbmap[dtc_config["extension"][i]["logic"]["db"].as<string>()] = vec;
+        }
+    }
+
+    log4cplus_info("loading node to map finished.");
     return 0;
 }
 
@@ -228,7 +245,7 @@ int yaml_dump_sharding_rule(FILE *fp, std::vector<YAML::Node> vec)
 
 int dump_single_conf_file(std::string logic_db_name, std::vector<YAML::Node> vec)
 {
-    std::string filename = "config-" + logic_db_name + ".yaml";
+    std::string filename = string("/etc/dtc/") + string("config-") + logic_db_name + ".yaml";
     FILE *fp = fopen(filename.c_str(), "w");
     if (fp == NULL)
         return -1;
@@ -236,11 +253,13 @@ int dump_single_conf_file(std::string logic_db_name, std::vector<YAML::Node> vec
     yaml_dump_data_sources(fp, vec);
     yaml_dump_sharding_rule(fp, vec);
     fclose(fp);
+    log4cplus_info("generating new conf file:%s", filename.c_str());
     return 0;
 }
 
 int dump_shardingsphere_conf_files()
 {
+    log4cplus_info("dumping ss conf files.");
     std::map<std::string, std::vector<YAML::Node>>::iterator it;
     for (it = dbmap.begin(); it != dbmap.end(); it++) 
     {
@@ -249,6 +268,7 @@ int dump_shardingsphere_conf_files()
         dump_single_conf_file(logic_db_name, vec);        
     }
 
+    log4cplus_info("dumping ss conf files finished.");
     return 0;
 }
 
