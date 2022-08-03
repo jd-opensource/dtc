@@ -372,7 +372,7 @@ static bool da_test_conf(struct instance *dai) {
 }
 
 static void da_log_init(struct instance *dai) {
-	_init_log_("da", dai->log_dir);
+	_init_log_("agent", dai->log_dir);
 	_set_log_level_(dai->log_level);
 	_set_remote_log_fd_();
 }

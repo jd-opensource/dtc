@@ -238,7 +238,12 @@ int DataConnectorAskChain::build_helper_object(int idx)
 	}
 
 	DTCConfig* p_dtc_conf = dbConfig[idx]->cfgObj;
-	int i_has_hwc = p_dtc_conf ? p_dtc_conf->get_int_val("cache", "EnableHwc", 0) : 0;
+	int i_has_hwc = 0;
+	if(p_dtc_conf)
+	{
+		if(p_dtc_conf->get_config_node()["primary"]["hot"])
+			i_has_hwc = 1;
+	}
 	log4cplus_info("enable hwc:%d" , i_has_hwc);
 
 	/* build helper object */

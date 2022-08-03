@@ -2,6 +2,8 @@
 
 FILE(GLOB SRC_LIST ./*.cc)
 
+include(../utils.cmake)
+
 INCLUDE_DIRECTORIES (
     ./
     ../core
@@ -43,7 +45,9 @@ LINK_LIBRARIES(libstat.a)
 LINK_LIBRARIES(libmysqlclient.a)
 
 ADD_DEFINITIONS ("-g -fPIC -fpermissive -std=gnu++11 -DOMN_PLATFORM_UNIX -Wl,--no-undefined -Xlinker -zmuldefs")
+ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 
 ADD_EXECUTABLE (connector ${SRC_LIST})
 
 TARGET_LINK_LIBRARIES(connector  libdtcd.a libdaemons.a libstat.a libcommon.a liblog4cplus.a  libyaml-cpp.a  libz64.a libmysqlclient.a)
+redefine_file_macro(connector)

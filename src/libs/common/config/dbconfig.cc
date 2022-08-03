@@ -370,7 +370,8 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
 log4cplus_info("YAML2 7777777777777");
     //DB section
     if(dtc_config["primary"][layer])    //cache.datasource mode
-    {log4cplus_info("YAML2 7777777777777-1");
+    {
+        log4cplus_info("YAML2 7777777777777-1");
         machineCnt = get_db_machine_count();
         if (machineCnt <= 0) {
             log4cplus_error("%s", "invalid server_count");
@@ -380,7 +381,7 @@ log4cplus_info("YAML2 7777777777777");
     else{
         machineCnt = 0;
     }
-log4cplus_info("YAML2 888888888888888888");
+    log4cplus_info("YAML2 888888888888888888:machineCnt:%d, %s", machineCnt, layer.c_str());
     //Depoly
     if(dtc_config["primary"][layer]) //cache.datasource mode
     {

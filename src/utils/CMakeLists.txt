@@ -1,5 +1,7 @@
 FILE(GLOB_RECURSE SRC_LIST ./*.cc ./*.c)
 
+include(../utils.cmake)
+
 #添加头文件搜索路径，相当于gcc -I
 INCLUDE_DIRECTORIES(
     .
@@ -22,9 +24,11 @@ LINK_LIBRARIES(dl)
 
 #编译参数
 ADD_DEFINITIONS("-g -rdynamic -fPIC -D_CORE_ -fpermissive -std=gnu++11 -D_GLIBCXX_USE_CXX11_ABI=0 -export-dynamic -Wl,--version-script,dtcd.export.lst")
+ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 
 #编译为.so/.a
 ADD_EXECUTABLE(conf-gen-utils ${SRC_LIST})
 
 #将目标文件与库文件链接
 TARGET_LINK_LIBRARIES(conf-gen-utils libsqlparser.so liblog4cplus.a libyaml-cpp.a)
+redefine_file_macro(conf-gen-utils)

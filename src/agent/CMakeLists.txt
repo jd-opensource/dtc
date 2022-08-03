@@ -15,6 +15,7 @@ IF("${HAVE_ASSERT_LOG}" EQUAL 1)
 ENDIF()
 
 FILE(GLOB_RECURSE  SRC_LIST ./*.c)
+include(../utils.cmake)
 
 INCLUDE_DIRECTORIES(
     .
@@ -37,7 +38,9 @@ LINK_LIBRARIES(pthread)
 LINK_LIBRARIES(librule.so)
 
 ADD_DEFINITIONS ("-D_GNU_SOURCE")
+ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 
 ADD_EXECUTABLE(dtcagent ${SRC_LIST})
 
 TARGET_LINK_LIBRARIES(dtcagent libmxml.a librule.so)
+redefine_file_macro(agent-watchdog)

@@ -2,6 +2,8 @@ ADD_SUBDIRECTORY (./lib)
 
 FILE(GLOB_RECURSE SRC_LIST ./*.cc ./*.c)
 
+include(../utils.cmake)
+
 #添加头文件搜索路径，相当于gcc -I
 INCLUDE_DIRECTORIES(
     . ./algorithm ./buffer ./chain
@@ -43,9 +45,11 @@ LINK_LIBRARIES(dl)
 
 #编译参数
 ADD_DEFINITIONS("-g -rdynamic -fPIC -D_CORE_ -fpermissive -std=gnu++11 -D_GLIBCXX_USE_CXX11_ABI=0 -export-dynamic -Wl,--version-script,dtcd.export.lst")
+ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 
 #编译为.so/.a
 ADD_EXECUTABLE(dtcd ${SRC_LIST})
 
 #将目标文件与库文件链接
 TARGET_LINK_LIBRARIES(dtcd libdaemons.a libstat.a libsqlparser.a libcommon.a libyaml-cpp.a liblog4cplus.a libz64.a libmysqlclient.a)
+redefine_file_macro(dtcd)

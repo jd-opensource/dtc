@@ -1,5 +1,7 @@
 FILE(GLOB_RECURSE SRC_LIST ./*.cc ./*.c)
 
+include(../../utils.cmake)
+
 INCLUDE_DIRECTORIES (
     .
     ../mysql/include
@@ -28,7 +30,9 @@ LINK_LIBRARIES(pthread)
 LINK_LIBRARIES(libmysqlclient.a)
 
 ADD_DEFINITIONS ("-g -fPIC -fpermissive -std=gnu++11")
+ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 
 ADD_LIBRARY (common ${SRC_LIST})
 
 TARGET_LINK_LIBRARIES(common liblog4cplus.a libyaml-cpp.a libsqlparser.a libz64.a libmysqlclient.a)
+redefine_file_macro(common)

@@ -9,6 +9,8 @@ LINK_DIRECTORIES(
     ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/libs
     ${PROJECT_SOURCE_DIR}/build/src/libs/common)
 
+include(../../utils.cmake)
+
 FILE(GLOB_RECURSE SRC_LIST1 ./*.cc ./*.c)
 
 LINK_LIBRARIES(liblog4cplus.a) 
@@ -18,9 +20,10 @@ LINK_LIBRARIES(pthread)
 LINK_LIBRARIES(dl)
 
 ADD_DEFINITIONS("-g -fPIC -fpermissive -std=gnu++11")
+ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 
 ADD_LIBRARY(stat ${SRC_LIST1})
 
 TARGET_LINK_LIBRARIES(stat liblog4cplus.a libyaml-cpp.a libcommon.a)
-
+redefine_file_macro(stat)
 

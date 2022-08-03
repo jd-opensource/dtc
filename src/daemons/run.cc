@@ -106,7 +106,8 @@ int start_dtc(int (*entry)(void *), void *args)
 			return -1;
     // wait for dtc entry step to agentlisten
     usleep(100 * 1000);
-    if (g_dtc_config->get_int_val("cache", "EnableHwc", 0) > 0) {
+	
+    if (g_dtc_config->get_config_node()["primary"]["hot"]) {	// open hwcserver at DATABASE_IN_ADDITION mode.
             WatchDogHWC* p_hwc_wd = new WatchDogHWC(wdog, delay);
             if (p_hwc_wd->new_proc_fork() < 0) {
                 log4cplus_error("fork hwc server fail");

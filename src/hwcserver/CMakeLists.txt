@@ -1,6 +1,8 @@
 FILE(GLOB_RECURSE SRC_LIST ./*.cc  ../connector/*tion.cc)
 message(${SRC_LIST})
 
+include(../utils.cmake)
+
 INCLUDE_DIRECTORIES (
     ./
     ../core
@@ -46,7 +48,9 @@ LINK_LIBRARIES(libmysqlclient.a)
 LINK_LIBRARIES(libdtcapi.so)
 
 ADD_DEFINITIONS ("-g -fPIC -fpermissive -std=gnu++11 -DOMN_PLATFORM_UNIX -Wl,--no-undefined -Xlinker -zmuldefs")
+ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 
 ADD_EXECUTABLE(hwcserver  ${SRC_LIST})
 
 TARGET_LINK_LIBRARIES(hwcserver  libdtcd.a libdaemons.a libstat.a libcommon.a liblog4cplus.a  libyaml-cpp.a  libz64.a libmysqlclient.a libdtcapi.so)
+redefine_file_macro(hwcserver)
