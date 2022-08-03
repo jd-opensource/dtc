@@ -488,14 +488,14 @@ log4cplus_info("YAML2 999999999999999");
         }
     
         log4cplus_info("YAML2 11111111111111");
-        //Table section
-        YAML::Node node = dtc_config["primary"][layer]["logic"]["table"];
+        //Table section with DATABASE_IN_ADDITION.
+        YAML::Node node = dtc_config["primary"][layer]["sharding"]["table"]["prefix"];
         if(!node)
         {
             log4cplus_error("[TABLE_CONF].table_name not defined");
             return -1;
         }
-        tblName = STRDUP(node.as<string>().c_str());
+        tblName = STRDUP(get_merge_string(node).c_str());
         log4cplus_info("YAML2 11111111111111:%s", tblName);
         if ((depoly & 2) == 0) {
             if (strchr(tblName, '%') != NULL) {
@@ -531,7 +531,7 @@ log4cplus_info("YAML2 999999999999999");
     }
     else
     {
-        //Table section
+        //Table section with CACHE_ONLY
         YAML::Node node = dtc_config["primary"]["table"];
         if(!node)
         {
