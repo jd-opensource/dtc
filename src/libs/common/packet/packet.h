@@ -135,7 +135,7 @@ class Packet {
 	int encode_reload_config(const DTCTableDefinition *tdef, int sn = 1);
 
 	BufferChain *encode_mysql_protocol(DtcJob *job);
-	BufferChain *encode_mysql_ok(DtcJob *job);
+	BufferChain *encode_mysql_ok(DtcJob *job, int affected_rows);
 
 private:
 	int load_table(const char* p_filename, char*& file , int& i_length);

@@ -44,7 +44,13 @@ typedef enum msg_parse_result {
 	MSG_PARSE_ERROR, /* parsing error */
 	MSG_PARSE_REPAIR, /* more to parse -> repair parsed & unparsed data */
 	MSG_PARSE_AGAIN, /* incomplete -> parse again */
+	MSG_PARSE_ERROR_NO_SELECTED_DB,
 } msg_parse_result_t;
+
+typedef enum msg_my_error{
+	MY_ERR_NO_DB_SELECTED = 1046,	//no database selected
+	MY_ERR_UNKNOWN_DB = 1049, 	// Unknown database
+} msg_my_error_t;
 
 #define MSG_TYPE_CODEC(ACTION)                                                 \
 	ACTION(NOP)                                                            \
