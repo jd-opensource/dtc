@@ -23,8 +23,8 @@ jobs:
     - uses: actions/checkout@v3
     
     - run: |
-        sudo echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial main" >> /etc/apt/sources.list
-        sudo echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial universe" >> /etc/apt/sources.list
+        echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial main" | sudo tee -a /etc/apt/sources.list
+        echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial universe" | sudo tee -a /etc/apt/sources.list
         sudo apt update
         sudo apt install gcc-4.9 g++-4.9
       shell: bash
