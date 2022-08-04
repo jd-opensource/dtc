@@ -3,8 +3,7 @@
 #
 props:
   log.level: debug
-  listener.bind: '*:20015/tcp'
-  shm.id: 20015
+  listener.port: 20015
   shm.mem.size: 100 #MB
   #hash.custom: yes/no/enable/disable
   #hash.custom.module: ../lib/key-hash.so

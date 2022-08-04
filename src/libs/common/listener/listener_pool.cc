@@ -82,12 +82,15 @@ int ListenerPool::do_bind(DTCConfig *gc, JobAskInterface<DTCJobOperation> *out)
 		int wbufsz;
 
 		if (i == 0) {
-			snprintf(bindStr, sizeof(bindStr), "listener.bind");
+			snprintf(bindStr, sizeof(bindStr), "listener.port");
 		} else {
-			snprintf(bindStr, sizeof(bindStr), "listener.bind.%d", i);
+			snprintf(bindStr, sizeof(bindStr), "listener.port.%d", i);
 		}
 
-		std::string addrStr = gc->get_config_node()["props"][bindStr].as<std::string>();
+		int port = gc->get_config_node()["props"][bindStr].as<int>();
+        char sz[200] = {0};
+        sprintf(sz, "*:%d/tcp", port);
+        std::string addrStr = sz;
 		if (addrStr.length() == 0)
 			continue;
 		errmsg = sockaddr[i].set_address(addrStr.c_str(), (const char*)NULL);
