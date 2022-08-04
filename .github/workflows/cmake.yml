@@ -9,8 +9,6 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
-  CC: gcc-${{ build.gcc }}
-  CXX: g++-${{ build.gcc }}
 
 jobs:
   build:
@@ -21,6 +19,9 @@ jobs:
     
     steps:
     - uses: actions/checkout@v3
+    
+    - name: Select Gcc Version
+      run: echo "CC=gcc-8" >> $GITHUB_ENV
     
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
