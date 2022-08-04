@@ -59,8 +59,8 @@ jobs:
 
         cd dockerfiles/devel/
 
-        docker build -t $DOCKER_USERNAME/devel:CacheOnly .
-        docker push $DOCKER_USERNAME/devel:CacheOnly
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:CacheOnly .
+        docker push ${{ secrets.DOCKER_USERNAME }}/devel:CacheOnly
       
     - name: login out docker
       run: /usr/bin/docker logout
