@@ -1,7 +1,6 @@
 ![DTC](http://storage.360buyimg.com/bq-install/release/dtc_logo.png)
 # DTC - Distributed Table Cache
-[![Build Status](https://app.travis-ci.com/DTC8/DTC.svg?branch=master)](https://app.travis-ci.com/github/DTC8/DTC)
-
+[![ubuntu-18.04&gcc-4.9](https://github.com/DTC8/DTC/actions/workflows/ubuntu-18.04&gcc-4.9.yml/badge.svg?branch=master)](https://github.com/DTC8/DTC/actions/workflows/ubuntu-18.04&gcc-4.9.yml)
 ## Overview
 DTC is a high performance Distributed Table Cache system designed by JD.com that offering hotspot data cache for databases in order to reduce pressure of database and improve QPS.
 
