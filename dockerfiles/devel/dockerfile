@@ -1,0 +1,18 @@
+FROM centos:centos8
+
+ARG basepath=/usr/local/dtc
+ARG confpath=/etc/dtc
+ARG logpath=/var/log/dtc
+
+RUN mkdir -p $basepath/bin
+RUN mkdir -p $basepath/data
+RUN mkdir -p $basepath/stat
+RUN mkdir -p $basepath/log
+RUN mkdir -p $confpath
+RUN mkdir -p $logpath
+
+COPY dtcd $basepath/dtcd
+COPY dtc.yaml $confpath/dtc.yaml
+COPY log4cplus.conf $confpath/log4cplus.conf
+
+CMD ["/usr/local/dtc/dtcd", "-d"]
