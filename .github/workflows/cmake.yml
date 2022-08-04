@@ -5,12 +5,12 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-
+    
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
-  CC: gcc-${{ matrix.gcc }}
-  CXX: g++-${{ matrix.gcc }}
+  CC: gcc-${{ build.gcc }}
+  CXX: g++-${{ build.gcc }}
 
 jobs:
   build:
