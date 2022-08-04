@@ -40,7 +40,7 @@ jobs:
     
     - name: publish devel docker
       run: |
-        cd ../
+        cd ${{github.workspace}}
         cp dockerfiles/devel/dtc.cacheonly.yaml dockerfiles/devel/
         cp conf/log4cplus.conf dockerfiles/devel/
         cp build/src/core/dtcd dockerfiles/devel/
