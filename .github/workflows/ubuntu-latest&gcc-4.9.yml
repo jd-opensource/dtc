@@ -58,7 +58,6 @@ jobs:
         cp build/src/hwcserver/hwcserver dockerfiles/devel/
 
         cd dockerfiles/devel/
-        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
         docker build -t $DOCKER_USERNAME/devel:CacheOnly .
         docker push $DOCKER_USERNAME/devel:CacheOnly
