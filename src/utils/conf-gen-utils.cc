@@ -6,16 +6,19 @@
 #include <map>
 
 using namespace std;
+#define ROOT_PATH "/etc/dtc/"
 
 char conf_file[256] = {0};
 YAML::Node dtc_config;
 std::map<std::string, std::vector<YAML::Node>> dbmap;
 std::string get_merge_string(YAML::Node node);
+std::map<std::string, std::string> algorithm;
 
 int load_dtc_config(int argc, char *argv[])
 {
     int c;
-    strcpy(conf_file, "/etc/dtc/dtc.yaml");
+    strcpy(conf_file, ROOT_PATH);
+    strcat(conf_file, "dtc.yaml");
 
     while ((c = getopt(argc, argv, "c:")) != -1) {
         switch (c) {
@@ -107,6 +110,7 @@ int yaml_dump_data_sources(FILE *fp, std::vector<YAML::Node> vec)
                 fprintf(fp, "    idleTimeoutMilliseconds: %d\n", 60000);
                 fprintf(fp, "    maxLifetimeMilliseconds: %d\n", 1800000);
                 fprintf(fp, "    maxPoolSize: %d\n", 50);
+                fprintf(fp, "    minPoolSize: %d\n", 1);
             }
             else    //multi db
             {
@@ -125,6 +129,7 @@ int yaml_dump_data_sources(FILE *fp, std::vector<YAML::Node> vec)
                     fprintf(fp, "    idleTimeoutMilliseconds: %d\n", 60000);
                     fprintf(fp, "    maxLifetimeMilliseconds: %d\n", 1800000);
                     fprintf(fp, "    maxPoolSize: %d\n", 50);
+                    fprintf(fp, "    minPoolSize: %d\n", 1);
                 }
             }
             
@@ -179,7 +184,7 @@ std::string yaml_dump_actual_data_nodes(YAML::Node node)
     {
         str += get_merge_string(node["sharding"]["table"]["prefix"]);
         char sztmp[200] = {0};
-        sprintf(sztmp, "${%d..%d}", 
+        sprintf(sztmp, "{%d..%d}", 
             node["sharding"]["table"]["start"].as<int>(),
             node["sharding"]["table"]["last"].as<int>());
         str += sztmp;
@@ -190,7 +195,8 @@ std::string yaml_dump_actual_data_nodes(YAML::Node node)
 
 int yaml_dump_sharding_rule(FILE *fp, std::vector<YAML::Node> vec)
 {
-    fprintf(fp, "shardingRule:\n");
+    fprintf(fp, "rules:\n");
+    fprintf(fp, "- !SHARDING\n");
     fprintf(fp, "  tables:\n");
     std::string binding_table = "";
     std::vector<YAML::Node>::iterator vt;
@@ -215,24 +221,49 @@ int yaml_dump_sharding_rule(FILE *fp, std::vector<YAML::Node> vec)
                 dbcount = node["real"][node["real"].size()-1]["db"]["last"].as<int>() - 
                     node["real"][0]["db"]["start"].as<int>() + 1;
                 fprintf(fp, "      databaseStrategy:\n");
-                fprintf(fp, "        inline:\n");
+                fprintf(fp, "        standard:\n");
                 fprintf(fp, "          shardingColumn: %s\n", key.c_str());
-                fprintf(fp, "          algorithmExpression: %s${(%s%%%d)}\n",
+                char szname[1024] = {0};
+                sprintf(szname, "%s_db_inline", tbname.c_str());
+                fprintf(fp, "          shardingAlgorithmName: %s\n", szname);
+
+                char sztemp[1024] = {0};
+                sprintf(sztemp, "$%s{(%s%%%d)}", 
                     get_merge_string(node["real"][0]["db"]["prefix"]).c_str(),
                     key.c_str(),
                     dbcount);
+                algorithm[szname] = sztemp;
             }
             
             fprintf(fp, "      tableStrategy:\n");
-            fprintf(fp, "        inline:\n");
+            fprintf(fp, "        standard:\n");
             fprintf(fp, "          shardingColumn: %s\n", key.c_str());
-            fprintf(fp, "          algorithmExpression: %s${((%s/%d).longValue()%%%d)}\n",
+            char szname[1024] = {0};
+            sprintf(szname, "%s_tb_inline", tbname.c_str());
+            fprintf(fp, "          shardingAlgorithmName: %s\n", szname);
+            char sztemp[1024] = {0};
+            sprintf(sztemp, "%s${((%s/%d).longValue()%%%d)}", 
                 get_merge_string(node["sharding"]["table"]["prefix"]).c_str(),
                 key.c_str(),
                 dbcount,
                 node["sharding"]["table"]["last"].as<int>() -
                 node["sharding"]["table"]["start"].as<int>() + 1);
+            algorithm[szname] = sztemp;
+
+            fprintf(fp, "      keyGenerateStrategy:\n");
+            fprintf(fp, "        column: %s\n", key.c_str());
+            fprintf(fp, "        keyGeneratorName: snowflake\n");
         }
+    }
+
+    fprintf(fp, "  shardingAlgorithms:\n");
+    std::map<std::string, std::string>::iterator it;
+    for (it = algorithm.begin(); it != algorithm.end(); it++) 
+    {
+        fprintf(fp, "    %s:\n", (*it).first.c_str());
+        fprintf(fp, "      type: INLINE\n");
+        fprintf(fp, "      props:\n");
+        fprintf(fp, "        algorithm-expression: %s\n", (*it).second.c_str());
     }
 
     fprintf(fp, "  bindingTables:\n");
@@ -245,7 +276,7 @@ int yaml_dump_sharding_rule(FILE *fp, std::vector<YAML::Node> vec)
 
 int dump_single_conf_file(std::string logic_db_name, std::vector<YAML::Node> vec)
 {
-    std::string filename = string("/etc/dtc/") + string("config-") + logic_db_name + ".yaml";
+    std::string filename = string(ROOT_PATH) + string("config-") + logic_db_name + ".yaml";
     FILE *fp = fopen(filename.c_str(), "w");
     if (fp == NULL)
         return -1;
@@ -272,6 +303,32 @@ int dump_shardingsphere_conf_files()
     return 0;
 }
 
+void delete_all_old_yaml()
+{
+    std::string cmd = "rm -rf ";
+    cmd += ROOT_PATH;
+    cmd += "config-*.yaml";
+    log4cplus_info("cmd: %s", cmd.c_str());
+    system(cmd.c_str());
+}
+
+void dump_authority()
+{
+    std::string filename = string(ROOT_PATH) + "server.yaml";
+    FILE *fp = fopen(filename.c_str(), "w");
+    if (fp == NULL)
+        return;
+
+    fprintf(fp, "rules:\n");
+    fprintf(fp, "  - !AUTHORITY\n");
+    fprintf(fp, "    users:\n");
+    fprintf(fp, "      - sharding@%%:sharding\n");
+    fprintf(fp, "    provider:\n");
+    fprintf(fp, "      type: ALL_PERMITTED\n");
+
+    fclose(fp);
+}
+
 int main(int argc, char* argv[])
 {
     init_log4cplus();
@@ -282,7 +339,11 @@ int main(int argc, char* argv[])
 
     load_node_to_map();
 
+    delete_all_old_yaml();
+
     dump_shardingsphere_conf_files();
+
+    dump_authority();
 
     return 0;
 }
