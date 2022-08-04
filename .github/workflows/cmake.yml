@@ -9,8 +9,8 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
-  CC: gcc-10
-  CXX: g++-10
+  CC: gcc-4.9
+  CXX: g++-4.9
 
 jobs:
   build:
@@ -24,7 +24,7 @@ jobs:
     
     - run: |
         sudo apt update
-        sudo apt install gcc-10 g++-10
+        sudo apt install gcc-4.9 g++-4.9
       shell: bash
           
     - name: Configure CMake
