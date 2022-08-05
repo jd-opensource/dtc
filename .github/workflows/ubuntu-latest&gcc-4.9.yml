@@ -18,7 +18,7 @@ jobs:
           - 3306:3306
         env: 
           MYSQL_ROOT_PASSWORD: 123456
-        options: --name "mysql"
+        #options: --name "mysql"
     steps:
       - name: check mysql
         run: |
@@ -27,7 +27,7 @@ jobs:
           docker ps -a
           sleep 30s
           #docker exec mysql /usr/bin/mysql -p123456 -e "show databases;"
-          mysql -h127.0.0.1 -P3306 -uroot -p123456 -e "show databases;"
+          mysql -hmysql -P3306 -uroot -p123456 -e "show databases;"
           
   build:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
