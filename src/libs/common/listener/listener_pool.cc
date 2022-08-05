@@ -82,9 +82,9 @@ int ListenerPool::do_bind(DTCConfig *gc, JobAskInterface<DTCJobOperation> *out)
 		int wbufsz;
 
 		if (i == 0) {
-			snprintf(bindStr, sizeof(bindStr), "listener.port");
+			snprintf(bindStr, sizeof(bindStr), "listener.port.dtc");
 		} else {
-			snprintf(bindStr, sizeof(bindStr), "listener.port.%d", i);
+			snprintf(bindStr, sizeof(bindStr), "listener.port.dtc.%d", i);
 		}
 
 		int port = gc->get_config_node()["props"][bindStr].as<int>();

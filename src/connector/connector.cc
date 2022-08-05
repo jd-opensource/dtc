@@ -336,7 +336,7 @@ int main(int argc, char **argv)
 	if (!strcmp(addr, "-"))
 		fd = 0;
 	else {
-		std::string dtcid = g_dtc_config->get_config_node()["props"]["listener.port"].as<std::string>();
+		std::string dtcid = g_dtc_config->get_config_node()["props"]["listener.port.dtc"].as<std::string>();
 		if(dtcid != "none")
 		{
 			log4cplus_warning(

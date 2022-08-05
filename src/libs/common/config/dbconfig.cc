@@ -1183,17 +1183,17 @@ std::string DbConfig::get_shm_size(YAML::Node dtc_config)
 
 int DbConfig::get_shm_id(YAML::Node dtc_config)
 {
-    if(dtc_config["props"]["listener.port"])
-        return dtc_config["props"]["listener.port"].as<int>();
+    if(dtc_config["props"]["listener.port.dtc"])
+        return dtc_config["props"]["listener.port.dtc"].as<int>();
     else
         return 0;
 }
 
 std::string DbConfig::get_bind_addr(YAML::Node dtc_config)
 {
-    if(dtc_config["props"]["listener.port"])
+    if(dtc_config["props"]["listener.port.dtc"])
     {
-        int port = dtc_config["props"]["listener.port"].as<int>();
+        int port = dtc_config["props"]["listener.port.dtc"].as<int>();
         char sz[200] = {0};
         sprintf(sz, "*:%d/tcp", port);
         return sz;
