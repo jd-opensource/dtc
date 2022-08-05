@@ -22,7 +22,8 @@ jobs:
       - name: check mysql
         run: |
           echo "hello mysql"
-          mysql -hlocalhost -uroot -p123456 -e "show databases;"
+          netstat -ntpl
+          mysql -hlocalhost -P3306 -uroot -p123456 -e "show databases;"
           
   build:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
