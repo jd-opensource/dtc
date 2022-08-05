@@ -25,7 +25,7 @@ jobs:
           echo "hello mysql"
           netstat -ntpl
           docker ps -a
-          docker exec -it mysql -e "show databases;"
+          docker exec -it mysql /usr/bin/mysql -p123456 -e "show databases;"
           #mysql -hlocalhost -P3306 -uroot -p123456 -e "show databases;"
           
   build:
