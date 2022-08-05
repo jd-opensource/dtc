@@ -16,6 +16,11 @@ jobs:
         image: mysql
         ports:
           - 3306:3306
+    steps:
+      - name: check mysql
+        run: |
+          echo "hello mysql"
+          docker exec -it mysql show databases;
           
   build:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
