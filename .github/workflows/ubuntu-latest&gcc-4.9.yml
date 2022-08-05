@@ -7,6 +7,7 @@ on:
 env:
   CC: gcc-4.9
   CXX: g++-4.9
+  secret_account: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:        
   build:
@@ -14,10 +15,6 @@ jobs:
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: ["3.7"]
     
     services:
       mysql:
@@ -52,14 +49,14 @@ jobs:
         make
 
     - name: login docker hub
-      if: ${{ secrets.DOCKER_USERNAME != '' }}
+      if: ${{ env.secret_account != '' }}
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
     
     - name: publish devel CacheOnly docker
-      if: ${{ secrets.DOCKER_USERNAME != '' }}
+      if: ${{ env.secret_account != '' }}
       run: |
         cd ${{github.workspace}}
         cp dockerfiles/devel/dtc.cacheonly.yaml dockerfiles/devel/dtc.yaml
@@ -78,7 +75,7 @@ jobs:
         docker push ${{ secrets.DOCKER_USERNAME }}/devel:CacheOnly
 
     - name: publish devel Cache with Database docker
-      if: ${{ secrets.DOCKER_USERNAME != '' }}
+      if: ${{ env.secret_account != '' }}
       run: |
         cd ${{github.workspace}}
         cp -f dockerfiles/devel/dtc.dbaddition.yaml dockerfiles/devel/dtc.yaml
@@ -88,7 +85,7 @@ jobs:
         docker push ${{ secrets.DOCKER_USERNAME }}/devel:CacheWithDB
 
     - name: publish devel Layered docker
-      if: ${{ secrets.DOCKER_USERNAME != '' }}
+      if: ${{ env.secret_account != '' }}
       run: |
         cd ${{github.workspace}}
         cp -f dockerfiles/devel/dtc.layered.yaml dockerfiles/devel/dtc.yaml
@@ -98,7 +95,7 @@ jobs:
         docker push ${{ secrets.DOCKER_USERNAME }}/devel:Layered
 
     - name: init db table
-      if: ${{ secrets.DOCKER_USERNAME != '' }}
+      if: ${{ env.secret_account != '' }}
       run: |
         mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
         mysql -h127.0.0.1 -uroot -p123456 -e "show databases;"
