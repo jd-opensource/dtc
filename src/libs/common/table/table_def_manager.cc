@@ -133,7 +133,6 @@ DTCTableDefinition *TableDefinitionManager::load_buffered_table(const char *buf)
 		_dbconfig->destory();
 		_dbconfig = NULL;
 	}
-	log4cplus_debug("YAML 2 AAAAAAA");
 	_dbconfig = DbConfig::load_buffered(bufLocal);
 	if(bufLocal)
 		FREE(bufLocal);

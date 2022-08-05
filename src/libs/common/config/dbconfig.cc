@@ -367,11 +367,10 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
 
     const char *cp = NULL;
     char *p;
-log4cplus_info("YAML2 7777777777777");
+
     //DB section
     if(dtc_config["primary"][layer])    //cache.datasource mode
     {
-        log4cplus_info("YAML2 7777777777777-1");
         machineCnt = get_db_machine_count();
         if (machineCnt <= 0) {
             log4cplus_error("%s", "invalid server_count");
@@ -381,15 +380,12 @@ log4cplus_info("YAML2 7777777777777");
     else{
         machineCnt = 0;
     }
-    log4cplus_info("YAML2 888888888888888888:machineCnt:%d, %s", machineCnt, layer.c_str());
     //Depoly
     if(dtc_config["primary"][layer]) //cache.datasource mode
     {
-        log4cplus_info("YAML2 888888888888888888-1");
         YAML::Node node = dtc_config["primary"][layer]["real"];
         if(node.size() == 1) //single db
         {
-            log4cplus_info("YAML2 888888888888888888-222222222");
             if(dtc_config["primary"][layer]["sharding"] && 
                 dtc_config["primary"][layer]["sharding"]["table"]["last"].as<int>() - dtc_config["primary"][layer]["sharding"]["table"]["start"].as<int>() + 1 > 1)
                 depoly = SINGLE_DB_SHARDING_TAB;
@@ -398,7 +394,6 @@ log4cplus_info("YAML2 7777777777777");
         }
         else if(node.size() > 1) //multi db
         {
-            log4cplus_info("YAML2 888888888888888888-333333333333");
             if(dtc_config["primary"][layer]["sharding"] && 
             dtc_config["primary"][layer]["sharding"]["table"]["last"].as<int>() - dtc_config["primary"][layer]["sharding"]["table"]["start"].as<int>() + 1 > 1)
                 depoly = SHARDING_DB_SHARDING_TAB;
@@ -415,18 +410,17 @@ log4cplus_info("YAML2 7777777777777");
     {
         depoly = SINGLE;
     }
-log4cplus_info("YAML2 999999999999999");
     //DB Name
     if(dtc_config["primary"][layer]) //cache.datasource mode
-    {log4cplus_info("YAML2 AAAAAAAAAAAA");
+    {
         YAML::Node node = dtc_config["primary"][layer]["real"][0]["db"];
         if(!node)
-        {log4cplus_info("YAML2 Bbbbbbbbbb");
+        {
             log4cplus_error("primary.layer.real db not defined");
             return -1;
         }
         else
-        {log4cplus_info("YAML2 CCCCCCCCCCCC");
+        {
             if(node.IsScalar())
                 dbName = STRDUP(node.as<string>().c_str());
             else
@@ -444,7 +438,6 @@ log4cplus_info("YAML2 999999999999999");
     if(dtc_config["primary"][layer])
     {
         if ((depoly & 1) == 0) {    //single db
-            log4cplus_info("YAML2 AAAAAAAAAAAA");
             if (strchr(dbName, '%') != NULL) {
                 log4cplus_error(
                     "Invalid [DATABASE_CONF].database_name, cannot contain symbol '%%'");
@@ -455,7 +448,6 @@ log4cplus_info("YAML2 999999999999999");
             dbMod = 1;
             dbFormat = dbName;
         } else {
-            log4cplus_info("YAML2 BBBBBBBBBBbb");
             dbDiv = 1;
             dbMod = dtc_config["primary"][layer]["real"].size();
 
@@ -465,7 +457,6 @@ log4cplus_info("YAML2 999999999999999");
                     dbMod);
                 return -1;
             }
-            log4cplus_info("YAML2 CCCCCCCCCCCCCc:%p",dbName);
             p = strchr(dbName, '%');
             if (p) {
                 dbFormat = STRDUP(dbName);
@@ -488,7 +479,6 @@ log4cplus_info("YAML2 999999999999999");
             database_max_count = dbMod;
         }
     
-        log4cplus_info("YAML2 11111111111111");
         //Table section with DATABASE_IN_ADDITION.
         YAML::Node node = dtc_config["primary"][layer]["sharding"]["table"]["prefix"];
         if(!node)
@@ -497,7 +487,6 @@ log4cplus_info("YAML2 999999999999999");
             return -1;
         }
         tblName = STRDUP(get_merge_string(node).c_str());
-        log4cplus_info("YAML2 11111111111111:%s", tblName);
         if ((depoly & 2) == 0) {
             if (strchr(tblName, '%') != NULL) {
                 log4cplus_error(
@@ -528,7 +517,6 @@ log4cplus_info("YAML2 999999999999999");
                     tblName);
             }
         }
-        log4cplus_info("YAML2 222222222222222222");
     }
     else
     {
@@ -540,7 +528,6 @@ log4cplus_info("YAML2 999999999999999");
             return -1;
         }
         tblName = STRDUP(node.as<string>().c_str());
-        log4cplus_info("YAML2 11111111111111:%s", tblName);
         if ((depoly & 2) == 0) 
         {
             if (strchr(tblName, '%') != NULL) {
@@ -579,7 +566,6 @@ log4cplus_info("YAML2 999999999999999");
         log4cplus_error("bad [TABLE_CONF].ServerOrderInsert");
         return -1;
     }
-log4cplus_info("YAML2 333333333333333333");
     //Machine setction
     mach = (struct MachineConfig *)calloc(machineCnt,
                           sizeof(struct MachineConfig));
@@ -613,13 +599,11 @@ log4cplus_info("YAML2 333333333333333333");
 
         m->mode = 0;
                 
-log4cplus_info("YAML2 33333333-11111111");
         if(dtc_config["primary"][layer]["real"][i]["db"].IsScalar())
             m->dbCnt = 1;
         else
             m->dbCnt = dtc_config["primary"][layer]["real"][i]["db"]["last"].as<int>() - 
                         dtc_config["primary"][layer]["real"][i]["db"]["start"].as<int>() + 1;
-log4cplus_info("YAML2 33333333-222222222:%d", m->dbCnt);
         for (int j = 0; j < m->dbCnt; j++) {
             if (m->dbIdx[j] >= database_max_count) {
                 log4cplus_error(
@@ -628,7 +612,6 @@ log4cplus_info("YAML2 33333333-222222222:%d", m->dbCnt);
                 return -1;
             }
         }
-log4cplus_info("YAML2 33333333-333333333333");
         /* Helper number alter */
         m->gprocs[0] = raw->get_int_val(NULL, "Procs", 10);
         if (m->gprocs[0] < 1)
@@ -639,7 +622,6 @@ log4cplus_info("YAML2 33333333-333333333333");
         m->gprocs[2] = raw->get_int_val(NULL, "CommitProcs", 10);
         if (m->gprocs[2] < 1)
             m->gprocs[2] = 0;
-log4cplus_info("YAML2 33333333-4444444444444");
         /* Helper Queue Size */
         m->gqueues[0] = raw->get_int_val(NULL, "QueueSize", 0);
         m->gqueues[1] =
@@ -658,7 +640,6 @@ log4cplus_info("YAML2 33333333-4444444444444");
             m->gqueues[1] = 2;
         if (m->gqueues[2] <= 1000)
             m->gqueues[2] = 1000;
-log4cplus_info("YAML2 33333333-5555555555555");
         if (m->dbCnt == 0) // database_index is NULL, no helper needed
         {
             m->gprocs[0] = 0;
@@ -666,7 +647,6 @@ log4cplus_info("YAML2 33333333-5555555555555");
             m->gprocs[2] = 0;
             m->mode = 0;
         }
-log4cplus_info("YAML2 33333333-666666666666666");
         switch (m->mode) {
         case BY_SLAVE:
         case BY_DB:
@@ -685,11 +665,9 @@ log4cplus_info("YAML2 33333333-666666666666666");
             m->gprocs[3] = 0;
             m->gqueues[3] = 0;
         }
-log4cplus_info("YAML2 33333333-777777777777777");
         m->procs = m->gprocs[0] + m->gprocs[1] + m->gprocs[2];
         procs += m->procs;
     }
-log4cplus_info("YAML2 44444444444444444444:%d", fieldCnt);
     //Field section
     field = (struct FieldConfig *)calloc(fieldCnt,
                          sizeof(struct FieldConfig));
@@ -704,7 +682,6 @@ log4cplus_info("YAML2 44444444444444444444:%d", fieldCnt);
     compressflag = -1;
     expireTime = -1;
     for (int i = 0; i < fieldCnt; i++) {
-        log4cplus_info("YAML2 4444444-1111111111:%d", i);
         struct FieldConfig *f = &field[i];
 
         f->name = STRDUP(dtc_config["primary"]["cache"]["field"][i]["name"].as<string>().c_str());
@@ -737,7 +714,6 @@ log4cplus_info("YAML2 44444444444444444444:%d", fieldCnt);
                     i);
             return -1;
         }
-log4cplus_info("YAML2 4444444-2222222222");
         if (i >= keyFieldCnt &&
             i < keyFieldCnt + idxFieldCnt) { // index field
             if (field[i].size > 255) {
@@ -759,7 +735,6 @@ log4cplus_info("YAML2 4444444-2222222222");
                     f->name);
             return -1;
         }
-log4cplus_info("YAML2 4444444-333333333333");
         if (i >= keyFieldCnt &&
             raw->get_int_val(NULL, "ReadOnly", 0) > 0)
             f->flags |= DB_FIELD_FLAGS_READONLY;
@@ -796,7 +771,6 @@ log4cplus_info("YAML2 4444444-333333333333");
             f->flags |= DB_FIELD_FLAGS_DISCARD |
                     DB_FIELD_FLAGS_VOLATILE;
         }
-log4cplus_info("YAML2 4444444-4444444444");
         if (!strcmp(f->name, DTC_EXPIRE_TIME_FIELD)) {
             if (f->type != DField::Unsigned &&
                 f->type != DField::Signed) {
@@ -813,7 +787,6 @@ log4cplus_info("YAML2 4444444-4444444444");
             }
             expireTime = i;
         }
-log4cplus_info("YAML2 4444444-5555555555");
         /* ATTN: must be last one */
         if(dtc_config["primary"]["cache"]["field"][i]["default"])
         {
@@ -1082,7 +1055,7 @@ log4cplus_info("YAML2 4444444-5555555555");
         }
         
     }
-log4cplus_info("YAML2 55555555555555");
+
     if (field[0].type == DField::Float) {
         log4cplus_error("%s", "FloatPoint key not supported");
         return -1;
@@ -1111,14 +1084,11 @@ log4cplus_info("YAML2 55555555555555");
             return -1;
         }
     }
-log4cplus_info("YAML2 666666666666668");
     // expire time only support uniq key
     if (expireTime != -1 && !(field[0].flags & DB_FIELD_FLAGS_UNIQ)) {
-        log4cplus_info("YAML2 666666666666669");
         log4cplus_error("%s", "expire time only support uniq key");
         return -1;
     }
-log4cplus_info("YAML2 66666666666666---11111");
     if (keyFieldCnt > 1) {
         for (int j = 0; j < keyFieldCnt; j++) {
             struct FieldConfig *f1 = &field[j];
@@ -1131,14 +1101,12 @@ log4cplus_info("YAML2 66666666666666---11111");
             }
         }
     }
-log4cplus_info("YAML2 7777777777777777");
     return 0;
 }
 
 struct DbConfig *DbConfig::load_buffered(char *buf)
 {
     DTCConfig *raw = new DTCConfig();
-    log4cplus_debug("YAML AAAAAAAA");
     if (raw->load_yaml_buffer(buf) < 0) {
         delete raw;
         return NULL;
@@ -1147,13 +1115,11 @@ struct DbConfig *DbConfig::load_buffered(char *buf)
     DbConfig *dbConfig =
         (struct DbConfig *)calloc(1, sizeof(struct DbConfig));
     dbConfig->cfgObj = raw;
-log4cplus_info("YAML2 11111111111111");
     if (dbConfig->get_dtc_config(raw->get_config_node(), raw, HOT) == -1) {
         log4cplus_error("get config error, destory now.");
         dbConfig->destory();
         dbConfig = NULL;
     }
-    log4cplus_info("YAML2 2222222222222");
 
     return dbConfig;
 }
@@ -1169,12 +1135,10 @@ struct DbConfig *DbConfig::Load(const char *file)
     DbConfig *dbConfig =
         (struct DbConfig *)calloc(1, sizeof(struct DbConfig));
     dbConfig->cfgObj = raw;
-log4cplus_info("YAML2 333333333");
     if (dbConfig->get_dtc_config(raw->get_config_node(), raw, HOT) == -1) {
         dbConfig->destory();
         dbConfig = NULL;
     }
-log4cplus_info("YAML2 444444444444");
     return dbConfig;
 }
 
@@ -1183,13 +1147,10 @@ struct DbConfig *DbConfig::Load(DTCConfig *raw , int i_server_type)
     DbConfig *dbConfig =
         (struct DbConfig *)calloc(1, sizeof(struct DbConfig));
     dbConfig->cfgObj = raw;
-log4cplus_info("YAML2 555555555555");
     if (dbConfig->get_dtc_config(raw->get_config_node(), raw, i_server_type) == -1) {
-        log4cplus_info("YAML2 5555555556666666666666");
         dbConfig->destory();
         dbConfig = NULL;
     }
-log4cplus_info("YAML2 6666666666666");
     return dbConfig;
 }
 

@@ -115,11 +115,9 @@ int load_entry_parameter(int argc, char **argv)
 
 	if (g_dtc_config->load_yaml_file(d_cache_file, true))
 		return -1;
-log4cplus_info("YAML2 1111-111111111");
 	dbConfig = DbConfig::Load(g_dtc_config);
 	if (dbConfig == NULL)
 		return -1;
-log4cplus_info("YAML2 1111-222222222222");
 	g_table_def[0] = dbConfig->build_table_definition();
 	if (g_table_def[0] == NULL)
 		return -1;

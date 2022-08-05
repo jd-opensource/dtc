@@ -96,9 +96,7 @@ int DTCConfig::load_yaml_buffer(char *buf)
     }
     log4cplus_debug("yaml buf:%s", buf);
     try {
-        log4cplus_info("00000-33333333333");
         dtc_config = YAML::Load(buf);
-        log4cplus_info("00000-444444444444");
         ret_code = 0;
     } catch (const YAML::Exception &e) {
         printf("load yaml buf error:%s\n", e.what());

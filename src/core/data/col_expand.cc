@@ -126,7 +126,6 @@ int DTCColExpand::attach(MEM_HANDLE_T handle, int forceFlag)
 	}
 	// parse shm table.conf
 	DTCTableDefinition *t, *tt = NULL;
-	log4cplus_debug("YAML 2 AAAAAAAA");
 	t = TableDefinitionManager::instance()->load_buffered_table(
 		col_expand_->tableBuff[col_expand_->curTable %
 				       COL_EXPAND_BUFF_NUM]);
@@ -137,7 +136,6 @@ int DTCColExpand::attach(MEM_HANDLE_T handle, int forceFlag)
 		return DTC_CODE_FAILED;
 	}
 	if (col_expand_->expanding) {
-		log4cplus_debug("YAML 2 AAAAAAAA");
 		tt = TableDefinitionManager::instance()->load_buffered_table(
 			col_expand_->tableBuff[(col_expand_->curTable + 1) %
 					       COL_EXPAND_BUFF_NUM]);

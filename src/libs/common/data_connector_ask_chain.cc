@@ -354,7 +354,6 @@ DbConfig *DataConnectorAskChain::get_db_config(DTCJobOperation *job)
 			strlen(row[3].bin.ptr), row[3].bin.ptr);
 	char *buf = row[3].bin.ptr;
 	config = new DTCConfig();
-	log4cplus_debug("YAML AAAAAAAA");
 	if (config->load_yaml_buffer(buf) !=
 	    0) {
 		log4cplus_error(
@@ -364,7 +363,6 @@ DbConfig *DataConnectorAskChain::get_db_config(DTCJobOperation *job)
 		delete config;
 		return NULL;
 	}
-	log4cplus_info("00000-11111111111");
 	if ((newdb = DbConfig::Load(config)) == NULL) {
 		log4cplus_error(
 			"table.yaml illeagl when migrate db, load error");
@@ -372,7 +370,6 @@ DbConfig *DataConnectorAskChain::get_db_config(DTCJobOperation *job)
 			       "table.yaml illegal, load error");
 		return NULL;
 	}
-	log4cplus_info("00000-222222222222");
 	return newdb;
 }
 

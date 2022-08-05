@@ -3040,7 +3040,7 @@ BufferProcessAskChain::buffer_column_expand_done(DTCJobOperation &Job)
 		char *bufLocal = (char *)MALLOC(strlen(buf) + 1);
 		memset(bufLocal, 0, strlen(buf) + 1);
 		strcpy(bufLocal, buf);
-		log4cplus_debug("YAML 2 AAAAAAA");
+
 		DbConfig *dbconfig = DbConfig::load_buffered(bufLocal);
 		FREE(bufLocal);
 		if (!dbconfig) {
