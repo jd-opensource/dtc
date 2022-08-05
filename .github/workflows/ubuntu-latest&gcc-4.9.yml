@@ -35,10 +35,17 @@ jobs:
         sudo apt update
         sudo apt install gcc-4.9 g++-4.9
       shell: bash
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v2
+      with:
+          python-version: "3.7"
       
     - name: install dependency
       run: |
         sudo apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
+        python -m pip install --upgrade pip
+        pip install pytest
       
     - name: cmake project
       run: |
@@ -101,3 +108,9 @@ jobs:
         mysql -h127.0.0.1 -uroot -p123456 -e "show databases;"
         mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source ${{github.workspace}}/script/init_table.sql;"
         mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"
+
+    - name: Testing CacheOnly
+
+      run: |
+        cd ${{github.workspace}}/tests
+        pytest
