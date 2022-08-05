@@ -26,7 +26,7 @@ jobs:
           netstat -ntpl
           docker ps -a
           #docker exec mysql /usr/bin/mysql -p123456 -e "show databases;"
-          mysql -h::1 -P3306 -uroot -p123456 -e "show databases;"
+          mysql -h127.0.0.1 -P3306 -uroot -p123456 -e "show databases;"
           
   build:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
