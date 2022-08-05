@@ -17,7 +17,7 @@
 #include "fulldata_entry.h"
 #include <unistd.h>
 
-const char *fulldata_name = "complexity";
+const char *fulldata_name = "async-connector";
 
 FullDataEntry::FullDataEntry(WatchDog *watchdog, int sec)
 	: WatchDogDaemon(watchdog, sec)

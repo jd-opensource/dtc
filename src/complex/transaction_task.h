@@ -24,6 +24,7 @@ public:
 	std::string GetErrorMessage() {return m_errmsg;}
 	void SetErrorMessage(std::string msg) {m_errmsg = msg;}
 	CBufferChain* encode_mysql_protocol(CTaskRequest *request);
+	CBufferChain *encode_mysql_ok(CTaskRequest *request, int affected_rows);
 
 private:
 	std::string m_oper;

@@ -112,6 +112,12 @@ void my_parse_req(struct msg *r)
 					    &command);
 			if (rc) {
 				if (rc < 0) {
+					if(rc == -6)
+					{
+						r->parse_res = MSG_PARSE_ERROR_NO_SELECTED_DB;
+						goto custom;
+					}
+
 					log_error("parse command error:%d\n",
 						  rc);
 					goto error;
@@ -137,6 +143,13 @@ end:
 		r->parse_res = MSG_PARSE_AGAIN;
 	}
 	return;
+
+custom:
+	r->pos = b->last;
+	log_debug("parse msg:%" PRIu64 " error!", r->id);
+	errno = EINVAL;
+	log_debug("my_parse_req leave.");
+	return ;
 
 error:
 	r->pos = b->last;
@@ -221,7 +234,10 @@ int my_do_command(struct msg *msg)
 	int rc = NEXT_RSP_ERROR;
 
 	switch (msg->command) {
-	case COM_INIT_DB:
+	case COM_INIT_DB:{
+		rc = NEXT_RSP_OK;
+		break;
+	}
 	case COM_REGISTER_SLAVE:
 	case COM_RESET_CONNECTION:
 	case COM_CLONE:
@@ -497,7 +513,7 @@ bool check_cmd_select(struct string *str)
 }
 
 int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
-		     int *end_offset)
+		     int *end_offset, const char* dbname)
 {
 	int i = 0;
 	int dtc_key_len = da_strlen(g_dtc_key);
@@ -516,7 +532,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	log_debug("sql: %s, key: %s", str.data, g_dtc_key);
 
 	//agent sql route, rule engine
-	layer = rule_sql_match(str.data, g_dtc_key);
+	layer = rule_sql_match(str.data, g_dtc_key, dbname);
 	log_debug("rule layer: %d", layer);
 
 	if(layer != 1)

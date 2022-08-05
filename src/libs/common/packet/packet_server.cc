@@ -1078,13 +1078,13 @@ BufferChain *encode_row_data(DtcJob *job, BufferChain *bc, uint8_t &pkt_nr)
 	return nbc;
 }
 
-BufferChain *Packet::encode_mysql_ok(DtcJob *job)
+BufferChain *Packet::encode_mysql_ok(DtcJob *job, int affected_rows)
 {
 	BufferChain *bc = NULL;
 	BufferChain *pos = NULL;
 
 	uint8_t buf[7] = {0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
-	int2store_big_endian(buf+ 1, job->resultInfo.affected_rows());
+	int2store_big_endian(buf+ 1, affected_rows);
 
 	uint8_t pkt_nr = job->mr.get_pkt_nr();
 	pkt_nr++;
@@ -1481,7 +1481,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 
 	rb = NULL;
 	if(bok == true)
-		rb = encode_mysql_ok(&job);
+		rb = encode_mysql_ok(&job, job.resultInfo.affected_rows());
 	else
 		rb = encode_mysql_protocol(&job);
 	if (!rb)
@@ -1600,7 +1600,7 @@ int Packet::encode_result_mysql(DtcJob &job, int mtu, uint32_t ts)
 
 	rb = NULL;
 	if(bok == true)
-		rb = encode_mysql_ok(&job);
+		rb = encode_mysql_ok(&job, job.resultInfo.affected_rows());
 	else
 		rb = encode_mysql_protocol(&job);
 	if (!rb)

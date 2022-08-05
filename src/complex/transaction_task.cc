@@ -420,6 +420,35 @@ CBufferChain *encode_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8_t &pkt_
 	return nbc;
 }
 
+CBufferChain *TransactionTask::encode_mysql_ok(CTaskRequest *request, int affected_rows)
+{
+	CBufferChain *bc = NULL;
+	CBufferChain *pos = NULL;
+
+	uint8_t buf[7] = {0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00};
+	int2store_big_endian(buf+ 1, affected_rows);
+
+	uint8_t pkt_nr = request->get_seq_num();
+	pkt_nr++;
+
+	int packet_len = sizeof(CBufferChain) + sizeof(MYSQL_HEADER_SIZE) +
+		sizeof(buf);
+
+	bc = (CBufferChain *)MALLOC(packet_len);
+	CBufferChain *r = bc;
+	if (r == NULL) {
+		return -ENOMEM;
+	}
+	r->totalBytes = packet_len - sizeof(CBufferChain);
+	encode_mysql_header(r, sizeof(buf), pkt_nr);
+	log4cplus_debug("len:%d, seq:%d, affected:%d, packet_len:%d", sizeof(buf), pkt_nr, affected_rows, packet_len);
+	memcpy(r->data + sizeof(MYSQL_HEADER_SIZE), buf, sizeof(buf));
+	r->usedBytes = sizeof(buf) + sizeof(MYSQL_HEADER_SIZE);
+	r->nextBuffer = NULL;
+
+	return bc;
+}
+
 CBufferChain* TransactionTask::encode_mysql_protocol(CTaskRequest *request)
 {
 	CBufferChain *bc = NULL;
@@ -472,7 +501,12 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 		return m_ErrorNo;
 	}
 
-	int ret = m_DBConn->Query(m_Sql.c_str());
+	std::string db = request->get_dbname();
+	int ret = 0;
+	if(db.length() == 0)
+		ret = m_DBConn->Query(m_Sql.c_str());
+	else
+		ret = m_DBConn->Query(db.c_str(), m_Sql.c_str());
 	if(0 != ret)
 	{
 		const char *errmsg = m_DBConn->GetErrMsg();
@@ -483,30 +517,43 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 		return m_ErrorNo;
 	}
 
-	ret = m_DBConn->UseResult();
-	if (0 != ret) {
-		log4cplus_error("can not use result,sql[%s]", m_Sql.c_str());
-		SetErrorMessage(m_DBConn->GetErrMsg());
-		return -4;
+	if(m_Sql.find("insert into") == 0 || m_Sql.find("update ") == 0 || m_Sql.find("delete from ") == 0)
+	{
+		int affected = m_DBConn->AffectedRows();
+		log4cplus_debug("affected result, %d.", affected);
+		CBufferChain* rb = encode_mysql_ok(request, affected);
+		if(rb)
+			request->set_buffer_chain(rb);
+	}
+	else
+	{
+		log4cplus_debug("query result.");
+		ret = m_DBConn->UseResult();
+		if (0 != ret) {
+			log4cplus_error("can not use result,sql[%s]", m_Sql.c_str());
+			SetErrorMessage(m_DBConn->GetErrMsg());
+			return -4;
+		}
+
+		ret = m_DBConn->FetchFields();
+		if (0 != ret) {
+			log4cplus_error("can not use fileds,[%d]%s", m_DBConn->GetErrNo(), m_DBConn->GetErrMsg());
+			return -4;
+		}
+
+		CBufferChain* rb = encode_mysql_protocol(request);
+		if(rb)
+			request->set_buffer_chain(rb);
+
+		m_DBConn->FreeResult();
 	}
 
-	ret = m_DBConn->FetchFields();
-	if (0 != ret) {
-		log4cplus_error("can not use fileds,[%d]%s", m_DBConn->GetErrNo(), m_DBConn->GetErrMsg());
-		return -4;
-	}
-
-	CBufferChain* rb = encode_mysql_protocol(request);
-	if(rb)
-		request->set_buffer_chain(rb);
-
-	m_DBConn->FreeResult();
 	log4cplus_debug("request_db_query leave.");
 	return 0;
 }
 
 int TransactionTask::Process(CTaskRequest *request) {
-	log4cplus_debug("complex: pop task process begin.");
+	log4cplus_debug("async-connector: pop task process begin.");
 
 	string request_sql = request->parse_request_sql();
 	log4cplus_debug("pop sql: %s", request_sql.c_str());
@@ -521,6 +568,6 @@ int TransactionTask::Process(CTaskRequest *request) {
 
 	int ret = request_db_query(request_sql, request);
 
-	log4cplus_debug("complex: pop task process end.");
+	log4cplus_debug("async-connector: pop task process end.");
 	return 0;
 }

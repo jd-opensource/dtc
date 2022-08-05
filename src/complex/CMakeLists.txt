@@ -32,8 +32,8 @@ ADD_DEFINITIONS("-g -rdynamic -fPIC -D_CORE_ -fpermissive -std=gnu++11 -D_GLIBCX
 ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 
 #编译为.so/.a
-ADD_EXECUTABLE(complexity ${SRC_LIST})
+ADD_EXECUTABLE(async-connector ${SRC_LIST})
 
 #将目标文件与库文件链接
-TARGET_LINK_LIBRARIES(complexity libsqlparser.a liblog4cplus.a libyaml-cpp.a libnet.a libmysqlclient.a)
-redefine_file_macro(complexity)
+TARGET_LINK_LIBRARIES(async-connector libsqlparser.a liblog4cplus.a libyaml-cpp.a libnet.a libmysqlclient.a)
+redefine_file_macro(async-connector)
