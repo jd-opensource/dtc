@@ -22,7 +22,7 @@ jobs:
       - name: check mysql
         run: |
           echo "hello mysql"
-          mysql -hlocalhost -P${{jobs.mysql.services.mysql.ports['3306']}} -uroot -p123456 show databases;
+          mysql -hlocalhost -P${{job.services.mysql.ports['3306']}} -uroot -p123456 show databases;
           
   build:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
