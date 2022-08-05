@@ -23,6 +23,7 @@ jobs:
         run: |
           echo "hello mysql"
           netstat -ntpl
+          docker ps -a
           mysql -hlocalhost -P3306 -uroot -p123456 -e "show databases;"
           
   build:
