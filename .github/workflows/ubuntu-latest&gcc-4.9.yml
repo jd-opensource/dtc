@@ -8,9 +8,13 @@ env:
   CC: gcc-4.9
   CXX: g++-4.9
 
-jobs:
-  run-mysql:
+jobs:        
+  build:
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
+    
     services:
       mysql:
         image: mysql
@@ -19,16 +23,6 @@ jobs:
         env: 
           MYSQL_ROOT_PASSWORD: 123456
         options: --name "mysql"
-    steps:
-      - name: check mysql
-        run: |
-          echo "hello mysql"
-          
-  build:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v3
