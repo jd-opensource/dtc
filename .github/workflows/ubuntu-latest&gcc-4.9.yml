@@ -9,6 +9,14 @@ env:
   CXX: g++-4.9
 
 jobs:
+  mysql:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql
+        ports:
+          - 3306:3306
+          
   build:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
