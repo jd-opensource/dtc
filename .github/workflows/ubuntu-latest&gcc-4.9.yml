@@ -9,10 +9,10 @@ env:
   CXX: g++-4.9
 
 jobs:
-  mysql:
+  run-mysql:
     runs-on: ubuntu-latest
     services:
-      mysql:
+      mysqlsource:
         image: mysql
         ports:
           - 3306:3306
