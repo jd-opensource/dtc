@@ -15,6 +15,7 @@ LINK_DIRECTORIES(
 
 FILE(GLOB_RECURSE SRC_LIST1 ./*.cc ./*.c)
 
+include(../utils.cmake)
 
 LINK_LIBRARIES(liblog4cplus.a) 
 LINK_LIBRARIES(libcommon.a)
@@ -24,9 +25,12 @@ LINK_LIBRARIES(pthread)
 LINK_LIBRARIES(dl)
 
 ADD_DEFINITIONS("-g -fPIC -fpermissive -std=gnu++11")
+ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 
 ADD_EXECUTABLE(faultlogger ${SRC_LIST1})
 ADD_LIBRARY(daemons ${SRC_LIST1})
 
 TARGET_LINK_LIBRARIES(faultlogger libstat.a libcommon.a libyaml-cpp.a liblog4cplus.a)
 TARGET_LINK_LIBRARIES(daemons libstat.a liblog4cplus.a libyaml-cpp.a libcommon.a)
+redefine_file_macro(faultlogger)
+redefine_file_macro(daemons)

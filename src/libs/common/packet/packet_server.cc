@@ -46,7 +46,7 @@ enum enum_select_types {
 const MetaSelections meta_selections[] = {
 	{"select dtctables" , E_SELECT_DTC_TABLES 	, NULL},
 	{"select dtcyaml" 	, E_SELECT_DTC_YAML 	, "/etc/dtc/dtc.yaml"},
-	{"select tableyaml" , E_SELECT_TABLE_YAML 	, "/etc/dtc/table.yaml"}
+	{"select tableyaml" , E_SELECT_TABLE_YAML 	, "/etc/dtc/dtc.yaml"}
 };
 
 enum enum_field_types { MYSQL_TYPE_DECIMAL, MYSQL_TYPE_TINY,
@@ -1317,6 +1317,7 @@ int Packet::load_table(const char* p_filename, char*& file , int& i_length)
 		return -1;
 	}
 
+	printf("open file:%s\n", p_filename);
 	lseek(fd, 0L, SEEK_SET);
 	i_length = lseek(fd, 0L, SEEK_END);
 	lseek(fd, 0L, SEEK_SET);

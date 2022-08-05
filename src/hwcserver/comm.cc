@@ -18,8 +18,8 @@ CRegistor CComm::registor;
 ConnectorProcess CComm::mysql_process_;
 
 const char *CComm::version = "hwc.0.1";
-char* CComm::dtc_conf = "../conf/dtc.yaml";
-char* CComm::table_conf = "../conf/table.yaml";
+char* CComm::dtc_conf = "/etc/dtc/dtc.yaml";
+char* CComm::table_conf = "/etc/dtc/dtc.yaml";
 int CComm::backend = 0;
 int CComm::normal = 1;
 
@@ -119,9 +119,8 @@ int CComm::connect_ttc_server(
     DbConfig* pParser)
 {
     log4cplus_warning("try to ping master server");
-
-    char* p_bind_addr = pParser->cfgObj->get_str_val("cache" , "BIND_ADDR");
-    if (NULL == p_bind_addr) {
+    char* p_bind_addr = pParser->get_bind_addr(pParser->cfgObj->get_config_node()).c_str();
+    if (strlen(p_bind_addr)) {
         return -1;
     }
     log4cplus_debug("master:%s.", p_bind_addr);

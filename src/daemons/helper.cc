@@ -77,7 +77,7 @@ void WatchDogHelper::exec()
 	if (conf_ == DBHELPER_TABLE_NEW) {
 		argv[argc++] = (char *)"-t";// 4
 		char tableName[64];
-		snprintf(tableName, 64, "../conf/table%d.yaml", num_);
+		snprintf(tableName, 64, "/etc/dtc/dtc%d.yaml", num_);
 		argv[argc++] = tableName; // 5
 	} else if (conf_ == DBHELPER_TABLE_ORIGIN &&
 		   strcmp(daemons_table_file, TABLE_CONF_NAME)) {

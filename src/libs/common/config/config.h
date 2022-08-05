@@ -20,22 +20,10 @@
 #include <string.h>
 #include <string>
 #include <map>
+#include "auto_config.h"
 #include "yaml-cpp/yaml.h"
 
-class AutoConfig {
-    public:
-	AutoConfig(){};
-	virtual ~AutoConfig(){};
-	virtual int get_int_val(const char *key, const char *inst,
-				int def = 0) = 0;
-	virtual unsigned long long get_size_val(const char *key,
-						const char *inst,
-						unsigned long long def = 0,
-						char unit = 0) = 0;
-	virtual int get_idx_val(const char *, const char *, const char *const *,
-				int = 0) = 0;
-	virtual const char *get_str_val(const char *key, const char *inst) = 0;
-};
+int str2int(const char *strval, int def);
 
 class DTCConfig {
     public:
@@ -50,19 +38,16 @@ class DTCConfig {
 	int get_idx_val(const char *, const char *, const char *const *,
 			int = 0);
 	const char *get_str_val(const char *sec, const char *key);
-	const YAML::Node& get_array_node(const char* sec , const char* key = NULL);
+	unsigned long long conv_size_val(const char* val, int ndefault, char unit);
 
-	bool has_section(const char *sec);
-	bool has_key(const char *sec, const char *key);
 	int Dump(const char *fn, bool dec = false);
-	int parse_config(const char *f = 0, const char *s = 0,
-			 bool bakconfig = false);
-	int parse_buffered_config(char *buf, const char *fn = 0,
-				  const char *s = 0, bool bakconfig = false);
+	int load_yaml_file(const char *f = 0, bool bakconfig = false);
+	int load_yaml_buffer(char *buf);
+
+	YAML::Node get_config_node() { return dtc_config;}
 
     private:
-	YAML::Node table_config_;
-	YAML::Node cache_config_;
+	YAML::Node dtc_config;
 };
 
 #endif

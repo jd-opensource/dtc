@@ -87,8 +87,8 @@ int stat_open_fd()
 
 int init_cache_mode()
 {
-	g_datasource_mode = g_dtc_config->get_int_val("cache", "DTC_MODE",
-						      DTC_MODE_CACHE_ONLY);
+	DbConfig dbConfig;
+	g_datasource_mode = dbConfig.get_dtc_mode(g_dtc_config->get_config_node());
 	switch (g_datasource_mode) {
 	case DTC_MODE_DATABASE_ADDITION:
 		log4cplus_info("dtc datasource mode: %s(%d)",
@@ -114,20 +114,8 @@ int init_cache_mode()
 		return DTC_CODE_FAILED;
 	}
 
-	const char *keyStr = g_dtc_config->get_str_val("cache", "DTCID");
-	if (keyStr == NULL) {
-		cache_key = 0;
-	} else if (!strcasecmp(keyStr, "none") &&
-		   g_datasource_mode != DTC_MODE_DATABASE_ONLY) {
-		log4cplus_error(
-			"Can not set DTC_MODE=(DTC_MODE_CACHE_ONLY|DTC_MODE_DATABASE_ADDITION) and DTCID=NONE together.");
-		return DTC_CODE_FAILED;
-	} else if (isdigit(keyStr[0])) {
-		cache_key = strtol(keyStr, NULL, 0);
-	} else {
-		log4cplus_error("Invalid DTCID value \"%s\"", keyStr);
-		return DTC_CODE_FAILED;
-	}
+	cache_key = DbConfig::get_shm_id(g_dtc_config->get_config_node());
+	log4cplus_info("cache key:%d", cache_key);
 
 	if (g_datasource_mode == DTC_MODE_DATABASE_ONLY && async_update) {
 		log4cplus_error("can't DelayUpdate when DTCID set to NONE");
@@ -203,8 +191,8 @@ int init_buffer_process_ask_chain_thread()
 		return DTC_CODE_FAILED;
 	}
 
-	unsigned long long cache_size =
-		g_dtc_config->get_size_val("cache", "MAX_USE_MEM_MB", 0, 'M');
+	std::string str_size = DbConfig::get_shm_size(g_dtc_config->get_config_node());
+	unsigned long long cache_size = g_dtc_config->conv_size_val(str_size.c_str(), 0, 'M');
 	if (cache_size <= (50ULL << 20)) // 50M
 	{
 		log4cplus_error("MAX_USE_MEM_MB too small");
@@ -437,8 +425,8 @@ int init_buffer_process_ask_chain(PollerBase *thread)
 	g_buffer_process_ask_instance->set_limit_empty_nodes(
 		g_dtc_config->get_int_val("cache", "LimitEmptyNodes", 0));
 
-	unsigned long long cache_size =
-		g_dtc_config->get_size_val("cache", "MAX_USE_MEM_MB", 0, 'M');
+	std::string str_size = DbConfig::get_shm_size(g_dtc_config->get_config_node());
+	unsigned long long cache_size = g_dtc_config->conv_size_val(str_size.c_str(), 0, 'M');
 	if (cache_size <= (50ULL << 20)) // 50M
 	{
 		log4cplus_error("MAX_USE_MEM_MB too small");
@@ -593,9 +581,6 @@ int init_data_connector_ask_chain(PollerBase *thread)
 //获取、配置基础信息
 int init_config_info()
 {
-	// mkdir("/usr/local/dtc/stat", 0777);
-	// mkdir("/usr/local/dtc/data", 0777);
-
 	g_hash_changing = g_dtc_config->get_int_val("cache", "HashChanging", 0);
 	g_target_new_hash =
 		g_dtc_config->get_int_val("cache", "TargetNewHash", 0);

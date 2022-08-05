@@ -228,7 +228,7 @@ int CConfig::ParseBufferedConfig(char *buf, const char *fn, const char *defsec, 
 	{
 			/*add by foryzhou write config file to stat directory,ignore error*/
 			char bak_config[1024];
-			snprintf(bak_config,sizeof(bak_config),"cp %s ../stat/",fn);
+			snprintf(bak_config,sizeof(bak_config),"cp %s /etc/dtc/stat/",fn);
 			system(bak_config);
 	}
 	return ret_code;

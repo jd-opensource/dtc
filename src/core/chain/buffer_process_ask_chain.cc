@@ -3040,6 +3040,7 @@ BufferProcessAskChain::buffer_column_expand_done(DTCJobOperation &Job)
 		char *bufLocal = (char *)MALLOC(strlen(buf) + 1);
 		memset(bufLocal, 0, strlen(buf) + 1);
 		strcpy(bufLocal, buf);
+
 		DbConfig *dbconfig = DbConfig::load_buffered(bufLocal);
 		FREE(bufLocal);
 		if (!dbconfig) {

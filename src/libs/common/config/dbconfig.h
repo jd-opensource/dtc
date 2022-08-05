@@ -90,7 +90,20 @@ struct KeyHash {
 	key_hash_interface keyHashFunction;
 };
 
-struct DbConfig {
+enum Layered {
+	HOT = 0,
+	FULL
+};
+
+enum Depoly{
+	SINGLE = 0,
+	SHARDING_DB_ONE_TAB = 1,
+	SINGLE_DB_SHARDING_TAB = 2,
+	SHARDING_DB_SHARDING_TAB = 3
+};
+
+class DbConfig {
+public:
 	DTCConfig *cfgObj;
 	char *dbName;
 	char *dbFormat;
@@ -109,7 +122,7 @@ struct DbConfig {
 	int machineCnt;
 	int procs; //all machine procs total
 	int database_max_count; //max db index
-	char depoly; //0:none 1:multiple db 2:multiple table 3:both
+	enum Depoly depoly;
 
 	struct KeyHash keyHashConfig;
 
@@ -139,9 +152,13 @@ struct DbConfig {
 	bool Compare(DbConfig *config, bool compareMach = false);
 	int find_new_mach(DbConfig *config, std::vector<int> &newMach,
 			  std::map<int, int> &machMap);
+	static int get_dtc_mode(YAML::Node dtc_config);
+	static std::string get_shm_size(YAML::Node dtc_config);
+	static int get_shm_id(YAML::Node dtc_config);
+	static std::string get_bind_addr(YAML::Node dtc_config);
 
 private:
-	int parse_db_config(DTCConfig* raw, int i_server_type = 0);
+	int get_dtc_config(YAML::Node dtc_config, DTCConfig* raw,int i_server_type);
 	int convert_case_sensitivity(std::string& s_val);
 };
 

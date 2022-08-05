@@ -71,6 +71,7 @@ int DTCColExpand::initialization()
 
 int DTCColExpand::reload_table()
 {
+	log4cplus_debug("reload table entry");
 	if (TableDefinitionManager::instance()->get_cur_table_idx() ==
 	    col_expand_->curTable)
 		return DTC_CODE_SUCCESS;
@@ -87,6 +88,8 @@ int DTCColExpand::reload_table()
 	}
 	TableDefinitionManager::instance()->set_cur_table_def(
 		t, col_expand_->curTable);
+
+	log4cplus_debug("reload table leave");
 	return DTC_CODE_SUCCESS;
 }
 

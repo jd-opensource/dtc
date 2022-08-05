@@ -21,6 +21,8 @@
 #include "task/task_request.h"
 #include "log/log.h"
 #include "stat_dtc.h"
+#include "../config/dbconfig.h"
+#include "yaml-cpp/yaml.h"
 
 AgentListenPool::AgentListenPool()
 {
@@ -48,7 +50,7 @@ int AgentListenPool::register_entrance_chain_multi_thread(
 	DTCConfig *gc, JobAskInterface<DTCJobOperation> *next_chain)
 {
 	char bindstr[64];
-	const char *bindaddr;
+	std::string bindaddr;
 	const char *errmsg = NULL;
 	char thread_name[64];
 	int checktime;
@@ -63,12 +65,12 @@ int AgentListenPool::register_entrance_chain_multi_thread(
 		else
 			snprintf(bindstr, sizeof(bindstr), "BIND_ADDR%d", i);
 
-		bindaddr = gc->get_str_val("cache", bindstr);
-		if (NULL == bindaddr)
+		bindaddr = DbConfig::get_bind_addr(gc->get_config_node());
+		if (bindaddr.length() == 0)
 			continue;
 
 		if ((errmsg = socket_address[i].set_address(
-			     bindaddr, (const char *)NULL)))
+			     bindaddr.c_str(), (const char *)NULL)))
 			continue;
 
 		snprintf(thread_name, sizeof(thread_name), "dtc-thread-main-%d",
@@ -120,8 +122,7 @@ int AgentListenPool::register_entrance_chain(
 	DTCConfig *gc, JobAskInterface<DTCJobOperation> *next_chain,
 	PollerBase *bind_thread)
 {
-	char bindstr[64];
-	const char *bindaddr;
+	std::string bindaddr;
 	const char *errmsg = NULL;
 	int checktime;
 	int blog;
@@ -129,15 +130,13 @@ int AgentListenPool::register_entrance_chain(
 	checktime = gc->get_int_val("cache", "AgentRcvBufCheck", 5);
 	blog = gc->get_int_val("cache", "AgentListenBlog", 256);
 
-	snprintf(bindstr, sizeof(bindstr), "BIND_ADDR");
-
-	bindaddr = gc->get_str_val("cache", bindstr);
-	if (bindaddr == NULL) {
+	bindaddr = DbConfig::get_bind_addr(gc->get_config_node());
+	if (bindaddr == "") {
 		log4cplus_error("get cache BIND_ADDR configure failed");
 		return -1;
 	}
 
-	if ((errmsg = socket_address[0].set_address(bindaddr,
+	if ((errmsg = socket_address[0].set_address(bindaddr.c_str(),
 						    (const char *)NULL))) {
 		log4cplus_error("socket_address[0] setaddress failed");
 		return -1;

@@ -62,9 +62,8 @@ int DTCConfig::Dump(const char *fn, bool dec)
     FILE *fp = fopen(fn, "w");
     if (fp == NULL)
         return -1;
-    //fprintf(fp, "##### ORIGINAL FILE %s #####\n", filename_.c_str());
-    for (YAML::const_iterator ite = table_config_.begin();
-         ite != table_config_.end(); ++ite) {
+    for (YAML::const_iterator ite = dtc_config.begin();
+         ite != dtc_config.end(); ++ite) {
         YAML::Node inception_sec = ite->first;
         std::string sec = inception_sec.as<std::string>();
         fprintf(fp, "%s:\n", sec.c_str());
@@ -86,43 +85,34 @@ int DTCConfig::Dump(const char *fn, bool dec)
     return 0;
 }
 
-int DTCConfig::parse_buffered_config(char *buf, const char *fn,
-                     const char *defsec, bool bakconfig)
+int DTCConfig::load_yaml_buffer(char *buf)
 {
     int ret_code = -1;
 
     if(!buf)
     {
-        log4cplus_debug("buffer null.");
+        log4cplus_error("yaml content don't allow null.");
         return ret_code;
     }
-
+    log4cplus_debug("yaml buf:%s", buf);
     try {
-        if (defsec && (strcmp(defsec, "cache") == 0 || strcmp(defsec, "data_lifecycle") == 0)) {
-            cache_config_ = YAML::Load(buf);
-        } else {
-            table_config_ = YAML::Load(buf);
-        }
+        dtc_config = YAML::Load(buf);
         ret_code = 0;
     } catch (const YAML::Exception &e) {
-        printf("config file error:%s\n", e.what());
-        log4cplus_debug("config file error:%s\n", e.what());
+        printf("load yaml buf error:%s\n", e.what());
+        log4cplus_debug("load yaml buf error:%s\n", e.what());
         return ret_code;
     }
     return ret_code;
 }
 
-int DTCConfig::parse_config(const char *fn, const char *defsec, bool bakconfig)
+int DTCConfig::load_yaml_file(const char *fn, bool bakconfig)
 {
     int ret_code = -1;
 
     try {
         printf("open config file:%s\n", fn);
-        if (defsec && (strcmp(defsec, "cache") == 0 || strcmp(defsec, "data_lifecycle") == 0)) {
-            cache_config_ = YAML::LoadFile(fn);
-        } else {
-            table_config_ = YAML::LoadFile(fn);
-        }
+        dtc_config = YAML::LoadFile(fn);
         ret_code = 0;
     } catch (const YAML::Exception &e) {
         printf("config file error:%s\n", e.what());
@@ -132,127 +122,33 @@ int DTCConfig::parse_config(const char *fn, const char *defsec, bool bakconfig)
     if (bakconfig) {
         char bak_config[1024];
         int err = 0;
-        system("mkdir -p /usr/local/dtc/stat/");
+        system("mkdir -p /etc/dtc/stat/");
         snprintf(bak_config, sizeof(bak_config),
-             "cp %s /usr/local/dtc/stat/", fn);
+             "cp %s /etc/dtc/stat/", fn);
         if (err == 0)
             err = system(bak_config);
     }
     return ret_code;
 }
 
-bool DTCConfig::has_section(const char *sec)
-{
-    YAML::Node inception = table_config_[sec];
-    if (inception && inception.IsMap())
-        return true;
-    else
-        return false;
-}
-
-bool DTCConfig::has_key(const char *sec, const char *key)
-{
-    if (!table_config_[sec])
-        return false;
-
-    YAML::Node inception = table_config_[sec][key];
-    if (inception && inception.IsScalar())
-        return true;
-    else
-        return false;
-}
-
-/********************************************
- * eg：get_str_val("cache", "RemoteLogAddr")
- * 读取 conf/cache.conf中RemoteLogAdd的参数
- * ******************************************/
 const char *DTCConfig::get_str_val(const char *sec, const char *key)
 {
-    if (sec && (strcmp(sec, "cache") == 0 || strcmp(sec, "data_lifecycle") == 0)) {
-        if (cache_config_[sec]) {
-            if (cache_config_[sec][key]) {
-                std::string s_cache = cache_config_[sec][key]
-                                 .as<std::string>();
-                if (s_cache.length() > 0) {
-                    return strdup(s_cache.c_str());
-                }
-            }
-        }
-    } else {
-        if (table_config_[sec]) {
-            if (table_config_[sec][key]) {
-                std::string s_cache = table_config_[sec][key]
-                                 .as<std::string>();
-                if (s_cache.length() > 0) {
-                    log4cplus_info("cache str:%s", s_cache.c_str());
-                    return strdup(s_cache.c_str());
-                }
-            }
-        }
-    }
-
     return NULL;
 }
 
 int DTCConfig::get_int_val(const char *sec, const char *key, int def)
 {
-    const char *val = NULL;
-    if (sec && (strcmp(sec, "cache") == 0 || strcmp(sec, "data_lifecycle") == 0)) {
-        if (cache_config_[sec]) {
-            if (cache_config_[sec][key]) {
-                std::string result = cache_config_[sec][key]
-                                 .as<std::string>();
-                if (result.length() > 0) {
-                    val = result.c_str();
-                }
-            }
-        }
-    } else {
-        if (table_config_[sec]) {
-            if (table_config_[sec][key]) {
-                std::string result = table_config_[sec][key]
-                                 .as<std::string>();
-                if (result.length() > 0) {
-                    val = result.c_str();
-                }
-            }
-        }
-    }
-
-    if (val == NULL)
-        return def;
-
-    return str2int(val, def);
+    return def;
 }
 
-unsigned long long DTCConfig::get_size_val(const char *sec, const char *key,
-                       unsigned long long def, char unit)
+unsigned long long DTCConfig::conv_size_val(const char* val, int ndefault, char unit)
 {
-    const char *val = NULL;
-    if (sec && (strcmp(sec, "cache") == 0 || strcmp(sec, "data_lifecycle") == 0)) {
-        if (cache_config_[sec]) {
-            if (cache_config_[sec][key]) {
-                std::string result = cache_config_[sec][key]
-                                 .as<std::string>();
-                if (result.length() > 0) {
-                    val = result.c_str();
-                }
-            }
-        }
-    } else {
-        if (table_config_[sec]) {
-            if (table_config_[sec][key]) {
-                std::string result = table_config_[sec][key]
-                                 .as<std::string>();
-                if (result.length() > 0) {
-                    val = result.c_str();
-                }
-            }
-        }
+    if (val == NULL)
+    {
+        log4cplus_error("val is null");
+        return ndefault;
     }
-
-    if (val == NULL || !isdigit(val[0]))
-        return def;
+        
 
     const char *p;
     double a = strtod(val, (char **)&p);
@@ -292,198 +188,14 @@ unsigned long long DTCConfig::get_size_val(const char *sec, const char *key,
     return (unsigned long long)a;
 }
 
+unsigned long long DTCConfig::get_size_val(const char *sec, const char *key,
+                       unsigned long long def, char unit)
+{
+    return def;
+}
+
 int DTCConfig::get_idx_val(const char *sec, const char *key,
                const char *const *array, int nDefault)
 {
-    const char *val = NULL;
-    if (sec && (strcmp(sec, "cache") == 0 || strcmp(sec, "data_lifecycle") == 0)) {
-        if (cache_config_[sec]) {
-            if (cache_config_[sec][key]) {
-                std::string result = cache_config_[sec][key]
-                                 .as<std::string>();
-                if (result.length() > 0) {
-                    val = result.c_str();
-                }
-            }
-        }
-    } else {
-        if (table_config_[sec]) {
-            if (table_config_[sec][key]) {
-                std::string result = table_config_[sec][key]
-                                 .as<std::string>();
-                if (result.length() > 0) {
-                    val = result.c_str();
-                }
-            }
-        }
-    }
-    if (val == NULL)
-        return nDefault;
-
-    if (isdigit(val[0])) {
-        char *p;
-        int n = strtol(val, &p, 0);
-        if (*p == '\0') {
-            for (int i = 0; array[i]; ++i) {
-                if (n == i)
-                    return i;
-            }
-        }
-    }
-
-    for (int i = 0; array[i]; ++i) {
-        if (!strcasecmp(val, array[i]))
-            return i;
-    }
-    return -1;
-}
-
-class AutoConfigSection : public AutoConfig {
-    private:
-    static pthread_mutex_t glock;
-    void GlobalLock(void)
-    {
-        pthread_mutex_lock(&glock);
-    }
-    void GlobalUnlock(void)
-    {
-        pthread_mutex_unlock(&glock);
-    }
-
-    private:
-    DTCConfig *parent;
-    char *section;
-    // buf must have enough room place composed key name
-    char buf[256];
-    char *last;
-
-    public:
-    AutoConfigSection(DTCConfig *p, const char *sec);
-    ~AutoConfigSection();
-
-    virtual int get_int_val(const char *key, const char *inst, int def = 0);
-    virtual unsigned long long get_size_val(const char *key,
-                        const char *inst,
-                        unsigned long long def = 0,
-                        char unit = 0);
-    virtual int get_idx_val(const char *, const char *, const char *const *,
-                int = 0);
-    virtual const char *get_str_val(const char *key, const char *inst);
-
-    private:
-    // return composed key, or vanilla key, always non-null
-    const char *findkey(const char *key, const char *inst);
-    // strip suffix digits
-    int stripnumber(void);
-    // strip suffix alphaphetic
-    int stripalpha(void);
-    // strip suffix punct
-    int strippunct(void);
-};
-
-pthread_mutex_t AutoConfigSection::glock = PTHREAD_MUTEX_INITIALIZER;
-
-AutoConfigSection::AutoConfigSection(DTCConfig *p, const char *sec)
-{
-    this->parent = p;
-    this->section = STRDUP(sec);
-}
-
-AutoConfigSection::~AutoConfigSection()
-{
-    FREE_CLEAR(section);
-}
-
-int AutoConfigSection::stripnumber(void)
-{
-    int n = 0;
-    while (last >= buf && isdigit(*last)) {
-        last--;
-        n++;
-    }
-    last[1] = 0;
-    strippunct();
-    return n;
-}
-
-int AutoConfigSection::stripalpha(void)
-{
-    int n = 0;
-    while (last >= buf && isalpha(*last)) {
-        last--;
-        n++;
-    }
-    last[1] = 0;
-    strippunct();
-    return n;
-}
-
-int AutoConfigSection::strippunct(void)
-{
-    int n = 0;
-    while (last >= buf && *last != '@' && !isalnum(*last)) {
-        last--;
-        n++;
-    }
-    last[1] = 0;
-    return n;
-}
-
-const char *AutoConfigSection::findkey(const char *key, const char *inst)
-{
-    snprintf(buf, sizeof(buf), "%s@%s", key, inst);
-    last = buf + strlen(buf) - 1;
-    strippunct();
-
-    do {
-        if (parent->get_str_val(section, buf) != NULL) {
-            return buf;
-        }
-    } while (isdigit(*last) ? stripnumber() : stripalpha());
-
-    return key;
-}
-
-int AutoConfigSection::get_int_val(const char *key, const char *inst, int def)
-{
-    int ret;
-    GlobalLock();
-    ret = parent->get_int_val(section, findkey(key, inst), def);
-    GlobalUnlock();
-    return ret;
-}
-unsigned long long AutoConfigSection::get_size_val(const char *key,
-                           const char *inst,
-                           unsigned long long def,
-                           char unit)
-{
-    unsigned long long ret;
-    GlobalLock();
-    ret = parent->get_size_val(section, findkey(key, inst), def, unit);
-    GlobalUnlock();
-    return ret;
-}
-int AutoConfigSection::get_idx_val(const char *key, const char *inst,
-                   const char *const *idxval, int def)
-{
-    int ret;
-    GlobalLock();
-    ret = parent->get_idx_val(section, findkey(key, inst), idxval, def);
-    GlobalUnlock();
-    return ret;
-}
-const char *AutoConfigSection::get_str_val(const char *key, const char *inst)
-{
-    const char *ret;
-    GlobalLock();
-    ret = parent->get_str_val(section, findkey(key, inst));
-    GlobalUnlock();
-    return ret;
-}
-
-AutoConfig *DTCConfig::get_auto_config_instance(const char *section)
-{
-    AutoConfigSection *inst;
-    NEW(AutoConfigSection(this, section), inst);
-    return inst;
+    return nDefault;
 }

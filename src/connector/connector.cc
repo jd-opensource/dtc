@@ -336,14 +336,15 @@ int main(int argc, char **argv)
 	if (!strcmp(addr, "-"))
 		fd = 0;
 	else {
-		if (strcasecmp(g_dtc_config->get_str_val("cache", "DTCID") ?:
-				       "",
-			       "none") != 0) {
+		std::string dtcid = g_dtc_config->get_config_node()["props"]["listener.port.dtc"].as<std::string>();
+		if(dtcid != "none")
+		{
 			log4cplus_warning(
 				"standalone %s need DTCID set to NONE",
 				progname);
 			return -1;
 		}
+		
 		SocketAddress sockaddr;
 		const char *err =
 			sockaddr.set_address(addr, argc == 2 ? NULL : argv[2]);

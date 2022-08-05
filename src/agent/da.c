@@ -343,7 +343,7 @@ static void show_usage(void) {
 			"  -D, --describe-stats   : print stats description and exit");
 	write_stderr(
 			"  -v, --verbosity=N      		: set logging level (default: 3, min: 1, max: 7)" CRLF
-			"  -o, --output=S         		: set logging dir (default: ../log/)" CRLF
+			"  -o, --output=S         		: set logging dir (default: /var/log/dtc/)" CRLF
 			"  -c, --conf-file=S      		: set configuration file (default: /etc/dtc/agent.xml)" CRLF
 			"  -e, --event-max-timeout=S	: set epoll max timeout(ms)(default: (30*1000)ms)" CRLF
 			"  -i, --stats_interval=S	    : set stats aggregator interval(ms)(default: (10*1000)ms)" CRLF
@@ -372,7 +372,7 @@ static bool da_test_conf(struct instance *dai) {
 }
 
 static void da_log_init(struct instance *dai) {
-	_init_log_("da", dai->log_dir);
+	_init_log_("agent", dai->log_dir);
 	_set_log_level_(dai->log_level);
 	_set_remote_log_fd_();
 }

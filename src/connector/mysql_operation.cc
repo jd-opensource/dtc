@@ -1459,21 +1459,8 @@ void ConnectorProcess::set_title(const char *status)
 
 int ConnectorProcess::process_reload_config(DtcJob *Task)
 {
-    const char *keyStr = g_dtc_config->get_str_val("cache", "DTCID");
-    int cacheKey = 0;
-    if (keyStr == NULL) {
-        cacheKey = 0;
-        log4cplus_info("DTCID not set!");
-        return -1;
-    } else if (!strcasecmp(keyStr, "none")) {
-        log4cplus_warning("DTCID set to NONE, Cache disabled");
-        return -1;
-    } else if (isdigit(keyStr[0])) {
-        cacheKey = strtol(keyStr, NULL, 0);
-    } else {
-        log4cplus_warning("Invalid DTCID value \"%s\"", keyStr);
-        return -1;
-    }
+    int cacheKey = DbConfig::get_shm_id(g_dtc_config->get_config_node());;
+
     BlockProperties stInfo;
     BufferPond cachePool;
     memset(&stInfo, 0, sizeof(stInfo));

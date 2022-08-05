@@ -7,7 +7,6 @@
 #include "daemon.h"
 #include "dbconfig.h"
 
-extern DTCConfig *g_dtc_config;
 extern DbConfig *dbConfig;
 extern char cache_file[256];
 char agent_file[256] = "/etc/dtc/agent.xml";
@@ -55,7 +54,7 @@ uint32_t DataConf::Port(){
 
 int DataConf::LoadConfig(int argc, char *argv[]){
     int c;
-    strcpy(table_file, "/etc/dtc/table.yaml");
+    strcpy(table_file, "/etc/dtc/dtc.yaml");
     strcpy(cache_file, "/etc/dtc/dtc.yaml");
 
     while ((c = getopt(argc, argv, "df:t:hvV")) != -1) {
@@ -81,12 +80,19 @@ int DataConf::LoadConfig(int argc, char *argv[]){
         }
     }
 
-    g_dtc_config = new DTCConfig;
-    if (0 != g_dtc_config->parse_config(cache_file, "data_lifecycle", false)){
+    YAML::Node config;
+    try {
+        config = YAML::LoadFile(cache_file);
+	} catch (const YAML::Exception &e) {
+		log4cplus_error("config file error:%s, %s\n", e.what(), cache_file);
+		return DTC_CODE_LOAD_CONFIG_ERR;
+	}
+
+    if(!config["data_lifecycle"]) {
         log4cplus_error("parse_config error.");
         return DTC_CODE_LOAD_CONFIG_ERR;
     }
-    if (0 != g_dtc_config->parse_config(table_file, "DATABASE_CONF", false)){
+    if(!config["primary"]) {
         log4cplus_error("parse_config error.");
         return DTC_CODE_LOAD_CONFIG_ERR;
     }
@@ -99,58 +105,53 @@ int DataConf::LoadConfig(int argc, char *argv[]){
 }
 
 int DataConf::ParseConfig(ConfigParam& config_param){
-    config_param.single_query_cnt_ = g_dtc_config->get_int_val("data_lifecycle", "SingleQueryCount", 10);
-    const char* data_rule = g_dtc_config->get_str_val("data_lifecycle", "DataSQLRule");
-    if(NULL == data_rule){
-        log4cplus_error("data_rule not defined.");
+    YAML::Node config;
+    try {
+        config = YAML::LoadFile(cache_file);
+	} catch (const YAML::Exception &e) {
+		log4cplus_error("config file error:%s, %s\n", e.what(), cache_file);
+		return DTC_CODE_LOAD_CONFIG_ERR;
+	}
+
+    YAML::Node node = config["data_lifecycle"]["single.query.count"];
+    config_param.single_query_cnt_ = node? node.as<int>(): 10;    
+    
+    node = config["data_lifecycle"]["rule.sql"];
+    if(!node){
+        log4cplus_error("rule.sql not defined.");
         return DTC_CODE_PARSE_CONFIG_ERR;
     }
-    config_param.data_rule_ = data_rule;
+    config_param.data_rule_ = node.as<string>();
 
-    const char* operate_time_rule = g_dtc_config->get_str_val("data_lifecycle", "OperateTimeRule");
-    if(NULL == operate_time_rule){
-        operate_time_rule = "00 01 * * * ?";
-    }
-    config_param.operate_time_rule_ = operate_time_rule;
+    node = config["data_lifecycle"]["rule.cron"];
+    config_param.operate_time_rule_ = node? node.as<string>(): "00 01 * * * ?";
 
     // 规则对应的操作operate_type  delete或update
-    const char* operate_type = g_dtc_config->get_str_val("data_lifecycle", "OperateType");
-    if(NULL == operate_type){
-        operate_type = "delete";
-    }
-    config_param.operate_type_ = operate_type;
+    node = config["data_lifecycle"]["type.operate"];
+    config_param.operate_type_ = node? node.as<string>(): "delete";
 
-    const char* life_cycle_table_name = g_dtc_config->get_str_val("data_lifecycle", "LifeCycleTableName");
-    if(NULL == life_cycle_table_name){
-        life_cycle_table_name = "data_lifecycle_table";
-    }
-    config_param.life_cycle_table_name_ = life_cycle_table_name;
+    node = config["data_lifecycle"]["lifecycle.tablename"];
+    config_param.life_cycle_table_name_ = node? node.as<string>(): "data_lifecycle_table";
 
-     const char* hot_db_name = g_dtc_config->get_str_val("data_lifecycle", "HotDBName");
-    if(NULL == hot_db_name){
-        hot_db_name = "L2";
-    }
-    config_param.hot_db_name_ = hot_db_name;
+    node = config["primary"]["hot"]["logic"]["db"];
+    config_param.hot_db_name_ = node? node.as<string>(): "L2";
 
-     const char* cold_db_name = g_dtc_config->get_str_val("data_lifecycle", "ColdDBName");
-    if(NULL == cold_db_name){
-        cold_db_name = "L3";
-    }
-    config_param.cold_db_name_ = cold_db_name;
+    node = config["primary"]["full"]["logic"]["db"];
+    config_param.cold_db_name_ = node? node.as<string>(): "L3";
 
-    const char* key_field_name = g_dtc_config->get_str_val("FIELD1", "field_name");
-    if(NULL == key_field_name){
+    node = config["primary"]["cache"]["field"][0]["name"];
+    if(!node){
         log4cplus_error("key_field_name not defined.");
         return DTC_CODE_PARSE_CONFIG_ERR;
     }
-    config_param.key_field_name_ = key_field_name;
+    config_param.key_field_name_ = node.as<string>();
 
-    const char* table_name = g_dtc_config->get_str_val("HOT_TABLE_CONF", "table_name");
-    if(NULL == table_name){
+    node = config["primary"]["hot"]["logic"]["table"];
+    if(!node){
         log4cplus_error("table_name not defined.");
         return DTC_CODE_PARSE_CONFIG_ERR;
     }
-    config_param.table_name_ = table_name;
+    config_param.table_name_ = node.as<string>();
 
     log4cplus_debug("single_query_cnt_: %d, data_rule: %s, operate_time_rule: %s, operate_type: %s, "
         "life_cycle_table_name: %s, key_field_name: %s, table_name: %s, hot_database_name: %s",

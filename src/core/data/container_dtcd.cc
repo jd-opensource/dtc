@@ -172,6 +172,7 @@ _QueryInternalService(const char *name, const char *instance)
 void init_task_executor(const char *name, AgentListenPool *listener,
 			JobAskInterface<DTCJobOperation> *main_chain)
 {
+	log4cplus_debug("name: %s, pool: %p, job: %p", name, listener, main_chain);
 	if (NCResultInternal::verify_class() == 0) {
 		log4cplus_error(
 			"Inconsistent class NCResultInternal detected, internal API disabled");

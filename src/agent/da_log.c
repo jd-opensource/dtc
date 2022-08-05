@@ -168,7 +168,7 @@ void _write_log_(int level, char *filename, const char *funcname,
 			int fd;
 
 			logday = today;
-			snprintf(logfile, sizeof(logfile), "%s/%s.error%04d%02d%02d.log",
+			snprintf(logfile, sizeof(logfile), "%s/%s.%04d%02d%02d.log",
 					log_dir, appname, tm.tm_year + 1900, tm.tm_mon + 1,
 					tm.tm_mday);
 			fd = open(logfile, O_CREAT | O_LARGEFILE | O_APPEND | O_WRONLY,

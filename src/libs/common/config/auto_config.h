@@ -13,22 +13,28 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-#ifndef _DTC_GLOBAL_H_
-#define _DTC_GLOBAL_H_
-#include "algorithm/non_copyable.h"
+#ifndef __AUTO_CONFIG_H__
+#define __AUTO_CONFIG_H__
 
-#define TABLE_CONF_NAME "/etc/dtc/dtc.yaml"
-#define CACHE_CONF_NAME "/etc/dtc/dtc.yaml"
-#define ALARM_CONF_FILE "/etc/dtc/dtcalarm.conf"
+#include <stdio.h>
+#include <string.h>
+#include <string>
+#include <map>
+#include "yaml-cpp/yaml.h"
 
-class DTCGlobal : private noncopyable {
+class AutoConfig {
     public:
-	DTCGlobal(void);
-	~DTCGlobal(void);
-
-    public:
-	static int pre_alloc_nodegroup_count;
-	static int min_chunk_size_;
-	static int pre_purge_nodes_;
+	AutoConfig(){};
+	virtual ~AutoConfig(){};
+	virtual int get_int_val(const char *key, const char *inst,
+				int def = 0) = 0;
+	virtual unsigned long long get_size_val(const char *key,
+						const char *inst,
+						unsigned long long def = 0,
+						char unit = 0) = 0;
+	virtual int get_idx_val(const char *, const char *, const char *const *,
+				int = 0) = 0;
+	virtual const char *get_str_val(const char *key, const char *inst) = 0;
 };
+
 #endif

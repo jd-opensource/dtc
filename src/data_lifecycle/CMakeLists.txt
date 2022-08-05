@@ -2,6 +2,8 @@ AUX_SOURCE_DIRECTORY(. SRC_LIST)
 AUX_SOURCE_DIRECTORY(. main)
 list(REMOVE_ITEM SRC_LIST "./cron_test.cc")
 
+include(../utils.cmake)
+
 INCLUDE_DIRECTORIES (
     .
     ../daemons
@@ -56,8 +58,10 @@ LINK_LIBRARIES(libstat.a)
 LINK_LIBRARIES(libmysqlclient.a)
 
 ADD_DEFINITIONS ("-g -fPIC -fpermissive -std=gnu++11 -DOMN_PLATFORM_UNIX -Wl,--no-undefined -Xlinker -zmuldefs")
+ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 ADD_EXECUTABLE (data_lifecycle_manager ${SRC_LIST} ../connector/database_connection.cc)
 TARGET_LINK_LIBRARIES(data_lifecycle_manager libdtcd.a libdaemons.a libstat.a libcommon.a liblog4cplus.a libyaml-cpp.a libz64.a libsqlparser.a libmysqlclient.a libmxml.a)
+redefine_file_macro(data_lifecycle_manager)
 
 if(jdtestOpen)
     cmake_minimum_required(VERSION 2.8.8)
@@ -108,6 +112,7 @@ if(jdtestOpen)
     ../libs/google_test/include
     )
     target_link_libraries(gtest_data_lifecycle dtcd daemons stat common gtest_main gmock gtest dl pthread log4cplus sqlparser yaml-cpp z64 mysqlclient mxml)
+    redefine_file_macro(gtest_data_lifecycle)
     SET_TARGET_PROPERTIES(gtest_data_lifecycle PROPERTIES RUNTIME_OUTPUT_DIRECTORY "./bin")
     install(TARGETS gtest_data_lifecycle RUNTIME DESTINATION bin)
 endif()

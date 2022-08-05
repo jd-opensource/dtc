@@ -5,9 +5,7 @@
 #include <iostream>
 #include "re_comm.h"
 
-#define TABLE_CONF_NAME "/etc/dtc/table.yaml"
 #define CACHE_CONF_NAME "/etc/dtc/dtc.yaml"
-#define ALARM_CONF_FILE "/etc/dtc/dtcalarm.conf"
 
 using namespace hsql;
 hsql::SQLParserResult rule_ast;
@@ -25,13 +23,11 @@ std::string do_get_rule()
 		return "";
 	}
 
-    if(config["match"])
+    YAML::Node node = config["primary"]["layered.rule"];
+    if(node)
     {
-        if(config["match"]["RULE"])
-        {
-            std::string rules = config["match"]["RULE"].as<string>();
-            return rules;
-        }
+        std::string rules = node.as<string>();
+        return rules;
     }
 
     return "";
@@ -169,32 +165,21 @@ extern "C" int re_load_table_key(char* key)
 {
     YAML::Node config;
     try {
-        config = YAML::LoadFile(TABLE_CONF_NAME);
+        config = YAML::LoadFile(CACHE_CONF_NAME);
 	} catch (const YAML::Exception &e) {
 		log4cplus_error("config file error:%s\n", e.what());
 		return -1;
 	}
 
-    if(config["TABLE_CONF"])
+    YAML::Node node = config["primary"]["cache"]["field"][0]["name"];
+    if(node)
     {
-        if(config["TABLE_CONF"]["key_count"])
+        if(node.as<string>().length() >= 50)
         {
-            if(config["TABLE_CONF"]["key_count"].as<int>() == 1)
-            {
-                if(config["FIELD1"])
-                {
-                    if(config["FIELD1"]["field_name"])
-                    {
-                        if(config["FIELD1"]["field_name"].as<string>().length() >= 50)
-                        {
-                            return -1;
-                        }
-                        strcpy(key, config["FIELD1"]["field_name"].as<string>().c_str());
-                        return 0;
-                    }
-                }
-            }
+            return -1;
         }
+        strcpy(key, node.as<string>().c_str());
+        return 0;
     }
 
     return -1;

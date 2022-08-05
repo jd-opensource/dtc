@@ -35,9 +35,7 @@ int main(int argc, char *argv[]){
     /*if(NULL != p_data_manager){
         delete p_data_manager;
     }
-    if(NULL != g_dtc_config){
-        delete g_dtc_config;
-    }*/
+    */
     log4cplus_info("%s v%s: stopped", data_project_name, version);
     //Logger::shutdown();
     //daemon_cleanup();

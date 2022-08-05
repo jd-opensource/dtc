@@ -18,11 +18,11 @@ dtc.yaml文件：
 
 ```
 data_lifecycle:
-   SingleQueryCount: 10 // 单次查询的记录条数
-   DataSQLRule: 'status = 0' // 定义数据规则的mysql语句
-   OperateTimeRule: '00 01 * * * ?' // 定义处理时机的时间规则，采用croncpp的格式，见https://github.com/mariusbancila/croncpp
-   LifeCycleDBName: 'data_lifecycle_database' // data_lifecycle表对应的库名，该表记录上次操作的数据对应的id、update_time等信息
-   LifeCycleTableName: 'data_lifecycle_table' // data_lifecycle表对应的表名
+   single.query.count: 10 // 单次查询的记录条数
+   rule.sql: 'status = 0' // 定义数据规则的mysql语句
+   rule.cron: '00 01 * * * ?' // 定义处理时机的时间规则，采用croncpp的格式，见https://github.com/mariusbancila/croncpp
+   lifecycle.dbname: 'data_lifecycle_database' // data_lifecycle表对应的库名，该表记录上次操作的数据对应的id、update_time等信息
+   lifecycle.tablename: 'data_lifecycle_table' // data_lifecycle表对应的表名
 ```
 
 table.yaml文件

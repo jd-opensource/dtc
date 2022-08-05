@@ -114,10 +114,6 @@ void Thread::auto_config_stack_size(void)
 void Thread::auto_config_cpu_mask(void)
 {
 #ifdef CPU_ZERO
-	const char *val = g_autoconf->get_str_val("ThreadCPUMask", taskname);
-	if (val != NULL) {
-		cpumask = strtoll(val, NULL, 16);
-	}
 	log4cplus_debug("autoconf thread %s ThreadCPUMask %llx", taskname,
 			(unsigned long long)cpumask);
 #endif

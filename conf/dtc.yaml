@@ -1,18 +1,59 @@
-cache:
-   LOG_LEVEL: debug
-   BIND_ADDR: '*:20015/tcp'
-   DTCID: 20015
-   MAX_USE_MEM_MB: 100
-   DTC_MODE: 1 #1: cache only, 0: database in addition.
-vhot:
-   addr: 127.0.0.1:3307
-   username: root
-   password: root
-   database: sharding
+# 
+# DTC configure file. v2
+#
+props:
+  log.level: debug
+  listener.port.agent: 12001
+  listener.port.dtc: 20015
+  listener.port.extension: 3745
+  shm.mem.size: 100 #MB
+  #hash.custom: yes/no/enable/disable
+  #hash.custom.module: ../lib/key-hash.so
+  #hash.custom.functon: StringHash(1.128)
+
 data_lifecycle:
-   SingleQueryCount: 10
-   DataSQLRule: 'status = 0'
-   OperateTimeRule: '00 01 * * * ?'
-   LifeCycleTableName: 'data_lifecycle_table'
-   HotDBName: 'HOT'
-   ColdDBName: 'COLD'
+  single.query.count: 10
+  lifecycle.tablename: 'data_lifecycle_table'
+  rule.sql: 'status = 0'
+  rule.cron: '00 01 * * * ?'
+
+connection: &connection
+  addr: 127.0.0.1:3306
+  user: username
+  pwd: password 
+
+primary:
+  table: &table name
+  layered.rule: '(a>1 and a<3) or uid = 0'
+  cache:
+    field:
+      - {name: &key uid, type: signed/unsigned/float/string/binary, size: 4}
+      - {name: name, type: binary, size: 50}
+      - {name: city, type: string, size: 50}
+      - {name: sex, type: signed, size: 4}
+      - {name: age, type: signed, size: 4}
+  hot:
+    logic:
+      {db: &db L2, table: *table, connection: *connection}
+    real:
+      - {addr: mysql-01.local:3306, user: username, pwd: password, db: {prefix: &prefix [*db, _], start: 0, last: 10}}
+      - {addr: mysql-02.local:3306, user: username, pwd: password, db: {prefix: *prefix, start: 11, last: 25}}
+      - {addr: mysql-03.local:3306, user: username, pwd: password, db: {prefix: *prefix, start: 26, last: 29}}
+    sharding:
+      key: *key
+      table: {prefix: [*table, _], start: 0, last: 9}
+  full:
+    logic:
+      {db: L3, table: *table, connection: *connection}
+    real:
+      - {addr: 127.0.0.1:3306, user: username, pwd: password, db: L3}
+
+extension:
+  - logic:
+      {db: January, table: Monday, connection: *connection}
+    real:
+      - {addr: mysql-01.local:3306, user: username, pwd: password, db: January}
+  - logic:
+      {db: February, table: Tuesday, connection: *connection}
+    real:
+      - {addr: mysql-01.local:3306, user: username, pwd: password, db: February}
