@@ -16,6 +16,8 @@ jobs:
         image: mysql
         ports:
           - 3306:3306
+        env: 
+          MYSQL_ROOT_PASSWORD: 123456
     steps:
       - name: check mysql
         run: |
