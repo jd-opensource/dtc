@@ -23,8 +23,6 @@ jobs:
       - name: check mysql
         run: |
           echo "hello mysql"
-          sleep 30s
-          mysql -h127.0.0.1 -uroot -p123456 -e "show databases;"
           
   build:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
@@ -96,3 +94,10 @@ jobs:
 
         docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:Layered .
         docker push ${{ secrets.DOCKER_USERNAME }}/devel:Layered
+
+    - name: init db table
+      run: |
+        mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
+        mysql -h127.0.0.1 -uroot -p123456 -e "show databases;"
+        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source ${{github.workspace}}/script/init_table.sql;"
+        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"
