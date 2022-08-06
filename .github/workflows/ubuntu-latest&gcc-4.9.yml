@@ -83,9 +83,8 @@ jobs:
 
     - name: Run devel CacheOnly docker
       if: ${{ env.secret_account != '' }}
-      uses: docker://kfysck/devel:CacheOnly
-      with:
-        args: "/usr/local/dtc/dtcd -d"
+      run: |
+        docker run --name CacheOnly -p 20015:20015 -d ${{ secrets.DOCKER_USERNAME }}/devel:CacheOnly /usr/local/dtc/dtcd -d
 
     - name: publish devel Cache with Database docker
       if: ${{ env.secret_account != '' }}
@@ -120,4 +119,4 @@ jobs:
         cd ${{github.workspace}}/tests
         pytest
         docker ps -a
-        #mysql -h127.0.0.1 -P20015 -uroot -proot -e "select uid from opensouce where uid = 1;"
+        mysql -h127.0.0.1 -P20015 -uroot -proot -e "select uid from opensouce where uid = 1;"
