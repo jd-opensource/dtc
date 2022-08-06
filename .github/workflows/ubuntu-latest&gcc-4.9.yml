@@ -48,7 +48,7 @@ jobs:
         pip install pytest
       
     - name: cmake project
-      if: 0
+      if: false
       run: |
         cd ${{github.workspace}}
         mkdir build
@@ -85,10 +85,8 @@ jobs:
     - name: Run devel CacheOnly docker
       if: ${{ env.secret_account != '' }}
       uses: docker://${{ env.secret_account }}/devel:CacheOnly
-      ports:
-        - 20015:20015
       with:
-        args: ["/usr/local/dtc/dtcd", "-d"]
+        args: "/usr/local/dtc/dtcd -d"
 
     - name: publish devel Cache with Database docker
       if: ${{ env.secret_account != '' }}
@@ -122,4 +120,5 @@ jobs:
       run: |
         cd ${{github.workspace}}/tests
         pytest
-        mysql -h127.0.0.1 -P20015 -uroot -proot -e "select uid from opensouce where uid = 1;"
+        docker ps -a
+        #mysql -h127.0.0.1 -P20015 -uroot -proot -e "select uid from opensouce where uid = 1;"
