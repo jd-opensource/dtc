@@ -73,7 +73,7 @@ jobs:
         cp build/src/agent-watchdog/agent-watchdog dockerfiles/devel/
         cp build/src/complex/async-connector dockerfiles/devel/
         cp build/src/connector/connector dockerfiles/devel/
-        cp build/src/data_lifecycle/data_lifecycle_manager dockerfiles/devel/
+        cp build/src/data_lifecycle/data-lifecycle-manager dockerfiles/devel/
         cp build/src/hwcserver/hwcserver dockerfiles/devel/
 
         cd dockerfiles/devel/
