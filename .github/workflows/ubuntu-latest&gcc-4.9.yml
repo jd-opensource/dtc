@@ -48,7 +48,6 @@ jobs:
         pip install pytest
       
     - name: cmake project
-      if: false
       run: |
         cd ${{github.workspace}}
         mkdir build
