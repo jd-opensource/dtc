@@ -4,7 +4,7 @@ ARG basepath=/usr/local/dtc
 ARG confpath=/etc/dtc
 ARG logpath=/var/log/dtc
 
-RUN mkdir -p $basepath/bin
+RUN mkdir -p $basepath
 RUN mkdir -p $basepath/data
 RUN mkdir -p $basepath/stat
 RUN mkdir -p $basepath/log
@@ -12,7 +12,12 @@ RUN mkdir -p $confpath
 RUN mkdir -p $logpath
 
 COPY dtcd $basepath/dtcd
+COPY dtcagent $basepath/dtcagent
+COPY agent-watchdog $basepath/agent-watchdog
+COPY async-connector $basepath/async-connector
+COPY connector $basepath/connector
+COPY data-lifecycle-manager $basepath/data-lifecycle-manager
+COPY hwcserver $basepath/hwcserver
+
 COPY dtc.yaml $confpath/dtc.yaml
 COPY log4cplus.conf $confpath/log4cplus.conf
-
-CMD ["/usr/local/dtc/dtcd", "-d"]
