@@ -25,7 +25,7 @@
 
 class MyRequest {
     public:
-	MyRequest() : raw(NULL), raw_len(0), pkt_nr(0)
+	MyRequest() : raw(NULL), raw_len(0), pkt_nr(0), eof_packet_new(false)
 	{
 	}
 
@@ -107,6 +107,7 @@ class MyRequest {
 	int raw_len;
 	std::string m_sql;
 	hsql::SQLParserResult m_result;
+	bool eof_packet_new;
 	uint8_t pkt_nr;
 };
 

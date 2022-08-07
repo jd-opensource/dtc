@@ -905,7 +905,7 @@ struct my_result_set_eof {
 };
 #pragma pack()
 
-BufferChain *encode_eof(BufferChain *bc, uint8_t pkt_nr)
+BufferChain *encode_eof(BufferChain *bc, uint8_t &pkt_nr)
 {
 	BufferChain *nbc = bc;
 	my_result_set_eof eof;
@@ -925,7 +925,7 @@ BufferChain *encode_eof(BufferChain *bc, uint8_t pkt_nr)
 	memcpy(r->data + sizeof(MYSQL_HEADER_SIZE), &eof, sizeof(eof));
 	r->usedBytes = sizeof(MYSQL_HEADER_SIZE) + sizeof(eof);
 	r->nextBuffer = NULL;
-	encode_mysql_header(r, sizeof(eof), pkt_nr);
+	encode_mysql_header(r, sizeof(eof), pkt_nr++);
 
 	nbc->nextBuffer = r;
 	nbc = nbc->nextBuffer;
@@ -1122,10 +1122,15 @@ BufferChain *Packet::encode_mysql_protocol(DtcJob *job)
 	pos = encode_field_def(job, bc, pkt_nr);
 	if (!pos)
 		return NULL;
-	//Different MYSQL Version.
-	//pos = encode_eof(pos, ++pkt_nr);
-	//if (!pos)
-	//	return NULL;
+
+	if(job->mr.eof_packet_new == false)
+	{
+		//Old MYSQL Version.
+		pos = encode_eof(pos, pkt_nr);
+		if (!pos)
+			return NULL;
+	}
+
 	BufferChain *prow = encode_row_data(job, pos, pkt_nr);
 	if (prow) {
 		pos = prow;
@@ -1436,7 +1441,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	if(bok == false)
 	{
 		nrp = 1 /*fields count info*/ +
-			job.mr.get_need_array().size() /*fields def*/ + 0 /*eof*/ +
+			job.mr.get_need_array().size() /*fields def*/ + (job.mr.eof_packet_new ? 0 : 1) /*eof*/ +
 			(job.result ? job.result->total_rows() : 0) /*row data*/ +
 			1 /*eof*/;
 	}
@@ -1567,7 +1572,7 @@ int Packet::encode_result_mysql(DtcJob &job, int mtu, uint32_t ts)
 	if(bok == false)
 	{
 		nrp = 1 /*fields count info*/ +
-			job.mr.get_need_array().size() /*fields def*/ + 0 /*eof*/ +
+			job.mr.get_need_array().size() /*fields def*/ + (job.mr.eof_packet_new ? 0 : 1) /*eof*/ +
 			(job.result ? job.result->total_rows() : 0) /*row data*/ +
 			1 /*eof*/;
 	}

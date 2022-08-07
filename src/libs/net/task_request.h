@@ -69,6 +69,7 @@ public:
 		resourceId(0),
 		resourceSeq(0),
 		dtc_header_id(0),
+		eof_packet_new(false),
 		cb(NULL), layer(0)
 	{
 	};
@@ -116,6 +117,7 @@ private:
 	std::string result;
 	uint32_t seq_number;
 	uint16_t request_cmd;
+	bool eof_packet_new;
 	std::string m_sql;
 	std::string dbname;
 	uint8_t mysql_seq_id;
@@ -131,6 +133,8 @@ public:
 	void SetOwnerClient(CClientAgent * client);
 	CClientAgent * OwnerClient();
 	void ClearOwnerClient();
+
+	bool get_eof_packet_new() {return eof_packet_new;}
 
 	int DecodeAgentRequest();
 	inline void SaveRecvedResult(char * buff, int len, int pktcnt)

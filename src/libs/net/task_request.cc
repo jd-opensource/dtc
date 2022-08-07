@@ -136,16 +136,22 @@ int CTaskRequest::do_mysql_protocol_parse()
 
 	input_packet_length --;
 	p++;
+	int count = 0;
 
 	if (*p == 0x0) {
 		p++;
 		input_packet_length--;
+		count++;
 	}
 
 	if (*p == 0x01) {
 		p++;
 		input_packet_length--;
+		count++;
 	}
+	if(count == 2)
+		eof_packet_new = true;
+		
 	m_sql.assign(p, input_packet_length);
 	log4cplus_debug("sql: \"%s\"", m_sql.c_str());
 
