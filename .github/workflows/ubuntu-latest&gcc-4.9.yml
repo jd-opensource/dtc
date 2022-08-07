@@ -116,6 +116,7 @@ jobs:
         mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"
 
     - name: Testing CacheOnly
+      if: ${{ env.secret_account != '' }}
       run: |
         cd ${{github.workspace}}/tests
         docker ps -a
