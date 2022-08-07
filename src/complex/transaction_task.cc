@@ -84,7 +84,7 @@ void encode_mysql_header(CBufferChain *r, int len, uint8_t pkt_num)
 	*(r->data + 3) = pkt_num;
 }
 
-CBufferChain *encode_eof(CBufferChain *bc, uint8_t pkt_nr)
+CBufferChain *encode_eof(CBufferChain *bc, uint8_t &pkt_nr)
 {
 	CBufferChain *nbc = bc;
 	my_result_set_eof eof;
@@ -104,7 +104,7 @@ CBufferChain *encode_eof(CBufferChain *bc, uint8_t pkt_nr)
 	memcpy(r->data + sizeof(MYSQL_HEADER_SIZE), &eof, sizeof(eof));
 	r->usedBytes = sizeof(MYSQL_HEADER_SIZE) + sizeof(eof);
 	r->nextBuffer = NULL;
-	encode_mysql_header(r, sizeof(eof), pkt_nr);
+	encode_mysql_header(r, sizeof(eof), pkt_nr++);
 
 	nbc->nextBuffer = r;
 	nbc = nbc->nextBuffer;
@@ -469,10 +469,13 @@ CBufferChain* TransactionTask::encode_mysql_protocol(CTaskRequest *request)
 	if (!pos)
 		return NULL;
 
-	//Different MYSQL Version.
-	//pos = encode_eof(pos, ++pkt_nr);
-	//if (!pos)
-	//	return NULL;
+	if(request->get_eof_packet_new() == false)
+	{
+		//Different MYSQL Version.
+		pos = encode_eof(pos, pkt_nr);
+		if (!pos)
+			return NULL;
+	}
 
 	CBufferChain *prow = encode_row_data(m_DBConn, pos, pkt_nr);
 	if (prow) {

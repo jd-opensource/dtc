@@ -59,9 +59,9 @@ LINK_LIBRARIES(libmysqlclient.a)
 
 ADD_DEFINITIONS ("-g -fPIC -fpermissive -std=gnu++11 -DOMN_PLATFORM_UNIX -Wl,--no-undefined -Xlinker -zmuldefs")
 ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
-ADD_EXECUTABLE (data_lifecycle_manager ${SRC_LIST} ../connector/database_connection.cc)
-TARGET_LINK_LIBRARIES(data_lifecycle_manager libdtcd.a libdaemons.a libstat.a libcommon.a liblog4cplus.a libyaml-cpp.a libz64.a libsqlparser.a libmysqlclient.a libmxml.a)
-redefine_file_macro(data_lifecycle_manager)
+ADD_EXECUTABLE (data-lifecycle-manager ${SRC_LIST} ../connector/database_connection.cc)
+TARGET_LINK_LIBRARIES(data-lifecycle-manager libdtcd.a libdaemons.a libstat.a libcommon.a liblog4cplus.a libyaml-cpp.a libz64.a libsqlparser.a libmysqlclient.a libmxml.a)
+redefine_file_macro(data-lifecycle-manager)
 
 if(jdtestOpen)
     cmake_minimum_required(VERSION 2.8.8)

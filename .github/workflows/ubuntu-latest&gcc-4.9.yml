@@ -46,6 +46,7 @@ jobs:
         sudo apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
         python -m pip install --upgrade pip
         pip install pytest
+        pip install pymysql
       
     - name: cmake project
       run: |
@@ -73,13 +74,18 @@ jobs:
         cp build/src/agent-watchdog/agent-watchdog dockerfiles/devel/
         cp build/src/complex/async-connector dockerfiles/devel/
         cp build/src/connector/connector dockerfiles/devel/
-        cp build/src/data_lifecycle/data_lifecycle_manager dockerfiles/devel/
+        cp build/src/data_lifecycle/data-lifecycle-manager dockerfiles/devel/
         cp build/src/hwcserver/hwcserver dockerfiles/devel/
 
         cd dockerfiles/devel/
 
         docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:CacheOnly .
         docker push ${{ secrets.DOCKER_USERNAME }}/devel:CacheOnly
+
+    - name: Run devel CacheOnly docker
+      if: ${{ env.secret_account != '' }}
+      run: |
+        docker run --name CacheOnly -p 20015:20015 -d ${{ secrets.DOCKER_USERNAME }}/devel:CacheOnly /usr/local/dtc/dtcd -d
 
     - name: publish devel Cache with Database docker
       if: ${{ env.secret_account != '' }}
@@ -110,7 +116,10 @@ jobs:
         mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"
 
     - name: Testing CacheOnly
-
+      if: ${{ env.secret_account != '' }}
       run: |
         cd ${{github.workspace}}/tests
+        docker ps -a
+        mysql -h127.0.0.1 -P20015 -uroot -proot -e "insert into opensource(uid, name) values(1, 'hello') where uid = 1;"
+        mysql -h127.0.0.1 -P20015 -uroot -proot -e "select uid, name from opensouce where uid = 1;"
         pytest
