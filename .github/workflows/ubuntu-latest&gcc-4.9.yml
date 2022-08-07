@@ -117,7 +117,7 @@ jobs:
     - name: Testing CacheOnly
       run: |
         cd ${{github.workspace}}/tests
-        pytest
         docker ps -a
         mysql -h127.0.0.1 -P20015 -uroot -proot -e "insert into opensource(uid, name) values(1, 'hello') where uid = 1;"
         mysql -h127.0.0.1 -P20015 -uroot -proot -e "select uid, name from opensouce where uid = 1;"
+        pytest
