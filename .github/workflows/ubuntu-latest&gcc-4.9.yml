@@ -113,7 +113,7 @@ jobs:
         docker run --name dtc -p 20015:20015 -v ${{github.workspace}}/tests/conf/:/etc/dtc/ -d ${{ secrets.DOCKER_USERNAME }}/devel:all /usr/local/dtc/dtcd -d
         docker ps
         cd ${{github.workspace}}/tests
-        pytest test_dtcd_datasource.s1.py     
+        pytest test_dtcd_datasource_s1.py     
         docker stop dtc
         docker rm dtc 
 
