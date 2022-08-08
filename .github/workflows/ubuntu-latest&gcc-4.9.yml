@@ -10,7 +10,7 @@ env:
   secret_account: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:        
-  build:
+  build-and-test:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
@@ -110,9 +110,13 @@ jobs:
         cp -f conf/log4cplus.conf tests/conf/ 
         cp -f dockerfiles/devel/dtc.dbaddition.s1.yaml tests/conf/dtc.yaml
         mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s1.sql;"
+        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"    
+        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "desc opensource;"            
         docker run --name dtc -p 20015:20015 -v ${{github.workspace}}/tests/conf/:/etc/dtc/ -d ${{ secrets.DOCKER_USERNAME }}/devel:all /usr/local/dtc/dtcd -d
         docker ps
         cd ${{github.workspace}}/tests
+        sleep 5s
+        docker logs dtc
         pytest test_dtcd_datasource_s1.py     
         docker stop dtc
         docker rm dtc 
