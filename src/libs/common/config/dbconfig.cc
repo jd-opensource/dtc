@@ -487,7 +487,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         }
         else if(dtc_config["primary"]["table"])
         {
-            tblName = STRDUP(node.as<string>().c_str());
+            tblName = STRDUP(dtc_config["primary"]["table"].as<string>().c_str());
         }
         else
         {
