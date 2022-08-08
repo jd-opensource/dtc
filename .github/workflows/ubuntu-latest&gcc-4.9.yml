@@ -102,14 +102,14 @@ jobs:
         docker stop dtc
         docker rm dtc 
 
-    - name: Testing Cache with Datasource Scene 1(Single DB and Single Table)
+    - name: Testing Cache with Datasource Scene 1 (Single DB and Single Table)
       if: ${{ env.secret_account != '' }}
       run: |
         cd ${{github.workspace}}
         mkdir -p tests/conf/
         cp -f conf/log4cplus.conf tests/conf/ 
         cp -f dockerfiles/devel/dtc.dbaddition.s1.yaml tests/conf/dtc.yaml
-        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source init.s1.sql;"
+        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s1.sql;"
         docker run --name dtc -p 20015:20015 -v ${{github.workspace}}/tests/conf/:/etc/dtc/ -d ${{ secrets.DOCKER_USERNAME }}/devel:all /usr/local/dtc/dtcd -d
         docker ps
         cd ${{github.workspace}}/tests
@@ -117,18 +117,18 @@ jobs:
         docker stop dtc
         docker rm dtc 
 
-#    - name: Testing Cache with Datasource Scene 2(Single DB and Sharding Table)
+#    - name: Testing Cache with Datasource Scene 2 (Single DB and Sharding Table)
 #      if: ${{ env.secret_account != '' }}
 #      run: |
 #        cd ${{github.workspace}}/tests
 #        docker ps -a
-#        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source init.s2.sql;"
+#        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s2.sql;"
 #        pytest test_dtcd_datasource.s2.py
 
-#    - name: Testing Cache with Datasource Scene 3(Sharding DB and Sharding Table)
+#    - name: Testing Cache with Datasource Scene 3 (Sharding DB and Sharding Table)
 #      if: ${{ env.secret_account != '' }}
 #      run: |
 #        cd ${{github.workspace}}/tests
 #        docker ps -a
-#        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source init.s3.sql;"
+#        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s3.sql;"
 #        pytest test_dtcd_datasource.s3.py        
