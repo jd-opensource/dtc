@@ -52,6 +52,7 @@ def test_select():
     sql = "select uid, name from opensource where uid = 1"
     cursor.execute(sql)
     results = cursor.fetchall()
+    assert len(results) == 1
     for row in results:
         uid = row[0]
         name = row[1]
@@ -65,6 +66,7 @@ def test_update():
     cursor = db.cursor()
     sql = "select uid, name from opensource where uid = 1"
     cursor.execute(sql)
+    assert len(results) == 1
     results = cursor.fetchall()
     for row in results:
         uid = row[0]
@@ -79,6 +81,7 @@ def test_update():
     cursor.execute(sql)
     db.commit()
     rowsaffected = cursor.rowcount
+    print("affected rows: %s" % (rowsaffected))
     assert rowsaffected == 1
     cursor.close()
 
@@ -86,6 +89,7 @@ def test_update():
     sql = "select uid, name from opensource where uid = 1"
     cursor.execute(sql)
     results = cursor.fetchall()
+    assert len(results) == 1
     for row in results:
         uid = row[0]
         name = row[1]
