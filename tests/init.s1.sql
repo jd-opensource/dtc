@@ -4,5 +4,4 @@ CREATE TABLE `opensource` (
   `city` varchar(50),
   `sex` int(11) ,
   `age` int(11) ,
-  PRIMARY KEY (`uid`)
 )DEFAULT CHARSET=utf8;

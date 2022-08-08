@@ -380,6 +380,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
     else{
         machineCnt = 0;
     }
+    log4cplus_info("YAML 2 AAAAAAAA");
     //Depoly
     if(dtc_config["primary"][layer]) //cache.datasource mode
     {
@@ -410,6 +411,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
     {
         depoly = SINGLE;
     }
+    log4cplus_info("YAML 2 BBBBBBBBB");
     //DB Name
     if(dtc_config["primary"][layer]) //cache.datasource mode
     {
@@ -429,7 +431,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
     }
     dstype = 0;
     checkTable = 1;
-
+log4cplus_info("YAML 2 CCCCCCCCCCCCCCC");
     //TODO: string key supporting.
     // key-hash dll
     //if (load_key_hash(raw) != 0)
@@ -437,6 +439,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
 
     if(dtc_config["primary"][layer])
     {
+        log4cplus_info("YAML 2 DDDDDDDDDDDDDD");
         if ((depoly & 1) == 0) {    //single db
             if (strchr(dbName, '%') != NULL) {
                 log4cplus_error(
@@ -466,7 +469,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
                 snprintf(dbFormat, strlen(dbName) + 3, "%s%%d", dbName);
             }
         }
-
+log4cplus_info("YAML 2 EEEEEEEEEEEEEEEEE");
         database_max_count = dtc_config["primary"][layer]["real"].size();
         if (database_max_count < 0 || database_max_count > 10000) {
             log4cplus_error("%s", "invalid [DATABASE_CONF].DbMax");
@@ -478,7 +481,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
                 dbMod);
             database_max_count = dbMod;
         }
-    
+    log4cplus_info("YAML 2 1111111111111");
         //Table section with DATABASE_IN_ADDITION.
         YAML::Node node = dtc_config["primary"][layer]["sharding"]["table"]["prefix"];
         if(node)
@@ -494,7 +497,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             log4cplus_error("table name not defined");
             return -1;
         }
-
+log4cplus_info("YAML 2 22222222222");
         if ((depoly & 2) == 0) {
             if (strchr(tblName, '%') != NULL) {
                 log4cplus_error(
@@ -549,7 +552,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             tblFormat = tblName;
         }
     }
-
+log4cplus_info("YAML 2 33333333333333333");
     fieldCnt = dtc_config["primary"]["cache"]["field"].size();
     if (fieldCnt <= 0 || fieldCnt > 240) {
         log4cplus_error("invalid [TABLE_CONF].field_count:%d", fieldCnt);
@@ -568,7 +571,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         log4cplus_error("invalid [TABLE_CONF].IndexFieldCount");
         return -1;
     }
-
+log4cplus_info("YAML 2 4444444444");
     ordIns = 0;
     if (ordIns < 0) {
         log4cplus_error("bad [TABLE_CONF].ServerOrderInsert");
@@ -621,13 +624,13 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             }
         }
         /* Helper number alter */
-        m->gprocs[0] = raw->get_int_val(NULL, "Procs", 10);
+        m->gprocs[0] = raw->get_int_val(NULL, "Procs", 1);
         if (m->gprocs[0] < 1)
             m->gprocs[0] = 0;
-        m->gprocs[1] = raw->get_int_val(NULL, "WriteProcs", 10);
+        m->gprocs[1] = raw->get_int_val(NULL, "WriteProcs", 1);
         if (m->gprocs[1] < 1)
             m->gprocs[1] = 0;
-        m->gprocs[2] = raw->get_int_val(NULL, "CommitProcs", 10);
+        m->gprocs[2] = raw->get_int_val(NULL, "CommitProcs", 1);
         if (m->gprocs[2] < 1)
             m->gprocs[2] = 0;
         /* Helper Queue Size */
