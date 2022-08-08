@@ -24,6 +24,7 @@
 #include "log/log.h"
 #include "dtc_global.h"
 #include <sstream>
+#include <unistd.h>
 
 WatchDogHelper::WatchDogHelper(WatchDog *watchdog, int sec, const char *path,
 			       int machine_conf, int role, int backlog,
@@ -90,7 +91,12 @@ void WatchDogHelper::exec()
 	Thread *helperThread =
 		new Thread(watchdog_object_name_, Thread::ThreadTypeProcess);
 	helperThread->initialize_thread();
-	argv[0] = (char *)connector_name[type_];
+	char filedir[260] = {0};
+	char filepath[260] = {0};
+	getcwd(filedir, 260);
+	sprintf(filepath, "%s/%s", filedir, connector_name[type_]);
+	log4cplus_info("connector path:%s", filepath);
+	argv[0] = filepath;
 	execv(argv[0], argv);
 	log4cplus_error("helper[%s] execv error: %m", argv[0]);
 }
