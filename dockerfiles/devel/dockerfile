@@ -1,4 +1,4 @@
-FROM centos:centos8
+FROM ubuntu
 
 ARG basepath=/usr/local/dtc
 ARG confpath=/etc/dtc
