@@ -66,8 +66,8 @@ def test_update():
     cursor = db.cursor()
     sql = "select uid, name from opensource where uid = 1"
     cursor.execute(sql)
-    assert len(results) == 1
     results = cursor.fetchall()
+    assert len(results) == 1
     for row in results:
         uid = row[0]
         name = row[1]
@@ -99,3 +99,31 @@ def test_update():
     cursor.close()
 
     db.close()
+
+def test_delete():
+    print("----delete----")
+    db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
+    cursor = db.cursor()
+    sql = "select uid, name from opensource where uid = 1"
+    cursor.execute(sql)
+    results = cursor.fetchall()
+    assert len(results) == 1
+    cursor.close()
+
+    cursor = db.cursor()
+    sql = "delete from opensource where uid = 1"
+    cursor.execute(sql)
+    db.commit()
+    rowsaffected = cursor.rowcount
+    print("affected rows: %s" % (rowsaffected))
+    assert rowsaffected == 1
+    cursor.close()
+
+    cursor = db.cursor()
+    sql = "select uid, name from opensource where uid = 1"
+    cursor.execute(sql)
+    results = cursor.fetchall()
+    assert len(results) == 0
+    cursor.close()
+
+    db.close()    
