@@ -93,7 +93,16 @@ void WatchDogHelper::exec()
 	helperThread->initialize_thread();
 	char filedir[260] = {0};
 	char filepath[260] = {0};
-	getcwd(filedir, 260);
+	char fn[260] = {0};
+	snprintf(fn, sizeof(fn), "/proc/%d/cwd", getpid());
+	int rv = readlink(fn, filedir, sizeof(filedir) - 1);
+	if(rv > 0)
+	{
+		filedir[rv] = '\0';
+		std::string str = filedir;
+		rv = str.rfind('/');
+		strcpy(filedir, email.substr(0, rv).c_str());
+	}
 	sprintf(filepath, "%s/%s", filedir, connector_name[type_]);
 	log4cplus_info("connector path:%s", filepath);
 	argv[0] = filepath;
