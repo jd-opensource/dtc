@@ -94,7 +94,7 @@ void WatchDogHelper::exec()
 	char filedir[260] = {0};
 	char filepath[260] = {0};
 	char fn[260] = {0};
-	snprintf(fn, sizeof(fn), "/proc/%d/cwd", getpid());
+	snprintf(fn, sizeof(fn), "/proc/%d/exe", getpid());
 	int rv = readlink(fn, filedir, sizeof(filedir) - 1);
 	if(rv > 0)
 	{
