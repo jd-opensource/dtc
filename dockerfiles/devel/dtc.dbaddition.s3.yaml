@@ -1,0 +1,32 @@
+# 
+# DTC configure file. v2
+# Cache with Datasource Test cases.
+# Scene 1: Sharding DB Sharding Table
+#
+props:
+  log.level: debug
+  listener.port.dtc: 20016
+  shm.mem.size: 100 #MB
+
+connection: &connection
+  addr: 127.0.0.1:3307
+  user: username
+  pwd: password 
+
+primary:
+  table: &table opensource
+  cache:
+    field:
+      - {name: &key uid, type: signed, size: 4}
+      - {name: name, type: string, size: 50}
+      - {name: city, type: string, size: 50}
+      - {name: sex, type: signed, size: 4}
+      - {name: age, type: signed, size: 4}
+  hot:
+    logic:
+      {db: &db layer2, table: *table, connection: *connection}
+    real:
+      - {addr: mysql-01.local:3306, user: username, pwd: password, db: single}
+    sharding:
+      key: *key
+      table: {prefix: [*table, _], start: 0, last: 9}

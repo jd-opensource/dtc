@@ -127,3 +127,7 @@ def test_delete():
     cursor.close()
 
     db.close()    
+
+'''
+def test_check_tablename():
+'''    
