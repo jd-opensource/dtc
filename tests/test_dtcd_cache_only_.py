@@ -8,6 +8,7 @@ def test_insert_with_single_quotes():
     cursor.execute(sql)
     db.commit()
     rowsaffected = cursor.rowcount
+    print("affected rows: %s" % (rowsaffected))
     cursor.close()
     db.close()
     assert rowsaffected == 1
