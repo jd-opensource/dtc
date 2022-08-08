@@ -78,6 +78,7 @@ def test_update():
     cursor.execute(sql)
     db.commit()
     rowsaffected = cursor.rowcount
+    assert rowsaffected == 1
     cursor.close()
 
     cursor = db.cursor()
