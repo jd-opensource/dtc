@@ -481,12 +481,20 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
     
         //Table section with DATABASE_IN_ADDITION.
         YAML::Node node = dtc_config["primary"][layer]["sharding"]["table"]["prefix"];
-        if(!node)
+        if(node)
         {
-            log4cplus_error("[TABLE_CONF].table_name not defined");
+            tblName = STRDUP(get_merge_string(node).c_str());
+        }
+        else if(dtc_config["primary"]["table"])
+        {
+            tblName = STRDUP(node.as<string>().c_str());
+        }
+        else
+        {
+            log4cplus_error("table name not defined");
             return -1;
         }
-        tblName = STRDUP(get_merge_string(node).c_str());
+
         if ((depoly & 2) == 0) {
             if (strchr(tblName, '%') != NULL) {
                 log4cplus_error(
@@ -524,7 +532,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         YAML::Node node = dtc_config["primary"]["table"];
         if(!node)
         {
-            log4cplus_error("[TABLE_CONF].table_name not defined");
+            log4cplus_error("table name not defined");
             return -1;
         }
         tblName = STRDUP(node.as<string>().c_str());

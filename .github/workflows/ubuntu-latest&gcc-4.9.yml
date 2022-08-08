@@ -96,7 +96,9 @@ jobs:
         cp -f conf/log4cplus.conf tests/conf/ 
         cp -f dockerfiles/devel/dtc.cacheonly.yaml tests/conf/dtc.yaml
         docker run --name dtc -p 20015:20015 -v ${{github.workspace}}/tests/conf/:/etc/dtc/ -d ${{ secrets.DOCKER_USERNAME }}/devel:all /usr/local/dtc/dtcd -d
+        sleep 5s
         docker ps
+        docker logs dtc
         cd ${{github.workspace}}/tests
         pytest test_dtcd_cache_only.py     
         docker stop dtc
@@ -113,9 +115,9 @@ jobs:
         mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"    
         mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "desc opensource;"            
         docker run --name dtc -p 20015:20015 -v ${{github.workspace}}/tests/conf/:/etc/dtc/ -d ${{ secrets.DOCKER_USERNAME }}/devel:all /usr/local/dtc/dtcd -d
+        sleep 5s
         docker ps
         cd ${{github.workspace}}/tests
-        sleep 5s
         docker logs dtc
         pytest test_dtcd_datasource_s1.py     
         docker stop dtc

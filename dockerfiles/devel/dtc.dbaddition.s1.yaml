@@ -26,4 +26,4 @@ primary:
     logic:
       {db: &db layer2, table: *table, connection: *connection}
     real:
-      - {addr: mysql, user: root, pwd: 123456, db: single}
+      - {addr: mysql, user: root, pwd: 123456, db: layer2}
