@@ -101,7 +101,7 @@ void WatchDogHelper::exec()
 		filedir[rv] = '\0';
 		std::string str = filedir;
 		rv = str.rfind('/');
-		strcpy(filedir, email.substr(0, rv).c_str());
+		strcpy(filedir, str.substr(0, rv).c_str());
 	}
 	sprintf(filepath, "%s/%s", filedir, connector_name[type_]);
 	log4cplus_info("connector path:%s", filepath);
