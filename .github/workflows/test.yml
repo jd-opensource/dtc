@@ -20,11 +20,10 @@ jobs:
           MYSQL_ROOT_PASSWORD: 123456
         options: --name "mysql"
     
-    steps:
-    - uses: actions/checkout@v3
-    
+    steps:   
     - name: Init db table
       run: |
+        sleep 10s
         mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
         mysql -h127.0.0.1 -uroot -p123456 -e "show databases;"  
     
