@@ -22,7 +22,7 @@ jobs:
     
     - name: Init db table
       run: |
-        sleep 10s
+        sleep 20s
         mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
         mysql -h127.0.0.1 -uroot -p123456 -e "show databases;"  
     
