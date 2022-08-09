@@ -23,8 +23,9 @@ COPY run.sh $basepath/run.sh
 
 RUN chmod +x $basepath/dtcd
 RUN chmod +x $basepath/connector
+RUN chmod +x $basepath/run.sh
 
-CMD ["/usr/bin/sh", "$basepath/run.sh"]
+CMD ["/usr/bin/sh", "/usr/local/dtc/run.sh"]
 
 #COPY dtc.yaml $confpath/dtc.yaml
 #COPY log4cplus.conf $confpath/log4cplus.conf

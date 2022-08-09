@@ -123,7 +123,7 @@ jobs:
       uses: docker://docker.io/kfysck/devel:all
       with:
         github: "/github/workspace/tests/conf"
-        entrypoint: /usr/local/dtc/run.sh
+#        entrypoint: /usr/local/dtc/run.sh
 
     - name: After docker
       if: ${{ env.secret_account != '' }}
