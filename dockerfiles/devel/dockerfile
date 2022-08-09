@@ -19,5 +19,8 @@ COPY connector $basepath/connector
 COPY data-lifecycle-manager $basepath/data-lifecycle-manager
 COPY hwcserver $basepath/hwcserver
 
+RUN chmod +x $basepath/dtcd
+RUN chmod +x $basepath/connector
+
 #COPY dtc.yaml $confpath/dtc.yaml
 #COPY log4cplus.conf $confpath/log4cplus.conf

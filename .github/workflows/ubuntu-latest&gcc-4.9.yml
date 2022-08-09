@@ -91,18 +91,6 @@ jobs:
         docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:latest .
         docker push ${{ secrets.DOCKER_USERNAME }}/devel:latest
 
-    - name: before docker
-      run: |
-        cd ${{github.workspace}}
-        mkdir -p tests/conf/
-        cp -f conf/log4cplus.conf tests/conf/ 
-        cp -f dockerfiles/devel/dtc.cacheonly.yaml tests/conf/dtc.yaml
-    
-    - name: my docker test
-      uses: docker://docker.io/kfysck/devel:all
-      with:
-        entrypoint: /usr/local/dtc/dtcd -d
-
     - name: Testing CacheOnly
       if: ${{ env.secret_account != '' }}
       run: |
