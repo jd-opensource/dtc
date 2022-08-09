@@ -14,11 +14,8 @@ jobs:
     services:
       mysql:
         image: mysql
-        ports:
-          - 3306:3306
         env: 
           MYSQL_ROOT_PASSWORD: 123456
-        options: --name "mysql"
     
     steps:
     - uses: actions/checkout@v3
@@ -39,4 +36,5 @@ jobs:
     - name: my docker test
       uses: docker://docker.io/kfysck/devel:all
       with:
-        entrypoint: /usr/local/dtc/dtcd -d
+        entrypoint: /usr/local/dtc/dtcd
+        cmd: -d
