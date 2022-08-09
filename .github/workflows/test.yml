@@ -14,6 +14,8 @@ jobs:
     services:
       mysql:
         image: mysql
+        ports:
+          - 3306:3306
         env: 
           MYSQL_ROOT_PASSWORD: 123456
     
@@ -22,7 +24,7 @@ jobs:
     
     - name: Init db table
       run: |
-        sleep 20s
+        sleep 10s
         mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
         mysql -h127.0.0.1 -uroot -p123456 -e "show databases;"  
     
