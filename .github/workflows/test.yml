@@ -18,8 +18,7 @@ jobs:
           - 3306:3306
         env: 
           MYSQL_ROOT_PASSWORD: 123456
-        volumes:
-          - /usr/local/etc/:/etc/dtc/
+        options: -v /usr/local/etc/:/etc/dtc/:rw
     
     steps:
     - uses: actions/checkout@v3
