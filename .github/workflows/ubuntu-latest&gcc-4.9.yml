@@ -88,6 +88,9 @@ jobs:
         docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:all .
         docker push ${{ secrets.DOCKER_USERNAME }}/devel:all
 
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:latest .
+        docker push ${{ secrets.DOCKER_USERNAME }}/devel:latest
+
     - name: Testing CacheOnly
       if: ${{ env.secret_account != '' }}
       run: |

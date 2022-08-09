@@ -115,8 +115,8 @@ int WatchDogHelper::verify()
 	struct sockaddr_un unaddr;
 	int len = init_unix_socket_address(&unaddr, path_);
 	log4cplus_info("verify path:%s" , path_);
-	/* delay 100ms and verify socket */
-	usleep(100 * 1000);
+	/* delay 1000ms and verify socket */
+	usleep(1000 * 1000);
 	int s = socket(unaddr.sun_family, SOCK_STREAM, 0);
 	if (connect(s, (sockaddr *)&unaddr, len) < 0) {
 		close(s);
