@@ -107,22 +107,31 @@ jobs:
         docker stop dtc
         docker rm dtc 
 
-    - name: Testing Cache with Datasource Scene 1 (Single DB and Single Table)
+    - name: Before docker
       if: ${{ env.secret_account != '' }}
       run: |
         cd ${{github.workspace}}
         mkdir -p tests/conf/
         cp -f conf/log4cplus.conf tests/conf/ 
-        cp -f dockerfiles/devel/dtc.dbaddition.s1.yaml tests/conf/dtc.yaml
+        cp -f dockerfiles/devel/dtc.dbaddition.s1.yaml tests/conf/dtc.yaml        
         mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s1.sql;"
         mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"    
         mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "desc opensource;"            
-        docker run --name dtc -p 20015:20015 -v ${{github.workspace}}/tests/conf/:/etc/dtc/ -d ${{ secrets.DOCKER_USERNAME }}/devel:all /usr/local/dtc/dtcd -d
+
+    - name: Testing Cache with Datasource Scene 1 (Single DB and Single Table)
+      if: ${{ env.secret_account != '' }}
+      uses: docker://docker.io/kfysck/devel:all
+      with:
+        github: "/github/workspace/tests/conf"
+
+    - name: After docker
+      if: ${{ env.secret_account != '' }}
+      run: |
         sleep 5s
         docker ps
-        cd ${{github.workspace}}/tests
+        #cd ${{github.workspace}}/tests
         docker logs dtc
-        pytest test_dtcd_datasource_s1.py     
+        #pytest test_dtcd_datasource_s1.py     
         docker stop dtc
         docker rm dtc 
 
