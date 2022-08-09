@@ -38,6 +38,5 @@ jobs:
     - name: my docker test
       uses: docker://docker.io/kfysck/devel:all
       with:
-        options: -v ${{github.workspace}}/tests/conf/:/etc/dtc/
         entrypoint: /usr/local/dtc/dtcd
         cmd: -d
