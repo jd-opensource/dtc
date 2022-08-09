@@ -5,7 +5,7 @@
 #
 props:
   log.level: debug
-  listener.port.dtc: 20016
+  listener.port.dtc: 20015
   shm.mem.size: 100 #MB
 
 connection: &connection
