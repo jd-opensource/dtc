@@ -49,6 +49,7 @@ jobs:
         pip install pymysql
       
     - name: cmake project
+      if: false
       run: |
         cd ${{github.workspace}}
         mkdir build
@@ -72,7 +73,8 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
     
     - name: Publish devel docker
-      if: ${{ env.secret_account != '' }}
+#      if: ${{ env.secret_account != '' }}
+      if: false
       run: |
         cd ${{github.workspace}}
         cp build/src/core/dtcd dockerfiles/devel/
