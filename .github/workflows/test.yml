@@ -19,7 +19,7 @@ jobs:
         env: 
           MYSQL_ROOT_PASSWORD: 123456
         volumes:
-          - ~/:/etc/dtc/
+          - /usr/local/etc/:/etc/dtc/
     
     steps:
     - uses: actions/checkout@v3
@@ -34,8 +34,8 @@ jobs:
       run: |
         cd ${{github.workspace}}
         mkdir -p tests/conf/
-        cp -f conf/log4cplus.conf ~/ 
-        cp -f dockerfiles/devel/dtc.cacheonly.yaml ~/dtc.yaml
+        cp -f conf/log4cplus.conf /usr/local/etc/ 
+        cp -f dockerfiles/devel/dtc.cacheonly.yaml /usr/local/etc/dtc.yaml
     
     - name: my docker test
       uses: docker://docker.io/kfysck/devel:all
