@@ -5,8 +5,12 @@ on:
   pull_request:
     
 jobs:        
-  start-mysql:
+  build-and-test:
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
+    
     services:
       mysql:
         image: mysql
@@ -14,28 +18,27 @@ jobs:
           - 3306:3306
         env: 
           MYSQL_ROOT_PASSWORD: 123456
-    steps:
-      - name: Init db table
-        run: |
-          sleep 10s
-          mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
-          mysql -h127.0.0.1 -uroot -p123456 -e "show databases;"  
-          
-  start-dtc:
-    runs-on: ubuntu-latest
-    container:
-      image: docker://docker.io/kfysck/devel:all
-      volumes:
-        - ${{github.workspace}}/tests/conf:/etc/dtc/
+    
     steps:
     - uses: actions/checkout@v3
-        
+    
+    - name: Init db table
+      run: |
+        sleep 10s
+        mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
+        mysql -h127.0.0.1 -uroot -p123456 -e "show databases;"  
+    
     - name: before docker
       run: |
         cd ${{github.workspace}}
         mkdir -p tests/conf/
-        sudo cp -f conf/log4cplus.conf tests/conf/
-        sudo cp -f dockerfiles/devel/dtc.cacheonly.yaml tests/conf/
+        cp -f conf/log4cplus.conf tests/conf/ 
+        cp -f dockerfiles/devel/dtc.cacheonly.yaml tests/conf/dtc.yaml
     
     - name: my docker test
-      run: /usr/local/dtc/dtcd -d
+      uses: docker://docker.io/kfysck/devel:all
+      with:
+        volumes: |
+          - ${{github.workspace}}/tests/conf/:/etc/dtc/
+        entrypoint: /usr/local/dtc/dtcd
+        cmd: -d
