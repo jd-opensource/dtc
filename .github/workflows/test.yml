@@ -38,6 +38,4 @@ jobs:
         sudo cp -f dockerfiles/devel/dtc.cacheonly.yaml tests/conf/
     
     - name: my docker test
-      with:
-        entrypoint: /usr/local/dtc/dtcd
-        cmd: -d
+      run: /usr/local/dtc/dtcd -d
