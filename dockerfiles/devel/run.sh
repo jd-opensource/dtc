@@ -6,6 +6,7 @@ while [ $sleep_count -le 100 ]
 do
     if [ -f "/etc/dtc/dtc.yaml" ]; then 
         echo "Start running process."
+        echo $1
         if [ $1 == "dtc"]; then
             /usr/local/dtc/dtcd -d
         elif [ $1 == "agent"]; then
