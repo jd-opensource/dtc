@@ -72,6 +72,9 @@ jobs:
         volumes:
           - /usr/local/etc:/etc/dtc/
         options: --name dtc
+        env:
+          DTC_BIN: dtcd
+          DTC_ARGV: -d
     steps:
       - uses: actions/checkout@v3
       
@@ -112,7 +115,7 @@ jobs:
 #          - 12001:12001
 #        volumes:
 #          - /usr/local/etc:/etc/dtc/
-#        options: --name agent --entrypoint "./usr/local/dtc/run.sh agent"
+#        options: --name agent --entrypoint "/usr/local/dtc/run.sh agent"
       dtc:
         image: docker.io/kfysck/devel:all
         ports:
@@ -167,6 +170,9 @@ jobs:
         volumes:
           - /usr/local/etc:/etc/dtc/
         options: --name dtc
+        env:
+          DTC_BIN: dtcd
+          DTC_ARGV: -d
     steps:
       - uses: actions/checkout@v3
       
