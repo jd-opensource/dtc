@@ -11,6 +11,7 @@ INCLUDE_DIRECTORIES(
 
 #添加.so/.a文件搜索路径，相当于gcc -L
 LINK_DIRECTORIES(
+    .
     ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/libs
     ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/libs
     ${PROJECT_SOURCE_DIR}/src/libs/hsql/libs)

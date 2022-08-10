@@ -50,6 +50,7 @@ jobs:
           cp build/src/data_lifecycle/data-lifecycle-manager dockerfiles/devel/
           cp build/src/hwcserver/hwcserver dockerfiles/devel/
           cp build/src/rule/librule.so dockerfiles/devel/
+          cp src/libs/hsql/libs/libsqlparser.so /usr/local/lib/
 
           cd dockerfiles/devel/
 
