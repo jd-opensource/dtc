@@ -2,11 +2,17 @@ confpath=/etc/dtc
 
 echo $INPUT_GITHUB
 if [ -d $INPUT_GITHUB ]; then 
-    echo "1111111111"
+    echo "Start copy conf files"
     cp $INPUT_GITHUB/dtc.yaml $confpath/dtc.yaml
     cp $INPUT_GITHUB/log4cplus.conf $confpath/log4cplus.conf
+
+    ping mysql
+    apt update
+    apt install -y net-tools
+    netstat
+
+    echo "Start running process."
+    /usr/local/dtc/dtcd -d
+else
+    echo "No conf file found in INPUT_GITHUB"
 fi
-
-echo "22222222"
-
-/usr/local/dtc/dtcd -d
