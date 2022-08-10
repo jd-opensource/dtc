@@ -16,9 +16,10 @@ COPY dtcagent $basepath/dtcagent
 COPY agent-watchdog $basepath/agent-watchdog
 COPY async-connector $basepath/async-connector
 COPY connector $basepath/connector
-COPY librule.so $basepath/librule.so
 COPY data-lifecycle-manager $basepath/data-lifecycle-manager
 COPY hwcserver $basepath/hwcserver
+COPY librule.so $basepath/librule.so
+COPY libsqlparser.so $basepath/libsqlparser.so
 
 RUN apt update
 RUN apt install -y iputils-ping
