@@ -34,14 +34,12 @@ jobs:
           make
 
       - name: Login docker hub
-        if: ${{ env.secret_account != '' }}
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       
       - name: Publish devel docker
-        if: ${{ env.secret_account != '' }}
         run: |
           cd ${{github.workspace}}
           cp build/src/core/dtcd dockerfiles/devel/
@@ -76,6 +74,7 @@ jobs:
           - 20015:20015
         volumes:
           - /usr/local/etc:/etc/dtc/
+        options: --name dtc
     steps:
       - uses: actions/checkout@v3
       
@@ -91,7 +90,6 @@ jobs:
           python-version: "3.7"
 
       - name: Init db table
-        if: ${{ env.secret_account != '' }}
         run: |
           sleep 5s
           mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
@@ -100,7 +98,6 @@ jobs:
           mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"        
 
       - name: Copy conf files.
-        if: ${{ env.secret_account != '' }}
         run: |
           cd ${{github.workspace}}
           mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s1.sql;"
@@ -110,7 +107,6 @@ jobs:
           sudo cp -f dockerfiles/devel/dtc.dbaddition.s1.yaml /usr/local/etc/dtc.yaml
 
       - name: Run Testing Cases
-        if: ${{ env.secret_account != '' }}
         run: |
           docker ps -a
           docker logs dtc
@@ -118,7 +114,6 @@ jobs:
           pytest test_dtcd_datasource_s1.py               
 
 #    - name: Testing Cache with Datasource Scene 2 (Single DB and Sharding Table)
-#      if: ${{ env.secret_account != '' }}
 #      run: |
 #        cd ${{github.workspace}}/tests
 #        docker ps -a
@@ -126,7 +121,6 @@ jobs:
 #        pytest test_dtcd_datasource_s2.py
 
 #    - name: Testing Cache with Datasource Scene 3 (Sharding DB and Sharding Table)
-#      if: ${{ env.secret_account != '' }}
 #      run: |
 #        cd ${{github.workspace}}/tests
 #        docker ps -a
