@@ -15,11 +15,10 @@ jobs:
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
-    container: ubuntu
     
     services:
-      mysql:
-        image: mysql
+      mysql-datasource:
+        image: mysql:latest
         ports:
           - 3306:3306
         env: 
@@ -31,10 +30,10 @@ jobs:
     
     - name: Install gcc env
       run: |
-        echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial main" | tee -a /etc/apt/sources.list
-        echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial universe" | tee -a /etc/apt/sources.list
-        apt update
-        apt install gcc-4.9 g++-4.9
+        echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial main" | sudo tee -a /etc/apt/sources.list
+        echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial universe" | sudo tee -a /etc/apt/sources.list
+        sudo apt update
+        sudo apt install gcc-4.9 g++-4.9
       shell: bash
 
     - name: Set up Python 3.7
@@ -44,7 +43,7 @@ jobs:
       
     - name: Install dependency
       run: |
-        apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
+        sudo apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
         python -m pip install --upgrade pip
         pip install pytest
         pip install pymysql
