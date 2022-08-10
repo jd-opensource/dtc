@@ -123,15 +123,16 @@ jobs:
       uses: docker://docker.io/kfysck/devel:all
       with:
         github: "/github/workspace/tests/conf"
+        run: -d
 
     - name: After docker
       if: ${{ env.secret_account != '' }}
       run: |
         sleep 5s
         docker ps
-        #cd ${{github.workspace}}/tests
         docker logs dtc
-        #pytest test_dtcd_datasource_s1.py     
+        cd ${{github.workspace}}/tests
+        pytest test_dtcd_datasource_s1.py     
         docker stop dtc
         docker rm dtc 
 
