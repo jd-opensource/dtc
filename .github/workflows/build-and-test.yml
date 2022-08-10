@@ -106,13 +106,13 @@ jobs:
     needs: building
     runs-on: ubuntu-latest
     services:
-      agent:
-        image: docker.io/kfysck/devel:all
-        ports:
-          - 12001:12001
-        volumes:
-          - /usr/local/etc:/etc/dtc/
-        options: --name agent --entrypoint "./usr/local/dtc/run.sh agent"
+#      agent:
+#        image: docker.io/kfysck/devel:all
+#        ports:
+#          - 12001:12001
+#        volumes:
+#          - /usr/local/etc:/etc/dtc/
+#        options: --name agent --entrypoint "./usr/local/dtc/run.sh agent"
       dtc:
         image: docker.io/kfysck/devel:all
         ports:

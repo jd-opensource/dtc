@@ -21,6 +21,9 @@ COPY hwcserver $basepath/hwcserver
 COPY librule.so $basepath/librule.so
 COPY libsqlparser.so $basepath/libsqlparser.so
 
+COPY librule.so /usr/local/lib/librule.so
+COPY libsqlparser.so /usr/local/lib/libsqlparser.so
+
 RUN apt update
 RUN apt install -y iputils-ping
 RUN apt install -y net-tools
@@ -33,7 +36,7 @@ RUN chmod +x $basepath/connector
 RUN chmod +x $basepath/run.sh
 
 #CMD ["dtc"]
-#ENTRYPOINT ["/usr/local/dtc/run.sh"]
+CMD ["/usr/local/dtc/run.sh", "dtc"]
 
 #COPY dtc.yaml $confpath/dtc.yaml
 #COPY log4cplus.conf $confpath/log4cplus.conf
