@@ -1,4 +1,4 @@
-name: ubuntu-latest&gcc-4.9
+name: build-and-test
 
 on: push
     
@@ -112,6 +112,8 @@ jobs:
       - name: Run Testing Cases
         if: ${{ env.secret_account != '' }}
         run: |
+          docker ps -a
+          docker logs dtc
           cd ${{github.workspace}}/tests
           pytest test_dtcd_datasource_s1.py               
 
