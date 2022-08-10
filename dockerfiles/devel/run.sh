@@ -2,7 +2,7 @@
 
 sleep_count=0
 echo "111111111111"
-while (($sleep_count <= 10))
+while [ $sleep_count -le 10 ]
 do
     if [ -f "/etc/dtc/dtc.yaml" ]; then 
         echo "Start running process."
@@ -10,7 +10,8 @@ do
     else
         echo "sleeping"
         sleep 10s
-        (($sleep_count++))
+        let sleep_count+=1
     fi
 done
+
 echo "Timeout waitting for dtc conf files."
