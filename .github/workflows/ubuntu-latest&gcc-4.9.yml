@@ -66,22 +66,22 @@ jobs:
       - name: Publish devel docker
         if: ${{ env.secret_account != '' }}
         run: |
-        cd ${{github.workspace}}
-        cp build/src/core/dtcd dockerfiles/devel/
-        cp build/src/agent/dtcagent dockerfiles/devel/
-        cp build/src/agent-watchdog/agent-watchdog dockerfiles/devel/
-        cp build/src/complex/async-connector dockerfiles/devel/
-        cp build/src/connector/connector dockerfiles/devel/
-        cp build/src/data_lifecycle/data-lifecycle-manager dockerfiles/devel/
-        cp build/src/hwcserver/hwcserver dockerfiles/devel/
+          cd ${{github.workspace}}
+          cp build/src/core/dtcd dockerfiles/devel/
+          cp build/src/agent/dtcagent dockerfiles/devel/
+          cp build/src/agent-watchdog/agent-watchdog dockerfiles/devel/
+          cp build/src/complex/async-connector dockerfiles/devel/
+          cp build/src/connector/connector dockerfiles/devel/
+          cp build/src/data_lifecycle/data-lifecycle-manager dockerfiles/devel/
+          cp build/src/hwcserver/hwcserver dockerfiles/devel/
 
-        cd dockerfiles/devel/
+          cd dockerfiles/devel/
 
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:all .
-        docker push ${{ secrets.DOCKER_USERNAME }}/devel:all
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:all .
+          docker push ${{ secrets.DOCKER_USERNAME }}/devel:all
 
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:latest .
-        docker push ${{ secrets.DOCKER_USERNAME }}/devel:latest
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/devel:latest
 
   before-run-dtc:
     needs: building
@@ -129,10 +129,10 @@ jobs:
     - name: Run Testing Cases
       if: ${{ env.secret_account != '' }}
       run: |
-#        docker ps
-#        docker logs dtc
         cd ${{github.workspace}}/tests
         pytest test_dtcd_datasource_s1.py     
+#        docker ps
+#        docker logs dtc
 #        docker stop dtc
 #        docker rm dtc 
 
