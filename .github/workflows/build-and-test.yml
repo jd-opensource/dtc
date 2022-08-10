@@ -59,7 +59,7 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/devel:latest
 
 # Testing Cache Only
-  test-cache-only:
+  test-dtc-cache-only:
     needs: building
     runs-on: ubuntu-latest
     services:
@@ -99,7 +99,7 @@ jobs:
           pytest test_dtcd_cache_only.py     
 
 # Testing Cache with Datasource Scene 1 (Single DB and Single Table)
-  test-dbsource-s1:
+  test-dtc-dbsource-single-db-single-table:
     needs: building
     runs-on: ubuntu-latest
     services:
