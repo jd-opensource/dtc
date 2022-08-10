@@ -7,7 +7,7 @@ if [ -d $INPUT_GITHUB ]; then
     cp $INPUT_GITHUB/log4cplus.conf $confpath/log4cplus.conf
 
     netstat
-    ping mysql
+    ping mysql-datasource
 
     echo "Start running process."
     /usr/local/dtc/dtcd -d
