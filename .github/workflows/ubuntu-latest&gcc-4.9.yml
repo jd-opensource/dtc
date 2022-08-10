@@ -107,11 +107,6 @@ jobs:
         - 20015:20015
       volumes:
         - /usr/local/etc:/etc/dtc/
-
-  run-test:
-    needs: run-dtc
-    runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: Install python dependency
