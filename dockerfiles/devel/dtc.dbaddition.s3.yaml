@@ -1,7 +1,7 @@
 # 
 # DTC configure file. v2
 # Cache with Datasource Test cases.
-# Scene 1: Sharding DB Sharding Table
+# Scene 3: Sharding DB Sharding Table
 #
 props:
   log.level: debug

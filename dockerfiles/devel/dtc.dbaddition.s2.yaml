@@ -1,7 +1,9 @@
 # 
 # DTC configure file. v2
 # Cache with Datasource Test cases.
-# Scene 1: Single DB Sharding Table
+# Scene 2: Single DB Sharding Table
+# table name: opensource_0 ... opensource_9
+# total: 10 tables.
 #
 props:
   log.level: debug
@@ -26,7 +28,7 @@ primary:
     logic:
       {db: &db layer2, table: *table, connection: *connection}
     real:
-      - {addr: mysql-01.local:3306, user: username, pwd: password, db: single}
+      - {addr: mysql:3306, user: root, pwd: 123456, db: layer2}
     sharding:
       key: *key
       table: {prefix: [*table, _], start: 0, last: 9}

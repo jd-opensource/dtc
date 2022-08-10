@@ -99,7 +99,7 @@ jobs:
           pytest test_dtcd_cache_only.py     
 
 # Testing Cache with Datasource Scene 1 (Single DB and Single Table)
-  test-dtc-dbsource-S-db-S-table:
+  test-dtc-ds-S-db-S-table:
     needs: building
     runs-on: ubuntu-latest
     services:
@@ -134,16 +134,13 @@ jobs:
         run: |
           sleep 5s
           mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
-          mysql -h127.0.0.1 -uroot -p123456 -e "show databases;"
-          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source ${{github.workspace}}/script/init_table.sql;"
-          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"        
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s1.sql;"
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"    
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "desc opensource;"  
 
       - name: Copy conf files.
         run: |
-          cd ${{github.workspace}}
-          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s1.sql;"
-          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"    
-          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "desc opensource;"     
+          cd ${{github.workspace}}   
           sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
           sudo cp -f dockerfiles/devel/dtc.dbaddition.s1.yaml /usr/local/etc/dtc.yaml
 
@@ -155,12 +152,58 @@ jobs:
           cd ${{github.workspace}}/tests
           pytest test_dtcd_datasource_s1.py               
 
-#    - name: Testing Cache with Datasource Scene 2 (Single DB and Sharding Table)
-#      run: |
-#        cd ${{github.workspace}}/tests
-#        docker ps -a
-#        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s2.sql;"
-#        pytest test_dtcd_datasource_s2.py
+# Testing Cache with Datasource Scene 2 (Single DB and Multi Table)
+  test-dtc-ds-S-db-M-table:
+    needs: building
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - 3306:3306
+        env: 
+          MYSQL_ROOT_PASSWORD: 123456
+      dtc:
+        image: docker.io/kfysck/devel:all
+        ports:
+          - 20015:20015
+        volumes:
+          - /usr/local/etc:/etc/dtc/
+        options: --name dtc
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install python dependency
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install pymysql
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+
+      - name: Init db table
+        run: |
+          sleep 5s
+          mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s2.sql;"
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"    
+
+      - name: Copy conf files.
+        run: |
+          cd ${{github.workspace}}   
+          sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
+          sudo cp -f dockerfiles/devel/dtc.dbaddition.s2.yaml /usr/local/etc/dtc.yaml
+
+      - name: Run Testing Cases
+        run: |
+          sleep 5s
+          docker ps -a
+          docker logs dtc
+          cd ${{github.workspace}}/tests
+          pytest test_dtcd_datasource_s2.py                     
 
 #    - name: Testing Cache with Datasource Scene 3 (Sharding DB and Sharding Table)
 #      run: |
