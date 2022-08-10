@@ -108,6 +108,7 @@ jobs:
 
       - name: Run Testing Cases
         run: |
+          sleep 5s
           docker ps -a
           docker logs dtc
           cd ${{github.workspace}}/tests
