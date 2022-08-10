@@ -1,16 +1,14 @@
-confpath=/etc/dtc
+#!/bin/bash
 
-echo $INPUT_GITHUB
-if [ -d $INPUT_GITHUB ]; then 
-    echo "Start copy conf files"
-    cp $INPUT_GITHUB/dtc.yaml $confpath/dtc.yaml
-    cp $INPUT_GITHUB/log4cplus.conf $confpath/log4cplus.conf
-
-    netstat
-    ping mysql-datasource -c 3
-
-    echo "Start running process."
-    /usr/local/dtc/dtcd -d
-else
-    echo "No conf file found in INPUT_GITHUB"
-fi
+sleep_count=0
+while (($sleep_count <= 100))
+do
+    if [ -f "/etc/dtc/dtc.yaml" ]; then 
+        echo "Start running process."
+        /usr/local/dtc/dtcd -d
+    else
+        sleep 1
+        (($sleep_count++))
+    fi
+done
+echo "Timeout waitting for dtc conf files."
