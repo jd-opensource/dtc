@@ -11,6 +11,8 @@ do
             /usr/local/dtc/dtcd -d
         elif [ $1 == "agent"]; then
             /usr/local/dtc/agent
+        else
+            exit 0
         fi
     else
         echo "sleeping"

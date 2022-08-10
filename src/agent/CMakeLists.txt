@@ -30,6 +30,7 @@ LINK_DIRECTORIES(
     .
     ${PROJECT_SOURCE_DIR}/src/libs/mxml/libs
     ${PROJECT_SOURCE_DIR}/src/libs/hsql/libs
+    ${PROJECT_SOURCE_DIR}/build/src/rule/
 )
 
 LINK_LIBRARIES(rt) 
