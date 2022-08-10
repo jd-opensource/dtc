@@ -84,7 +84,7 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/devel:latest
 
   before-run-dtc:
-    needs: building
+    needs: [building, start-mysql]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
