@@ -10,12 +10,8 @@ env:
   secret_account: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:        
-  build-and-test:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+  start-mysql:
     runs-on: ubuntu-latest
-    
     services:
       mysql-datasource:
         image: mysql:5.7
@@ -23,57 +19,53 @@ jobs:
           - 3306:3306
         env: 
           MYSQL_ROOT_PASSWORD: 123456
-#        options: --name "mysql"
-    
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Install gcc env
-      run: |
-        echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial main" | sudo tee -a /etc/apt/sources.list
-        echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial universe" | sudo tee -a /etc/apt/sources.list
-        sudo apt update
-        sudo apt install gcc-4.9 g++-4.9
-      shell: bash
+      - uses: actions/checkout@v3
 
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v2
-      with:
-          python-version: "3.7"
+      - name: Init db table
+        if: ${{ env.secret_account != '' }}
+        run: |
+          sleep 10s
+          mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
+          mysql -h127.0.0.1 -uroot -p123456 -e "show databases;"
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source ${{github.workspace}}/script/init_table.sql;"
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"        
+
+  building:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
       
-    - name: Install dependency
-      run: |
-        sudo apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
-        python -m pip install --upgrade pip
-        pip install pytest
-        pip install pymysql
-      
-    - name: cmake project
-      run: |
-        cd ${{github.workspace}}
-        mkdir build
-        cd build
-        cmake ../
-        make
-
-    - name: Init db table
-      if: ${{ env.secret_account != '' }}
-      run: |
-        mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
-        mysql -h127.0.0.1 -uroot -p123456 -e "show databases;"
-        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source ${{github.workspace}}/script/init_table.sql;"
-        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"        
-
-    - name: Login docker hub
-      if: ${{ env.secret_account != '' }}
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Install gcc env
+        run: |
+          echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial main" | sudo tee -a /etc/apt/sources.list
+          echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial universe" | sudo tee -a /etc/apt/sources.list
+          sudo apt update
+          sudo apt install gcc-4.9 g++-4.9
+        shell: bash
+        
+      - name: Install dependency
+        run: |
+          sudo apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
     
-    - name: Publish devel docker
-      if: ${{ env.secret_account != '' }}
-      run: |
+      - name: cmake project
+        run: |
+          cd ${{github.workspace}}
+          mkdir build
+          cd build
+          cmake ../
+          make
+
+      - name: Login docker hub
+        if: ${{ env.secret_account != '' }}
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Publish devel docker
+        if: ${{ env.secret_account != '' }}
+        run: |
         cd ${{github.workspace}}
         cp build/src/core/dtcd dockerfiles/devel/
         cp build/src/agent/dtcagent dockerfiles/devel/
@@ -91,50 +83,58 @@ jobs:
         docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:latest .
         docker push ${{ secrets.DOCKER_USERNAME }}/devel:latest
 
-    - name: Testing CacheOnly
-      if: ${{ env.secret_account != '' }}
-      run: |
-        cd ${{github.workspace}}
-        mkdir -p tests/conf/
-        cp -f conf/log4cplus.conf tests/conf/ 
-        cp -f dockerfiles/devel/dtc.cacheonly.yaml tests/conf/dtc.yaml
-        docker run --name dtc -p 20015:20015 -v ${{github.workspace}}/tests/conf/:/etc/dtc/ -d ${{ secrets.DOCKER_USERNAME }}/devel:all /usr/local/dtc/dtcd -d
-        sleep 5s
-        docker ps
-        docker logs dtc
-        cd ${{github.workspace}}/tests
-        pytest test_dtcd_cache_only.py     
-        docker stop dtc
-        docker rm dtc 
+  before-run-dtc:
+    needs: building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Copy conf files.
+        if: ${{ env.secret_account != '' }}
+        run: |
+          cd ${{github.workspace}}
+          sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
+          sudo cp -f dockerfiles/devel/dtc.dbaddition.s1.yaml /usr/local/etc/dtc.yaml
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s1.sql;"
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"    
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "desc opensource;"     
 
-    - name: Before docker
-      if: ${{ env.secret_account != '' }}
-      run: |
-        cd ${{github.workspace}}
-        mkdir -p tests/conf/
-        cp -f conf/log4cplus.conf tests/conf/ 
-        cp -f dockerfiles/devel/dtc.dbaddition.s1.yaml tests/conf/dtc.yaml        
-        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s1.sql;"
-        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"    
-        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "desc opensource;"            
+  run-dtc:
+    needs: before-run-dtc
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/kfysck/devel:all
+      ports:
+        - 20015:20015
+      volumes:
+        - /usr/local/etc:/etc/dtc/
 
-    - name: Testing Cache with Datasource Scene 1 (Single DB and Single Table)
-      if: ${{ env.secret_account != '' }}
-      uses: docker://docker.io/kfysck/devel:all
+  run-test:
+    needs: run-dtc
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install python dependency
+      run: |
+        sudo apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
+        python -m pip install --upgrade pip
+        pip install pytest
+        pip install pymysql
+
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v2
       with:
-        github: "/github/workspace/tests/conf"
-        run: -d
+          python-version: "3.7"
 
-    - name: After docker
+    - name: Run Testing Cases
       if: ${{ env.secret_account != '' }}
       run: |
-        sleep 5s
-        docker ps
-        docker logs dtc
+#        docker ps
+#        docker logs dtc
         cd ${{github.workspace}}/tests
         pytest test_dtcd_datasource_s1.py     
-        docker stop dtc
-        docker rm dtc 
+#        docker stop dtc
+#        docker rm dtc 
 
 #    - name: Testing Cache with Datasource Scene 2 (Single DB and Sharding Table)
 #      if: ${{ env.secret_account != '' }}
