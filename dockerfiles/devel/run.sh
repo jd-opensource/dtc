@@ -6,10 +6,8 @@ if [ -d $INPUT_GITHUB ]; then
     cp $INPUT_GITHUB/dtc.yaml $confpath/dtc.yaml
     cp $INPUT_GITHUB/log4cplus.conf $confpath/log4cplus.conf
 
-    ping mysql
-    apt update
-    apt install -y net-tools
     netstat
+    ping mysql
 
     echo "Start running process."
     /usr/local/dtc/dtcd -d
