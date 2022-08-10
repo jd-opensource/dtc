@@ -1,0 +1,16 @@
+<? xml version="1.0" encoding="utf-8" ?>
+<ALL>
+  <VERSION value="2"/>
+  <AGENT_CONFIG AgentId="1"/>
+  <BUSINESS_MODULE>
+    <MODULE Mid="1319" Name="test1" AccessToken="000013192869b7fcc3f362a97f72c0908a92cb6d" ListenOn="0.0.0.0:12001" Backlog="500" Client_Connections="900"
+        Preconnect="true" Server_Connections="1" Hash="chash" Timeout="3000" ReplicaEnable="true" ModuleIDC="LF" MainReport="false" InstanceReport="false" AutoRemoveReplica="true" TopPercentileEnable="false" TopPercentileDomain="127.0.0.1" TopPercentilePort="20020">
+      <CACHESHARDING  Sid="293" ShardingReplicaEnable="true" ShardingName="test">
+        <INSTANCE idc="LF" Role="replica" Enable="false" Addr="127.0.0.1:20000:1"/>
+        <INSTANCE idc="LF" Role="master" Enable="true" Addr="dtc:20015:1"/>
+      </CACHESHARDING>
+    </MODULE>
+  </BUSINESS_MODULE>
+<VERSION value="2" />
+    <LOG_MODULE LogSwitch="0" RemoteLogSwitch="1" RemoteLogIP="127.0.0.1" RemoteLogPort="9997" />
+</ALL>

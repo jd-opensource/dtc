@@ -49,6 +49,7 @@ jobs:
           cp build/src/connector/connector dockerfiles/devel/
           cp build/src/data_lifecycle/data-lifecycle-manager dockerfiles/devel/
           cp build/src/hwcserver/hwcserver dockerfiles/devel/
+          cp build/src/rule/librule.so dockerfiles/devel/
 
           cd dockerfiles/devel/
 
@@ -97,6 +98,55 @@ jobs:
           docker logs dtc
           cd ${{github.workspace}}/tests
           pytest test_dtcd_cache_only.py     
+
+# Testing Cache Only via Agent.
+  test-agent-cache-only:
+    if: false
+    needs: building
+    runs-on: ubuntu-latest
+    services:
+      agent:
+        image: docker.io/kfysck/devel:all
+        ports:
+          - 12001:12001
+        volumes:
+          - /usr/local/etc:/etc/dtc/
+        options: --name agent --entrypoint "./usr/local/dtc/run.sh agent"
+      dtc:
+        image: docker.io/kfysck/devel:all
+        ports:
+          - 20015:20015
+        volumes:
+          - /usr/local/etc:/etc/dtc/
+        options: --name dtc
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install python dependency
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install pymysql
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+
+      - name: Copy conf files.
+        run: |
+          cd ${{github.workspace}}   
+          sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
+          sudo cp -f dockerfiles/devel/dtc.cacheonly.yaml /usr/local/etc/dtc.yaml
+          sudo cp -f dockerfiles/devel/agent.cacheonly.xml /usr/local/etc/agent.xml
+
+      - name: Run Testing Cases
+        run: |
+          sleep 5s
+          docker ps -a
+          docker logs dtc
+          cd ${{github.workspace}}/tests
+          pytest test_dtcd_cache_only.py               
 
 # Testing Cache with Datasource Scene 1 (Single DB and Single Table)
   test-dtc-ds-S-db-S-table:
@@ -154,6 +204,7 @@ jobs:
 
 # Testing Cache with Datasource Scene 2 (Single DB and Multi Table)
   test-dtc-ds-S-db-M-table:
+    if: false
     needs: building
     runs-on: ubuntu-latest
     services:

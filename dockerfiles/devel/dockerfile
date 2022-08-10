@@ -16,6 +16,7 @@ COPY dtcagent $basepath/dtcagent
 COPY agent-watchdog $basepath/agent-watchdog
 COPY async-connector $basepath/async-connector
 COPY connector $basepath/connector
+COPY librule.so $basepath/librule.so
 COPY data-lifecycle-manager $basepath/data-lifecycle-manager
 COPY hwcserver $basepath/hwcserver
 
@@ -26,10 +27,11 @@ RUN apt install -y net-tools
 COPY run.sh $basepath/run.sh
 
 RUN chmod +x $basepath/dtcd
+RUN chmod +x $basepath/dtcagent
 RUN chmod +x $basepath/connector
 RUN chmod +x $basepath/run.sh
 
-CMD ["./usr/local/dtc/run.sh"]
+CMD ["./usr/local/dtc/run.sh", "dtc"]
 
 #COPY dtc.yaml $confpath/dtc.yaml
 #COPY log4cplus.conf $confpath/log4cplus.conf
