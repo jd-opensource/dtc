@@ -32,8 +32,8 @@ RUN chmod +x $basepath/dtcagent
 RUN chmod +x $basepath/connector
 RUN chmod +x $basepath/run.sh
 
-CMD ["dtc"]
-ENTRYPOINT ["./usr/local/dtc/run.sh"]
+#CMD ["dtc"]
+#ENTRYPOINT ["/usr/local/dtc/run.sh"]
 
 #COPY dtc.yaml $confpath/dtc.yaml
 #COPY log4cplus.conf $confpath/log4cplus.conf
