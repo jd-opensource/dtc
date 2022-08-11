@@ -185,7 +185,7 @@ jobs:
           DTC_BIN: agent-watchdog
           DTC_ARGV1: -a
           DTC_ARGV2: -f
-          DTC_ARGV2: -c
+          DTC_ARGV3: -c
     steps:
       - uses: actions/checkout@v3
       
