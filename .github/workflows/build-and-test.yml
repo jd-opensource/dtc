@@ -154,6 +154,7 @@ jobs:
         run: |
           sleep 5s
           docker ps -a
+          ping dtc -c 3
           docker logs agent
           docker logs dtc
           cd ${{github.workspace}}/tests
