@@ -1,18 +1,33 @@
-cache:
-   LOG_LEVEL: debug
-   BIND_ADDR: '*:20015/tcp'
-   DTCID: 20015
-   MAX_USE_MEM_MB: 100
-   DTC_MODE: 1 #1: cache only, 0: database in addition.
-vhot:
-   addr: 127.0.0.1:3307
-   username: root
-   password: root
-   database: sharding
-data_lifecycle:
-   SingleQueryCount: 10
-   DataSQLRule: 'status = 0'
-   OperateTimeRule: '00 01 * * * ?'
-   LifeCycleTableName: 'data_lifecycle_table'
-   HotDBName: 'HOT'
-   ColdDBName: 'COLD'
+# 
+# DTC configure file. v2
+# Layered Storage Test Cases.
+#
+props:
+  log.level: debug
+  listener.port.dtc: 20015
+  shm.mem.size: 100 #MB
+
+connection: &connection
+  addr: 127.0.0.1:3307
+  user: username
+  pwd: password 
+
+primary:
+  table: &table opensource
+  cache:
+    field:
+      - {name: &key uid, type: signed, size: 4}
+      - {name: name, type: string, size: 50}
+      - {name: city, type: string, size: 50}
+      - {name: sex, type: signed, size: 4}
+      - {name: age, type: signed, size: 4}
+  hot:
+    logic:
+      {db: &db layer2, table: *table, connection: *connection}
+    real:
+      - {addr: mysql:3306, user: root, pwd: 123456, db: layer2}
+  full:
+    logic:
+      {db: layer3, table: *table, connection: *connection}
+    real:
+      - {addr: mysql:3306, user: root, pwd: 123456, db: layer3}      

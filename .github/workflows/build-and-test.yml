@@ -106,6 +106,7 @@ jobs:
 # Testing Cache Only via Agent.
   test-agent-cache-only:
     needs: building
+    if: false
     runs-on: ubuntu-latest
     services:
       dtc:
@@ -161,8 +162,75 @@ jobs:
           docker logs dtc
           cd ${{github.workspace}}/tests
           pytest test_agent_cache_only.py               
+
+# Testing Layered Storage.
+  test-agent-layered:
+    needs: building
+    runs-on: ubuntu-latest
+    services:
+      dtc:
+        image: docker.io/kfysck/devel:all
+        ports:
+          - 20015:20015
+        volumes:
+          - /usr/local/etc:/etc/dtc/
+        options: --name dtc
+        env:
+          DTC_BIN: dtcd
+          DTC_ARGV: -d        
+      agent:
+        image: docker.io/kfysck/devel:all
+        ports:
+          - 12001:12001
+        volumes:
+          - /usr/local/etc:/etc/dtc/
+        options: --name agent
+        env:
+          DTC_BIN: agent-watchdog
+          DTC_ARGV: -a
+          DTC_ARGV2: -f
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install python dependency
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install pymysql
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+
+      - name: Init db table
+        run: |
+          sleep 5s
+          mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s1.sql;"
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"    
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "desc opensource;"  
+          mysql -h127.0.0.1 -uroot -p123456 -e "create database layer3;"
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer3 -e "source tests/init.s1.sql;"
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer3 -e "show tables;"    
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer3 -e "desc opensource;"            
+
+      - name: Copy conf files.
+        run: |
+          cd ${{github.workspace}}   
+          sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
+          sudo cp -f dockerfiles/devel/dtc.layered.yaml /usr/local/etc/dtc.yaml
+          sudo cp -f dockerfiles/devel/agent.layered.xml /usr/local/etc/agent.xml
+
+      - name: Run Testing Cases
+        run: |
+          sleep 5s
+          docker ps -a
+          netstat -ntpl
           docker logs agent
           docker logs dtc
+          cd ${{github.workspace}}/tests
+#          pytest test_agent_cache_only.py           
 
 # Testing Cache with Datasource Scene 1 (Single DB and Single Table)
   test-dtc-ds-S-db-S-table:
