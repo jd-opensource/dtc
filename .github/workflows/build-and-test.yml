@@ -73,8 +73,8 @@ jobs:
           - /usr/local/etc:/etc/dtc/
         options: --name dtc
         env:
-          DTC_BIN: dtcd
-          DTC_ARGV: -d
+          DTC_BIN: agent-watchdog
+          DTC_ARGV: -c
     steps:
       - uses: actions/checkout@v3
       
@@ -117,8 +117,8 @@ jobs:
           - /usr/local/etc:/etc/dtc/
         options: --name dtc
         env:
-          DTC_BIN: dtcd
-          DTC_ARGV: -d        
+          DTC_BIN: agent-watchdog
+          DTC_ARGV: -c        
       agent:
         image: docker.io/kfysck/devel:all
         ports:
@@ -223,7 +223,7 @@ jobs:
           docker logs agent
           cd ${{github.workspace}}/tests
           mysql -h127.0.0.1 -P12001 -uroot -p123456 -e "show databases;"
-          mysql -h127.0.0.1 -P12001 -uroot -p123456 -Dlayer2 -e "show tables;"
+#          mysql -h127.0.0.1 -P12001 -uroot -p123456 -Dlayer2 -e "show tables;"
 #          pytest test_agent_cache_only.py           
 
 # Testing Cache with Datasource Scene 1 (Single DB and Single Table)
@@ -245,8 +245,8 @@ jobs:
           - /usr/local/etc:/etc/dtc/
         options: --name dtc
         env:
-          DTC_BIN: dtcd
-          DTC_ARGV: -d
+          DTC_BIN: agent-watchdog
+          DTC_ARGV: -c
     steps:
       - uses: actions/checkout@v3
       
@@ -312,8 +312,8 @@ jobs:
           - /usr/local/etc:/etc/dtc/
         options: --name dtc
         env:
-          DTC_BIN: dtcd
-          DTC_ARGV: -d
+          DTC_BIN: agent-watchdog
+          DTC_ARGV: -c
     steps:
       - uses: actions/checkout@v3
       
