@@ -161,6 +161,8 @@ jobs:
           docker logs dtc
           cd ${{github.workspace}}/tests
           pytest test_agent_cache_only.py               
+          docker logs agent
+          docker logs dtc
 
 # Testing Cache with Datasource Scene 1 (Single DB and Single Table)
   test-dtc-ds-S-db-S-table:
