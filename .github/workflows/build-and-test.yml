@@ -150,7 +150,7 @@ jobs:
           cd ${{github.workspace}}   
           sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
           sudo cp -f dockerfiles/devel/dtc.cacheonly.yaml /usr/local/etc/dtc.yaml
-          sudo cp -f dockerfiles/devel/agent.single.dtcd /usr/local/etc/agent.xml
+          sudo cp -f dockerfiles/devel/agent.single.dtcd.xml /usr/local/etc/agent.xml
 
       - name: Run Testing Cases
         run: |
@@ -279,7 +279,7 @@ jobs:
           cd ${{github.workspace}}   
           sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
           sudo cp -f dockerfiles/devel/dtc.dbaddition.s1.yaml /usr/local/etc/dtc.yaml
-          sudo cp -f dockerfiles/devel/agent.single.dtcd /usr/local/etc/agent.xml          
+          sudo cp -f dockerfiles/devel/agent.single.dtcd.xml /usr/local/etc/agent.xml          
 
       - name: Run Testing Cases
         run: |
