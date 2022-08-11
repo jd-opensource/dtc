@@ -117,6 +117,8 @@ jobs:
         options: --name agent
         env:
           DTC_BIN: dtcagent
+          DTC_ARGV: -v
+          DTC_ARGV2: 7
       dtc:
         image: docker.io/kfysck/devel:all
         ports:
