@@ -152,6 +152,7 @@ jobs:
         run: |
           sleep 5s
           docker ps -a
+          docker logs agent
           docker logs dtc
           cd ${{github.workspace}}/tests
           pytest test_agent_cache_only.py               
@@ -212,6 +213,66 @@ jobs:
           docker logs dtc
           cd ${{github.workspace}}/tests
           pytest test_dtcd_datasource_s1.py               
+
+# Testing Cache with Datasource Scene 1 (Single DB and Single Table)
+  test-agent-ds-S-db-S-table:
+    needs: building
+    if: false
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - 3306:3306
+        env: 
+          MYSQL_ROOT_PASSWORD: 123456
+      dtc:
+        image: docker.io/kfysck/devel:all
+        ports:
+          - 20015:20015
+        volumes:
+          - /usr/local/etc:/etc/dtc/
+        options: --name dtc
+        env:
+          DTC_BIN: dtcd
+          DTC_ARGV: -d
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install python dependency
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          pip install pymysql
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.7"
+
+      - name: Init db table
+        run: |
+          sleep 5s
+          mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source tests/init.s1.sql;"
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"    
+          mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "desc opensource;"  
+
+      - name: Copy conf files.
+        run: |
+          cd ${{github.workspace}}   
+          sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
+          sudo cp -f dockerfiles/devel/dtc.dbaddition.s1.yaml /usr/local/etc/dtc.yaml
+          sudo cp -f dockerfiles/devel/agent.cacheonly.xml /usr/local/etc/agent.xml          
+
+      - name: Run Testing Cases
+        run: |
+          sleep 5s
+          docker ps -a
+          docker logs agent
+          docker logs dtc
+          cd ${{github.workspace}}/tests
+          pytest test_agent_datasource_s1.py                         
 
 # Testing Cache with Datasource Scene 2 (Single DB and Multi Table)
   test-dtc-ds-S-db-M-table:
