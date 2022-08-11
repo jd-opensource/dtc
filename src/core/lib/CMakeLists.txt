@@ -39,7 +39,7 @@ LINK_LIBRARIES(pthread)
 LINK_LIBRARIES(dl)
 
 #编译参数
-ADD_DEFINITIONS("-g -rdynamic -fPIC -fpermissive -std=gnu++11 -D_GLIBCXX_USE_CXX11_ABI=0 -export-dynamic -Wl,--version-script,dtcd.export.lst")
+ADD_DEFINITIONS("-g -rdynamic -fPIC -fpermissive -std=gnu++11 -D_GLIBCXX_USE_CXX11_ABI=0 -export-dynamic -Wl,--version-script,core.export.lst")
 
 #编译为.so/.a
 ADD_LIBRARY(dtcd_static ${SRC_LIST})

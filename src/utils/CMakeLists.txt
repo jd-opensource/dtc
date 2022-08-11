@@ -23,7 +23,7 @@ LINK_LIBRARIES(pthread)
 LINK_LIBRARIES(dl)
 
 #编译参数
-ADD_DEFINITIONS("-g -rdynamic -fPIC -D_CORE_ -fpermissive -std=gnu++11 -D_GLIBCXX_USE_CXX11_ABI=0 -export-dynamic -Wl,--version-script,dtcd.export.lst")
+ADD_DEFINITIONS("-g -rdynamic -fPIC -D_CORE_ -fpermissive -std=gnu++11 -D_GLIBCXX_USE_CXX11_ABI=0 -export-dynamic -Wl,--version-script,core.export.lst")
 ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 
 #编译为.so/.a
