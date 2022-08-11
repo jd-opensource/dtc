@@ -108,6 +108,16 @@ jobs:
     needs: building
     runs-on: ubuntu-latest
     services:
+      dtc:
+        image: docker.io/kfysck/devel:all
+        ports:
+          - 20015:20015
+        volumes:
+          - /usr/local/etc:/etc/dtc/
+        options: --name dtc
+        env:
+          DTC_BIN: dtcd
+          DTC_ARGV: -d        
       agent:
         image: docker.io/kfysck/devel:all
         ports:
@@ -119,16 +129,6 @@ jobs:
           DTC_BIN: dtcagent
           DTC_ARGV: -v
           DTC_ARGV2: 7
-      dtc:
-        image: docker.io/kfysck/devel:all
-        ports:
-          - 20015:20015
-        volumes:
-          - /usr/local/etc:/etc/dtc/
-        options: --name dtc
-        env:
-          DTC_BIN: dtcd
-          DTC_ARGV: -d        
     steps:
       - uses: actions/checkout@v3
       
@@ -137,6 +137,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest
           pip install pymysql
+          sudo apt update
+          sudo apt install -y net-tools
 
       - name: Set up Python 3.7
         uses: actions/setup-python@v2
@@ -148,13 +150,12 @@ jobs:
           cd ${{github.workspace}}   
           sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
           sudo cp -f dockerfiles/devel/dtc.cacheonly.yaml /usr/local/etc/dtc.yaml
-          sudo cp -f dockerfiles/devel/agent.cacheonly.xml /usr/local/etc/agent.xml
+          sudo cp -f dockerfiles/devel/agent.single.dtcd /usr/local/etc/agent.xml
 
       - name: Run Testing Cases
         run: |
           sleep 5s
           docker ps -a
-          ping dtc -c 3
           netstat -ntpl
           docker logs agent
           docker logs dtc
@@ -230,6 +231,17 @@ jobs:
           - 3306:3306
         env: 
           MYSQL_ROOT_PASSWORD: 123456
+      agent:
+        image: docker.io/kfysck/devel:all
+        ports:
+          - 12001:12001
+        volumes:
+          - /usr/local/etc:/etc/dtc/
+        options: --name agent
+        env:
+          DTC_BIN: dtcagent
+          DTC_ARGV: -v
+          DTC_ARGV2: 7          
       dtc:
         image: docker.io/kfysck/devel:all
         ports:
@@ -267,7 +279,7 @@ jobs:
           cd ${{github.workspace}}   
           sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
           sudo cp -f dockerfiles/devel/dtc.dbaddition.s1.yaml /usr/local/etc/dtc.yaml
-          sudo cp -f dockerfiles/devel/agent.cacheonly.xml /usr/local/etc/agent.xml          
+          sudo cp -f dockerfiles/devel/agent.single.dtcd /usr/local/etc/agent.xml          
 
       - name: Run Testing Cases
         run: |
