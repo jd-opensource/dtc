@@ -31,8 +31,9 @@ CoreEntry::~CoreEntry(void)
 
 void CoreEntry::exec()
 {
-	char *argv[1];
+	char *argv[2];
 
 	argv[0] = (char *)core_name;
+	argv[1] = NULL;
 	execv(argv[0], argv);
 }

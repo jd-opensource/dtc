@@ -34,6 +34,7 @@ RUN chmod +x $basepath/dtcd
 RUN chmod +x $basepath/dtcagent
 RUN chmod +x $basepath/connector
 RUN chmod +x $basepath/run.sh
+RUN chmod +x $basepath/async-connector
 
 ENV LD_LIBRARY_PATH=:/usr/local/lib
 
