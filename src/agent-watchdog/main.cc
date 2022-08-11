@@ -42,13 +42,13 @@ static struct option long_options[] = {
 		{ "version", no_argument, NULL, 'v' },
 		{ "data-lifecycle", no_argument, NULL,'l' },
 		{ "agent", no_argument, NULL,'a' },
-		{ "full-data", no_argument, NULL,'f' },
+		{ "async-connector", no_argument, NULL,'y' },
 		{ "sharding", no_argument, NULL,'s' },
 		{ "recovery", no_argument, NULL,'r' },
 		{ "core", no_argument, NULL,'c' },
 		{ NULL, 0, NULL, 0 } };
 
-static char short_options[] = "hvlafsr";
+static char short_options[] = "hvlaycsr";
 
 
 static int get_options(int argc, char **argv) {
@@ -78,7 +78,7 @@ static int get_options(int argc, char **argv) {
 		case 'a':
 			load_agent = 1;
 			break;
-		case 'f':
+		case 'y':
 			load_fulldata = 1;
 			break;
 		case 's':
@@ -107,7 +107,7 @@ static void show_usage(void) {
 	printf("  -a, --agent        			: load agent module\n");
 	printf("  -c, --core        			: load dtc core module\n");
 	printf("  -l, --data-lifecycle			: load data-lifecycle module\n");
-	printf("  -f, --full-data     			: load full-data module\n");
+	printf("  -y, --async-connector			: load async-connector module\n");
 	printf("  -s, --sharding      			: load sharding module\n");
 	printf("  -r, --recovery mode  			: auto restart when crashed\n");
 

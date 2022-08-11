@@ -5,9 +5,9 @@ sleep_count=0
 while [ $sleep_count -le 100 ]
 do
     if [ -f "/etc/dtc/dtc.yaml" ]; then 
-        echo "Start running process: "$DTC_BIN","$DTC_ARGV1","$DTC_ARGV2","$DTC_ARGV3
+        echo "Start running process: "$DTC_BIN","$DTC_ARGV
         cd /usr/local/dtc/
-        ./$DTC_BIN $DTC_ARGV1 $DTC_ARGV2 $DTV_ARGV3
+        ./$DTC_BIN $DTC_ARGV
         break
     else
         echo "sleeping: "$sleep_count"s"

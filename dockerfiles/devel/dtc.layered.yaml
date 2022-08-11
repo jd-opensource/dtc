@@ -1,6 +1,7 @@
 # 
 # DTC configure file. v2
 # Layered Storage Test Cases.
+# Without ShardingSphere.
 #
 props:
   log.level: debug
@@ -8,9 +9,9 @@ props:
   shm.mem.size: 100 #MB
 
 connection: &connection
-  addr: 127.0.0.1:3307
-  user: username
-  pwd: password 
+  addr: mysql:3306
+  user: root
+  pwd: 123456 
 
 primary:
   table: &table opensource

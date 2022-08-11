@@ -129,9 +129,6 @@ bool ConfigHelper::load_full_inst_info()
 {
 	memset(&full_instance, 0, sizeof(DBHost));
 
-	if(!dtc["COLD_MACHINE1"] || !dtc["DATABASE_CONF"])
-		return false;
-
 	if( !dtc["primary"]["full"]["logic"]["connection"]["addr"] || 
 		!dtc["primary"]["full"]["logic"]["connection"]["user"] ||
 		!dtc["primary"]["full"]["logic"]["connection"]["pwd"] ||
