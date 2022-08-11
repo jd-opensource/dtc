@@ -35,6 +35,8 @@ RUN chmod +x $basepath/dtcagent
 RUN chmod +x $basepath/connector
 RUN chmod +x $basepath/run.sh
 
+ENV LD_LIBRARY_PATH=:/usr/local/lib
+
 CMD ["/usr/local/dtc/run.sh"]
 
 #COPY dtc.yaml $confpath/dtc.yaml
