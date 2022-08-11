@@ -105,7 +105,6 @@ jobs:
 
 # Testing Cache Only via Agent.
   test-agent-cache-only:
-    if: false
     needs: building
     runs-on: ubuntu-latest
     services:
