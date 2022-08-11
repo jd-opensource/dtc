@@ -7,6 +7,7 @@
 #include "fulldata_entry.h"
 #include "main_entry.h"
 #include "cold_wipe_entry.h"
+#include "core_entry.h"
 #include "agent_entry.h"
 #include "proc_title.h"
 
@@ -29,6 +30,7 @@ static int show_version;
 static int load_datalife;
 static int load_agent;
 static int load_fulldata;
+static int load_core;
 int recovery_mode;
 int load_sharding;
 int load_all;
@@ -43,6 +45,7 @@ static struct option long_options[] = {
 		{ "full-data", no_argument, NULL,'f' },
 		{ "sharding", no_argument, NULL,'s' },
 		{ "recovery", no_argument, NULL,'r' },
+		{ "core", no_argument, NULL,'c' },
 		{ NULL, 0, NULL, 0 } };
 
 static char short_options[] = "hvlafsr";
@@ -84,7 +87,9 @@ static int get_options(int argc, char **argv) {
 		case 'r':
 			recovery_mode = 1;
 			break;					
-
+		case 'c':
+			load_core = 1;
+			break;				
 		default:
 			break;
 		}
@@ -100,6 +105,7 @@ static void show_usage(void) {
 	printf("  -h, --help             		: this help\n");
 	printf("  -v, --version          		: show version and exit\n");
 	printf("  -a, --agent        			: load agent module\n");
+	printf("  -c, --core        			: load dtc core module\n");
 	printf("  -l, --data-lifecycle			: load data-lifecycle module\n");
 	printf("  -f, --full-data     			: load full-data module\n");
 	printf("  -s, --sharding      			: load sharding module\n");
@@ -155,6 +161,21 @@ int start_data_lifecycle(WatchDog* wdog, int delay)
 	if (colddata_connector->new_proc_fork() < 0)
 		return -1;
 
+	return 0;
+}
+
+int start_core(WatchDog* wdog, int delay)
+{
+	// start dtcd core main process.
+	CoreEntry *core_entry = new CoreEntry(wdog, delay);
+	if (core_entry == NULL) {
+		log4cplus_error(
+			"create CoreEntry object failed, msg: %m");
+		return -1;
+	}
+	if (core_entry->new_proc_fork() < 0)
+		return -1;
+	
 	return 0;
 }
 
@@ -246,6 +267,11 @@ int main(int argc, char* argv[])
 	if (load_agent || load_all) {
 		if(start_agent(wdog, delay) < 0)
 			log4cplus_error("start full-data failed.");
+	}
+
+	if (load_core || load_all) {
+		if(start_core(wdog, delay) < 0)
+			log4cplus_error("start core failed.");
 	}
 
 	if(init_watchdog() < 0)

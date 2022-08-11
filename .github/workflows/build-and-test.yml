@@ -74,7 +74,7 @@ jobs:
         options: --name dtc
         env:
           DTC_BIN: dtcd
-          DTC_ARGV: -d
+          DTC_ARGV1: -d
     steps:
       - uses: actions/checkout@v3
       
@@ -118,7 +118,7 @@ jobs:
         options: --name dtc
         env:
           DTC_BIN: dtcd
-          DTC_ARGV: -d        
+          DTC_ARGV1: -d        
       agent:
         image: docker.io/kfysck/devel:all
         ports:
@@ -128,7 +128,7 @@ jobs:
         options: --name agent
         env:
           DTC_BIN: dtcagent
-          DTC_ARGV: -v
+          DTC_ARGV1: -v
           DTC_ARGV2: 7
     steps:
       - uses: actions/checkout@v3
@@ -174,16 +174,6 @@ jobs:
           - 3306:3306
         env: 
           MYSQL_ROOT_PASSWORD: 123456
-      dtc:
-        image: docker.io/kfysck/devel:all
-        ports:
-          - 20015:20015
-        volumes:
-          - /usr/local/etc:/etc/dtc/
-        options: --name dtc
-        env:
-          DTC_BIN: dtcd
-          DTC_ARGV: -d        
       agent:
         image: docker.io/kfysck/devel:all
         ports:
@@ -193,8 +183,9 @@ jobs:
         options: --name agent
         env:
           DTC_BIN: agent-watchdog
-          DTC_ARGV: -a
+          DTC_ARGV1: -a
           DTC_ARGV2: -f
+          DTC_ARGV2: -c
     steps:
       - uses: actions/checkout@v3
       
@@ -258,7 +249,7 @@ jobs:
         options: --name dtc
         env:
           DTC_BIN: dtcd
-          DTC_ARGV: -d
+          DTC_ARGV1: -d
     steps:
       - uses: actions/checkout@v3
       
@@ -316,7 +307,7 @@ jobs:
         options: --name agent
         env:
           DTC_BIN: dtcagent
-          DTC_ARGV: -v
+          DTC_ARGV1: -v
           DTC_ARGV2: 7          
       dtc:
         image: docker.io/kfysck/devel:all
@@ -327,7 +318,7 @@ jobs:
         options: --name dtc
         env:
           DTC_BIN: dtcd
-          DTC_ARGV: -d
+          DTC_ARGV1: -d
     steps:
       - uses: actions/checkout@v3
       
