@@ -100,7 +100,7 @@ static int get_options(int argc, char **argv) {
 
 
 static void show_usage(void) {
-	printf("Usage: agent-watchdog -[hvadfs], default load all modules.\n");
+	printf("Usage: dtc -[hvlaycsr], default load all modules.\n");
 	printf("Options:\n"); 
 	printf("  -h, --help             		: this help\n");
 	printf("  -v, --version          		: show version and exit\n");
@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 	if (show_version) {
-		printf("This is agent-watchdog-%s\n", DA_VERSION_STR);
+		printf("This is dtc watchdog -%s\n", DA_VERSION_STR);
 		if (show_help) {
 			show_usage();
 		}

@@ -441,7 +441,7 @@ void dump_base(void)
 void create_files(void)
 {
 	char buf[256];
-	if (g_stat_mgr.create_stat_index("dtcd", STATIDX, g_stat_definition,
+	if (g_stat_mgr.create_stat_index("core", STATIDX, g_stat_definition,
 					 buf, sizeof(buf)) < 0) {
 		fprintf(stderr, "Fail to create stat index file: %s\n", buf);
 		exit(-3);
@@ -453,7 +453,7 @@ void init(void)
 {
 	int ret;
 
-	ret = stc.init_stat_info("dtcd", STATIDX);
+	ret = stc.init_stat_info("core", STATIDX);
 	if (ret < 0) {
 		fprintf(stderr, "Cannot Initialize StatInfo: %s\n",
 			stc.get_error_message());

@@ -11,11 +11,11 @@ RUN mkdir -p $basepath/log
 RUN mkdir -p $confpath
 RUN mkdir -p $logpath
 
-COPY dtcd $basepath/bin/dtcd
+COPY core $basepath/bin/core
 COPY hwcserver $basepath/bin/hwcserver
 COPY connector $basepath/bin/connector
 COPY table.yaml $confpath/table.yaml
 COPY dtc.yaml $confpath/dtc.yaml
 COPY log4cplus.conf $confpath/log4cplus.conf
 
-CMD ["/usr/local/dtc/bin/dtcd", "-d"]
+CMD ["/usr/local/dtc/bin/core", "-d"]

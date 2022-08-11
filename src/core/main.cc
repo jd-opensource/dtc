@@ -27,7 +27,7 @@
 
 using namespace ClusterConfig;
 
-const char project_name[] = "dtcd";
+const char project_name[] = "core";
 const char usage_argv[] = "";
 
 BufferProcessAskChain *g_buffer_process_ask_instance = NULL;

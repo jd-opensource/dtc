@@ -46,6 +46,6 @@ ADD_LIBRARY(dtcd_static ${SRC_LIST})
 
 #将目标文件与库文件链接
 TARGET_LINK_LIBRARIES(dtcd_static libdaemons.a libstat.a libcommon.a libyaml-cpp.a liblog4cplus.a libz64.a)
-SET_TARGET_PROPERTIES(dtcd_static PROPERTIES OUTPUT_NAME "dtcd")
+SET_TARGET_PROPERTIES(dtcd_static PROPERTIES OUTPUT_NAME "core")
 SET_TARGET_PROPERTIES (dtcd_static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 

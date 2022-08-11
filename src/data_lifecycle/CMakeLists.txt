@@ -111,7 +111,7 @@ if(jdtestOpen)
     ../libs/mxml/include
     ../libs/google_test/include
     )
-    target_link_libraries(gtest_data_lifecycle dtcd daemons stat common gtest_main gmock gtest dl pthread log4cplus sqlparser yaml-cpp z64 mysqlclient mxml)
+    target_link_libraries(gtest_data_lifecycle core daemons stat common gtest_main gmock gtest dl pthread log4cplus sqlparser yaml-cpp z64 mysqlclient mxml)
     redefine_file_macro(gtest_data_lifecycle)
     SET_TARGET_PROPERTIES(gtest_data_lifecycle PROPERTIES RUNTIME_OUTPUT_DIRECTORY "./bin")
     install(TARGETS gtest_data_lifecycle RUNTIME DESTINATION bin)

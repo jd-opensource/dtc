@@ -11,9 +11,9 @@ RUN mkdir -p $basepath/log
 RUN mkdir -p $confpath
 RUN mkdir -p $logpath
 
-COPY dtcd $basepath/dtcd
+COPY core $basepath/core
 COPY dtcagent $basepath/dtcagent
-COPY agent-watchdog $basepath/agent-watchdog
+COPY dtc $basepath/dtc
 COPY async-connector $basepath/async-connector
 COPY connector $basepath/connector
 COPY data-lifecycle-manager $basepath/data-lifecycle-manager
@@ -30,7 +30,7 @@ RUN apt install -y net-tools
 
 COPY run.sh $basepath/run.sh
 
-RUN chmod +x $basepath/dtcd
+RUN chmod +x $basepath/core
 RUN chmod +x $basepath/dtcagent
 RUN chmod +x $basepath/connector
 RUN chmod +x $basepath/run.sh

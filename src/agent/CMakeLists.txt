@@ -44,4 +44,4 @@ ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 ADD_EXECUTABLE(dtcagent ${SRC_LIST})
 
 TARGET_LINK_LIBRARIES(dtcagent libmxml.a librule.so)
-redefine_file_macro(agent-watchdog)
+redefine_file_macro(dtcagent)
