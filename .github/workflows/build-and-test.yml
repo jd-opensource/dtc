@@ -60,16 +60,30 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/devel:latest
 
-# DTC Junction
-  dtc:
+# Core Junction
+  CORE:
     needs: building
     runs-on: ubuntu-latest
     steps:
-      - run: echo "DTC Junction."
+      - run: echo "Core Junction."  
+
+# Agent Junction
+  AGENT:
+    needs: building
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Agent Junction."        
+
+# Layered Junction
+  LAYERED:
+    needs: AGENT
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Layered Junction."          
 
 # Testing Cache Only
   test-dtc-cache-only:
-    needs: dtc
+    needs: CORE
     runs-on: ubuntu-latest
     services:
       dtc:
@@ -112,7 +126,7 @@ jobs:
 
 # Testing Cache Only via Agent.
   test-agent-cache-only:
-    needs: building
+    needs: AGENT
     if: false
     runs-on: ubuntu-latest
     services:
@@ -170,7 +184,7 @@ jobs:
 
 # Testing Layered Storage.
   test-agent-layered:
-    needs: building
+    needs: LAYERED
     runs-on: ubuntu-latest
     services:
       mysql:
@@ -229,14 +243,17 @@ jobs:
           netstat -ntpl
           docker logs agent
           cd ${{github.workspace}}/tests
+          echo "show databases;"
           mysql -h127.0.0.1 -P12001 -uroot -p123456 -e "show databases;"
-          mysql -h127.0.0.1 -P12001 -uroot -p123456 -e "use layer2;"
-          mysql -h127.0.0.1 -P12001 -uroot -p123456 -e "show tables;"
+          echo "use layer2;"
+          mysql -h127.0.0.1 -P12001 -uroot -p123456 -Dlayer2 -e "use layer2;"
+          echo "show tables;"
+          mysql -h127.0.0.1 -P12001 -uroot -p123456 -Dlayer2 -e "show tables;"
 #          pytest test_agent_cache_only.py           
 
 # Testing Cache with Datasource Scene 1 (Single DB and Single Table)
   test-dtc-ds-S-db-S-table:
-    needs: building
+    needs: CORE
     runs-on: ubuntu-latest
     services:
       mysql:
@@ -293,7 +310,7 @@ jobs:
 
 # Testing Cache with Datasource Scene 1 (Single DB and Single Table) via Agent
   test-agent-ds-S-db-S-table:
-    needs: building
+    needs: AGENT
     if: false
     runs-on: ubuntu-latest
     services:
@@ -363,7 +380,7 @@ jobs:
 # Testing Cache with Datasource Scene 2 (Single DB and Multi Table)
   test-dtc-ds-S-db-M-table:
     if: false
-    needs: building
+    needs: CORE
     runs-on: ubuntu-latest
     services:
       mysql:
