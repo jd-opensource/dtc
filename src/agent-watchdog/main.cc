@@ -267,7 +267,6 @@ int main(int argc, char* argv[])
 	if (load_core || load_all) {
 		if(start_core(wdog, delay) < 0)
 			log4cplus_error("start core failed.");
-		sleep(5);
 	}
 
 	if (load_agent || load_all) {
