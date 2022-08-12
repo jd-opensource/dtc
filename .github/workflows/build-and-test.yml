@@ -60,9 +60,14 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/devel:latest
 
+# DTC Junction
+  dtc:
+    needs: building
+    runs-on: ubuntu-latest
+
 # Testing Cache Only
   test-dtc-cache-only:
-    needs: building
+    needs: dtc
     runs-on: ubuntu-latest
     services:
       dtc:
