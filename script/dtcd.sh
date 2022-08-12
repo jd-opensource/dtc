@@ -4,7 +4,7 @@ ulimit -c unlimited
 
 DTC_BIN="dtcd_docker"
 rm -f "$DTC_BIN"
-ln -s dtcd "$DTC_BIN" 
+ln -s core "$DTC_BIN" 
 
 if [ "$1" = "stop" ] ; then
     killall -9 $DTC_BIN

@@ -1,7 +1,9 @@
 # 
 # DTC configure file. v2
-# Layered Storage Test Cases.
-# Without ShardingSphere.
+# Cache with Datasource Test cases.
+# Scene 2: Single DB Sharding Table
+# table name: opensource_0 ... opensource_9
+# total: 10 tables.
 #
 props:
   log.level: debug
@@ -9,9 +11,9 @@ props:
   shm.mem.size: 100 #MB
 
 connection: &connection
-  addr: mysql:3306
-  user: root
-  pwd: 123456 
+  addr: 127.0.0.1:3307
+  user: username
+  pwd: password 
 
 primary:
   table: &table opensource
@@ -27,8 +29,6 @@ primary:
       {db: &db layer2, table: *table, connection: *connection}
     real:
       - {addr: mysql:3306, user: root, pwd: 123456, db: layer2}
-  full:
-    logic:
-      {db: layer3, table: *table, connection: *connection}
-    real:
-      - {addr: mysql:3306, user: root, pwd: 123456, db: layer3}      
+    sharding:
+      key: *key
+      table: {prefix: [*table, _], start: 0, last: 9}

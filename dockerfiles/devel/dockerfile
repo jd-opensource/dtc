@@ -1,4 +1,4 @@
-FROM centos:centos8
+FROM ubuntu
 
 ARG basepath=/usr/local/dtc
 ARG confpath=/etc/dtc
@@ -11,13 +11,34 @@ RUN mkdir -p $basepath/log
 RUN mkdir -p $confpath
 RUN mkdir -p $logpath
 
-COPY dtcd $basepath/dtcd
+COPY core $basepath/core
 COPY dtcagent $basepath/dtcagent
-COPY agent-watchdog $basepath/agent-watchdog
+COPY dtc $basepath/dtc
 COPY async-connector $basepath/async-connector
 COPY connector $basepath/connector
 COPY data-lifecycle-manager $basepath/data-lifecycle-manager
 COPY hwcserver $basepath/hwcserver
+COPY librule.so $basepath/librule.so
+COPY libsqlparser.so $basepath/libsqlparser.so
 
-COPY dtc.yaml $confpath/dtc.yaml
-COPY log4cplus.conf $confpath/log4cplus.conf
+COPY librule.so /usr/local/lib/librule.so
+COPY libsqlparser.so /usr/local/lib/libsqlparser.so
+
+RUN apt update
+RUN apt install -y iputils-ping
+RUN apt install -y net-tools
+
+COPY run.sh $basepath/run.sh
+
+RUN chmod +x $basepath/core
+RUN chmod +x $basepath/dtcagent
+RUN chmod +x $basepath/connector
+RUN chmod +x $basepath/run.sh
+RUN chmod +x $basepath/async-connector
+
+ENV LD_LIBRARY_PATH=:/usr/local/lib
+
+CMD ["/usr/local/dtc/run.sh"]
+
+#COPY dtc.yaml $confpath/dtc.yaml
+#COPY log4cplus.conf $confpath/log4cplus.conf

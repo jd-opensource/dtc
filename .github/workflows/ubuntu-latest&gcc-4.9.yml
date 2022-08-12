@@ -1,29 +1,14 @@
 name: ubuntu-latest&gcc-4.9
 
-on:
-  push:
-  pull_request:
+on: pull_request
     
 env:
   CC: gcc-4.9
   CXX: g++-4.9
-  secret_account: ${{ secrets.DOCKER_USERNAME }}
 
-jobs:        
-  build:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+jobs:
+  build-and-test:
     runs-on: ubuntu-latest
-    
-    services:
-      mysql:
-        image: mysql
-        ports:
-          - 3306:3306
-        env: 
-          MYSQL_ROOT_PASSWORD: 123456
-        options: --name "mysql"
     
     steps:
     - uses: actions/checkout@v3
@@ -35,18 +20,10 @@ jobs:
         sudo apt update
         sudo apt install gcc-4.9 g++-4.9
       shell: bash
-
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v2
-      with:
-          python-version: "3.7"
       
     - name: install dependency
       run: |
         sudo apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
-        python -m pip install --upgrade pip
-        pip install pytest
-        pip install pymysql
       
     - name: cmake project
       run: |
@@ -55,71 +32,3 @@ jobs:
         cd build
         cmake ../
         make
-
-    - name: login docker hub
-      if: ${{ env.secret_account != '' }}
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-    
-    - name: publish devel CacheOnly docker
-      if: ${{ env.secret_account != '' }}
-      run: |
-        cd ${{github.workspace}}
-        cp dockerfiles/devel/dtc.cacheonly.yaml dockerfiles/devel/dtc.yaml
-        cp conf/log4cplus.conf dockerfiles/devel/
-        cp build/src/core/dtcd dockerfiles/devel/
-        cp build/src/agent/dtcagent dockerfiles/devel/
-        cp build/src/agent-watchdog/agent-watchdog dockerfiles/devel/
-        cp build/src/complex/async-connector dockerfiles/devel/
-        cp build/src/connector/connector dockerfiles/devel/
-        cp build/src/data_lifecycle/data-lifecycle-manager dockerfiles/devel/
-        cp build/src/hwcserver/hwcserver dockerfiles/devel/
-
-        cd dockerfiles/devel/
-
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:CacheOnly .
-        docker push ${{ secrets.DOCKER_USERNAME }}/devel:CacheOnly
-
-    - name: Run devel CacheOnly docker
-      if: ${{ env.secret_account != '' }}
-      run: |
-        docker run --name CacheOnly -p 20015:20015 -d ${{ secrets.DOCKER_USERNAME }}/devel:CacheOnly /usr/local/dtc/dtcd -d
-
-    - name: publish devel Cache with Database docker
-      if: ${{ env.secret_account != '' }}
-      run: |
-        cd ${{github.workspace}}
-        cp -f dockerfiles/devel/dtc.dbaddition.yaml dockerfiles/devel/dtc.yaml
-        cd dockerfiles/devel/
-
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:CacheWithDB .
-        docker push ${{ secrets.DOCKER_USERNAME }}/devel:CacheWithDB
-
-    - name: publish devel Layered docker
-      if: ${{ env.secret_account != '' }}
-      run: |
-        cd ${{github.workspace}}
-        cp -f dockerfiles/devel/dtc.layered.yaml dockerfiles/devel/dtc.yaml
-        cd dockerfiles/devel/
-
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/devel:Layered .
-        docker push ${{ secrets.DOCKER_USERNAME }}/devel:Layered
-
-    - name: init db table
-      if: ${{ env.secret_account != '' }}
-      run: |
-        mysql -h127.0.0.1 -uroot -p123456 -e "create database layer2;"
-        mysql -h127.0.0.1 -uroot -p123456 -e "show databases;"
-        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "source ${{github.workspace}}/script/init_table.sql;"
-        mysql -h127.0.0.1 -uroot -p123456 -Dlayer2 -e "show tables;"
-
-    - name: Testing CacheOnly
-      if: ${{ env.secret_account != '' }}
-      run: |
-        cd ${{github.workspace}}/tests
-        docker ps -a
-        mysql -h127.0.0.1 -P20015 -uroot -proot -e "insert into opensource(uid, name) values(1, 'hello') where uid = 1;"
-        mysql -h127.0.0.1 -P20015 -uroot -proot -e "select uid, name from opensouce where uid = 1;"
-        pytest

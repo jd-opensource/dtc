@@ -107,7 +107,7 @@ const char *DTCInstance::query_version_string(void)
 
 const char *DTCInstance::query_service_type(void)
 {
-	return "dtcd";
+	return "core";
 }
 
 const char *DTCInstance::query_instance_name(void)
@@ -154,7 +154,7 @@ _QueryInternalService(const char *name, const char *instance)
 	if (!name || !instance)
 		return NULL;
 
-	if (strcasecmp(name, "dtcd") != 0)
+	if (strcasecmp(name, "core") != 0)
 		return NULL;
 
 	/* not found */

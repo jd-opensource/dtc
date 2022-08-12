@@ -104,9 +104,9 @@ void WatchDog::run_loop()
 
 	while (!watchdog_stop) {
 		int timeout = expire_micro_seconds(1000, 1);
-		log4cplus_debug("befor poll, timeout:%d, %d, %d\n", timeout, pfd[0].fd, pfd[1].fd);
+		//log4cplus_debug("befor poll, timeout:%d, %d, %d\n", timeout, pfd[0].fd, pfd[1].fd);
 		int interrupted = poll(pfd, 2, timeout);
-		log4cplus_debug("after poll, watchdog_stop:%d, interrupted:%d\n", watchdog_stop, interrupted);
+		//log4cplus_debug("after poll, watchdog_stop:%d, interrupted:%d\n", watchdog_stop, interrupted);
 		update_now_time(timeout, interrupted);
 		if (watchdog_stop)
 			break;

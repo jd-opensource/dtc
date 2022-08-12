@@ -113,7 +113,7 @@ int StatManager::init_stat_info(const char *name, const char *indexfile,
 	fd = open(indexfile, O_RDWR);
 	if (fd < 0) {
 		snprintf(stat_error_message_, sizeof(stat_error_message_),
-			 "cannot open index file, checking privilege and stat directory.");
+			 "cannot open index file, checking privilege and stat directory: %s", indexfile);
 		return -1;
 	}
 

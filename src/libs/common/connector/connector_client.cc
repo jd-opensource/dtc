@@ -80,7 +80,7 @@ int ConnectorClient::connect_error()
     connectErrorCnt++;
     if (connectErrorCnt > maxTryConnect && ready) {
         log4cplus_debug(
-            "helper-client[%d] try connect %lu times, switch invalid.",
+            "connector[%d] try connect %lu times, switch invalid.",
             helperIdx, (unsigned long)connectErrorCnt);
         helperGroup->dec_ready_helper();
         ready = 0;
@@ -266,7 +266,7 @@ int ConnectorClient::reconnect(void)
     }
 
     if (errno != EINPROGRESS) {
-        log4cplus_error("connect helper-%s error: %m", sockpath);
+        log4cplus_error("connect connector-%s error: %m", sockpath);
         close(netfd);
         netfd = -1;
         attach_timer(helperGroup->retryList);
@@ -275,7 +275,7 @@ int ConnectorClient::reconnect(void)
         return 0;
     }
 
-    log4cplus_debug("Connectting to helper[%d]: %s", helperIdx, sockpath);
+    log4cplus_debug("Connectting to connector[%d]: %s", helperIdx, sockpath);
 
     disable_input();
     enable_output();
@@ -345,7 +345,7 @@ int ConnectorClient::recv_verify()
             supportBatchKey = 0;
             break;
         default:
-            log4cplus_error("detect helper-%s error: %d, %s",
+            log4cplus_error("detect connector-%s error: %d, %s",
                     helperGroup->sock_path(),
                     job->result_code(),
                     job->resultInfo.error_message());
@@ -355,14 +355,14 @@ int ConnectorClient::recv_verify()
     }
 
     if (supportBatchKey) {
-        log4cplus_debug("helper-%s support batch-key",
+        log4cplus_debug("connector-%s support batch-key",
                 helperGroup->sock_path());
     } else {
         if (logwarn++ == 0)
-            log4cplus_warning("helper-%s unsupported batch-key",
+            log4cplus_warning("connector-%s unsupported batch-key",
                       helperGroup->sock_path());
         else
-            log4cplus_debug("helper-%s unsupported batch-key",
+            log4cplus_debug("connector-%s unsupported batch-key",
                     helperGroup->sock_path());
     }
 

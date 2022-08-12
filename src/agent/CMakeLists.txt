@@ -27,6 +27,7 @@ INCLUDE_DIRECTORIES(
     ../rule)
 
 LINK_DIRECTORIES(
+    .
     ${PROJECT_SOURCE_DIR}/src/libs/mxml/libs
     ${PROJECT_SOURCE_DIR}/src/libs/hsql/libs
     ${PROJECT_SOURCE_DIR}/build/src/rule/
@@ -43,4 +44,4 @@ ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 ADD_EXECUTABLE(dtcagent ${SRC_LIST})
 
 TARGET_LINK_LIBRARIES(dtcagent libmxml.a librule.so)
-redefine_file_macro(agent-watchdog)
+redefine_file_macro(dtcagent)

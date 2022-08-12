@@ -380,6 +380,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
     else{
         machineCnt = 0;
     }
+
     //Depoly
     if(dtc_config["primary"][layer]) //cache.datasource mode
     {
@@ -410,6 +411,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
     {
         depoly = SINGLE;
     }
+
     //DB Name
     if(dtc_config["primary"][layer]) //cache.datasource mode
     {
@@ -478,15 +480,23 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
                 dbMod);
             database_max_count = dbMod;
         }
-    
+
         //Table section with DATABASE_IN_ADDITION.
         YAML::Node node = dtc_config["primary"][layer]["sharding"]["table"]["prefix"];
-        if(!node)
+        if(node)
         {
-            log4cplus_error("[TABLE_CONF].table_name not defined");
+            tblName = STRDUP(get_merge_string(node).c_str());
+        }
+        else if(dtc_config["primary"]["table"])
+        {
+            tblName = STRDUP(dtc_config["primary"]["table"].as<string>().c_str());
+        }
+        else
+        {
+            log4cplus_error("table name not defined");
             return -1;
         }
-        tblName = STRDUP(get_merge_string(node).c_str());
+
         if ((depoly & 2) == 0) {
             if (strchr(tblName, '%') != NULL) {
                 log4cplus_error(
@@ -524,7 +534,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         YAML::Node node = dtc_config["primary"]["table"];
         if(!node)
         {
-            log4cplus_error("[TABLE_CONF].table_name not defined");
+            log4cplus_error("table name not defined");
             return -1;
         }
         tblName = STRDUP(node.as<string>().c_str());
@@ -613,13 +623,13 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             }
         }
         /* Helper number alter */
-        m->gprocs[0] = raw->get_int_val(NULL, "Procs", 10);
+        m->gprocs[0] = raw->get_int_val(NULL, "Procs", 1);
         if (m->gprocs[0] < 1)
             m->gprocs[0] = 0;
-        m->gprocs[1] = raw->get_int_val(NULL, "WriteProcs", 10);
+        m->gprocs[1] = raw->get_int_val(NULL, "WriteProcs", 1);
         if (m->gprocs[1] < 1)
             m->gprocs[1] = 0;
-        m->gprocs[2] = raw->get_int_val(NULL, "CommitProcs", 10);
+        m->gprocs[2] = raw->get_int_val(NULL, "CommitProcs", 1);
         if (m->gprocs[2] < 1)
             m->gprocs[2] = 0;
         /* Helper Queue Size */

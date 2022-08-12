@@ -1,18 +1,13 @@
 name: ubuntu-20.04&gcc-4.9
 
-on:
-  push:
-  pull_request:
+on: pull_request
     
 env:
   CC: gcc-4.9
   CXX: g++-4.9
 
 jobs:
-  build:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+  build-and-test:
     runs-on: ubuntu-20.04
     
     steps:

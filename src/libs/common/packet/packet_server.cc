@@ -90,7 +90,7 @@ int Packet::encode_detect(const DTCTableDefinition *tdef, int sn)
 	vi.set_table_hash(tdef->table_hash());
 	vi.set_serial_nr(sn);
 	// app version
-	vi.set_tag(5, "dtcd");
+	vi.set_tag(5, "core");
 	// lib version
 	vi.set_tag(6, "ctlib-v" DTC_VERSION);
 	vi.set_tag(9, tdef->field_type(0));
@@ -190,7 +190,7 @@ int Packet::encode_reload_config(const DTCTableDefinition *tdef, int sn)
 	vi.set_table_hash(tdef->table_hash());
 	vi.set_serial_nr(sn);
 	// app version
-	vi.set_tag(5, "dtcd");
+	vi.set_tag(5, "core");
 	// lib version
 	vi.set_tag(6, "ctlib-v" DTC_VERSION);
 	vi.set_tag(9, tdef->field_type(0));
