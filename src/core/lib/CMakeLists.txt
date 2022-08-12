@@ -42,10 +42,10 @@ LINK_LIBRARIES(dl)
 ADD_DEFINITIONS("-g -rdynamic -fPIC -fpermissive -std=gnu++11 -D_GLIBCXX_USE_CXX11_ABI=0 -export-dynamic -Wl,--version-script,core.export.lst")
 
 #编译为.so/.a
-ADD_LIBRARY(dtcd_static ${SRC_LIST})
+ADD_LIBRARY(core_static ${SRC_LIST})
 
 #将目标文件与库文件链接
-TARGET_LINK_LIBRARIES(dtcd_static libdaemons.a libstat.a libcommon.a libyaml-cpp.a liblog4cplus.a libz64.a)
-SET_TARGET_PROPERTIES(dtcd_static PROPERTIES OUTPUT_NAME "core")
-SET_TARGET_PROPERTIES (dtcd_static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+TARGET_LINK_LIBRARIES(core_static libdaemons.a libstat.a libcommon.a libyaml-cpp.a liblog4cplus.a libz64.a)
+SET_TARGET_PROPERTIES(core_static PROPERTIES OUTPUT_NAME "core")
+SET_TARGET_PROPERTIES (core_static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 
