@@ -81,6 +81,7 @@ public:
 	{
 		return mysql_fetch_lengths (Res);	    
 	}
+	char* get_db_name() { return DBConfig.DbName;}
 
 	~MysqlConn();
 };
