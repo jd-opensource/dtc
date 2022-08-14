@@ -423,6 +423,8 @@ CBufferChain *encode_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8_t &pkt_
 std::string build_dtc_table_type(std::string real_tbname, std::string real_dbname)
 {
 	YAML::Node dtc = g_config.get_conf();
+	log4cplus_info("111111111111111 real_tb:%s, db:%s, yaml db:%s", real_tbname.c_str(), real_dbname.c_str(),
+		dtc["primary"]["hot"]["real"][0]["db"].as<std::string>().c_str());
 	if(real_dbname == "@@DTC_LAYER1_CACHE@@")
 	{
 		if(dtc["primary"]["full"])
