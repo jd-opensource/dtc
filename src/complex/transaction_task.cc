@@ -458,6 +458,8 @@ std::string build_dtc_table_type(std::string real_tbname, std::string real_dbnam
 			return dtc["extension"][i]["sharding"] ? "SHARDING_TALBE" : "SINGLE_TABLE";
 		}
 	}
+
+	return "";
 }
 
 bool ignore_system_table_name(std::string tbname)
@@ -502,16 +504,17 @@ CBufferChain *encode_show_tables_row_data(MysqlConn* dbconn, CBufferChain *bc, u
 
 		//calc current row len
 		int row_len = 0;
-		std::string tbtypestr = build_dtc_table_type(dbconn->get_db_name(), dbconn->Row[0]);
-
+		std::string tbtypestr = build_dtc_table_type(dbconn->Row[0], dbconn->get_db_name());
+#if 0
 		if(ignore_system_table_name(tbtypestr))
 		{
 			log4cplus_debug("ignore table: %s", tbtypestr.c_str());
 			continue;
 		}
+#endif		
 
 		for (int j = 0; j < dbconn->field_num; j++) {
-			if(j == 1) 	// table type field
+			if(j == 1 && tbtypestr.length() > 0) 	// table type field
 			{
 				row_len++; //first byte for result len
 				row_len += tbtypestr.length();
@@ -541,7 +544,7 @@ CBufferChain *encode_show_tables_row_data(MysqlConn* dbconn, CBufferChain *bc, u
 
 		//copy fields content
 		for (int j = 0; j < dbconn->field_num; j++) {
-			if(j == 1) 	// table type field
+			if(j == 1 && tbtypestr.length() > 0) 	// table type field
 			{
 				*(r + offset) = tbtypestr.length();
 				offset++;
@@ -561,6 +564,7 @@ CBufferChain *encode_show_tables_row_data(MysqlConn* dbconn, CBufferChain *bc, u
 		nbc = nbc->nextBuffer;
 	}
 
+#if 0
 	//add dtc cache layer1 info.
 	if(dbconn->field_num == 2)
 	{
@@ -620,7 +624,7 @@ CBufferChain *encode_show_tables_row_data(MysqlConn* dbconn, CBufferChain *bc, u
 		nbc->nextBuffer = nbuff;
 		nbc = nbc->nextBuffer;
 	}
-
+#endif
 	return nbc;
 }
 
