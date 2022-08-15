@@ -475,7 +475,7 @@ bool ignore_system_table_name(std::string tbname)
 	return false;
 }
 
-CBufferChain *encode_show_tables_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8_t &pkt_nr)
+CBufferChain *encode_show_tables_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8_t &pkt_nr, std::string dbname)
 {
 	CBufferChain *nbc = bc;
 
@@ -506,7 +506,7 @@ CBufferChain *encode_show_tables_row_data(MysqlConn* dbconn, CBufferChain *bc, u
 
 		//calc current row len
 		int row_len = 0;
-		std::string tbtypestr = build_dtc_table_type(dbconn->Row[0], dbconn->get_db_name());
+		std::string tbtypestr = build_dtc_table_type(dbconn->Row[0], dbname);
 #if 0
 		if(ignore_system_table_name(tbtypestr))
 		{
@@ -689,7 +689,7 @@ CBufferChain* TransactionTask::encode_mysql_protocol(CTaskRequest *request)
 
 	CBufferChain *prow = NULL;
 	if(request->cmd == QUERY_CMD_SHOW_TABLES)
-		prow = encode_show_tables_row_data(m_DBConn, pos, pkt_nr);
+		prow = encode_show_tables_row_data(m_DBConn, pos, pkt_nr, request->get_dbname());
 	else
 		prow = encode_row_data(m_DBConn, pos, pkt_nr);
 	if (prow) {
