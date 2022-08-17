@@ -470,6 +470,10 @@ bool ignore_system_db_name(std::string dbname)
 		dbname == std::string("sys"))
 		return true;
 
+	YAML::Node dtc = g_config.get_conf();
+	if(dbname == dtc["primary"]["full"]["logic"]["db"].as<std::string>())
+		return true;
+
 	return false;
 }
 
@@ -505,7 +509,6 @@ CBufferChain *encode_show_db_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8
 		//calc current row len
 		int row_len = 0;
 
-		log4cplus_debug("show db:%s", dbconn->Row[0]);
 		if(ignore_system_db_name(dbconn->Row[0]))
 		{
 			log4cplus_debug("ignore db: %s", dbconn->Row[0]);
