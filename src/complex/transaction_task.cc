@@ -473,7 +473,7 @@ bool ignore_system_db_name(std::string dbname)
 	return false;
 }
 
-CBufferChain *encode_show_db_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8_t &pkt_nr, std::string dbname)
+CBufferChain *encode_show_db_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8_t &pkt_nr)
 {
 	CBufferChain *nbc = bc;
 
@@ -505,10 +505,10 @@ CBufferChain *encode_show_db_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8
 		//calc current row len
 		int row_len = 0;
 
-		log4cplus_debug("show db:%s", dbname.c_str());
-		if(ignore_system_db_name(dbname))
+		log4cplus_debug("show db:%s", dbconn->Row[0]);
+		if(ignore_system_db_name(dbconn->Row[0]))
 		{
-			log4cplus_debug("ignore db: %s", dbname.c_str());
+			log4cplus_debug("ignore db: %s", dbconn->Row[0]);
 			continue;
 		}	
 
@@ -798,7 +798,7 @@ CBufferChain* TransactionTask::encode_mysql_protocol(CTaskRequest *request)
 	if(request->cmd == QUERY_CMD_SHOW_TABLES)
 		prow = encode_show_tables_row_data(m_DBConn, pos, pkt_nr, request->get_dbname());
 	else if(request->cmd == QUERY_CMD_SHOW_DB)
-		prow = encode_show_db_row_data(m_DBConn, pos, pkt_nr, request->get_dbname());
+		prow = encode_show_db_row_data(m_DBConn, pos, pkt_nr);
 	else
 		prow = encode_row_data(m_DBConn, pos, pkt_nr);
 	if (prow) {
