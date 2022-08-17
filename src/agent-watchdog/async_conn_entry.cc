@@ -14,22 +14,22 @@
 * limitations under the License.
 * 
 */
-#include "fulldata_entry.h"
+#include "async_conn_entry.h"
 #include <unistd.h>
 
 const char *fulldata_name = "async-connector";
 
-FullDataEntry::FullDataEntry(WatchDog *watchdog, int sec)
+AsyncConnEntry::AsyncConnEntry(WatchDog *watchdog, int sec)
 	: WatchDogDaemon(watchdog, sec)
 {
 	strncpy(watchdog_object_name_, fulldata_name, sizeof(watchdog_object_name_) < strlen(fulldata_name) ? sizeof(watchdog_object_name_) : strlen(fulldata_name));
 }
 
-FullDataEntry::~FullDataEntry(void)
+AsyncConnEntry::~AsyncConnEntry(void)
 {
 }
 
-void FullDataEntry::exec()
+void AsyncConnEntry::exec()
 {
 	char *argv[2];
 

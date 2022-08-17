@@ -4,7 +4,7 @@
 
 #include "log.h"
 #include "sharding_entry.h"
-#include "fulldata_entry.h"
+#include "async_conn_entry.h"
 #include "main_entry.h"
 #include "cold_wipe_entry.h"
 #include "core_entry.h"
@@ -29,7 +29,7 @@ static int show_help;
 static int show_version;
 static int load_datalife;
 static int load_agent;
-static int load_fulldata;
+static int load_asyncconn;
 static int load_core;
 int recovery_mode;
 int load_sharding;
@@ -79,7 +79,7 @@ static int get_options(int argc, char **argv) {
 			load_agent = 1;
 			break;
 		case 'y':
-			load_fulldata = 1;
+			load_asyncconn = 1;
 			break;
 		case 's':
 			load_sharding = 1;
@@ -113,17 +113,17 @@ static void show_usage(void) {
 
 }
 
-int start_full_data(WatchDog* wdog, int delay)
+int start_async_connector(WatchDog* wdog, int delay)
 {
 	// start full-data connector
-	FullDataEntry *fulldata_connector = new FullDataEntry(wdog, delay);
-	if (fulldata_connector == NULL) {
+	AsyncConnEntry *async_connector = new AsyncConnEntry(wdog, delay);
+	if (async_connector == NULL) {
 		log4cplus_error(
-			"create FullDataEntry object failed, msg: %m");
+			"create Async-Connector object failed, msg: %m");
 		return -1;
 	}
 
-	if (fulldata_connector->new_proc_fork() < 0)
+	if (async_connector->new_proc_fork() < 0)
 	{
 		return -1;
 	}
@@ -259,8 +259,8 @@ int main(int argc, char* argv[])
 			log4cplus_error("start data_lifecycle failed.");
 	}
 
-	if (load_fulldata || load_all) {
-		if(start_full_data(wdog, delay) < 0)
+	if (load_asyncconn || load_all) {
+		if(start_async_connector(wdog, delay) < 0)
 			log4cplus_error("start full-data failed.");
 	}
 

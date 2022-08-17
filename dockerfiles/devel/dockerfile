@@ -27,8 +27,9 @@ COPY libsqlparser.so /usr/local/lib/libsqlparser.so
 RUN apt update
 RUN apt install -y iputils-ping net-tools wget
 
-RUN wget "https://www.apache.org/dyn/closer.lua/shardingsphere/5.1.2/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin.tar.gz" -o $basepath/sharding.tar.gz
-RUN tar -zxvf $basepath/sharding.tar.gz -C $basepath/sharding
+RUN wget "https://dlcdn.apache.org/shardingsphere/5.1.2/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin.tar.gz" -O $basepath/sharding.tar.gz
+RUN tar -zxvf $basepath/sharding.tar.gz -C $basepath
+RUN $basepath/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin $basepath/sharding
 
 COPY run.sh $basepath/run.sh
 
