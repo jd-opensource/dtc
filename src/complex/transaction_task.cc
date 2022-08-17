@@ -869,24 +869,21 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 
 	std::string db = request->get_dbname();
 	int ret = 0;	
-	if(db != std::string("dtc") || db.length() == 0)
+	if(db.length() == 0 || db == std::string("dtc"))
+		ret = m_DBConn->Query(m_Sql.c_str());
+	else
+		ret = m_DBConn->Query(db.c_str(), m_Sql.c_str());
+	if(0 != ret)
 	{
-		if(db.length() == 0)
-			ret = m_DBConn->Query(m_Sql.c_str());
-		else
-			ret = m_DBConn->Query(db.c_str(), m_Sql.c_str());
-		if(0 != ret)
-		{
-			const char *errmsg = m_DBConn->GetErrMsg();
-			int m_ErrorNo = m_DBConn->GetErrNo();
-			log4cplus_error("db execute error. errno[%d]  errmsg[%s]", m_ErrorNo, errmsg);
-			log4cplus_error("error sql [%s]", m_Sql.c_str());
-			SetErrorMessage(errmsg);
-			CBufferChain* rb = encode_mysql_error(request, std::string(errmsg), m_ErrorNo);
-			if(rb)
-				request->set_buffer_chain(rb);
-			return m_ErrorNo;
-		}
+		const char *errmsg = m_DBConn->GetErrMsg();
+		int m_ErrorNo = m_DBConn->GetErrNo();
+		log4cplus_error("db execute error. errno[%d]  errmsg[%s]", m_ErrorNo, errmsg);
+		log4cplus_error("error sql [%s]", m_Sql.c_str());
+		SetErrorMessage(errmsg);
+		CBufferChain* rb = encode_mysql_error(request, std::string(errmsg), m_ErrorNo);
+		if(rb)
+			request->set_buffer_chain(rb);
+		return m_ErrorNo;
 	}
 
 	if(m_Sql.find("insert into") == 0 || m_Sql.find("update ") == 0 || m_Sql.find("delete from ") == 0)
@@ -907,7 +904,7 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 		}
 		else if(m_Sql.find("show databases") == 0)
 		{
-			log4cplus_debug("query tables info.");
+			log4cplus_debug("query db info.");
 			request->cmd = QUERY_CMD_SHOW_DB;
 		}
 		else
