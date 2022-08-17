@@ -918,10 +918,14 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 
 		if(db == std::string("dtc"))
 		{
-			CBufferChain* rb = encode_mysql_ok(request, 0); //encode_show_tables_dtc(m_DBConn, pos, pkt_nr, request->get_dbname());
-			if(rb)
-				request->set_buffer_chain(rb);
-			return 0;
+			CBufferChain* rba = NULL;
+			if(request->cmd == QUERY_CMD_SHOW_TABLES)
+			{
+				rba = encode_mysql_ok(request, 0); //encode_show_tables_dtc(m_DBConn, pos, pkt_nr, request->get_dbname());
+				if(rba)
+					request->set_buffer_chain(rba);
+				return 0;
+			}
 		}
 
 		ret = m_DBConn->UseResult();
