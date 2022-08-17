@@ -799,7 +799,7 @@ CBufferChain *TransactionTask::encode_mysql_error(CTaskRequest *request, std::st
 		return -ENOMEM;
 	}
 	r->totalBytes = packet_len - sizeof(CBufferChain);
-	encode_mysql_header(r, sizeof(buf), pkt_nr);
+	encode_mysql_header(r, sizeof(buf) + errmsg.length(), pkt_nr);
 	log4cplus_debug("len:%d, seq:%d, packet_len:%d, msg len:%d", sizeof(buf), pkt_nr, packet_len, errmsg.length());
 	memcpy(r->data + sizeof(MYSQL_HEADER_SIZE), buf, sizeof(buf));
 	memcpy(r->data + sizeof(MYSQL_HEADER_SIZE) + sizeof(buf), errmsg.c_str(), errmsg.length());
