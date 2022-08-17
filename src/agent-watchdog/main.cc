@@ -100,7 +100,7 @@ static int get_options(int argc, char **argv) {
 
 
 static void show_usage(void) {
-	printf("Usage: dtc -[hvlaycsr], default load all modules.\n");
+	printf("Usage: dtc -[hvlaycsr], default loading ALL modules.\n");
 	printf("Options:\n"); 
 	printf("  -h, --help             		: this help\n");
 	printf("  -v, --version          		: show version and exit\n");
@@ -249,6 +249,11 @@ int main(int argc, char* argv[])
 		exit(0);
 	}
 
+	if (load_sharding || load_all) {
+		if(start_sharding(wdog, delay) < 0)
+			log4cplus_error("start sharding failed.");
+	}
+
 	if (load_datalife || load_all) {
 		if(start_data_lifecycle(wdog, delay) < 0)
 			log4cplus_error("start data_lifecycle failed.");
@@ -257,11 +262,6 @@ int main(int argc, char* argv[])
 	if (load_fulldata || load_all) {
 		if(start_full_data(wdog, delay) < 0)
 			log4cplus_error("start full-data failed.");
-	}
-
-	if (load_sharding || load_all) {
-		if(start_sharding(wdog, delay) < 0)
-			log4cplus_error("start sharding failed.");
 	}
 
 	if (load_core || load_all) {
