@@ -36,5 +36,5 @@ void ShardingEntry::exec()
 	argv[0] = NULL;
 
 	set_proc_title("agent_sharding");
-	execv("./../../sharding/bin/start.sh", argv);
+	execv("./usr/local/sharding/bin/start.sh 3307 /etc/dtc", argv);
 }
