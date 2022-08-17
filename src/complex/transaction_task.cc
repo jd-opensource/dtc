@@ -834,10 +834,7 @@ CBufferChain* TransactionTask::encode_mysql_protocol(CTaskRequest *request)
 	CBufferChain *prow = NULL;
 	if(request->cmd == QUERY_CMD_SHOW_TABLES)
 	{
-		if(request->get_dbname() == std::string("dtc"))
-			prow = encode_mysql_ok(request, 0); //encode_show_tables_dtc(m_DBConn, pos, pkt_nr, request->get_dbname());
-		else
-			prow = encode_show_tables_row_data(m_DBConn, pos, pkt_nr, request->get_dbname());
+		prow = encode_show_tables_row_data(m_DBConn, pos, pkt_nr, request->get_dbname());
 	}
 		
 	else if(request->cmd == QUERY_CMD_SHOW_DB)
@@ -919,20 +916,25 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 			request->cmd = QUERY_CMD_NORMAL;
 		}
 
-		if(db != std::string("dtc") || db.length() == 0)
+		if(db == std::string("dtc"))
 		{
-			ret = m_DBConn->UseResult();
-			if (0 != ret) {
-				log4cplus_error("can not use result,sql[%s]", m_Sql.c_str());
-				SetErrorMessage(m_DBConn->GetErrMsg());
-				return -4;
-			}
+			CBufferChain* rb = encode_mysql_ok(request, 0); //encode_show_tables_dtc(m_DBConn, pos, pkt_nr, request->get_dbname());
+			if(rb)
+				request->set_buffer_chain(rb);
+			return 0;
+		}
 
-			ret = m_DBConn->FetchFields();
-			if (0 != ret) {
-				log4cplus_error("can not use fileds,[%d]%s", m_DBConn->GetErrNo(), m_DBConn->GetErrMsg());
-				return -4;
-			}
+		ret = m_DBConn->UseResult();
+		if (0 != ret) {
+			log4cplus_error("can not use result,sql[%s]", m_Sql.c_str());
+			SetErrorMessage(m_DBConn->GetErrMsg());
+			return -4;
+		}
+
+		ret = m_DBConn->FetchFields();
+		if (0 != ret) {
+			log4cplus_error("can not use fileds,[%d]%s", m_DBConn->GetErrNo(), m_DBConn->GetErrMsg());
+			return -4;
 		}
 
 		CBufferChain* rb = encode_mysql_protocol(request);
