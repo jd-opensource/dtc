@@ -20,6 +20,7 @@ COPY data-lifecycle-manager $basepath/data-lifecycle-manager
 COPY hwcserver $basepath/hwcserver
 COPY librule.so $basepath/librule.so
 COPY libsqlparser.so $basepath/libsqlparser.so
+COPY conf-gen-utils $basepath/conf-gen-utils
 
 COPY librule.so /usr/local/lib/librule.so
 COPY libsqlparser.so /usr/local/lib/libsqlparser.so
@@ -37,6 +38,7 @@ RUN chmod +x $basepath/core
 RUN chmod +x $basepath/dtcagent
 RUN chmod +x $basepath/connector
 RUN chmod +x $basepath/run.sh
+RUN chmod +x $basepath/conf-gen-utils
 RUN chmod +x $basepath/async-connector
 
 ENV LD_LIBRARY_PATH=:/usr/local/lib
