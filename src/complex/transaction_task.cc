@@ -919,17 +919,20 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 			request->cmd = QUERY_CMD_NORMAL;
 		}
 
-		ret = m_DBConn->UseResult();
-		if (0 != ret) {
-			log4cplus_error("can not use result,sql[%s]", m_Sql.c_str());
-			SetErrorMessage(m_DBConn->GetErrMsg());
-			return -4;
-		}
+		if(db != std::string("dtc") || db.length() == 0)
+		{
+			ret = m_DBConn->UseResult();
+			if (0 != ret) {
+				log4cplus_error("can not use result,sql[%s]", m_Sql.c_str());
+				SetErrorMessage(m_DBConn->GetErrMsg());
+				return -4;
+			}
 
-		ret = m_DBConn->FetchFields();
-		if (0 != ret) {
-			log4cplus_error("can not use fileds,[%d]%s", m_DBConn->GetErrNo(), m_DBConn->GetErrMsg());
-			return -4;
+			ret = m_DBConn->FetchFields();
+			if (0 != ret) {
+				log4cplus_error("can not use fileds,[%d]%s", m_DBConn->GetErrNo(), m_DBConn->GetErrMsg());
+				return -4;
+			}
 		}
 
 		CBufferChain* rb = encode_mysql_protocol(request);
