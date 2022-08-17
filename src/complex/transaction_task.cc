@@ -423,16 +423,14 @@ CBufferChain *encode_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8_t &pkt_
 std::string build_dtc_table_type(std::string real_tbname, std::string real_dbname)
 {
 	YAML::Node dtc = g_config.get_conf();
-	log4cplus_info("111111111111111 real_tb:%s, db:%s, yaml db:%s", real_tbname.c_str(), real_dbname.c_str(),
-		dtc["primary"]["hot"]["real"][0]["db"].as<std::string>().c_str());
 	if(real_dbname == "@@DTC_LAYER1_CACHE@@")
 	{
 		if(dtc["primary"]["full"])
-			return "LAYERED_TALBE";
+			return "LAYERED TALBE";
 		else if(dtc["primary"]["hot"]["sharding"])
-			return "SHARDING_TALBE";
+			return "SHARDING TALBE";
 		else
-			return "SINGLE_TABLE";
+			return "SINGLE TABLE";
 	}
 
 	if(dtc["primary"]["hot"]["real"][0]["db"].as<std::string>() == real_dbname)
@@ -442,7 +440,7 @@ std::string build_dtc_table_type(std::string real_tbname, std::string real_dbnam
 		dst_tbname = dtc["primary"]["hot"]["logic"]["table"].as<std::string>();
 
 		if(dst_tbname == real_tbname)
-			return dtc["primary"]["hot"]["sharding"] ? "SHARDING_TALBE" : "SINGLE_TABLE";
+			return dtc["primary"]["hot"]["sharding"] ? "SHARDING TALBE" : "SINGLE TABLE";
 	}
 
 	int ext_count = dtc["extension"].size();
@@ -457,14 +455,14 @@ std::string build_dtc_table_type(std::string real_tbname, std::string real_dbnam
 			if(dst_tbname != real_tbname)
 				continue;
 			
-			return dtc["extension"][i]["sharding"] ? "SHARDING_TALBE" : "SINGLE_TABLE";
+			return dtc["extension"][i]["sharding"] ? "SHARDING TALBE" : "SINGLE TABLE";
 		}
 	}
 
 	return "";
 }
 
-bool ignore_system_table_name(std::string dbname)
+bool ignore_system_db_name(std::string dbname)
 {
 	if(dbname == std::string("mysql") || 
 		dbname == std::string("information_schema") || 
@@ -507,7 +505,8 @@ CBufferChain *encode_show_db_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8
 		//calc current row len
 		int row_len = 0;
 
-		if(ignore_system_table_name(dbname))
+		log4cplus_debug("show db:%s", dbname.c_str());
+		if(ignore_system_db_name(dbname))
 		{
 			log4cplus_debug("ignore db: %s", dbname.c_str());
 			continue;
@@ -622,13 +621,6 @@ CBufferChain *encode_show_tables_row_data(MysqlConn* dbconn, CBufferChain *bc, u
 		//calc current row len
 		int row_len = 0;
 		std::string tbtypestr = build_dtc_table_type(dbconn->Row[0], dbname);
-#if 0
-		if(ignore_system_table_name(tbtypestr))
-		{
-			log4cplus_debug("ignore table: %s", tbtypestr.c_str());
-			continue;
-		}
-#endif		
 
 		for (int j = 0; j < dbconn->field_num; j++) {
 			if(j == 1 && tbtypestr.length() > 0) 	// table type field
