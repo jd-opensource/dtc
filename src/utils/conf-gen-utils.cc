@@ -184,7 +184,7 @@ std::string yaml_dump_actual_data_nodes(YAML::Node node)
     {
         str += get_merge_string(node["sharding"]["table"]["prefix"]);
         char sztmp[200] = {0};
-        sprintf(sztmp, "{%d..%d}", 
+        sprintf(sztmp, "${%d..%d}", 
             node["sharding"]["table"]["start"].as<int>(),
             node["sharding"]["table"]["last"].as<int>());
         str += sztmp;
