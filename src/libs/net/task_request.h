@@ -179,6 +179,7 @@ public:
 		char* n = new char[len+1];
 		memset(n, 0, len+1);
 		memcpy(n, name, len);
+		n[len] = '\0';
 		this->dbname = n;
 		delete n;
 	}
