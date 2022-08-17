@@ -740,6 +740,35 @@ CBufferChain *encode_show_tables_row_data(MysqlConn* dbconn, CBufferChain *bc, u
 	return nbc;
 }
 
+CBufferChain *TransactionTask::encode_mysql_error(CTaskRequest *request, std::string errmsg, int myerrno)
+{
+	CBufferChain *bc = NULL;
+	CBufferChain *pos = NULL;
+
+	uint8_t buf[9] = {0xff, 0x0, 0x0, 0x30, 0x30, 0x30, 0x30, 0x30, 0x20};
+
+	uint8_t pkt_nr = request->get_seq_num();
+	pkt_nr++;
+
+	int packet_len = sizeof(CBufferChain) + sizeof(MYSQL_HEADER_SIZE) +
+		sizeof(buf) + errmsg.length();
+
+	bc = (CBufferChain *)MALLOC(packet_len);
+	CBufferChain *r = bc;
+	if (r == NULL) {
+		return -ENOMEM;
+	}
+	r->totalBytes = packet_len - sizeof(CBufferChain);
+	encode_mysql_header(r, sizeof(buf), pkt_nr);
+	log4cplus_debug("len:%d, seq:%d, packet_len:%d, msg len:%d", sizeof(buf), pkt_nr, packet_len, errmsg.length());
+	memcpy(r->data + sizeof(MYSQL_HEADER_SIZE), buf, sizeof(buf));
+	memcpy(r->data + sizeof(MYSQL_HEADER_SIZE) + sizeof(buf), errmsg.c_str(), errmsg.length());
+	r->usedBytes = sizeof(MYSQL_HEADER_SIZE) + sizeof(buf) + errmsg.length();
+	r->nextBuffer = NULL;
+
+	return bc;
+}
+
 CBufferChain *TransactionTask::encode_mysql_ok(CTaskRequest *request, int affected_rows)
 {
 	CBufferChain *bc = NULL;
@@ -843,6 +872,9 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 		log4cplus_error("db execute error. errno[%d]  errmsg[%s]", m_ErrorNo, errmsg);
 		log4cplus_error("error sql [%s]", m_Sql.c_str());
 		SetErrorMessage(errmsg);
+		CBufferChain* rb = encode_mysql_error(request, std::string(errmsg), m_ErrorNo);
+		if(rb)
+			request->set_buffer_chain(rb);
 		return m_ErrorNo;
 	}
 
