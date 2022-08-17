@@ -3,9 +3,8 @@
 #
 props:
   log.level: debug
-  listener.port.agent: 12001
   listener.port.dtc: 20015
-  listener.port.extension: 3745
+  listener.port.extension: 2002
   shm.mem.size: 100 #MB
   #hash.custom: yes/no/enable/disable
   #hash.custom.module: ../lib/key-hash.so

@@ -25,11 +25,21 @@ agent配置文件位置为当前项目的conf/agent.xml，主要配置以下字�
 
 
 ### dtc.yaml
-cache配置文件位置为当前项目的conf/dtc.yaml，主要配置以下字段：
-* DTCID 整形数字值。缓存在系统当中的标识。需保证在同一台服务器上，每个DTC Server的实例此值唯一。
-* MAX_USE_MEM_MB 整形数字值，单位为MB。设置此实例可提供的缓存大小。单台服务器上所有实例申请内存的值的总和要小于此服务器物理内存的最大值。
-* DTC_MODE 0或1，默认值为1.设置为1时，使用CACHE ONLY模式；设置为0时，使用的是DB CACHE模式。
-* LOG_LEVEL 可配置debug/info/error等日志输出级别。
+#### primary 主库，提供dtc核心功能
+* table dtc的表名
+* layered.rule 分层存储的命中规则，匹配到此规则就进入到cache层。
+* cache/hot/full
+  dtc根据不同的功能需要配置不同的模块，共分为三层：<br />
+  cache层：提供缓存功能，只设置cache，不设置hot则表示CACHE ONLY模式，只缓存数据不存储数据到数据库。<br />
+  hot层：在cache的基础上提供数据存储功能，在datasource模式下需要配置此层来设置具体的数据源信息。在分层存储时，设置此模块能够配置热点数据的数据源<br />
+  full层：在分层存储的功能时，需要配置此层，全量数据将存储在此数据源中。
+* logic/real：
+该字段分别设置逻辑库表和真实库表。逻辑库表用于在dtc中显示和使用库、表。真实库表信息是真实的数据源信息。
+* sharding:
+该字段用户设置分库分表的信息，key字段用于设置依照此字段进行分片。table字段用于设置分表的信息，例如分表名为opensource_0/opensource_1.....opensouce_9，则只需要设置为{prefix: [*table, _], start: 0, last: 9}
+
+#### extension 扩展库，提供多租户功能
+在dtc的基础缓存和数据代理功能之外，还提供了扩展库，通过配置此模块能够在数据库中进行复杂查询和分库分表功能。
 
 ### table.yaml
 cache配置文件位置为当前项目的conf/table.yaml，主要配置以下字段：

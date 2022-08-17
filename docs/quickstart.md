@@ -7,20 +7,20 @@ binlog数据目录：/usr/local/log/<br/>
 
 ## DTC模式
 
-DTC分为两种数据模式：CACHE ONLY模式和DB CACHE模式。
+DTC分为两种数据模式：CACHE ONLY模式和Datasource模式。
 - CACHE ONLY模式的DTC当做缓存使用，不连接数据库。
-- DB CACHE模式需要连接数据库，目前支持连接Mysql。此模式下DTC作为数据库的缓存代理，将热点数据缓存在DTC中。
+- Datasource模式需要连接数据库，目前支持连接Mysql。此模式下DTC作为数据库的缓存代理，提供分库分表，将热点数据缓存在DTC中。
   
 Demo使用的是CACHE ONLY模式演示。
 
 ## 表结构
-表结构文件在conf/table.yaml中。<br/>
+表结构文件在conf/dtc.yaml中。<br/>
 demo中定义的表名为dtc_opensource, <br/>
 结构为：
 | 字段名 | 类型                   | 长度    |
 | ------ | ---------------------- | ------- |
 | uid    | 整型                   | 4 Byte  |
-| name   | 字符串（大小写敏感）   | 50 Byte |
+| name   | 字符串（大小写不敏感   | 50 Byte |
 | city   | 字符串（大小写不敏感） | 50 Byte |
 | sex    | 整型                   | 4 Byte  |
 | age    | 整型                   | 4 Byte  |
@@ -28,53 +28,90 @@ demo中定义的表名为dtc_opensource, <br/>
 ## 启动DTC Server端
 为了省去配置环境的麻烦，Demo中提供docker镜像，直接运行即可启动服务端：<br/>
   ```shell
-  docker pull dtc8/server:latest
-  docker run -i -t --name dtc-server -p 127.0.0.1:20015:20015 dtc8/server:latest
-  ```
-如非首次运行容器，则有可能会提示容器已存在，删除旧容器即可：
-  ```shell
-  docker rm dtc-server
+  docker pull dtc8/dtc:latest
+  docker run --rm --name dtc -p <MY_LISTENER_PORT>:12001 -v <MY_HOST_CONF_DIR>:/etc/dtc/ -e DTC_BIN=dtc -e DTC_ARGV=-ayc dtc8/dtc
   ```
 
-## 启动Agent端
-  在docker环境中，agent和dtc-server需要在同一个网络环境中才能相互通信，故在启动时使用--network=container参数。
-  ```shell
-  docker pull dtc8/agent:latest
-  docker run -i -t --name agent --network=container:dtc-server dtc8/agent:latest
-  ```
-如非首次运行容器，则有可能会提示容器已存在，删除旧容器即可：
-  ```shell
-  docker rm agent
-  ```
 ## 运行Client测试示例
-client测试示例在server容器当中，进入容器：
-  ```shell
-  docker exec -it dtc-server /bin/bash
-  ```
-进入示例所在目录：
-  ```shell
-  cd /usr/local/demo
-  ```
-此目录中有get和insert两个bin文件，对应的源代码在当前项目的test文件夹中。<br/>
-运行insert即可插入一条数据
-```shell
-chmod +x insert
-./insert
+当前已经支持mysql 5.X和8.X的客户端访问dtc进行SQL操作。当运行上面docker之后，可以运行以下SQL语句：
+* 登录：
 ```
-数据内容为：
-| 字段名 | 值       | 备注 |
-| ------ | -------- | ---- |
-| uid    | 1        | KEY  |
-| name   | norton   |      |
-| city   | shanghai |      |
-| age    | 18       |      |
-| sex    | 1        |      |
+  mysql -h127.0.0.1 -P12001 -uroot -proot
+```
+* 查看数据库列表
+```
+  show databases;
+```
+* 切换数据库
+```
+  use layer2;
+```
+* 查看表列表
+```
+  show tables;
+```
+* 插入
+```
+  insert into opensource(uid, name) values(1, 'Jack') where uid = 1;
+```
+* 更新
+```
+  update opensource set name = 'Lee' where uid = 1;
+```
+* 查询
+```
+  select uid, name from opensource where uid = 1;
+```
+* 删除
+```
+  delete from opensource where uid = 1;
+```
 
-运行get即可查询并打印出刚才插入的数据。
-```shell
-chmod +x get
-./get
-```
 你也可以根据需要尝试修改示例中的代码或配置，进行更多的体验。配置文件请参考[Configure](./configure.md)。
 
 源码编译请参照[buiding](./building.md)。
+
+## 直接部署
+* 创建文件夹
+```
+mkdir -p basepath
+mkdir -p /usr/local/dtc/data
+mkdir -p /usr/local/dtc/stat
+mkdir -p /usr/local/dtc/log
+mkdir -p /etc/dtc
+mkdir -p /var/log/dtc
+```
+* 将bin文件拷贝到/usr/local/dtc文件夹，并赋执行权限
+```
+cp * /usr/local/dtc/
+chmod +x *
+```
+* 运行dtc
+执行./dtc -h获取详细信息，可以依据需要分别运行不同的组件。注：需要在root权限下运行core模块。
+```
+  -h, --help                            : this help
+  -v, --version                         : show version and exit
+  -a, --agent                           : load agent module
+  -c, --core                            : load dtc core module
+  -l, --data-lifecycle                  : load data-lifecycle module
+  -y, --async-connector                 : load async-connector module
+  -s, --sharding                        : load sharding module
+  -r, --recovery mode                   : auto restart when crashed
+```
+例如：
+1.只运行core，不使用agent代理：
+```
+./dtc -c
+```
+2.运行agent代理的dtc模式：
+```
+./dtc -ac
+```
+3.运行分层存储
+```
+./dtc -ayc
+```
+4.运行带有分库分表的分层存储
+```
+./dtc -aycs
+```
