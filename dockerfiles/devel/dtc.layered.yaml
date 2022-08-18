@@ -14,6 +14,7 @@ connection: &connection
   pwd: 123456 
 
 primary:
+  db: &db dtc
   table: &table opensource
   cache:
     field:
@@ -24,11 +25,11 @@ primary:
       - {name: age, type: signed, size: 4}
   hot:
     logic:
-      {db: &db layer2, table: *table, connection: *connection}
+      {db: *db, table: *table, connection: *connection}
     real:
       - {addr: mysql:3306, user: root, pwd: 123456, db: layer2}
   full:
     logic:
-      {db: layer3, table: *table, connection: *connection}
+      {db: *db, table: *table, connection: *connection}
     real:
       - {addr: mysql:3306, user: root, pwd: 123456, db: layer3}      

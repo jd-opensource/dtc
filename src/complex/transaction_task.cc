@@ -423,7 +423,7 @@ CBufferChain *encode_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8_t &pkt_
 std::string build_dtc_table_type(std::string real_tbname, std::string real_dbname)
 {
 	YAML::Node dtc = g_config.get_conf();
-	if(real_dbname == "dtc")
+	if(real_dbname == dtc["primary"]["hot"]["real"][0]["db"].as<std::string>())
 	{
 		if(dtc["primary"]["full"])
 			return "LAYERED TALBE";
@@ -431,16 +431,6 @@ std::string build_dtc_table_type(std::string real_tbname, std::string real_dbnam
 			return "SHARDING TALBE";
 		else
 			return "SINGLE TABLE";
-	}
-
-	if(dtc["primary"]["hot"]["real"][0]["db"].as<std::string>() == real_dbname)
-	{
-		std::string dst_tbname;
-		std::string tbtype;
-		dst_tbname = dtc["primary"]["hot"]["logic"]["table"].as<std::string>();
-
-		if(dst_tbname == real_tbname)
-			return dtc["primary"]["hot"]["sharding"] ? "SHARDING TALBE" : "SINGLE TABLE";
 	}
 
 	int ext_count = dtc["extension"].size();
@@ -548,88 +538,7 @@ CBufferChain *encode_show_db_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8
 		nbc = nbc->nextBuffer;
 	}
 
-	//add dtc cache layer1 info.
-	if(dbconn->field_num == 1)
-	{
-		//calc current row len
-		int row_len = 0;
-		YAML::Node dtc = g_config.get_conf();
-		std::string tbname = "dtc";
-
-		for (int j = 0; j < dbconn->field_num; j++) {
-			row_len++; //first byte for result len
-			row_len += tbname.length();
-		}
-
-		//alloc new buffer to store row data.
-		int packet_len = sizeof(CBufferChain) +
-					sizeof(MYSQL_HEADER_SIZE) + row_len;
-		CBufferChain *nbuff = (CBufferChain *)MALLOC(packet_len);
-		if (nbuff == NULL) {
-			return NULL;
-		}
-		nbuff->totalBytes = packet_len - sizeof(CBufferChain);
-		nbuff->usedBytes = sizeof(MYSQL_HEADER_SIZE) + row_len;
-		nbuff->nextBuffer = NULL;
-
-		char *r = nbuff->data;
-		encode_mysql_header(nbuff, row_len, pkt_nr++);
-		int offset = 0;
-		offset += sizeof(MYSQL_HEADER_SIZE);
-
-		//copy fields content
-		for (int j = 0; j < dbconn->field_num; j++) {
-			*(r + offset) = tbname.length();
-			offset++;
-			memcpy(r + offset, tbname.c_str(), tbname.length());
-			offset += tbname.length();
-		}
-
-		nbc->nextBuffer = nbuff;
-		nbc = nbc->nextBuffer;
-	}
-
 	return nbc;
-}
-
-CBufferChain *encode_show_tables_dtc(CTaskRequest *request, std::string dbname)
-{
-	uint8_t pkt_nr = request->get_seq_num();
-	pkt_nr++;
-
-	//calc current row len
-	int row_len = 0;
-	YAML::Node dtc = g_config.get_conf();
-	std::string tbname = dtc["primary"]["table"].as<std::string>();
-	std::string tbtypestr = build_dtc_table_type(tbname, dbname);
-
-	row_len++; //first byte for result len
-	row_len += tbtypestr.length();
-
-	//alloc new buffer to store row data.
-	int packet_len = sizeof(CBufferChain) +
-				sizeof(MYSQL_HEADER_SIZE) + row_len;
-
-	CBufferChain *nbuff = (CBufferChain *)MALLOC(packet_len);
-	if (nbuff == NULL) {
-		return NULL;
-	}
-	nbuff->totalBytes = packet_len - sizeof(CBufferChain);
-	nbuff->usedBytes = sizeof(MYSQL_HEADER_SIZE) + row_len;
-	nbuff->nextBuffer = NULL;
-
-	char *r = nbuff->data;
-	encode_mysql_header(nbuff, row_len, pkt_nr);
-	int offset = 0;
-	offset += sizeof(MYSQL_HEADER_SIZE);
-
-	//copy fields content
-	*(r + offset) = tbtypestr.length();
-	offset++;
-	memcpy(r + offset, tbtypestr.c_str(), tbtypestr.length());
-	offset += tbtypestr.length();
-
-	return nbuff;
 }
 
 CBufferChain *encode_show_tables_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8_t &pkt_nr, std::string dbname)
@@ -716,67 +625,6 @@ CBufferChain *encode_show_tables_row_data(MysqlConn* dbconn, CBufferChain *bc, u
 		nbc = nbc->nextBuffer;
 	}
 
-#if 0
-	//add dtc cache layer1 info.
-	if(dbconn->field_num == 2)
-	{
-		//calc current row len
-		int row_len = 0;
-		YAML::Node dtc = g_config.get_conf();
-		std::string tbname = dtc["primary"]["table"].as<std::string>();
-		std::string tbtypestr = build_dtc_table_type(tbname, "@@DTC_LAYER1_CACHE@@");
-
-		for (int j = 0; j < dbconn->field_num; j++) {
-			if(j == 1) 	// table type field
-			{
-				row_len++; //first byte for result len
-				row_len += tbtypestr.length();
-			}
-			else if(j == 0)
-			{
-				row_len++; //first byte for result len
-				row_len += tbname.length();
-			}
-		}
-
-		//alloc new buffer to store row data.
-		int packet_len = sizeof(CBufferChain) +
-					sizeof(MYSQL_HEADER_SIZE) + row_len;
-		CBufferChain *nbuff = (CBufferChain *)MALLOC(packet_len);
-		if (nbuff == NULL) {
-			return NULL;
-		}
-		nbuff->totalBytes = packet_len - sizeof(CBufferChain);
-		nbuff->usedBytes = sizeof(MYSQL_HEADER_SIZE) + row_len;
-		nbuff->nextBuffer = NULL;
-
-		char *r = nbuff->data;
-		encode_mysql_header(nbuff, row_len, pkt_nr++);
-		int offset = 0;
-		offset += sizeof(MYSQL_HEADER_SIZE);
-
-		//copy fields content
-		for (int j = 0; j < dbconn->field_num; j++) {
-			if(j == 1) 	// table type field
-			{
-				*(r + offset) = tbtypestr.length();
-				offset++;
-				memcpy(r + offset, tbtypestr.c_str(), tbtypestr.length());
-				offset += tbtypestr.length();
-			}
-			else if(j == 0)
-			{
-				*(r + offset) = tbname.length();
-				offset++;
-				memcpy(r + offset, tbname.c_str(), tbname.length());
-				offset += tbname.length();
-			}
-		}
-
-		nbc->nextBuffer = nbuff;
-		nbc = nbc->nextBuffer;
-	}
-#endif
 	return nbc;
 }
 
@@ -868,10 +716,7 @@ CBufferChain* TransactionTask::encode_mysql_protocol(CTaskRequest *request)
 
 	CBufferChain *prow = NULL;
 	if(request->cmd == QUERY_CMD_SHOW_TABLES)
-	{
 		prow = encode_show_tables_row_data(m_DBConn, pos, pkt_nr, request->get_dbname());
-	}
-		
 	else if(request->cmd == QUERY_CMD_SHOW_DB)
 		prow = encode_show_db_row_data(m_DBConn, pos, pkt_nr);
 	else
@@ -907,7 +752,7 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 
 	std::string db = request->get_dbname();
 	int ret = 0;	
-	if(db.length() == 0 || db == std::string("dtc"))
+	if(db.length() == 0)
 		ret = m_DBConn->Query(m_Sql.c_str());
 	else
 		ret = m_DBConn->Query(db.c_str(), m_Sql.c_str());
@@ -949,18 +794,6 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 		{
 			log4cplus_debug("query result.");
 			request->cmd = QUERY_CMD_NORMAL;
-		}
-
-		if(db == std::string("dtc"))
-		{
-			CBufferChain* rba = NULL;
-			if(request->cmd == QUERY_CMD_SHOW_TABLES)
-			{
-				rba = encode_mysql_ok(request, 0); //encode_show_tables_dtc(request, request->get_dbname());
-				if(rba)
-					request->set_buffer_chain(rba);
-				return 0;
-			}
 		}
 
 		ret = m_DBConn->UseResult();

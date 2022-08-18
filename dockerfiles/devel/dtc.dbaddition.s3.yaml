@@ -14,6 +14,7 @@ connection: &connection
   pwd: password 
 
 primary:
+  db: &db dtc
   table: &table opensource
   cache:
     field:
@@ -24,7 +25,7 @@ primary:
       - {name: age, type: signed, size: 4}
   hot:
     logic:
-      {db: &db layer2, table: *table, connection: *connection}
+      {db: *db, table: *table, connection: *connection}
     real:
       - {addr: mysql-01.local:3306, user: username, pwd: password, db: single}
     sharding:
