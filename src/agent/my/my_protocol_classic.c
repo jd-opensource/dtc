@@ -35,6 +35,7 @@ bool parse_packet(uchar *input_raw_packet, int input_packet_length,
 		if(input_packet_length > 0 && input_packet_length < 250)
 		{
 			memcpy(r->owner->dbname, p, input_packet_length);
+			r->owner->dbname[input_packet_length] = '\0';
 			return true;
 		}
 

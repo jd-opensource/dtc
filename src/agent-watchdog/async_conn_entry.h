@@ -20,11 +20,11 @@
 #include "base.h"
 #include "daemon_listener.h"
 
-class FullDataEntry : public WatchDogDaemon
+class AsyncConnEntry : public WatchDogDaemon
 {
 public:
-	FullDataEntry(WatchDog *watchdog, int sec);
-	virtual ~FullDataEntry();
+	AsyncConnEntry(WatchDog *watchdog, int sec);
+	virtual ~AsyncConnEntry();
 	virtual void exec();
 };
 

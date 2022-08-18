@@ -20,13 +20,18 @@ COPY data-lifecycle-manager $basepath/data-lifecycle-manager
 COPY hwcserver $basepath/hwcserver
 COPY librule.so $basepath/librule.so
 COPY libsqlparser.so $basepath/libsqlparser.so
+COPY conf-gen-utils $basepath/conf-gen-utils
 
 COPY librule.so /usr/local/lib/librule.so
 COPY libsqlparser.so /usr/local/lib/libsqlparser.so
 
 RUN apt update
-RUN apt install -y iputils-ping
-RUN apt install -y net-tools
+RUN apt install -y iputils-ping net-tools wget default-jre
+
+RUN wget "https://dlcdn.apache.org/shardingsphere/5.1.2/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin.tar.gz" -O $basepath/sharding.tar.gz
+RUN tar -zxvf $basepath/sharding.tar.gz -C $basepath
+RUN mv $basepath/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin $basepath/sharding
+COPY mysql-connector-java-5.1.49.jar $basepath/sharding/lib/mysql-connector-java-5.1.49.jar
 
 COPY run.sh $basepath/run.sh
 
@@ -34,6 +39,7 @@ RUN chmod +x $basepath/core
 RUN chmod +x $basepath/dtcagent
 RUN chmod +x $basepath/connector
 RUN chmod +x $basepath/run.sh
+RUN chmod +x $basepath/conf-gen-utils
 RUN chmod +x $basepath/async-connector
 
 ENV LD_LIBRARY_PATH=:/usr/local/lib

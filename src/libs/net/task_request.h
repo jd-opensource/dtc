@@ -53,6 +53,13 @@ public:
 	int OwnerIndex(void) const { return ownerIndex; }
 };
 
+typedef enum _QUERY_CMD{
+	QUERY_CMD_NORMAL = 0,
+	QUERY_CMD_SHOW_TABLES,
+	QUERY_CMD_WRITE,
+	QUERY_CMD_SHOW_DB
+} QUERY_CMD;
+
 class CTaskRequest:public CTaskReplyList<CTaskRequest, 10>, public CTaskOwnerInfo
 {
 public:
@@ -172,6 +179,7 @@ public:
 		char* n = new char[len+1];
 		memset(n, 0, len+1);
 		memcpy(n, name, len);
+		n[len] = '\0';
 		this->dbname = n;
 		delete n;
 	}
@@ -235,6 +243,7 @@ public:	// timing
 	void ResponseTimerStart(void) { responseTimer.start(); }
 	unsigned int resourceId;
 	uint32_t resourceSeq;
+	QUERY_CMD cmd;
 };
 
 #endif

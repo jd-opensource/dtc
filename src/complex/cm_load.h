@@ -31,6 +31,8 @@ public:
 	
 	bool load_hot_inst_info();
 	bool load_full_inst_info();
+
+	YAML::Node get_conf() { return dtc;}
 };
 
 #endif

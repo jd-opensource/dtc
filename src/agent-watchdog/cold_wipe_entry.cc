@@ -17,7 +17,7 @@
 #include "cold_wipe_entry.h"
 #include <unistd.h>
 
-const char *cold_wipe_name = "data_lifecycle_manager";
+const char *cold_wipe_name = "data-lifecycle-manager";
 
 DataLifeCycleEntry::DataLifeCycleEntry(WatchDog *watchdog, int sec)
 	: WatchDogDaemon(watchdog, sec)
