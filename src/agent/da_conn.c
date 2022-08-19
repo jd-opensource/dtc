@@ -98,6 +98,7 @@ static struct conn *_conn_get() {
 	c->error=0;
 	c->writecached=0;
 	c->isvalid = 0;
+	memset(c->dbname, 0, 250);
 
 	ntotal_conn++;
 	ncurr_conn++;

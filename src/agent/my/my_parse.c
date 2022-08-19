@@ -529,7 +529,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	if (!string_upper(&str))
 		return -9;
 
-	log_debug("sql: %s, key: %s", str.data, g_dtc_key);
+	log_debug("sql: %s, key: %s, dbname len:%d, dbname: %s", str.data, g_dtc_key, strlen(dbname), dbname);
 
 	//agent sql route, rule engine
 	layer = rule_sql_match(str.data, g_dtc_key, dbname);

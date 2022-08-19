@@ -32,6 +32,9 @@ extern "C" int rule_sql_match(const char* szsql, const char* szkey, const char* 
 
     cout<<"key: "<<key<<endl;
     cout<<"sql: "<<sql<<endl;
+    cout<<"dbname len: "<<strlen(dbname)<<endl;
+    if(strlen(dbname))
+        cout<<"dbname: "<<dbname<<endl;
 
     init_log4cplus();
 
