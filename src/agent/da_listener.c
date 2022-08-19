@@ -383,8 +383,6 @@ static int listener_accept(struct context *ctx, struct conn *l)
 	}
 	c->enqueue_outq(ctx, c, smsg);
 
-	//init dtc key info
-	request_dtc_key_define(ctx, c);
 	return 0;
 }
 

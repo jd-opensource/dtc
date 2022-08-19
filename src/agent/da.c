@@ -560,6 +560,7 @@ static void da_post_run(struct instance *dai) {
 static void da_run(struct instance *dai) {
 	int status;
 	struct context *ctx;
+	struct conn* c = NULL;
 
 	ctx = core_start(dai);
 	if (ctx == NULL) {
@@ -588,8 +589,18 @@ static void da_run(struct instance *dai) {
 			_set_remote_log_config_((char *)dai->ctx->cf->stCL.remote_log_ip.data, dai->ctx->cf->stCL.remote_log_port, dai->ctx->cf->localip, iPort, iBid, dai->ctx->cf->stCL.remote_log_switch);
 		}
 	}
+	else
+		return ;
 
 	tv_update_date(0, 1);
+
+	//init dtc key info
+	c = get_client_conn((struct server_pool *)array_top(&(dai->ctx->pool)));
+	if (c == NULL) {
+		return ;
+	}
+	request_dtc_key_define(dai->ctx, c);
+
 	/* run rabbit run */
 	while (!da_stop) {
 		status = core_loop(dai->ctx);
