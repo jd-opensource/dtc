@@ -30,13 +30,9 @@ extern "C" int rule_sql_match(const char* szsql, const char* szkey, const char* 
     if(key.length() == 0)
         return -1;
 
-    cout<<"key: "<<key<<endl;
-    cout<<"sql: "<<sql<<endl;
-    cout<<"dbname len: "<<strlen(dbname)<<endl;
-    if(strlen(dbname))
-        cout<<"dbname: "<<dbname<<endl;
-
     init_log4cplus();
+
+    log4cplus_debug("key len: %d, key: %s, sql len: %d, sql: %s, dbname len: %d, dbname: %s", key.length(), key.c_str(), sql.length(), sql.c_str(), strlen(dbname), std::string(dbname).c_str());
 
     if(sql == "show databases" || sql == "SHOW DATABASES" || sql == "select database()" || sql == "SELECT DATABASE()")
     {

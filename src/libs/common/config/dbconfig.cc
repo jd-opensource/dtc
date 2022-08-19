@@ -430,7 +430,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         }
     }
     dstype = 0;
-    checkTable = 1;
+    checkTable = 0;
 
     //TODO: string key supporting.
     // key-hash dll
