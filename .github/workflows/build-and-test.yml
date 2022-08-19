@@ -128,7 +128,6 @@ jobs:
 # Testing Cache Only via Agent.
   test-agent-cache-only:
     needs: AGENT
-    if: false
     runs-on: ubuntu-latest
     services:
       dtc:
@@ -149,7 +148,8 @@ jobs:
           - /usr/local/etc:/etc/dtc/
         options: --name agent
         env:
-          DTC_BIN: dtcagent
+          DTC_BIN: dtc
+          DTC_ARGV: -a
     steps:
       - uses: actions/checkout@v3
       
@@ -185,6 +185,7 @@ jobs:
 
 # Testing Layered Storage.
   test-agent-layered:
+    if: false
     needs: LAYERED
     runs-on: ubuntu-latest
     services:

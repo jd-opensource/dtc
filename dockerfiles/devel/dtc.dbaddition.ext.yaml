@@ -1,0 +1,52 @@
+# 
+# DTC configure file. v2
+# Cache with Datasource Test cases.
+# Scene 2: Single DB Sharding Table
+# table name: opensource_0 ... opensource_9
+# total: 10 tables.
+#
+props:
+  log.level: debug
+  listener.port.dtc: 20015
+  shm.mem.size: 100 #MB
+
+connection: &connection
+  addr: 127.0.0.1:3307
+  user: username
+  pwd: password 
+
+primary:
+  db: &db dtc
+  table: &table opensource
+  cache:
+    field:
+      - {name: &key uid, type: signed, size: 4}
+      - {name: name, type: string, size: 50}
+      - {name: city, type: string, size: 50}
+      - {name: sex, type: signed, size: 4}
+      - {name: age, type: signed, size: 4}
+  hot:
+    logic:
+      {db: *db, table: *table, connection: *connection}
+    real:
+      - {addr: mysql:3306, user: root, pwd: 123456, db: layer2}
+    sharding:
+      key: *key
+      table: {prefix: [*table, _], start: 0, last: 9}
+
+extension:
+  - logic:
+      {db: ext1, table: monday, connection: *connection}
+    real:
+      - {addr: mysql:3306, user: root, pwd: 123456, db: january}
+  - logic:
+      {db: ext2, table: tuesday, connection: *connection}
+    real:
+      - {addr: mysql:3306, user: root, pwd: 123456, db: weekdays}
+  - logic:
+      {db: ext2, table: &sunday sunday, connection: *connection}
+    real:
+      - {addr: mysql:3306, user: root, pwd: 123456, db: weekdays}
+    sharding:
+      key: day
+      table: {prefix: [*sunday, _], start: 0, last: 2}      
