@@ -380,7 +380,6 @@ jobs:
 
 # Testing Cache with Datasource Scene 2 (Single DB and Multi Table)
   test-dtc-ds-S-db-M-table:
-    if: false
     needs: CORE
     runs-on: ubuntu-latest
     services:
