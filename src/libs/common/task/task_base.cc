@@ -812,6 +812,7 @@ void DtcJob::decode_request_v1(DTC_HEADER_V1 &header, char *p)
 		}
 
 		if (role == TaskRoleServer) {
+#if 0
 			/* local storage no need to check table, because it always set it to "@HOT_BACKUP", checking tablename */
 			if (requestCode != DRequest::Replicate &&
 			    !is_same_table(versionInfo.table_name())) {
@@ -825,6 +826,7 @@ void DtcJob::decode_request_v1(DTC_HEADER_V1 &header, char *p)
 					versionInfo.table_name().ptr,
 					table_name());
 			}
+#endif			
 
 			/* check table hash */
 			if (requestCode != DRequest::Replicate &&
