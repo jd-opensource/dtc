@@ -10,9 +10,13 @@
 #include "core_entry.h"
 #include "agent_entry.h"
 #include "proc_title.h"
+#include "mxml.h"
 
 extern char cache_file[256];
 extern char table_file[256];
+#define ROOT_PATH "/etc/dtc/"
+char agent_file[256] = "/etc/dtc/agent.xml";
+std::map<std::string, std::string> map_dtc_conf; //key:value --> dtc addr:conf file name
 
 #define DA_VERSION_MAJOR	1
 #define DA_VERSION_MINOR	0
@@ -224,6 +228,115 @@ int init_watchdog()
 	return 0;
 }
 
+bool ParseAgentConf(std::string path){
+    FILE *fp = fopen(path.c_str(), "r");
+    if (fp == NULL) {
+        log4cplus_error("conf: failed to open configuration '%s': %s", path.c_str(), strerror(errno));
+        return false;
+    }
+    mxml_node_t* tree = mxmlLoadFile(NULL, fp, MXML_TEXT_CALLBACK);
+    if (tree == NULL) {
+        log4cplus_error("mxmlLoadFile error, file: %s", path.c_str());
+        return false;
+    }
+    fclose(fp);
+
+	mxml_node_t *poolnode, *servernode, *instancenode, *lognode;
+
+	for (poolnode = mxmlFindElement(tree, tree, "MODULE",
+	NULL, NULL, MXML_DESCEND); poolnode != NULL;
+			poolnode = mxmlFindElement(poolnode, tree, "MODULE",
+			NULL, NULL, MXML_DESCEND)) 
+	{
+		
+		for (servernode = mxmlFindElement(poolnode, poolnode, "CACHESHARDING",
+		NULL, NULL, MXML_DESCEND); servernode != NULL; servernode =
+				mxmlFindElement(servernode, poolnode, "CACHESHARDING",
+				NULL, NULL, MXML_DESCEND)) 
+		{
+
+			for (instancenode = mxmlFindElement(servernode, servernode, "INSTANCE",
+				NULL, NULL, MXML_DESCEND); instancenode != NULL; instancenode =
+				mxmlFindElement(instancenode, servernode, "INSTANCE",
+					NULL, NULL, MXML_DESCEND)) 
+				{
+			
+					char *argment = (char *)mxmlElementGetAttr(instancenode, "Enable");
+					if (argment == NULL) {
+						return false;
+					}
+					if(strcmp(argment, "true") != 0)
+						continue;
+
+					argment = (char *)mxmlElementGetAttr(instancenode, "Addr");
+					if (argment == NULL) {
+						return false;
+					}
+
+					std::string listen_on = argment;
+					std::string::size_type pos = listen_on.find(":");
+					if(pos == std::string::npos){
+						log4cplus_error("string find error, file: %s", path.c_str());
+						return false;
+					}
+					std::string addr = listen_on.substr(0, pos);
+					char filename[250] = {0};
+					sprintf(filename, "dtc-conf-%d.yaml", map_dtc_conf.size());
+					map_dtc_conf[addr] = filename;
+
+				}
+		}
+	}
+
+    mxmlDelete(tree);
+    
+    return true;
+}
+
+int get_all_dtc_confs()
+{
+	//load xml
+	if(false == ParseAgentConf(agent_file)){
+        log4cplus_error("DataConf ParseConf error.");
+        return -1;
+    }
+
+	//get each dtc instance conn
+	int success_num = 0;
+	std::map<std::string, std::string>::iterator it;
+	for(it = map_dtc_conf.begin(); it != map_dtc_conf.end(); it++)
+	{
+		std::string addr = (*it).first;
+		std::string filename = (*it).second;
+
+		//TODO: send select dtcyaml
+		char* content = NULL;
+		int content_len = 0;
+
+		//save conf file and rename.
+		if(content != NULL && content_len > 0)
+		{
+			std::string filename = string(ROOT_PATH) + filename;
+			FILE *fp = fopen(filename.c_str(), "w");
+			if (fp == NULL)
+			{
+				log4cplus_error("open file %s error", filename.c_str());
+				continue;
+			}
+
+			fprintf(fp, "%s", content);
+
+			fclose(fp);
+			success_num++;
+		}
+	}
+
+	if(success_num > 0)
+		return 0;
+	else
+		return -2;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -247,6 +360,15 @@ int main(int argc, char* argv[])
 			show_usage();
 		}
 		exit(0);
+	}
+
+	if(load_agent || load_sharding || load_asyncconn)
+	{
+		if(get_all_dtc_confs() < 0)
+		{
+			log4cplus_error("get dtc conf files failed, process exit right now.");
+			exit(0);
+		}
 	}
 
 	if (load_sharding || load_all) {

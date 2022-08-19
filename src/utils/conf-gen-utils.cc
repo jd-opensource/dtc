@@ -3,13 +3,14 @@
 #include "log.h"
 #include "yaml-cpp/yaml.h"
 #include <vector>
+#include <sys/types.h>
+#include <dirent.h>
 #include <map>
 
 using namespace std;
 #define ROOT_PATH "/etc/dtc/"
 
-char conf_file[256] = {0};
-YAML::Node dtc_config;
+char conf_dir[256] = {0};
 std::map<std::string, std::vector<YAML::Node>> dbmap;
 std::string get_merge_string(YAML::Node node);
 std::map<std::string, std::string> algorithm;
@@ -17,34 +18,22 @@ std::map<std::string, std::string> algorithm;
 int load_dtc_config(int argc, char *argv[])
 {
     int c;
-    strcpy(conf_file, ROOT_PATH);
-    strcat(conf_file, "dtc.yaml");
+    strcpy(conf_dir, ROOT_PATH);
 
     while ((c = getopt(argc, argv, "c:")) != -1) {
         switch (c) {
         case 'c':
-            log4cplus_info("conf file:%s", optarg);
-            strncpy(conf_file, optarg, sizeof(conf_file) - 1);
+            log4cplus_info("conf dir:%s", optarg);
+            strncpy(conf_dir, optarg, sizeof(conf_dir) - 1);
             break;
         }
     }
-
-    try {
-        log4cplus_info("loading file: %s", conf_file);
-        dtc_config = YAML::LoadFile(conf_file);
-	} catch (const YAML::Exception &e) {
-		log4cplus_error("config file error:%s, %s\n", e.what(), conf_file);
-		return -1;
-	}
-
-    if(!dtc_config)
-        return -1;
 
     log4cplus_info("loading conf file successfully.");
     return 0;
 }
 
-int load_node_to_map()
+int load_node_to_map(YAML::Node dtc_config)
 {
     log4cplus_info("loading node to map.");
     std::vector<YAML::Node> vec;
@@ -337,7 +326,43 @@ int main(int argc, char* argv[])
     if(load_dtc_config(argc, argv) < 0)
         return 0;
 
-    load_node_to_map();
+    char prefix[260] = {0};
+	snprintf(prefix, 259, "%sdtc-conf-", conf_dir);
+
+    DIR *dir = opendir(conf_dir);
+	if (!dir)
+		return -1;
+
+	struct dirent *drt = readdir(dir);
+	if (!drt) {
+		closedir(dir);
+		return -2;
+	}
+
+	int l = strlen(prefix);
+	uint32_t v = 0;
+	int found = 0;
+
+	for (; drt; drt = readdir(dir)) {
+		int n = strncmp(drt->d_name, prefix, l);
+		if (n == 0) {
+			YAML::Node dtc_config;
+            char filepath[260] = {0};
+            try {
+                sprintf(filepath, "%s%s", conf_dir, drt->d_name);
+                log4cplus_info("loading file: %s", filepath);
+                dtc_config = YAML::LoadFile(filepath);
+            } catch (const YAML::Exception &e) {
+                log4cplus_error("config file error:%s, %s\n", e.what(), filepath);
+                return -1;
+            }
+
+            if(!dtc_config)
+                return -1;
+
+            load_node_to_map(dtc_config);
+		}
+	}   
 
     delete_all_old_yaml();
 
