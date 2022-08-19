@@ -396,6 +396,9 @@ jobs:
         volumes:
           - /usr/local/etc:/etc/dtc/
         options: --name dtc
+        env:
+          DTC_BIN: dtc
+          DTC_ARGV: -c
     steps:
       - uses: actions/checkout@v3
       
