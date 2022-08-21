@@ -13,7 +13,6 @@ using namespace std;
 char conf_dir[256] = {0};
 std::map<std::string, std::vector<YAML::Node>> dbmap;
 std::string get_merge_string(YAML::Node node);
-std::map<std::string, std::string> algorithm;
 
 int load_dtc_config(int argc, char *argv[])
 {
@@ -189,6 +188,7 @@ int yaml_dump_sharding_rule(FILE *fp, std::vector<YAML::Node> vec)
     fprintf(fp, "  tables:\n");
     std::string binding_table = "";
     std::vector<YAML::Node>::iterator vt;
+    std::map<std::string, std::string> algorithm;
     for(vt = vec.begin(); vt != vec.end(); vt++)
     {
         YAML::Node node = *vt;
@@ -245,18 +245,18 @@ int yaml_dump_sharding_rule(FILE *fp, std::vector<YAML::Node> vec)
         }
     }
 
-    fprintf(fp, "  shardingAlgorithms:\n");
-    std::map<std::string, std::string>::iterator it;
-    for (it = algorithm.begin(); it != algorithm.end(); it++) 
+    if(algorithm.size() > 0)
     {
-        fprintf(fp, "    %s:\n", (*it).first.c_str());
-        fprintf(fp, "      type: INLINE\n");
-        fprintf(fp, "      props:\n");
-        fprintf(fp, "        algorithm-expression: %s\n", (*it).second.c_str());
+        fprintf(fp, "  shardingAlgorithms:\n");
+        std::map<std::string, std::string>::iterator it;
+        for (it = algorithm.begin(); it != algorithm.end(); it++) 
+        {
+            fprintf(fp, "    %s:\n", (*it).first.c_str());
+            fprintf(fp, "      type: INLINE\n");
+            fprintf(fp, "      props:\n");
+            fprintf(fp, "        algorithm-expression: %s\n", (*it).second.c_str());
+        }
     }
-
-    fprintf(fp, "  bindingTables:\n");
-    fprintf(fp, "    - %s\n", binding_table.c_str());
 
     return 0;
 }
@@ -327,7 +327,7 @@ int main(int argc, char* argv[])
         return 0;
 
     char prefix[260] = {0};
-	snprintf(prefix, 259, "%sdtc-conf-", conf_dir);
+    strcpy(prefix, "dtc-conf-");
 
     DIR *dir = opendir(conf_dir);
 	if (!dir)
@@ -343,7 +343,9 @@ int main(int argc, char* argv[])
 	uint32_t v = 0;
 	int found = 0;
 
-	for (; drt; drt = readdir(dir)) {
+	for (; drt; drt = readdir(dir)) 
+    {
+        log4cplus_info("d_name: %s", drt->d_name);
 		int n = strncmp(drt->d_name, prefix, l);
 		if (n == 0) {
 			YAML::Node dtc_config;
