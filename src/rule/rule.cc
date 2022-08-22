@@ -17,14 +17,20 @@
 using namespace std;
 
 extern vector<vector<hsql::Expr*> > expr_rules;
+extern std::string conf_file;
 
-extern "C" int rule_sql_match(const char* szsql, const char* szkey, const char* dbname)
+extern "C" int rule_sql_match(const char* szsql, const char* szkey, const char* dbname, const char* conf)
 {
     if(!szsql || !szkey)
         return -1;
         
     std::string key = "";
     std::string sql = szsql;
+
+    if(conf)
+    {
+        conf_file = std::string(conf);
+    }
 
     key = szkey;
     if(key.length() == 0)

@@ -532,7 +532,8 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	log_debug("sql: %s, key: %s, dbname len:%d, dbname: %s", str.data, g_dtc_key, strlen(dbname), dbname);
 
 	//agent sql route, rule engine
-	layer = rule_sql_match(str.data, g_dtc_key, dbname);
+	//TODO: add conf file param.
+	layer = rule_sql_match(str.data, g_dtc_key, dbname, NULL);
 	log_debug("rule layer: %d", layer);
 
 	if(layer != 1)
