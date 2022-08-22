@@ -27,7 +27,7 @@ public:
     std::string GetStringValue(const char* key, std::string default_value = "");
 	std::vector<int> GetIntArray(const char* key);
 
-	bool load_dtc_config();
+	bool load_dtc_config(std::string conf_file);
 	
 	bool load_hot_inst_info();
 	bool load_full_inst_info();
