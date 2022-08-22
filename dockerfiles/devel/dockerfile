@@ -13,16 +13,16 @@ RUN mkdir -p $binpath
 RUN mkdir -p $confpath
 RUN mkdir -p $logpath
 
-COPY core $$binpath/core
-COPY dtcagent $$binpath/dtcagent
-COPY dtc $$binpath/dtc
-COPY async-connector $$binpath/async-connector
-COPY connector $$binpath/connector
-COPY data-lifecycle-manager $$binpath/data-lifecycle-manager
-COPY hwcserver $$binpath/hwcserver
-COPY librule.so $$binpath/librule.so
-COPY libsqlparser.so $$binpath/libsqlparser.so
-COPY conf-gen-utils $$binpath/conf-gen-utils
+COPY core $binpath/core
+COPY dtcagent $binpath/dtcagent
+COPY dtc $binpath/dtc
+COPY async-connector $binpath/async-connector
+COPY connector $binpath/connector
+COPY data-lifecycle-manager $binpath/data-lifecycle-manager
+COPY hwcserver $binpath/hwcserver
+COPY librule.so $binpath/librule.so
+COPY libsqlparser.so $binpath/libsqlparser.so
+COPY conf-gen-utils $binpath/conf-gen-utils
 
 COPY librule.so /usr/local/lib/librule.so
 COPY libsqlparser.so /usr/local/lib/libsqlparser.so
@@ -37,12 +37,12 @@ COPY mysql-connector-java-5.1.49.jar $basepath/sharding/lib/mysql-connector-java
 
 COPY run.sh $basepath/run.sh
 
-RUN chmod +x $$binpath/core
-RUN chmod +x $$binpath/dtcagent
-RUN chmod +x $$binpath/connector
+RUN chmod +x $binpath/core
+RUN chmod +x $binpath/dtcagent
+RUN chmod +x $binpath/connector
 RUN chmod +x $basepath/run.sh
-RUN chmod +x $$binpath/conf-gen-utils
-RUN chmod +x $$binpath/async-connector
+RUN chmod +x $binpath/conf-gen-utils
+RUN chmod +x $binpath/async-connector
 
 ENV LD_LIBRARY_PATH=:/usr/local/lib
 
