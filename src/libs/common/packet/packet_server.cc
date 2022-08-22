@@ -1366,10 +1366,6 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 		break;
 	}
 
-	// if (is_desc_tables(&job)) {
-	// 	return desc_tables_result(&job);
-	// }
-
 	// rp指向返回数据集
 	ResultPacket *rp =
 		job.result_code() >= 0 ? job.get_result_packet() : NULL;

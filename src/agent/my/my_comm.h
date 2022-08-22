@@ -16,7 +16,6 @@
 
 #ifndef _MY_COMM_H
 #define _MY_COMM_H
-#include "da_string.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
