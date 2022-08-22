@@ -92,7 +92,7 @@ jobs:
         ports:
           - 20015:20015
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
           DTC_BIN: dtc
@@ -136,7 +136,7 @@ jobs:
         ports:
           - 20015:20015
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
           DTC_BIN: dtc
@@ -146,7 +146,7 @@ jobs:
         ports:
           - 12001:12001
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name agent
         env:
           DTC_BIN: dtc
@@ -201,7 +201,7 @@ jobs:
         ports:
           - 12001:12001
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name agent
         env:
           DTC_BIN: dtc
@@ -270,7 +270,7 @@ jobs:
         ports:
           - 20015:20015
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
           DTC_BIN: dtc
@@ -328,7 +328,7 @@ jobs:
         ports:
           - 12001:12001
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name agent
         env:
           DTC_BIN: dtcagent       
@@ -337,7 +337,7 @@ jobs:
         ports:
           - 20015:20015
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
           DTC_BIN: dtc
@@ -396,7 +396,7 @@ jobs:
         ports:
           - 20015:20015
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
           DTC_BIN: dtc

@@ -42,8 +42,8 @@ int background = 1;
 const char stat_project_name[] = "daemon";
 const char stat_usage_argv[] = "";
 
-#define TABLE_CONF_NAME "/etc/dtc/dtc.yaml"
-#define CACHE_CONF_NAME "/etc/dtc/dtc.yaml"
+#define TABLE_CONF_NAME "../conf/dtc.yaml"
+#define CACHE_CONF_NAME "../conf/dtc.yaml"
 
 char d_cache_file[256] = CACHE_CONF_NAME;
 char d_table_file[256] = TABLE_CONF_NAME;

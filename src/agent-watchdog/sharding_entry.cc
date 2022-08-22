@@ -34,7 +34,7 @@ void ShardingEntry::exec()
 {
 	char *argv[4];
 
-	int ret = system("/usr/local/dtc/conf-gen-utils");
+	int ret = system("/usr/local/dtc/bin/conf-gen-utils");
 	if(ret == 0)
 	{
 		set_proc_title("agent_sharding");
