@@ -45,8 +45,8 @@ enum enum_select_types {
 
 const MetaSelections meta_selections[] = {
 	{"select dtctables" , E_SELECT_DTC_TABLES 	, NULL},
-	{"select dtcyaml" 	, E_SELECT_DTC_YAML 	, "/etc/dtc/dtc.yaml"},
-	{"select tableyaml" , E_SELECT_TABLE_YAML 	, "/etc/dtc/dtc.yaml"}
+	{"select dtcyaml" 	, E_SELECT_DTC_YAML 	, "../conf/dtc.yaml"},
+	{"select tableyaml" , E_SELECT_TABLE_YAML 	, "../conf/dtc.yaml"}
 };
 
 enum enum_field_types { MYSQL_TYPE_DECIMAL, MYSQL_TYPE_TINY,
@@ -1263,9 +1263,7 @@ int Packet::yaml_config_result(DtcJob *job , const char* p_filename)
 	char* p_buf = NULL;
 	int i_len = 0;
 	int i_ret = load_table(p_filename , p_buf , i_len);
-	if (p_buf != NULL) {
-		log4cplus_debug("p_filename:%s , buflen:%d" , p_filename , i_len);
-	}
+	log4cplus_debug("p_filename:%s , buflen:%d" , p_filename , i_len);
     
 	if (i_ret != 0) { return -EFAULT; }
 
