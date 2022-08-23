@@ -20,7 +20,7 @@
 #include "stat_thread.h"
 #include "stat_dtc_def.h"
 
-#define STATIDX "/usr/local/dtc/stat/dtc.stat.idx"
+#define STATIDX "../stat/dtc.stat.idx"
 extern StatThread g_stat_mgr;
 extern int init_statistics(void);
 
