@@ -62,7 +62,7 @@ bool parse_packet(uchar *input_raw_packet, int input_packet_length,
 		log_debug("len: %d", input_packet_length);
 
 		int layer = my_get_route_key(p, input_packet_length,
-					   &start_offset, &end_offset, r->owner->dbname);
+					   &start_offset, &end_offset, r->owner->dbname, r);
 		//if(layer <= 0 || layer > 3)
 		//	layer = 3;
 

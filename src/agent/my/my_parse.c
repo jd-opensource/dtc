@@ -23,6 +23,7 @@
 #include "../da_buf.h"
 #include "../da_util.h"
 #include "../da_errno.h"
+#include "../da_server.h"
 #include "../da_time.h"
 #include "../da_core.h"
 #include "my_comm.h"
@@ -512,8 +513,66 @@ bool check_cmd_select(struct string *str)
 	return false;
 }
 
+int get_mid_by_dbname(const char* dbname, const char* sql, struct msg* r)
+{
+	int mid = 0;
+	struct context* ctx = NULL;
+	struct conn *c_conn = NULL;
+	int sql_len = 0;
+	c_conn = r->owner;
+	ctx = conn_to_ctx(c_conn);
+	if(dbname && strlen(dbname) > 0)
+	{
+		char* cmp_dbname[250] = {0};
+		sprintf(cmp_dbname, "%s.", dbname);
+		struct array *pool = &(ctx->pool);
+		int i;
+		for (i = 0; i < array_n(pool); i++) {
+			struct server_pool *p = (struct server_pool *)array_get(pool, i);
+			if(string_empty(&p->name))
+				continue;
+			log_info("server pool module name: %s, cmp dbname: %s", p->name.data, cmp_dbname);
+			if(da_strncmp(p->name.data, cmp_dbname, strlen(cmp_dbname)) == 0)
+			{
+				mid = p->mid;
+			}
+		}
+	}
+
+	if(sql)
+	{
+		sql_len = strlen(sql);
+		if(sql_len > 0)
+		{
+			struct array *pool = &(ctx->pool);
+			int i, j;
+			for (i = 0; i < array_n(pool); i++) {
+				struct string cmp_name; 
+				struct server_pool *p = (struct server_pool *)array_get(pool, i);
+				if(string_empty(&p->name))
+					continue;
+				
+				string_copy(&cmp_name, p->name.data, p->name.len);
+				string_upper(&cmp_name);
+				for(j = 0; j < sql_len; j++)
+				{
+					if(sql_len - j > cmp_name.len && da_strncmp(sql + j, cmp_name.data, cmp_name.len) == 0)
+					{
+						mid = p->mid;
+					}
+				}
+				log_info("server pool module name: %s, cmp sql: %s", cmp_name.data, sql);
+			}
+		}
+		
+	}
+
+	log_info("mid result: %d", mid);
+	return mid;
+}
+
 int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
-		     int *end_offset, const char* dbname)
+		     int *end_offset, const char* dbname, struct msg* r)
 {
 	int i = 0;
 	int dtc_key_len = da_strlen(g_dtc_key);
@@ -529,11 +588,21 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	if (!string_upper(&str))
 		return -9;
 
-	log_debug("sql: %s, key: %s, dbname len:%d, dbname: %s", str.data, g_dtc_key, strlen(dbname), dbname);
+	log_debug("sql: %s, key: %s", str.data, g_dtc_key);
+	if(dbname && strlen(dbname))
+	{
+		log_debug("dbname len:%d, dbname: %s", strlen(dbname), dbname);
+	}
+
+	int mid = get_mid_by_dbname(dbname, str.data, r);
+	char conf_path[260] = {0};
+	if(mid != 0)
+	{
+		sprintf(conf_path, "/etc/dtc/dtc-conf-%d.yaml", mid);
+	}
 
 	//agent sql route, rule engine
-	//TODO: add conf file param.
-	layer = rule_sql_match(str.data, g_dtc_key, dbname, NULL);
+	layer = rule_sql_match(str.data, g_dtc_key, dbname, strlen(conf_path) > 0 ? conf_path : NULL);
 	log_debug("rule layer: %d", layer);
 
 	if(layer != 1)
