@@ -106,8 +106,8 @@ int load_entry_parameter(int argc, char **argv)
 
 	//init_log("dtcd");
 	log4cplus_info("%s v%s: starting....", stat_project_name, version);
-	strcpy(d_table_file, "/etc/dtc/dtc.yaml");
-	strcpy(d_cache_file, "/etc/dtc/dtc.yaml");
+	//strcpy(d_table_file, "/etc/dtc/dtc.yaml");
+	//strcpy(d_cache_file, "/etc/dtc/dtc.yaml");
 	g_dtc_config = new DTCConfig;
 	//load config file and copy it to ../stat
 	if (g_dtc_config->load_yaml_file(d_table_file, true) == -1)
