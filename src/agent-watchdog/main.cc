@@ -281,7 +281,7 @@ bool ParseAgentConf(std::string path){
 					}
 
 					std::string listen_on = argment;
-					log4cplus_debug("addr:%s", argment);
+					log4cplus_debug("addr:%s %s", argment, (char *)mxmlElementGetAttr(poolnode, "Mid"));
 					std::string::size_type pos = listen_on.find_last_of(":");
 					if(pos == std::string::npos){
 						log4cplus_error("string find error, file: %s", path.c_str());
@@ -289,7 +289,7 @@ bool ParseAgentConf(std::string path){
 					}
 					std::string addr = listen_on.substr(0, pos);
 					char filename[250] = {0};
-					sprintf(filename, "dtc-conf-%d.yaml", map_dtc_conf.size());
+					sprintf(filename, "dtc-conf-%d.yaml", atoi((char *)mxmlElementGetAttr(poolnode, "Mid")));
 					map_dtc_conf[addr] = filename;
 
 				}

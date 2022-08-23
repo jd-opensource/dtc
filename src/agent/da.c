@@ -594,12 +594,14 @@ static void da_run(struct instance *dai) {
 
 	tv_update_date(0, 1);
 
+	log_info("get dtc key start");
 	//init dtc key info
 	c = get_client_conn((struct server_pool *)array_top(&(dai->ctx->pool)));
 	if (c == NULL) {
 		return ;
 	}
 	request_dtc_key_define(dai->ctx, c);
+	log_info("get dtc key end");
 
 	/* run rabbit run */
 	while (!da_stop) {
