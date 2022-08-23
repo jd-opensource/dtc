@@ -95,7 +95,7 @@ jobs:
           - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
-          DTC_BIN: dtc
+          DTC_BIN: agent-watchdog
           DTC_ARGV: -c
     steps:
       - uses: actions/checkout@v3
@@ -139,7 +139,7 @@ jobs:
           - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
-          DTC_BIN: dtc
+          DTC_BIN: agent-watchdog
           DTC_ARGV: -c        
       agent:
         image: docker.io/kfysck/devel:all
@@ -149,7 +149,7 @@ jobs:
           - /usr/local/etc:/usr/local/dtc/conf/
         options: --name agent
         env:
-          DTC_BIN: dtc
+          DTC_BIN: agent-watchdog
           DTC_ARGV: -a
     steps:
       - uses: actions/checkout@v3
@@ -204,7 +204,7 @@ jobs:
           - /usr/local/etc:/usr/local/dtc/conf/
         options: --name agent
         env:
-          DTC_BIN: dtc
+          DTC_BIN: agent-watchdog
           DTC_ARGV: -ayc
     steps:
       - uses: actions/checkout@v3
@@ -273,7 +273,7 @@ jobs:
           - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
-          DTC_BIN: dtc
+          DTC_BIN: agent-watchdog
           DTC_ARGV: -c
     steps:
       - uses: actions/checkout@v3
@@ -340,7 +340,7 @@ jobs:
           - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
-          DTC_BIN: dtc
+          DTC_BIN: agent-watchdog
           DTC_ARGV: -c
     steps:
       - uses: actions/checkout@v3
@@ -399,7 +399,7 @@ jobs:
           - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
-          DTC_BIN: dtc
+          DTC_BIN: agent-watchdog
           DTC_ARGV: -c
     steps:
       - uses: actions/checkout@v3

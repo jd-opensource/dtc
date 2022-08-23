@@ -15,7 +15,7 @@ RUN mkdir -p $logpath
 
 COPY core $binpath/core
 COPY dtcagent $binpath/dtcagent
-COPY dtc $binpath/dtc
+COPY agent-watchdog $binpath/agent-watchdog
 COPY async-connector $binpath/async-connector
 COPY connector $binpath/connector
 COPY data-lifecycle-manager $binpath/data-lifecycle-manager

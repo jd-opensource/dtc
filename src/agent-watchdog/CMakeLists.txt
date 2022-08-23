@@ -29,7 +29,7 @@ LINK_LIBRARIES(dl)
 ADD_DEFINITIONS("-g -fPIC -fpermissive -std=gnu++11")
 ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 
-ADD_EXECUTABLE(dtc ${SRC_LIST1})
+ADD_EXECUTABLE(agent-watchdog ${SRC_LIST1})
 
-TARGET_LINK_LIBRARIES(dtc libstat.a libcommon.a libyaml-cpp.a liblog4cplus.a mxml)
-redefine_file_macro(dtc)
+TARGET_LINK_LIBRARIES(agent-watchdog libstat.a libcommon.a libyaml-cpp.a liblog4cplus.a mxml)
+redefine_file_macro(agent-watchdog)
