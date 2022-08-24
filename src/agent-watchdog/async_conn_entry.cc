@@ -16,8 +16,11 @@
 */
 #include "async_conn_entry.h"
 #include <unistd.h>
+#include "log.h"
 
+#define ROOT_PATH "/etc/dtc/"
 const char *fulldata_name = "async-connector";
+extern std::map<std::string, std::string> map_dtc_conf; //key:value --> dtc addr:conf file name
 
 AsyncConnEntry::AsyncConnEntry(WatchDog *watchdog, int sec)
 	: WatchDogDaemon(watchdog, sec)
@@ -31,9 +34,20 @@ AsyncConnEntry::~AsyncConnEntry(void)
 
 void AsyncConnEntry::exec()
 {
-	char *argv[2];
+	std::map<std::string, std::string>::iterator it;
+	for(it = map_dtc_conf.begin(); it != map_dtc_conf.end(); it++)
+	{
+		std::string addr = (*it).first;
+		std::string filename = (*it).second;
 
-	argv[1] = NULL;
-	argv[0] = (char *)fulldata_name;
-	execv(argv[0], argv);
+		std::string filepath = string(ROOT_PATH) + filename;
+		log4cplus_debug("filepath:%s", filepath.c_str());
+
+		char *argv[3];
+
+		argv[2] = NULL;
+		argv[0] = (char *)fulldata_name;
+		argv[1] = (char *)filepath.c_str();
+		execv(argv[0], argv);
+	}
 }

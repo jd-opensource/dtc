@@ -141,6 +141,7 @@ static struct server *server_pool_server(struct server_pool *pool,
 	uint32_t idx;
 
 	idx = msg->idx;
+	log_debug("server pool idx: %d", idx);
 	server = array_get(&pool->server, idx);
 
 	return server;

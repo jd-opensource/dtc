@@ -39,7 +39,7 @@ LINK_LIBRARIES(pthread)
 LINK_LIBRARIES(librule.so)
 
 ADD_DEFINITIONS ("-D_GNU_SOURCE")
-ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
+ADD_DEFINITIONS(-Wno-builtin-macro-redefined -g)
 
 ADD_EXECUTABLE(dtcagent ${SRC_LIST})
 

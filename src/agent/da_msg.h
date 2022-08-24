@@ -153,6 +153,8 @@ struct msg {
 	enum enum_server_command command; /* mysql request command type */
 	enum enum_agent_admin admin;
 	uint8_t layer;
+	int mid;
+	struct string table_name;
 	union COM_DATA data;
 
 	int err; /* errno on error? */

@@ -46,7 +46,10 @@ static int start_main_thread()
 	agentListener = new CAgentListenPkg();
 
 	agentProcess->BindDispatcher(netserverProcess);	
-	if(agentListener->Bind("*:2002/tcp", agentProcess) < 0)
+	char portstr[250] = {0};
+	sprintf(portstr, "*:%d/tcp", g_config.get_conf()["props"]["listener.port.async"].as<int>());
+	log4cplus_debug("portstr:%s", portstr);
+	if(agentListener->Bind(portstr, agentProcess) < 0)
 		return -1;
 		
 	workerThread->RunningThread();
@@ -176,7 +179,7 @@ int main(int argc, char* argv[])
 	init_log4cplus();
 	log4cplus_info("async-connector main entry.");
 
-	if(argc == 1)
+	if(argc == 2)
 	{
 		conf_path = argv[1];
 		log4cplus_info("custom conf path: %s", conf_path.c_str());

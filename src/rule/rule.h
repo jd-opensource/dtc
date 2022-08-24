@@ -3,8 +3,11 @@
 extern "C"{
 #endif
 
-    int rule_sql_match(const char* szsql, const char* szkey, const char* dbname, const char* conf);
+    int rule_sql_match(const char* szsql, const char* dbname, const char* conf);
     int re_load_table_key(char* key);
+    int sql_parse_table(const char* szsql, char* out);
+    int rule_get_key_type(const char* conf);
+    const char* rule_get_key(const char* conf);
 
 #ifdef __cplusplus    
 }

@@ -123,6 +123,20 @@ int string_compare(const struct string *s1, const struct string *s2)
 	return da_strncmp(s1->data, s2->data, s1->len);
 }
 
+int string_compare_nonsentive(const struct string *s1, const struct string *s2)
+{
+	struct string tmp1, tmp2;
+	if (s1->len != s2->len) {
+		return s1->len > s2->len ? 1 : -1;
+	}
+	
+	string_copy(&tmp1, s1, s1->len);
+	string_copy(&tmp2, s2, s2->len);
+	string_upper(&tmp1);
+	string_upper(&tmp2);
+	return da_strncmp(&tmp1.data, &tmp2.data, &tmp1.len);
+}
+
 static const char *_safe_check_longlong(const char *fmt, int32_t *have_longlong)
 {
 	*have_longlong = false;

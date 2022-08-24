@@ -148,6 +148,44 @@ std::string get_schema(SQLParserResult* sql_ast)
     return "";
 }
 
+std::string get_table_name(SQLParserResult* sql_ast)
+{
+    StatementType t = sql_ast->getStatement(0)->type();
+    if(t == kStmtSelect)
+    {
+        const SelectStatement* stmt = (const SelectStatement*)(sql_ast->getStatement(0));
+        TableRef* table = stmt->fromTable;
+        if(table)
+        {
+            return std::string(table->getName());
+        }
+    }
+    else if(t == kStmtInsert)
+    {
+        const InsertStatement* stmt = (const InsertStatement*)(sql_ast->getStatement(0));
+        return std::string(stmt->tableName);
+    }
+    else if(t == kStmtUpdate)
+    {
+        const UpdateStatement* stmt = (const UpdateStatement*)(sql_ast->getStatement(0));
+        TableRef* table = stmt->table;
+        if(table)
+        {
+            return std::string(table->getName());
+        }
+    }
+    else if(t == kStmtDelete)
+    {
+        const DeleteStatement* stmt = (const DeleteStatement*)(sql_ast->getStatement(0));
+        if(stmt)
+        {
+            return std::string(stmt->tableName);
+        }
+    }
+  
+    return "";
+}
+
 bool is_dtc_adapt_type(SQLParserResult* sql_ast)
 {
     StatementType t = sql_ast->getStatement(0)->type();
