@@ -44,7 +44,7 @@ jobs:
           cd ${{github.workspace}}
           cp build/src/core/core dockerfiles/devel/
           cp build/src/agent/dtcagent dockerfiles/devel/
-          cp build/src/agent-watchdog/dtc dockerfiles/devel/
+          cp build/src/agent-watchdog/agent-watchdog dockerfiles/devel/
           cp build/src/complex/async-connector dockerfiles/devel/
           cp build/src/connector/connector dockerfiles/devel/
           cp build/src/data_lifecycle/data-lifecycle-manager dockerfiles/devel/
@@ -92,10 +92,10 @@ jobs:
         ports:
           - 20015:20015
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
-          DTC_BIN: dtc
+          DTC_BIN: agent-watchdog
           DTC_ARGV: -c
     steps:
       - uses: actions/checkout@v3
@@ -136,20 +136,21 @@ jobs:
         ports:
           - 20015:20015
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
-          DTC_BIN: dtc
+          DTC_BIN: agent-watchdog
           DTC_ARGV: -c        
       agent:
         image: docker.io/kfysck/devel:all
         ports:
           - 12001:12001
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name agent
         env:
-          DTC_BIN: dtcagent
+          DTC_BIN: agent-watchdog
+          DTC_ARGV: -a
     steps:
       - uses: actions/checkout@v3
       
@@ -185,6 +186,7 @@ jobs:
 
 # Testing Layered Storage.
   test-agent-layered:
+    if: false
     needs: LAYERED
     runs-on: ubuntu-latest
     services:
@@ -199,10 +201,10 @@ jobs:
         ports:
           - 12001:12001
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name agent
         env:
-          DTC_BIN: dtc
+          DTC_BIN: agent-watchdog
           DTC_ARGV: -ayc
     steps:
       - uses: actions/checkout@v3
@@ -268,10 +270,10 @@ jobs:
         ports:
           - 20015:20015
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
-          DTC_BIN: dtc
+          DTC_BIN: agent-watchdog
           DTC_ARGV: -c
     steps:
       - uses: actions/checkout@v3
@@ -326,7 +328,7 @@ jobs:
         ports:
           - 12001:12001
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name agent
         env:
           DTC_BIN: dtcagent       
@@ -335,10 +337,10 @@ jobs:
         ports:
           - 20015:20015
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
         env:
-          DTC_BIN: dtc
+          DTC_BIN: agent-watchdog
           DTC_ARGV: -c
     steps:
       - uses: actions/checkout@v3
@@ -380,7 +382,6 @@ jobs:
 
 # Testing Cache with Datasource Scene 2 (Single DB and Multi Table)
   test-dtc-ds-S-db-M-table:
-    if: false
     needs: CORE
     runs-on: ubuntu-latest
     services:
@@ -395,8 +396,11 @@ jobs:
         ports:
           - 20015:20015
         volumes:
-          - /usr/local/etc:/etc/dtc/
+          - /usr/local/etc:/usr/local/dtc/conf/
         options: --name dtc
+        env:
+          DTC_BIN: agent-watchdog
+          DTC_ARGV: -c
     steps:
       - uses: actions/checkout@v3
       

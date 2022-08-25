@@ -8,6 +8,7 @@ props:
   shm.mem.size: 100 #MB
 
 primary:
+  db: dtc
   table: &table opensource
   cache:
     field:

@@ -115,7 +115,7 @@ uint32_t server_pool_idx(struct server_pool *pool, uint8_t *key,
 
 	if(key == NULL && keylen == 0)
 	{
-		log_debug("server_pool_idx 2\n");
+		log_debug("server_pool_idx 2: %d\n", array_n(&pool->server));
 		return array_n(&pool->server) - 1;
 
 		hash = server_pool_hash(pool, key, keylen);
@@ -141,6 +141,7 @@ static struct server *server_pool_server(struct server_pool *pool,
 	uint32_t idx;
 
 	idx = msg->idx;
+	log_debug("server pool idx: %d", idx);
 	server = array_get(&pool->server, idx);
 
 	return server;

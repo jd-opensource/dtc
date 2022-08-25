@@ -214,6 +214,7 @@ static struct msg *_msg_get() {
 	m->sending = 0;
 
 	m->pkt_nr = 0;
+	m->mid = 0;
 
 	return m;
 }
@@ -549,8 +550,33 @@ struct mbuf *msg_insert_mem_bulk(struct msg *msg,struct mbuf *mbuf,uint8_t *pos,
 uint32_t msg_backend_idx(struct msg *msg, uint8_t *key, uint32_t keylen) {
 	struct conn *conn = msg->owner;
 	struct server_pool *pool = conn->owner;
+	uint32_t i ;
+	struct server_pool *temp_pool = NULL;
+	struct context *ctx = pool->ctx;
+	log_debug("msg backend idx entry");
+	for(i = 0 ; i < array_n(&(ctx->pool)) ; i ++){
+		struct string tmp1, tmp2;
+		log_debug("AAAAAAAAAAA 111111111");
+		temp_pool = (struct server_pool *)array_get(&(ctx->pool), i);
+		string_copy(&tmp2, temp_pool->name.data, temp_pool->name.len);
+		string_upper(&tmp2);		
+		log_debug("AAAAAAAAAAA 222222222222: %s", tmp2.data);
+		log_debug("AAAAAAAAAAA 333333333333: %s", msg->table_name.data);
 
-	return server_pool_idx(pool, key, keylen);
+		//if(string_compare(&tmp2, &msg->table_name) == 0)
+		if(msg->mid == temp_pool->mid)
+			break;
+		else
+			temp_pool = NULL;			
+	}
+
+	if(temp_pool)
+		return server_pool_idx(temp_pool, key, keylen);
+	else
+	{
+		temp_pool = (struct server_pool *)array_get(&(ctx->pool), 0);
+		return server_pool_idx(temp_pool, NULL, 0);
+	}
 }
 
 static int msg_send_chain(struct context *ctx, struct conn *conn,

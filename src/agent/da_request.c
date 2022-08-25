@@ -29,9 +29,6 @@
 #include "da_time.h"
 #include "my/my_comm.h"
 
-extern char g_dtc_key[DTC_KEY_MAX];
-extern int g_dtc_key_type;
-
 void req_put(struct msg *msg)
 {
 	struct msg *pmsg; /* peer message (response) */
@@ -450,16 +447,47 @@ static void req_forward(struct context *ctx, struct conn *c_conn,
 	struct conn *s_conn;
 	struct server_pool *pool;
 	struct cache_instance *ci;
+	uint32_t i;
+	struct server_pool *temp_pool = NULL;
 	log_debug("req_forward entry");
 
 	/*insert msg to client imsgq，waiting for
 	 *the response,first add to backworker's queue
 	 */
 	c_conn->enqueue_inq(ctx, c_conn, msg);
-
 	pool = c_conn->owner;
+
+	for(i = 0 ; i < array_n(&(ctx->pool)) ; i ++){
+		log_debug("AAAAAAAAAA 111111, len: %d, my table name: %s", msg->table_name.len, msg->table_name.data);
+		temp_pool = (struct server_pool *)array_get(&(ctx->pool), i);
+		log_debug("AAAAAAAAAA 22222222 :MSG->MID: %d, TEMP_POOL->MID: %d", msg->mid, temp_pool->mid);
+		if(msg->mid == 0)
+			break;
+		if(msg->mid == temp_pool->mid)
+			break;
+		else
+			temp_pool = NULL;
+	}
+	if(temp_pool == NULL){
+		log_debug("s_conn null");
+		//client connection is still exist,no swallow
+		msg->done = 1;
+		msg->error = 1;
+		msg->err = MSG_REQ_FORWARD_ERR;
+		if (msg->frag_owner != NULL) {
+			msg->frag_owner->nfrag_done++;
+		}
+		if (req_done(c_conn, msg)) {
+			rsp_forward(ctx, c_conn, msg);
+		}
+		stats_pool_incr(ctx, pool, forward_error);
+		log_error("msg :%" PRIu64 " from c %d ,get s_conn fail!",
+			  msg->id, c_conn->fd);
+		return;
+	}
+
 	s_conn =
-		server_pool_conn(ctx, (struct server_pool *)c_conn->owner, msg);
+		server_pool_conn(ctx, temp_pool, msg);
 	if (s_conn == NULL) {
 		log_debug("s_conn null");
 		//client connection is still exist,no swallow
@@ -756,32 +784,6 @@ ferror:
 		  conn->fd, id, nfragment);
 
 	return true;
-}
-
-void request_dtc_key_define(struct context *ctx, struct conn *c)
-{
-	struct msg *msg = NULL;
-	int ret = 0;
-	if (g_dtc_key_type != -1)
-		return;
-
-	msg = net_send_desc_dtctable(c);
-	if (msg == NULL) {
-		log_error("error code:%d", ret);
-		return;
-	}
-	ret = dtc_header_add(msg, CMD_KEY_DEFINE, NULL);
-	if (ret) {
-		log_error("error code:%d %p", ret, msg);
-		return;
-	}
-
-	uint64_t rkey = 1;
-	msg->idx = msg_backend_idx(msg, (uint8_t *)&rkey, sizeof(uint64_t));
-	log_debug(
-		"request process will forward to dtc. msg len: %d, msg id: %d, ret:%d, idx:%d",
-		msg->mlen, msg->id, ret, msg->idx);
-	req_forward(ctx, c, msg);
 }
 
 void error_reply(struct msg *msg, struct conn *conn, struct context *ctx, int errcode)

@@ -1,26 +1,28 @@
 FROM ubuntu
 
 ARG basepath=/usr/local/dtc
-ARG confpath=/etc/dtc
+ARG binpath=$basepath/bin
+ARG confpath=$basepath/conf
 ARG logpath=/var/log/dtc
 
 RUN mkdir -p $basepath
 RUN mkdir -p $basepath/data
 RUN mkdir -p $basepath/stat
 RUN mkdir -p $basepath/log
+RUN mkdir -p $binpath
 RUN mkdir -p $confpath
 RUN mkdir -p $logpath
 
-COPY core $basepath/core
-COPY dtcagent $basepath/dtcagent
-COPY dtc $basepath/dtc
-COPY async-connector $basepath/async-connector
-COPY connector $basepath/connector
-COPY data-lifecycle-manager $basepath/data-lifecycle-manager
-COPY hwcserver $basepath/hwcserver
-COPY librule.so $basepath/librule.so
-COPY libsqlparser.so $basepath/libsqlparser.so
-COPY conf-gen-utils $basepath/conf-gen-utils
+COPY core $binpath/core
+COPY dtcagent $binpath/dtcagent
+COPY agent-watchdog $binpath/agent-watchdog
+COPY async-connector $binpath/async-connector
+COPY connector $binpath/connector
+COPY data-lifecycle-manager $binpath/data-lifecycle-manager
+COPY hwcserver $binpath/hwcserver
+COPY librule.so $binpath/librule.so
+COPY libsqlparser.so $binpath/libsqlparser.so
+COPY conf-gen-utils $binpath/conf-gen-utils
 
 COPY librule.so /usr/local/lib/librule.so
 COPY libsqlparser.so /usr/local/lib/libsqlparser.so
@@ -35,16 +37,13 @@ COPY mysql-connector-java-5.1.49.jar $basepath/sharding/lib/mysql-connector-java
 
 COPY run.sh $basepath/run.sh
 
-RUN chmod +x $basepath/core
-RUN chmod +x $basepath/dtcagent
-RUN chmod +x $basepath/connector
+RUN chmod +x $binpath/core
+RUN chmod +x $binpath/dtcagent
+RUN chmod +x $binpath/connector
 RUN chmod +x $basepath/run.sh
-RUN chmod +x $basepath/conf-gen-utils
-RUN chmod +x $basepath/async-connector
+RUN chmod +x $binpath/conf-gen-utils
+RUN chmod +x $binpath/async-connector
 
 ENV LD_LIBRARY_PATH=:/usr/local/lib
 
 CMD ["/usr/local/dtc/run.sh"]
-
-#COPY dtc.yaml $confpath/dtc.yaml
-#COPY log4cplus.conf $confpath/log4cplus.conf

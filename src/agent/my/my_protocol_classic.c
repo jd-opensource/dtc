@@ -18,7 +18,7 @@ bool parse_packet(uchar *input_raw_packet, int input_packet_length,
 	switch (cmd) {
 	case COM_INIT_DB: {
 		uint8_t *p = input_raw_packet;
-		log_debug("len: %d", input_packet_length);
+		log_debug("COM_INIT_DB len: %d", input_packet_length);
 
 		if (*p == 0x0) {
 			log_debug("len: %d", input_packet_length);
@@ -62,7 +62,7 @@ bool parse_packet(uchar *input_raw_packet, int input_packet_length,
 		log_debug("len: %d", input_packet_length);
 
 		int layer = my_get_route_key(p, input_packet_length,
-					   &start_offset, &end_offset, r->owner->dbname);
+					   &start_offset, &end_offset, r->owner->dbname, r);
 		//if(layer <= 0 || layer > 3)
 		//	layer = 3;
 

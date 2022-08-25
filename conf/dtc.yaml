@@ -22,6 +22,7 @@ connection: &connection
   pwd: password 
 
 primary:
+  db: &db mydb
   table: &table name
   layered.rule: '(a>1 and a<3) or uid = 0'
   cache:
@@ -33,7 +34,7 @@ primary:
       - {name: age, type: signed, size: 4}
   hot:
     logic:
-      {db: &db layer2, table: *table, connection: *connection}
+      {db: mydb_layer2, table: *table, connection: *connection}
     real:
       - {addr: mysql-01.local:3306, user: username, pwd: password, db: {prefix: &prefix [*db, _], start: 0, last: 10}}
       - {addr: mysql-02.local:3306, user: username, pwd: password, db: {prefix: *prefix, start: 11, last: 25}}
@@ -43,7 +44,7 @@ primary:
       table: {prefix: [*table, _], start: 0, last: 9}
   full:
     logic:
-      {db: layer3, table: *table, connection: *connection}
+      {db: mydb_layer3, table: *table, connection: *connection}
     real:
       - {addr: 127.0.0.1:3306, user: username, pwd: password, db: layer3}
 

@@ -17,23 +17,95 @@
 using namespace std;
 
 extern vector<vector<hsql::Expr*> > expr_rules;
+extern std::string conf_file;
 
-extern "C" int rule_sql_match(const char* szsql, const char* szkey, const char* dbname)
+std::string get_key_info(std::string conf)
 {
-    if(!szsql || !szkey)
+    YAML::Node config;
+    try {
+        config = YAML::LoadFile(conf);
+	} catch (const YAML::Exception &e) {
+		log4cplus_error("config file error:%s\n", e.what());
+		return "";
+	}
+
+    YAML::Node node = config["primary"]["cache"]["field"][0]["name"];
+    if(node)
+    {
+        std::string keystr = node.as<string>();
+        transform(keystr.begin(),keystr.end(),keystr.begin(),::toupper);
+        return keystr;
+    }
+    
+    return "";
+}
+
+extern "C" const char* rule_get_key(const char* conf)
+{
+    std::string strkey = get_key_info(conf);
+    printf("222222222222, conf file: %s\n", conf);
+    printf("key len: %d, key: %s\n", strkey.length(), strkey.c_str());
+    if(strkey.length() > 0)
+        return strkey.c_str();
+    else
+        return NULL;
+}
+
+extern "C" int rule_get_key_type(const char* conf)
+{
+    YAML::Node config;
+    if(conf == NULL)
+        return -1;
+
+    try {
+        config = YAML::LoadFile(conf);
+	} catch (const YAML::Exception &e) {
+		log4cplus_error("config file error:%s\n", e.what());
+		return -1;
+	}
+
+    YAML::Node node = config["primary"]["cache"]["field"][0]["type"];
+    if(node)
+    {
+        std::string str = node.as<string>();
+        if(str == "signed")
+            return 1;
+        else if(str == "unsigned")
+            return 2;
+        else if(str == "float")
+            return 3;
+        else if(str == "string")
+            return 4;
+        else if(str == "binary")
+            return 5;
+        else   
+            return -1;
+    }
+    return -1;
+}
+
+extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char* conf)
+{
+    if(!szsql)
         return -1;
         
     std::string key = "";
     std::string sql = szsql;
-
-    key = szkey;
-    if(key.length() == 0)
-        return -1;
-
-    cout<<"key: "<<key<<endl;
-    cout<<"sql: "<<sql<<endl;
+    bool flag = false;
 
     init_log4cplus();
+
+    if(conf)
+    {
+        conf_file = std::string(conf);
+        flag = true;
+
+        key = get_key_info(conf_file);
+        if(key.length() == 0)
+            return -1;
+    }
+
+    log4cplus_debug("key len: %d, key: %s, sql len: %d, sql: %s, dbname len: %d, dbname: %s", key.length(), key.c_str(), sql.length(), sql.c_str(), strlen(dbname), std::string(dbname).c_str());
 
     if(sql == "show databases" || sql == "SHOW DATABASES" || sql == "select database()" || sql == "SELECT DATABASE()")
     {
@@ -48,13 +120,13 @@ extern "C" int rule_sql_match(const char* szsql, const char* szkey, const char* 
             return 3;
     }
 
-    if(dbname != NULL && strlen(dbname) > 0 && 
-        std::string(dbname) != SPECIFIC_L1_SCHEMA && 
-        std::string(dbname) != SPECIFIC_L2_SCHEMA)
+    log4cplus_debug("#############dbname:%s", dbname);
+    if(dbname != NULL && strlen(dbname) > 0 && flag == false)
     {
+        log4cplus_debug("#############111111111111");
         return 3;
     }
-
+    log4cplus_debug("#############22222222222");
     int ret = re_load_rule();
     if(ret != 0)
     {
@@ -95,3 +167,15 @@ extern "C" int rule_sql_match(const char* szsql, const char* szkey, const char* 
     return 3;
 }
 
+extern "C" int sql_parse_table(const char* szsql, char* out)
+{
+    hsql::SQLParserResult sql_ast;
+    if(re_parse_sql(szsql, &sql_ast) != 0)
+        return -1;
+
+    std::string tablename = get_table_name(&sql_ast);
+    if(tablename.length() > 0)
+        strcpy(out, tablename.c_str());
+
+    return tablename.length();
+}

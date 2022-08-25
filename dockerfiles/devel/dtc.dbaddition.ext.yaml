@@ -33,3 +33,20 @@ primary:
     sharding:
       key: *key
       table: {prefix: [*table, _], start: 0, last: 9}
+
+extension:
+  - logic:
+      {db: ext1, table: monday, connection: *connection}
+    real:
+      - {addr: mysql:3306, user: root, pwd: 123456, db: january}
+  - logic:
+      {db: ext2, table: tuesday, connection: *connection}
+    real:
+      - {addr: mysql:3306, user: root, pwd: 123456, db: weekdays}
+  - logic:
+      {db: ext2, table: &sunday sunday, connection: *connection}
+    real:
+      - {addr: mysql:3306, user: root, pwd: 123456, db: weekdays}
+    sharding:
+      key: day
+      table: {prefix: [*sunday, _], start: 0, last: 2}      

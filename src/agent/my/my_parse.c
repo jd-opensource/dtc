@@ -23,6 +23,7 @@
 #include "../da_buf.h"
 #include "../da_util.h"
 #include "../da_errno.h"
+#include "../da_server.h"
 #include "../da_time.h"
 #include "../da_core.h"
 #include "my_comm.h"
@@ -62,9 +63,6 @@ enum codestate {
 	ST_LENTH = 1,
 	ST_VALUE = 2,
 };
-
-char g_dtc_key[DTC_KEY_MAX] = { 0 };
-int g_dtc_key_type = -1;
 
 /*
  * parse request msg
@@ -106,8 +104,6 @@ void my_parse_req(struct msg *r)
 		}
 
 		if (r->owner->stage == CONN_STAGE_LOGGED_IN) {
-			r->keytype = g_dtc_key_type;
-
 			rc = my_get_command(p, input_packet_length, r,
 					    &command);
 			if (rc) {
@@ -128,7 +124,7 @@ void my_parse_req(struct msg *r)
 				r->cmd = MSG_REQ_SVRADMIN;
 			}
 		}
-
+log_debug("AAAAAAAAA 444444444444");
 		p += input_packet_length;
 
 		goto success;
@@ -218,7 +214,7 @@ int my_get_command(uint8_t *input_raw_packet, uint32_t input_packet_length,
 		   struct msg *r, enum enum_server_command *cmd)
 {
 	*cmd = (enum enum_server_command)(uchar)input_raw_packet[0];
-
+	log_debug("cmd: %d", *cmd);
 	if (*cmd >= COM_END)
 		*cmd = COM_END; // Wrong command
 
@@ -512,11 +508,84 @@ bool check_cmd_select(struct string *str)
 	return false;
 }
 
+int get_mid_by_dbname(const char* dbname, const char* sql, struct msg* r)
+{
+	int mid = 0;
+	struct context* ctx = NULL;
+	struct conn *c_conn = NULL;
+	int sql_len = 0;
+	c_conn = r->owner;
+	ctx = conn_to_ctx(c_conn);
+	if(dbname && strlen(dbname) > 0)
+	{
+		char* cmp_dbname[250] = {0};
+		sprintf(cmp_dbname, "%s.", dbname);
+		struct array *pool = &(ctx->pool);
+		int i;
+		for (i = 0; i < array_n(pool); i++) {
+			struct server_pool *p = (struct server_pool *)array_get(pool, i);
+			if(string_empty(&p->name))
+				continue;
+			log_info("server pool module name: %s, cmp dbname: %s", p->name.data, cmp_dbname);
+			if(da_strncmp(p->name.data, cmp_dbname, strlen(cmp_dbname)) == 0)
+			{
+				mid = p->mid;
+			}
+		}
+	}
+
+	if(sql)
+	{
+		sql_len = strlen(sql);
+		if(sql_len > 0)
+		{
+			struct array *pool = &(ctx->pool);
+			int i, j;
+			for (i = 0; i < array_n(pool); i++) {
+				struct string cmp_name; 
+				struct server_pool *p = (struct server_pool *)array_get(pool, i);
+				if(string_empty(&p->name))
+					continue;
+				
+				string_copy(&cmp_name, p->name.data, p->name.len);
+				string_upper(&cmp_name);
+				for(j = 0; j < sql_len; j++)
+				{
+					if(sql_len - j > cmp_name.len && da_strncmp(sql + j, cmp_name.data, cmp_name.len) == 0)
+					{
+						mid = p->mid;
+					}
+				}
+				log_info("server pool module name: %s, cmp sql: %s", cmp_name.data, sql);
+			}
+		}
+		
+	}
+
+	log_info("mid result: %d", mid);
+	return mid;
+}
+
+void get_tablename(struct msg* r, uint8_t* sql, int sql_len)
+{
+	char tablename[260] = {0};
+	if(sql == NULL || sql_len <= 0)
+		return ;
+
+	log_debug("AAAAAAAAA 555555555555");
+	int ret = sql_parse_table(sql, &tablename);
+	if(ret > 0)
+	{
+		log_debug("AAAAAAAAA 666666666666");
+		string_copy(&r->table_name, tablename, strlen(tablename));
+	}
+	log_debug("AAAAAAAAA 77777777777 %s", tablename);
+}
+
 int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
-		     int *end_offset, const char* dbname)
+		     int *end_offset, const char* dbname, struct msg* r)
 {
 	int i = 0;
-	int dtc_key_len = da_strlen(g_dtc_key);
 	struct string str;
 	int ret = 0;
 	int layer = 0;
@@ -529,10 +598,47 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	if (!string_upper(&str))
 		return -9;
 
-	log_debug("sql: %s, key: %s", str.data, g_dtc_key);
+	log_debug("sql: %s", str.data);
+	if(dbname && strlen(dbname))
+	{
+		log_debug("dbname len:%d, dbname: %s", strlen(dbname), dbname);
+	}
+
+	int mid = get_mid_by_dbname(dbname, str.data, r);
+	char conf_path[260] = {0};
+	if(mid != 0)
+	{
+		sprintf(conf_path, "/etc/dtc/dtc-conf-%d.yaml", mid);
+		r->mid = mid;
+	}
+
+	get_tablename(r, str.data, str.len);
+	if(r->table_name.len > 0)
+		log_debug("table name: %s", r->table_name.data);
+
+	char* res = NULL;
+	char strkey[260] = {0};
+	memset(strkey, 0, 260);
+	if(strlen(conf_path) > 0)
+	{
+		res = rule_get_key(conf_path);
+		if(res == NULL)
+		{
+			ret = -5;
+			goto done;
+		}
+		else
+		{
+			strcpy(strkey, res);
+			log_debug("strkey: %s", strkey);
+		}
+	}
+
+	r->keytype = rule_get_key_type(conf_path);
+	log_debug("strkey type: %d", r->keytype);
 
 	//agent sql route, rule engine
-	layer = rule_sql_match(str.data, g_dtc_key, dbname);
+	layer = rule_sql_match(str.data, dbname, strlen(conf_path) > 0 ? conf_path : NULL);
 	log_debug("rule layer: %d", layer);
 
 	if(layer != 1)
@@ -555,38 +661,34 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	}
 
 	for (; i < str.len; i++) {
-		if (str.len - i >= dtc_key_len) {
+		if (str.len - i >= strlen(strkey)) {
 			log_debug(
-				"str.len:%d i:%d dtc_key_len:%d str.data + i:%s g_dtc_key:%c",
-				str.len, i, dtc_key_len, str.data + i,
-				g_dtc_key);
-			if (da_strncmp(str.data + i, g_dtc_key, dtc_key_len) ==
-			    0) {
+				"key: %s, key len:%d, str.len:%d i:%d dtc_key_len:%d str.data + i:%s ", strkey, strlen(strkey),
+				str.len, i, strlen(strkey), str.data + i);
+			if (da_strncmp(str.data + i, strkey, strlen(strkey)) == 0) 
+			{
 				int j;
-				for (j = i + dtc_key_len; j < str.len; j++) {
-					if (str.data[j] == '=') {
+				for (j = i + strlen(strkey); j < str.len; j++) 
+				{
+					if (str.data[j] == '=') 
+					{
 						j++;
 						//strip space.
-						while (j < str.len &&
-						       str.data[j] == ' ') {
+						while (j < str.len && str.data[j] == ' ') 
+						{
 							j++;
 						}
 
-						if (j < str.len) {
+						if (j < str.len) 
+						{
 							*start_offset = j;
 
 							int k = 0;
 							for (k = j; k < str.len;
 							     k++) {
-								if (sql[k + 1] ==
-									    ' ' ||
-								    sql[k + 1] ==
-									    ';' ||
-								    k + 1 ==
-									    str.len) {
-									*end_offset =
-										k +
-										1;
+								if (sql[k + 1] == ' ' || sql[k + 1] == ';' || k + 1 == str.len) 
+								{
+									*end_offset = k + 1;
 									ret = layer;
 									goto done;
 								}
@@ -594,7 +696,9 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 
 							ret = -4;
 							goto done;
-						} else {
+						} 
+						else 
+						{
 							ret = -5;
 							goto done;
 						}

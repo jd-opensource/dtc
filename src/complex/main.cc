@@ -33,6 +33,8 @@ static PollerBase* workerThread;
 CTransactionGroup* FullDBGroup = NULL;
 CTransactionGroup* HotDBGroup = NULL;
 
+std::string conf_path = "/etc/dtc/dtc.yaml";
+
 static int start_main_thread()
 {
 	workerThread = new PollerBase("async-connector");
@@ -44,7 +46,10 @@ static int start_main_thread()
 	agentListener = new CAgentListenPkg();
 
 	agentProcess->BindDispatcher(netserverProcess);	
-	if(agentListener->Bind("*:2002/tcp", agentProcess) < 0)
+	char portstr[250] = {0};
+	sprintf(portstr, "*:%d/tcp", g_config.get_conf()["props"]["listener.port.async"].as<int>());
+	log4cplus_debug("portstr:%s", portstr);
+	if(agentListener->Bind(portstr, agentProcess) < 0)
 		return -1;
 		
 	workerThread->RunningThread();
@@ -85,7 +90,7 @@ int GetIdxVal(const char *key,
 int init_config(void)
 {
 	//load cold and hot db config.
-	if(g_config.load_dtc_config() == false)
+	if(g_config.load_dtc_config(conf_path) == false)
 	{
 		log4cplus_error("load db config error");
 		return -1;
@@ -168,10 +173,17 @@ int start_db_thread_group(DBHost* dbconfig, std::string level)
 
 int main(int argc, char* argv[])
 {
+	// ./complex [conf file]
 	int ret = 0;
 
 	init_log4cplus();
 	log4cplus_info("async-connector main entry.");
+
+	if(argc == 2)
+	{
+		conf_path = argv[1];
+		log4cplus_info("custom conf path: %s", conf_path.c_str());
+	}
 
     if(init_config() == -1)
 		return -1;

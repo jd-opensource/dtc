@@ -19,8 +19,6 @@
 #include "cm_conn.h"
 #include "log.h"
 
-#define CACHE_CONF_NAME "/etc/dtc/dtc.yaml"
-
 using namespace std;
 
 #define STRCPY(d,s) do{ strncpy(d, s, sizeof(d)-1); d[sizeof(d)-1]=0; }while(0)
@@ -60,11 +58,11 @@ ConfigHelper::~ConfigHelper ()
 {
 }
 
-bool ConfigHelper::load_dtc_config()
+bool ConfigHelper::load_dtc_config(std::string conf_file)
 {
 	try 
 	{
-        dtc = YAML::LoadFile(CACHE_CONF_NAME);
+        dtc = YAML::LoadFile(conf_file);
 		if(dtc.IsNull())
 		{
 			log4cplus_error("dtc null");

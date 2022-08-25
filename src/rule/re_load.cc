@@ -5,7 +5,7 @@
 #include <iostream>
 #include "re_comm.h"
 
-#define CACHE_CONF_NAME "/etc/dtc/dtc.yaml"
+std::string conf_file = "/etc/dtc/dtc.yaml";
 
 using namespace hsql;
 hsql::SQLParserResult rule_ast;
@@ -17,7 +17,7 @@ std::string do_get_rule()
 {
     YAML::Node config;
     try {
-        config = YAML::LoadFile(CACHE_CONF_NAME);
+        config = YAML::LoadFile(conf_file);
 	} catch (const YAML::Exception &e) {
 		log4cplus_error("config file error:%s\n", e.what());
 		return "";
@@ -165,7 +165,7 @@ extern "C" int re_load_table_key(char* key)
 {
     YAML::Node config;
     try {
-        config = YAML::LoadFile(CACHE_CONF_NAME);
+        config = YAML::LoadFile(conf_file);
 	} catch (const YAML::Exception &e) {
 		log4cplus_error("config file error:%s\n", e.what());
 		return -1;

@@ -29,9 +29,6 @@
 #include "da_top_percentile.h"
 #include "my/my_comm.h"
 
-extern char g_dtc_key[DTC_KEY_MAX];
-extern int g_dtc_key_type;
-
 void rsp_put(struct msg *msg) {
 	ASSERT(!msg->request);
 	ASSERT(msg->peer == NULL);
@@ -160,51 +157,6 @@ int dtc_header_remove(struct msg* msg)
 	return 0;
 }
 
-int key_define_handle(struct msg* msg)
-{
-	struct mbuf* mbuf = STAILQ_LAST(&msg->buf_q, mbuf, next);
-	int buf_len = 0;
-
-	log_debug("key_define_handle entry.");
-
-	if(!mbuf)
-		return -1;
-
-	buf_len = mbuf->last - mbuf->start;
-	if(buf_len < sizeof(struct DTC_HEADER_V2))
-		return -3;
-
-	uint8_t* pos = mbuf->start + sizeof(struct DTC_HEADER_V2);
-	uint8_t type = *pos;
-	uint8_t key_len;
-	int i = 0;
-	g_dtc_key_type = type;
-	pos++;
-
-	key_len = *pos;
-	pos++;
-	if(key_len > DTC_KEY_MAX || key_len <= 0)
-		return -2;
-	
-	if(mbuf->last - pos < key_len)
-	{
-		log_debug("key len:%d %d", mbuf->last - pos, key_len);
-		return -4;
-	}
-
-	memcpy(g_dtc_key, pos, key_len);
-	g_dtc_key[key_len] = '\0';
-
-	for(i = 0; i < key_len; i++)
-		g_dtc_key[i] = upper(g_dtc_key[i]);
-	
-	log_info("dtc key:%s", g_dtc_key);
-
-	log_debug("key_define_handle leave.");
-
-	return 0;
-}
-
 void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 		struct msg *nmsg) {
 	log_debug("rsp_recv_done entry.");
@@ -297,15 +249,6 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 			case CMD_NOP:
 				dtc_header_remove(msg);
 				rsp_forward(ctx, c_conn, req);
-				break;
-			case CMD_KEY_DEFINE:	// get key define config from dtc server.
-				ret = key_define_handle(msg);
-				if(ret < 0)
-				{
-					log_error("get dtc key error:%d", ret);
-				}
-				c_conn->dequeue_inq(ctx, c_conn, req);
-				req_put(req);
 				break;
 			default:
 				log_error("msg admin error:%d", msg->admin);
