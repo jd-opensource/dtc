@@ -616,16 +616,23 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	if(r->table_name.len > 0)
 		log_debug("table name: %s", r->table_name.data);
 
-	char* res = rule_get_key(conf_path);
-	if(res == NULL)
-	{
-		ret = -5;
-		goto done;
-	}
+	char* res = NULL;
 	char strkey[260] = {0};
 	memset(strkey, 0, 260);
-	strcpy(strkey, res);
-	log_debug("strkey: %s", strkey);
+	if(strlen(conf_path) > 0)
+	{
+		res = rule_get_key(conf_path);
+		if(res == NULL)
+		{
+			ret = -5;
+			goto done;
+		}
+		else
+		{
+			strcpy(strkey, res);
+			log_debug("strkey: %s", strkey);
+		}
+	}
 
 	r->keytype = rule_get_key_type(conf_path);
 	log_debug("strkey type: %d", r->keytype);

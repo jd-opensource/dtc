@@ -114,7 +114,7 @@ bool MyRequest::check_packet_info()
 {
 	if (this->raw == NULL || this->raw_len <= 0) {
 		log4cplus_error(
-			"check packet info error:%p %d，set packet info first please",
+			"check packet info error:%p %d, set packet info first please",
 			this->raw, this->raw_len);
 		return false;
 	} else

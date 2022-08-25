@@ -458,15 +458,11 @@ static void req_forward(struct context *ctx, struct conn *c_conn,
 	pool = c_conn->owner;
 
 	for(i = 0 ; i < array_n(&(ctx->pool)) ; i ++){
-		struct string tmp1, tmp2;
 		log_debug("AAAAAAAAAA 111111, len: %d, my table name: %s", msg->table_name.len, msg->table_name.data);
 		temp_pool = (struct server_pool *)array_get(&(ctx->pool), i);
-		string_copy(&tmp2, msg->table_name.data, msg->table_name.len);
-		string_copy(&tmp1, temp_pool->name.data, temp_pool->name.len);
-		string_upper(&tmp2);
-		string_upper(&tmp1);
-		log_debug("AAAAAAAAAA 22222222 :%s, %s, MSG->MID: %d, TEMP_POOL->MID: %d", tmp2.data, tmp1.data, msg->mid, temp_pool->mid);
-		//if(string_compare(&tmp1, &tmp2) == 0)
+		log_debug("AAAAAAAAAA 22222222 :MSG->MID: %d, TEMP_POOL->MID: %d", msg->mid, temp_pool->mid);
+		if(msg->mid == 0)
+			break;
 		if(msg->mid == temp_pool->mid)
 			break;
 		else

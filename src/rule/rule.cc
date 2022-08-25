@@ -43,7 +43,7 @@ std::string get_key_info(std::string conf)
 extern "C" const char* rule_get_key(const char* conf)
 {
     std::string strkey = get_key_info(conf);
-    printf("222222222222\n");
+    printf("222222222222, conf file: %s\n", conf);
     printf("key len: %d, key: %s\n", strkey.length(), strkey.c_str());
     if(strkey.length() > 0)
         return strkey.c_str();
@@ -54,6 +54,9 @@ extern "C" const char* rule_get_key(const char* conf)
 extern "C" int rule_get_key_type(const char* conf)
 {
     YAML::Node config;
+    if(conf == NULL)
+        return -1;
+
     try {
         config = YAML::LoadFile(conf);
 	} catch (const YAML::Exception &e) {
@@ -88,17 +91,19 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
         
     std::string key = "";
     std::string sql = szsql;
+    bool flag = false;
+
+    init_log4cplus();
 
     if(conf)
     {
         conf_file = std::string(conf);
+        flag = true;
+
+        key = get_key_info(conf_file);
+        if(key.length() == 0)
+            return -1;
     }
-
-    key = get_key_info(conf_file);
-    if(key.length() == 0)
-        return -1;
-
-    init_log4cplus();
 
     log4cplus_debug("key len: %d, key: %s, sql len: %d, sql: %s, dbname len: %d, dbname: %s", key.length(), key.c_str(), sql.length(), sql.c_str(), strlen(dbname), std::string(dbname).c_str());
 
@@ -115,13 +120,13 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
             return 3;
     }
 
-    if(dbname != NULL && strlen(dbname) > 0 && 
-        std::string(dbname) != SPECIFIC_L1_SCHEMA && 
-        std::string(dbname) != SPECIFIC_L2_SCHEMA)
+    log4cplus_debug("#############dbname:%s", dbname);
+    if(dbname != NULL && strlen(dbname) > 0 && flag == false)
     {
+        log4cplus_debug("#############111111111111");
         return 3;
     }
-
+    log4cplus_debug("#############22222222222");
     int ret = re_load_rule();
     if(ret != 0)
     {

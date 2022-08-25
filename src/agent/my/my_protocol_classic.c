@@ -18,7 +18,7 @@ bool parse_packet(uchar *input_raw_packet, int input_packet_length,
 	switch (cmd) {
 	case COM_INIT_DB: {
 		uint8_t *p = input_raw_packet;
-		log_debug("len: %d", input_packet_length);
+		log_debug("COM_INIT_DB len: %d", input_packet_length);
 
 		if (*p == 0x0) {
 			log_debug("len: %d", input_packet_length);

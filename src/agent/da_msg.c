@@ -569,7 +569,14 @@ uint32_t msg_backend_idx(struct msg *msg, uint8_t *key, uint32_t keylen) {
 		else
 			temp_pool = NULL;			
 	}
-	return server_pool_idx(temp_pool, key, keylen);
+
+	if(temp_pool)
+		return server_pool_idx(temp_pool, key, keylen);
+	else
+	{
+		temp_pool = (struct server_pool *)array_get(&(ctx->pool), 0);
+		return server_pool_idx(temp_pool, NULL, 0);
+	}
 }
 
 static int msg_send_chain(struct context *ctx, struct conn *conn,

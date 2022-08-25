@@ -295,11 +295,12 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 	}
 
 	peerid = header->id;
+	int dbname_len = header->dbname_len;
 
 	//offset DTC Header.
 	p = p + sizeof(DTC_HEADER_V2);
 
-	mr.set_packet_info(p, packetLen - sizeof(DTC_HEADER_V2));
+	mr.set_packet_info(p + dbname_len, packetLen - sizeof(DTC_HEADER_V2) - dbname_len);
 
 	struct timeval tv1, tv2;
 	gettimeofday(&tv1, NULL);
