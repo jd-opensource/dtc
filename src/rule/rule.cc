@@ -134,9 +134,9 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
         return -5;
     }
 
-    if(sql.find("INSERT INTO") != sql.npos || sql.find("insert into") != sql.npos)
+    if(sql.find("INSERT INTO") != sql.npos || sql.find("UPDATE") != sql.npos || sql.find("DELETE FROM") != sql.npos)
     {
-        log4cplus_debug("INSERT request, force direct to L1.");
+        log4cplus_debug("INSERT/UPDATE/DELETE request, force direct to L1.");
         //L1: DTC cache.
         return 1;
     }

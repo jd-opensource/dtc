@@ -751,11 +751,23 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 	}
 
 	std::string db = request->get_dbname();
-	int ret = 0;	
+	int ret = 0;
 	if(db.length() == 0)
 		ret = m_DBConn->Query(m_Sql.c_str());
 	else
-		ret = m_DBConn->Query(db.c_str(), m_Sql.c_str());
+	{
+		if(request->get_layer() == 3)
+		{
+			log4cplus_debug("complex: get layer is 3");
+			log4cplus_debug("complex: dbname: %s", g_config.full_instance.DbName);
+			ret = m_DBConn->Query(g_config.full_instance.DbName, m_Sql.c_str());
+		}
+		else
+		{
+			ret = m_DBConn->Query(db.c_str(), m_Sql.c_str());
+		}
+	}
+		
 	if(0 != ret)
 	{
 		const char *errmsg = m_DBConn->GetErrMsg();
@@ -830,7 +842,7 @@ int TransactionTask::Process(CTaskRequest *request) {
 	log4cplus_debug("async-connector: pop task process begin.");
 
 	string request_sql = request->parse_request_sql();
-	log4cplus_debug("pop sql: %s", request_sql.c_str());
+	log4cplus_debug("pop sql: len:%d,  %s", request_sql.length(), request_sql.c_str());
 	if (request_sql.length() <= 0)
 	{
 		log4cplus_debug("request sql error.");

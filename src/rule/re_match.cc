@@ -226,11 +226,15 @@ bool do_match_expr(hsql::Expr* input, hsql::Expr* rule)
     return cmp_expr_value(input->expr2, rule->expr2, input->opType, rule->opType);
 }
 
-bool is_insert_type(SQLParserResult* sql_ast)
+bool is_write_type(SQLParserResult* sql_ast)
 {
     StatementType t = sql_ast->getStatement(0)->type();
     if(t == kStmtInsert)
         return true;
+    else if(t == kStmtUpdate)
+        return true;
+    else if(t == kStmtDelete)
+        return true;        
     else
         return false;
 }
@@ -370,7 +374,7 @@ int re_match_sql(hsql::SQLParserResult* sql_ast, vector<vector<hsql::Expr*> > ex
         goto RESULT;
     }
 
-    if(is_insert_type(sql_ast))
+    if(is_write_type(sql_ast))
     {
         ret = 0;
         goto RESULT;

@@ -60,6 +60,7 @@ int CAgentReceiver::RecvOnce()
 		errno = ECONNRESET;
 		return -errno;
 	}
+	log4cplus_debug("recv len:%d", rv);
 
 	offset += rv;
    
@@ -155,7 +156,9 @@ int CAgentReceiver::DecodeHeader(DTC_HEADER_V2 * header)
 
 	if(header->version != 2)
 	{
-		log4cplus_error("dtc header version error: %d", header->version);
+		log4cplus_error("struct dtc header version error: %d", header->version);
+		log4cplus_error("%c %c %c %c %c %c %c", header->version, header->version + 1, header->version+2,header->version+3, header->version+4,
+		header->version+5, header->version+6);
     	return -1;
 	}
 
@@ -184,6 +187,7 @@ int CAgentReceiver::CountPacket()
     {
         int pktbodylen = 0;
         DTC_HEADER_V2* header = NULL;
+		log4cplus_debug("count_packet: %d", pktCnt);
 
         if(leftlen < (int)sizeof(DTC_HEADER_V2))
             break;
