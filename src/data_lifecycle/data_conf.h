@@ -3,6 +3,7 @@
 
 #include "algorithm/singleton.h"
 #include <string>
+#include <vector>
 #include <stdint.h>
 
 struct ConfigParam{
@@ -16,6 +17,7 @@ public:
     std::string life_cycle_table_name_;
     std::string hot_db_name_;
     std::string cold_db_name_;
+    std::vector<std::string> field_vec_;
 };
 
 class DataConf{
