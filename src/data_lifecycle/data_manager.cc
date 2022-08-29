@@ -40,16 +40,37 @@ field_vec_(config_param.field_vec_){
     if(NULL != db_host){
         delete db_host;
     }
+
+    std::vector<std::string> full_db_vec = splitVecStr(config_param.full_db_addr_, ":");
+    if(full_db_vec.size() == 2){
+        DBHost* full_db_host = new DBHost();
+        memset(full_db_host, 0, sizeof(full_db_host));
+        strcpy(full_db_host->Host, full_db_vec[0].c_str());
+        full_db_host->Port = stoi(full_db_vec[1]);
+        strcpy(full_db_host->User, config_param.full_db_user_.c_str());
+        strcpy(full_db_host->Password, config_param.full_db_pwd_.c_str());
+        full_db_conn_ = new CDBConn(full_db_host);
+        if(NULL != full_db_host){
+            delete full_db_host;
+        }
+    }
 }
 
 DataManager::~DataManager(){
     if(NULL != db_conn_){
         delete db_conn_;
     }
+    if(NULL != full_db_conn_){
+        delete full_db_conn_;
+    }
 }
 
 int DataManager::ConnectAgent(){
     return db_conn_->Open();
+}
+
+int DataManager::ConnectFullDB(){
+    return full_db_conn_->Open();
 }
 
 int DataManager::DoProcess(){
@@ -131,22 +152,22 @@ int DataManager::GetLastId(uint64_t& last_delete_id, std::string& last_invisible
     std::stringstream ss_sql;
     ss_sql << "select id,ip,last_id,last_update_time from " << life_cycle_table_name_
             << " order by id desc limit 1";
-    int ret = db_conn_->do_query(cold_db_name_.c_str(), ss_sql.str().c_str());
+    int ret = full_db_conn_->do_query(cold_db_name_.c_str(), ss_sql.str().c_str());
     if(0 != ret){
-        log4cplus_debug("query error, ret: %d, err msg: %s", ret, db_conn_->get_err_msg());
+        log4cplus_debug("query error, ret: %d, err msg: %s", ret, full_db_conn_->get_err_msg());
         return ret;
     }
-    if(0 == db_conn_->use_result()){
-        if (0 == db_conn_->fetch_row()){
-            string ip = db_conn_->Row[1];
-            last_delete_id = std::stoull(db_conn_->Row[2]);
-            last_invisible_time = db_conn_->Row[3];
+    if(0 == full_db_conn_->use_result()){
+        if (0 == full_db_conn_->fetch_row()){
+            string ip = full_db_conn_->Row[1];
+            last_delete_id = std::stoull(full_db_conn_->Row[2]);
+            last_invisible_time = full_db_conn_->Row[3];
         } else {
-            db_conn_->free_result();
-            log4cplus_error("db fetch row error: %s", db_conn_->get_err_msg());
+            full_db_conn_->free_result();
+            log4cplus_error("db fetch row error: %s", full_db_conn_->get_err_msg());
             return ret;
         }
-        db_conn_->free_result();
+        full_db_conn_->free_result();
     }
     return 0;
 }
@@ -172,29 +193,29 @@ std::string DataManager::ConstructQuerySql(uint64_t last_delete_id, std::string 
 }
 
 int DataManager::DoQuery(const std::string& query_sql, std::vector<QueryInfo>& query_info_vec){
-    int ret = db_conn_->do_query(cold_db_name_.c_str(), query_sql.c_str());
+    int ret = full_db_conn_->do_query(cold_db_name_.c_str(), query_sql.c_str());
     if(0 != ret){
-        printf("query error, ret: %d, err msg: %s\n", ret, db_conn_->get_err_msg());
+        printf("query error, ret: %d, err msg: %s\n", ret, full_db_conn_->get_err_msg());
         return ret;
     }
-    if(0 == db_conn_->use_result()){
-        for (int i = 0; i < db_conn_->res_num; i++) {
-            ret = db_conn_->fetch_row();
+    if(0 == full_db_conn_->use_result()){
+        for (int i = 0; i < full_db_conn_->res_num; i++) {
+            ret = full_db_conn_->fetch_row();
             if (ret != 0) {
-                db_conn_->free_result();
-                printf("db fetch row error: %s\n", db_conn_->get_err_msg());
+                full_db_conn_->free_result();
+                printf("db fetch row error: %s\n", full_db_conn_->get_err_msg());
                 return ret;
             }
             QueryInfo query_info;
-            query_info.id = std::stoull(db_conn_->Row[0]);
-            query_info.invisible_time = db_conn_->Row[1];
-            query_info.key_info = db_conn_->Row[2];
+            query_info.id = std::stoull(full_db_conn_->Row[0]);
+            query_info.invisible_time = full_db_conn_->Row[1];
+            query_info.key_info = full_db_conn_->Row[2];
             for(int row_idx = 2; row_idx < field_vec_.size() + 2; row_idx++){
-                query_info.field_info.push_back(db_conn_->Row[row_idx]);
+                query_info.field_info.push_back(full_db_conn_->Row[row_idx]);
             }
             query_info_vec.push_back(query_info);
         }
-        db_conn_->free_result();
+        full_db_conn_->free_result();
     }
     return 0;
 }
@@ -249,9 +270,9 @@ int DataManager::UpdateLastDeleteId(){
         << "', " << last_delete_id_
         << ", '" << last_invisible_time_
         << "')";
-    int ret = db_conn_->do_query(cold_db_name_.c_str(), ss_sql.str().c_str());
+    int ret = full_db_conn_->do_query(cold_db_name_.c_str(), ss_sql.str().c_str());
     if(0 != ret){
-        log4cplus_debug("insert error, ret: %d, err msg: %s", ret, db_conn_->get_err_msg());
+        log4cplus_debug("insert error, ret: %d, err msg: %s", ret, full_db_conn_->get_err_msg());
         return ret;
     }
     return 0;
@@ -273,5 +294,24 @@ std::set<std::string> DataManager::splitStr(const std::string& src, const std::s
     string last_string = src.substr(last_position);//截取最后一个分隔符后的内容
     if (!last_string.empty() && last_string != " ")
         strs.insert(last_string);//如果最后一个分隔符后还有内容就入队
+    return strs;
+}
+
+std::vector<std::string> DataManager::splitVecStr(const std::string& src, const std::string& separate_character)
+{
+    std::vector<std::string> strs;
+
+    int separate_characterLen = separate_character.size();
+    int last_position = 0, index = -1;
+    while (-1 != (index = src.find(separate_character, last_position)))
+    {
+        if (src.substr(last_position, index - last_position) != " ") {
+            strs.push_back(src.substr(last_position, index - last_position));
+        }
+        last_position = index + separate_characterLen;
+    }
+    string last_string = src.substr(last_position);//截取最后一个分隔符后的内容
+    if (!last_string.empty() && last_string != " ")
+        strs.push_back(last_string);//如果最后一个分隔符后还有内容就入队
     return strs;
 }

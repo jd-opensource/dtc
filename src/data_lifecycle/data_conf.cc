@@ -83,10 +83,10 @@ int DataConf::LoadConfig(int argc, char *argv[]){
     YAML::Node config;
     try {
         config = YAML::LoadFile(cache_file);
-	} catch (const YAML::Exception &e) {
-		log4cplus_error("config file error:%s, %s\n", e.what(), cache_file);
-		return DTC_CODE_LOAD_CONFIG_ERR;
-	}
+    } catch (const YAML::Exception &e) {
+        log4cplus_error("config file error:%s, %s\n", e.what(), cache_file);
+        return DTC_CODE_LOAD_CONFIG_ERR;
+    }
 
     if(!config["data_lifecycle"]) {
         log4cplus_error("parse_config error.");
@@ -108,10 +108,10 @@ int DataConf::ParseConfig(ConfigParam& config_param){
     YAML::Node config;
     try {
         config = YAML::LoadFile(cache_file);
-	} catch (const YAML::Exception &e) {
-		log4cplus_error("config file error:%s, %s\n", e.what(), cache_file);
-		return DTC_CODE_LOAD_CONFIG_ERR;
-	}
+    } catch (const YAML::Exception &e) {
+        log4cplus_error("config file error:%s, %s\n", e.what(), cache_file);
+        return DTC_CODE_LOAD_CONFIG_ERR;
+    }
 
     YAML::Node node = config["data_lifecycle"]["single.query.count"];
     config_param.single_query_cnt_ = node? node.as<int>(): 10;    
@@ -136,8 +136,34 @@ int DataConf::ParseConfig(ConfigParam& config_param){
     node = config["primary"]["hot"]["logic"]["db"];
     config_param.hot_db_name_ = node? node.as<string>(): "L2";
 
-    node = config["primary"]["full"]["logic"]["db"];
+    if(config["primary"]["full"]["real"].size() == 0){
+        log4cplus_error("full real db not defined.");
+        return DTC_CODE_PARSE_CONFIG_ERR;
+    }
+
+    node = config["primary"]["full"]["real"][0]["db"];
     config_param.cold_db_name_ = node? node.as<string>(): "L3";
+
+    node = config["primary"]["full"]["real"][0]["addr"];
+    if(!node){
+        log4cplus_error("full db addr not defined.");
+        return DTC_CODE_PARSE_CONFIG_ERR;
+    }
+    config_param.full_db_addr_ = node.as<string>();
+
+    node = config["primary"]["full"]["real"][0]["user"];
+    if(!node){
+        log4cplus_error("full db user not defined.");
+        return DTC_CODE_PARSE_CONFIG_ERR;
+    }
+    config_param.full_db_user_ = node.as<string>();
+
+    node = config["primary"]["full"]["real"][0]["pwd"];
+    if(!node){
+        log4cplus_error("full db pwd not defined.");
+        return DTC_CODE_PARSE_CONFIG_ERR;
+    }
+    config_param.full_db_pwd_ = node.as<string>();
 
     node = config["primary"]["cache"]["field"][0]["name"];
     if(!node){

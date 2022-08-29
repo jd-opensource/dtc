@@ -31,6 +31,10 @@ int main(int argc, char *argv[]){
         log4cplus_error("ConnectAgent error.");
         return DTC_CODE_INIT_DAEMON_ERR;
     }
+    if(0 != p_data_manager->ConnectFullDB()){
+        log4cplus_error("ConnectFullDB error.");
+        return DTC_CODE_INIT_DAEMON_ERR;
+    }
     p_data_manager->DoProcess();
     /*if(NULL != p_data_manager){
         delete p_data_manager;

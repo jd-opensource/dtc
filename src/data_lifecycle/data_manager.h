@@ -25,6 +25,7 @@ public:
     DataManager(const ConfigParam& config_param);
     virtual ~DataManager();
     int ConnectAgent();
+    int ConnectFullDB();
     int DoProcess();
     int DoTaskOnce();
     void SetTimeRule(const std::string& time_rule);
@@ -39,6 +40,7 @@ public:
     virtual int DoDelete(const std::string& delete_sql);
     virtual int UpdateLastDeleteId();
     std::set<std::string> splitStr(const std::string& src, const std::string& separate_character);
+    std::vector<std::string> splitVecStr(const std::string& src, const std::string& separate_character);
 private:
     std::string data_rule_; // example: status=0
     std::string operate_time_rule_; // example: 0 */5 * * * ?
@@ -50,6 +52,7 @@ private:
     std::string cold_db_name_;
     std::time_t next_process_time_;
     CDBConn* db_conn_;
+    CDBConn* full_db_conn_;
     uint64_t last_delete_id_;
     std::string last_invisible_time_;
     std::vector<std::string> field_vec_;

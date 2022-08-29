@@ -18,6 +18,9 @@ public:
     std::string hot_db_name_;
     std::string cold_db_name_;
     std::vector<std::string> field_vec_;
+    std::string full_db_addr_;
+    std::string full_db_user_;
+    std::string full_db_pwd_;
 };
 
 class DataConf{
