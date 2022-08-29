@@ -751,6 +751,7 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 	}
 
 	std::string db = request->get_dbname();
+  
 	int ret = 0;
 	if(db.length() == 0)
 		ret = m_DBConn->Query(m_Sql.c_str());

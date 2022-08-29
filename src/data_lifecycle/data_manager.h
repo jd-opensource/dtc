@@ -15,6 +15,7 @@ public:
     uint64_t id;
     std::string key_info;
     std::string invisible_time;
+    std::vector<std::string> field_info;
 };
 
 class DataManager
@@ -34,6 +35,7 @@ public:
     std::string ConstructQuerySql(uint64_t last_delete_id, std::string last_invisible_time);
     virtual int DoQuery(const std::string& query_sql, std::vector<QueryInfo>& query_info_vec);
     std::set<std::string> ConstructDeleteSql(const std::string& key);
+    std::string ConstructDeleteSql(const std::vector<std::string>& key_vec);
     virtual int DoDelete(const std::string& delete_sql);
     virtual int UpdateLastDeleteId();
     std::set<std::string> splitStr(const std::string& src, const std::string& separate_character);
@@ -50,6 +52,7 @@ private:
     CDBConn* db_conn_;
     uint64_t last_delete_id_;
     std::string last_invisible_time_;
+    std::vector<std::string> field_vec_;
 };
 
 
