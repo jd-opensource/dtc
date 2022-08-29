@@ -35,7 +35,7 @@ int start_dtc(int (*entry)(void *), void *args)
     WatchDog *wdog = NULL;
     WatchDogListener *srv = NULL;
 
-	  if (g_dtc_config->get_int_val("cache", "DisableWatchDog", 1) == 0) {
+	  if (g_dtc_config->get_int_val("cache", "DisableWatchDog", 0) == 0) {
 		signal(SIGCHLD, SIG_DFL);
 		delay = g_dtc_config->get_int_val("cache", "WatchDogTime", 30);
 		if (delay < 5)
@@ -114,7 +114,9 @@ int start_dtc(int (*entry)(void *), void *args)
                 return -1;
             }
             log4cplus_info ("fork hwc server");
-    }
+    } else {
+		log4cplus_info("not hot");
+	}
 		wdog->run_loop();
 		exit(0);
 	}
