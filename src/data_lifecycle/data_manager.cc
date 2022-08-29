@@ -131,6 +131,7 @@ int DataManager::GetLastId(uint64_t& last_delete_id, std::string& last_invisible
     std::stringstream ss_sql;
     ss_sql << "select id,ip,last_id,last_update_time from " << life_cycle_table_name_
             << " order by id desc limit 1";
+    log4cplus_debug("ss sql: %s, cold db: %s", ss_sql.str().c_str(), cold_db_name_.c_str());
     int ret = db_conn_->do_query(cold_db_name_.c_str(), ss_sql.str().c_str());
     if(0 != ret){
         log4cplus_debug("query error, ret: %d, err msg: %s", ret, db_conn_->get_err_msg());

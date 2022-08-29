@@ -54,8 +54,8 @@ uint32_t DataConf::Port(){
 
 int DataConf::LoadConfig(int argc, char *argv[]){
     int c;
-    strcpy(table_file, "/etc/dtc/dtc.yaml");
-    strcpy(cache_file, "/etc/dtc/dtc.yaml");
+    strcpy(table_file, "/etc/dtc/dtc-conf-1000.yaml");
+    strcpy(cache_file, "/etc/dtc/dtc-conf-1000.yaml");
 
     while ((c = getopt(argc, argv, "df:t:hvV")) != -1) {
         switch (c) {

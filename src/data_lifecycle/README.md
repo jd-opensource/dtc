@@ -84,9 +84,9 @@ CREATE TABLE `data_lifecycle_table` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `ip` varchar(20) NOT NULL DEFAULT '0' COMMENT '执行清理操作的机器ip',
   `last_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '上次删除的记录对应的id',
-  `last_update_time` timestamp COMMENT '上次删除的记录对应的更新时间',
+  `last_update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '上次删除的记录对应的更新时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8
 ```
 
 当一个data_lifecycle_manager进程根据查询出的记录执行完操作后，需要执行update操作更新last_update_time的值为当前操作最后操作的记录id对应的更新时间。以此来保证其它data_lifecycle_manager进程不会重复处理同一条记录，同时多个data_lifecycle_manager进程也可以并行的执行操作。
