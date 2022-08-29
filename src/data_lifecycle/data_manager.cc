@@ -225,10 +225,9 @@ std::string DataManager::ConstructDeleteSql(const std::vector<std::string>& key_
     ss_sql << "delete from " << table_name_ << " where ";
     for(int i = 0; i < field_vec_.size(); i++){
         ss_sql << field_vec_[i] << " = '" << key_vec[i] << "'";
-        if(i != field_vec_.size() - 1){
-            ss_sql << " and ";
-        } 
+        ss_sql << " and ";
     }
+    ss_sql << "@@without=1";
     log4cplus_debug("delete sql: %s", ss_sql.str().c_str());
     return ss_sql.str();
 }
