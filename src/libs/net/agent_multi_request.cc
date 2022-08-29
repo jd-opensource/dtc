@@ -96,6 +96,8 @@ void CAgentMultiRequest::DecodeOneRequest(char * packetstart, int packetlen, int
 		return;
 	}
 
+	log4cplus_debug("copy_one_packet, db len: %d, ver: %d, packet len: %d", ((DTC_HEADER_V2*)packetstart)->dbname_len,
+					((DTC_HEADER_V2*)packetstart)->version, ((DTC_HEADER_V2*)packetstart)->packet_len);
 	if(!task->copyOnePacket(packetstart + sizeof(DTC_HEADER_V2) + ((DTC_HEADER_V2*)packetstart)->dbname_len, 
 			packetlen - sizeof(DTC_HEADER_V2) - ((DTC_HEADER_V2*)packetstart)->dbname_len)){
 		log4cplus_error("not enough mem for buf copy, client wont recv response");

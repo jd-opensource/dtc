@@ -122,9 +122,9 @@ int DTCConfig::load_yaml_file(const char *fn, bool bakconfig)
     if (bakconfig) {
         char bak_config[1024];
         int err = 0;
-        system("mkdir -p /etc/dtc/stat/");
+        system("mkdir -p ../stat/");
         snprintf(bak_config, sizeof(bak_config),
-             "cp %s /etc/dtc/stat/", fn);
+             "cp %s ../stat/", fn);
         if (err == 0)
             err = system(bak_config);
     }

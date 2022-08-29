@@ -220,7 +220,7 @@ int daemon_set_fd_limit(int maxfd)
 		rlim.rlim_cur = maxfd;
 		rlim.rlim_max = maxfd;
 		if (setrlimit(RLIMIT_NOFILE, &rlim) == -1) {
-			log4cplus_info(
+			log4cplus_error(
 				"Increase FdLimit failed, set val[%d] errmsg[%s]",
 				maxfd, strerror(errno));
 			return -1;
