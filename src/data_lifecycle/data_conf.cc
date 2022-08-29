@@ -146,6 +146,21 @@ int DataConf::ParseConfig(ConfigParam& config_param){
     }
     config_param.key_field_name_ = node.as<string>();
 
+    int field_size = config["primary"]["cache"]["field"].size();
+    if(field_size <= 0){
+        log4cplus_error("parse field name error.");
+        return DTC_CODE_PARSE_CONFIG_ERR;
+    }
+
+    for(int i = 0; i < field_size; i++){
+        node = config["primary"]["cache"]["field"][i]["name"];
+        if(!node){
+            log4cplus_error("field_name not defined.");
+            return DTC_CODE_PARSE_CONFIG_ERR;
+        }
+        config_param.field_vec_.push_back(node.as<string>());
+    }
+
     node = config["primary"]["hot"]["logic"]["table"];
     if(!node){
         log4cplus_error("table_name not defined.");

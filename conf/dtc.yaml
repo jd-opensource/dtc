@@ -13,8 +13,8 @@ props:
 data_lifecycle:
   single.query.count: 10
   lifecycle.tablename: 'data_lifecycle_table'
-  rule.sql: 'status = 0'
-  rule.cron: '00 01 * * * ?'
+  rule.sql: 'uid = 0'
+  rule.cron: '0 */1 * * * ?'
 
 connection: &connection
   addr: 127.0.0.1:3307

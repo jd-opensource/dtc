@@ -27,7 +27,8 @@ table_name_(config_param.table_name_),
 key_field_name_(config_param.key_field_name_),
 life_cycle_table_name_(config_param.life_cycle_table_name_),
 hot_db_name_(config_param.hot_db_name_),
-cold_db_name_(config_param.cold_db_name_){
+cold_db_name_(config_param.cold_db_name_),
+field_vec_(config_param.field_vec_){
     next_process_time_ = 0;
     DBHost* db_host = new DBHost();
     memset(db_host, 0, sizeof(db_host));
@@ -106,19 +107,12 @@ int DataManager::DoTaskOnce(){
         }
         for(auto iter = query_info_vec.begin(); iter != query_info_vec.end(); iter++){
             // 如果执行失败，更新last_id，并退出循环
-            // 如果清除规则有or，delete语句需要拆分成多个语句
-            std::set<std::string> sql_set = ConstructDeleteSql(iter->key_info);
-            bool success_flag = true;
-            for(auto del_iter = sql_set.begin(); del_iter != sql_set.end(); del_iter++){
-                ret = DoDelete(*del_iter);
-                printf("DoDelete ret: %d\n", ret);
-                if(0 != ret){
-                    success_flag = false;
-                }
-            }
+            std::string sql_set = ConstructDeleteSql(iter->field_info);
+            ret = DoDelete(sql_set);
+            printf("DoDelete ret: %d\n", ret);
             last_delete_id_ = iter->id;
             last_invisible_time_ = iter->invisible_time;
-            if(false == success_flag){
+            if(0 != ret){
                 UpdateLastDeleteId();
                 printf("DoDelete error, ret: %d\n", ret);
                 return DTC_CODE_MYSQL_DEL_ERR;
@@ -160,8 +154,14 @@ int DataManager::GetLastId(uint64_t& last_delete_id, std::string& last_invisible
 std::string DataManager::ConstructQuerySql(uint64_t last_delete_id, std::string last_invisible_time){
     // example: select id from table_A where status=0 and (invisible_time>6 or (invisible_time=6 and id>6)) order by invisible_time limit 2
     std::stringstream ss_sql;
-    ss_sql << "select id,invisible_time," << key_field_name_ 
-        << " from " << table_name_
+    ss_sql << "select id,invisible_time,";
+    for(int i = 0; i < field_vec_.size(); i++){
+        ss_sql << field_vec_[i];
+        if(i != field_vec_.size()-1){
+            ss_sql << ",";
+        }
+    }
+    ss_sql << " from " << table_name_
         << " where (" << data_rule_
         << ") and (invisible_time>'" << last_invisible_time
         << "' or (invisible_time='" << last_invisible_time
@@ -189,6 +189,9 @@ int DataManager::DoQuery(const std::string& query_sql, std::vector<QueryInfo>& q
             query_info.id = std::stoull(db_conn_->Row[0]);
             query_info.invisible_time = db_conn_->Row[1];
             query_info.key_info = db_conn_->Row[2];
+            for(int row_idx = 2; row_idx < field_vec_.size() + 2; row_idx++){
+                query_info.field_info.push_back(db_conn_->Row[row_idx]);
+            }
             query_info_vec.push_back(query_info);
         }
         db_conn_->free_result();
@@ -214,10 +217,25 @@ std::set<std::string> DataManager::ConstructDeleteSql(const std::string& key){
     return sql_set;
 }
 
+std::string DataManager::ConstructDeleteSql(const std::vector<std::string>& key_vec){
+    if(field_vec_.size() != key_vec.size()){
+        return "";
+    }
+    std::stringstream ss_sql;
+    ss_sql << "delete from " << table_name_ << " where ";
+    for(int i = 0; i < field_vec_.size(); i++){
+        ss_sql << field_vec_[i] << " = '" << key_vec[i] << "'";
+        ss_sql << " and ";
+    }
+    ss_sql << "@@without=1";
+    log4cplus_debug("delete sql: %s", ss_sql.str().c_str());
+    return ss_sql.str();
+}
+
 int DataManager::DoDelete(const std::string& delete_sql){
     int ret = db_conn_->do_query(hot_db_name_.c_str(), delete_sql.c_str());
     if(0 != ret){
-        log4cplus_debug("DoDelete error, ret: %d, err msg: %s", ret, db_conn_->get_err_msg());
+        log4cplus_debug("DoDelete error, ret: %d, err msg: %s, delete_sql: %s", ret, db_conn_->get_err_msg(), delete_sql.c_str());
         return ret;
     }
     return 0;
