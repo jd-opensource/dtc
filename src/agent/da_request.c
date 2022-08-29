@@ -337,14 +337,16 @@ int dtc_header_add(struct msg *msg, enum enum_agent_admin admin, char* dbname)
 #endif
 	dtc_header.id = msg->id;
 
-	dtc_header.dbname_len = dbname ? strlen(dbname) : 0;
+	dtc_header.dbname_len = dbname && strlen(dbname) > 0 ? strlen(dbname) : 0;
 	dtc_header.packet_len = mbuf_length(mbuf) + sizeof(dtc_header) + dtc_header.dbname_len;
 	dtc_header.layer = msg->layer;
 
 	mbuf_copy(new_buf, &dtc_header, sizeof(dtc_header));
-	if(dbname)
+	if(dbname && strlen(dbname) > 0)
 		mbuf_copy(new_buf, dbname, dtc_header.dbname_len);
 	mbuf_copy(new_buf, mbuf->start, mbuf_length(mbuf));
+
+	log_debug("dtc_header.dbname_len: %d, %s", dtc_header.dbname_len, dbname);
 
 	mbuf_remove(&msg->buf_q, mbuf);
 	mbuf_put(mbuf);

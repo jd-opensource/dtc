@@ -170,7 +170,7 @@ const char* CTaskRequest::get_result(void)
 //TODO: parse request sql.
 std::string CTaskRequest::parse_request_sql()
 {
-	log4cplus_debug("parse_request_sql entry, %p, %d", recvBuff, recvLen);
+	log4cplus_debug("parse_request_sql entry, %p, %d %c %c %c %c %c %c", recvBuff, recvLen, recvBuff[0], recvBuff[1], recvBuff[2], recvBuff[3], recvBuff[4], recvBuff[5]);
 
 	if(!recvBuff)
 		return "";
