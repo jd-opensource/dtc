@@ -184,3 +184,26 @@ extern "C" int re_load_table_key(char* key)
 
     return -1;
 }
+
+std::string re_load_table_name()
+{
+    YAML::Node config;
+    try {
+        config = YAML::LoadFile(conf_file);
+	} catch (const YAML::Exception &e) {
+		log4cplus_error("config file error:%s\n", e.what());
+		return "";
+	}
+
+    YAML::Node node = config["primary"]["table"];
+    if(node)
+    {
+        if(node.as<string>().length() >= 50)
+        {
+            return "";
+        }
+        return node.as<string>();
+    }
+
+    return "";
+}

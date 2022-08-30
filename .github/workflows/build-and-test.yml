@@ -85,6 +85,7 @@ jobs:
 # Testing Cache Only
   test-dtc-cache-only:
     needs: CORE
+    if: false    
     runs-on: ubuntu-latest
     services:
       dtc:
@@ -257,6 +258,7 @@ jobs:
 # Testing Cache with Datasource Scene 1 (Single DB and Single Table)
   test-dtc-ds-S-db-S-table:
     needs: CORE
+    if: false    
     runs-on: ubuntu-latest
     services:
       mysql:
@@ -383,6 +385,7 @@ jobs:
 # Testing Cache with Datasource Scene 2 (Single DB and Multi Table)
   test-dtc-ds-S-db-M-table:
     needs: CORE
+    if: false    
     runs-on: ubuntu-latest
     services:
       mysql:

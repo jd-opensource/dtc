@@ -4,3 +4,4 @@
 
 int get_rule_condition_num(hsql::Expr* rule);
 int re_load_rule();
+std::string re_load_table_name();
