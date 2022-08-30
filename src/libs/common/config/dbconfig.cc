@@ -1206,7 +1206,7 @@ std::string DbConfig::get_bind_addr(YAML::Node dtc_config)
         int port = dtc_config["props"]["listener.port.dtc"].as<int>();
         char sz[200] = {0};
         sprintf(sz, "*:%d/tcp", port);
-        return sz;
+        return std::string(sz, strlen(sz));
     }
     else
         return "";

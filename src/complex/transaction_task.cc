@@ -570,6 +570,9 @@ CBufferChain *encode_show_tables_row_data(MysqlConn* dbconn, CBufferChain *bc, u
 			return NULL;
 		}
 
+		if(std::string(dbconn->Row[0]) == "data_lifecycle_table")
+			continue;
+
 		//calc current row len
 		int row_len = 0;
 		std::string tbtypestr = build_dtc_table_type(dbconn->Row[0], dbname);
