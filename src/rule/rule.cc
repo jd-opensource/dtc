@@ -151,7 +151,10 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
         if(re_is_cache_sql(&sql_ast, key))
         {
             //L1: DTC cache.
-            return 1;
+            if(sql.find("*") != -1)
+                return -9;
+            else
+                return 1;
         }
         else
         {
