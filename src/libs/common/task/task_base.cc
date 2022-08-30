@@ -621,6 +621,13 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 					continue;
 				}
 
+				if (strcmp(exprList.at(i)->expr->getName(),
+					   "WITHOUT@@") ==
+				    0) { //is special flag.
+					temp--;
+					continue;
+				}				
+
 				int rtype = build_field_type_r(
 					exprList.at(i)
 						->expr2
