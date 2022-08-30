@@ -168,7 +168,7 @@ int ConnectorGroup::WriteHBLog(
 {
     log4cplus_info("WriteHBLog start");
     std::string s_value = p_job->mr.get_sql();
-    int start_pos = s_value.find("and @@WITHOUT=1;");
+    int start_pos = s_value.find("and WITHOUT@@ = 1;");
     if (start_pos != std::string::npos) {
         log4cplus_info("no need write hb log");
         return 0;
