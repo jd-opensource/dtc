@@ -121,6 +121,31 @@ bool MyRequest::check_packet_info()
 		return true;
 }
 
+hsql::Expr* find_node(hsql::Expr* node, char* key_name)
+{
+	if(!node)
+		return NULL;
+
+	if (node->type == kExprOperator && node->opType == kOpAnd) 
+	{
+		hsql::Expr* t1 = find_node(node->expr, key_name);
+		if(t1)
+			return t1;
+		hsql::Expr* t2 = find_node(node->expr2, key_name);
+		if(t2)
+			return t2;
+	}
+	else if(node->type == kExprOperator && node->opType == kOpEquals)
+	{
+		if(strcmp(node->expr->name, key_name) == 0)
+		{
+			return node->expr2;
+		}
+	}
+
+	return NULL;
+}
+
 bool MyRequest::get_key(DTCValue *key, char *key_name)
 {
 	hsql::Expr *where = NULL;
@@ -167,32 +192,25 @@ bool MyRequest::get_key(DTCValue *key, char *key_name)
 		if (!where)
 			return false;
 
-		if (where->type == kExprOperator && where->opType == kOpAnd) {
-			where = where->expr;
-		}
-
-		if (where->type == kExprOperator &&
-		    where->expr->type == kExprColumnRef) {
-			if (strcmp(where->expr->name, key_name) == 0) {
-				if (where->expr2) {
-					switch (where->expr2->type) {
-						case hsql::ExprType::kExprLiteralInt:
-							*key = DTCValue::Make(
-								where->expr2->ival);
-							return true;
-						case hsql::ExprType::kExprLiteralFloat:
-							*key = DTCValue::Make(
-								where->expr2->fval);
-							return true;
-						case hsql::ExprType::kExprLiteralString:
-							*key = DTCValue::Make(
-								where->expr2->name);
-							return true;
-						default:
-							return false;
-					}
-				}
-				return false;
+		hsql::Expr* node = find_node(where, key_name);
+		if(node)
+		{
+			switch (node->type) 
+			{
+				case hsql::ExprType::kExprLiteralInt:
+					*key = DTCValue::Make(
+						node->ival);
+					return true;
+				case hsql::ExprType::kExprLiteralFloat:
+					*key = DTCValue::Make(
+						node->fval);
+					return true;
+				case hsql::ExprType::kExprLiteralString:
+					*key = DTCValue::Make(
+						node->name);
+					return true;
+				default:
+					return false;
 			}
 		}
 	}
