@@ -56,7 +56,6 @@ private:
     uint64_t last_delete_id_;
     std::string last_invisible_time_;
     std::vector<std::string> field_vec_;
-    std::vector<bool> field_flag_vec_;
 };
 
 

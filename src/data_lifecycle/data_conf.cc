@@ -185,13 +185,6 @@ int DataConf::ParseConfig(ConfigParam& config_param){
             return DTC_CODE_PARSE_CONFIG_ERR;
         }
         config_param.field_vec_.push_back(node.as<string>());
-        node = config["primary"]["cache"]["field"][i]["type"];
-        if(!node){
-            log4cplus_error("field_type not defined.");
-            return DTC_CODE_PARSE_CONFIG_ERR;
-        }
-        bool flag = (node.as<string>() == "string") ? true : false;
-        config_param.field_flag_vec_.push_back(flag);
     }
 
     node = config["primary"]["hot"]["logic"]["table"];
