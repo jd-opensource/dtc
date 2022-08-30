@@ -211,7 +211,10 @@ int DataManager::DoQuery(const std::string& query_sql, std::vector<QueryInfo>& q
             query_info.invisible_time = full_db_conn_->Row[1];
             query_info.key_info = full_db_conn_->Row[2];
             for(int row_idx = 2; row_idx < field_vec_.size() + 2; row_idx++){
-                query_info.field_info.push_back(full_db_conn_->Row[row_idx]);
+                if(full_db_conn_->Row[row_idx] == NULL)
+                    query_info.field_info.push_back("");
+                else
+                    query_info.field_info.push_back(full_db_conn_->Row[row_idx]);
             }
             query_info_vec.push_back(query_info);
         }
