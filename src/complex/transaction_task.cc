@@ -754,13 +754,36 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 	}
 
 	std::string db = request->get_dbname();
+
+	if(m_Sql.find("insert into") == 0 || m_Sql.find("update ") == 0 || m_Sql.find("delete from ") == 0)
+	{
+		request->cmd = QUERY_CMD_WRITE;
+	}
+	else
+	{
+		if(m_Sql.find("show tables") == 0 || m_Sql.find("show full tables") == 0)
+		{
+			log4cplus_debug("query tables info.");
+			request->cmd = QUERY_CMD_SHOW_TABLES;
+		}
+		else if(m_Sql.find("show databases") == 0)
+		{
+			log4cplus_debug("query db info.");
+			request->cmd = QUERY_CMD_SHOW_DB;
+		}
+		else
+		{
+			log4cplus_debug("query result.");
+			request->cmd = QUERY_CMD_NORMAL;
+		}
+	}
   
 	int ret = 0;
 	if(db.length() == 0)
 		ret = m_DBConn->Query(m_Sql.c_str());
 	else
 	{
-		if(request->get_layer() == 3)
+		if(request->get_layer() == 3 && db == std::string(g_config.hot_instance.DbName))
 		{
 			log4cplus_debug("complex: get layer is 3");
 			log4cplus_debug("complex: dbname: %s", g_config.full_instance.DbName);
@@ -785,9 +808,8 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 		return m_ErrorNo;
 	}
 
-	if(m_Sql.find("insert into") == 0 || m_Sql.find("update ") == 0 || m_Sql.find("delete from ") == 0)
+	if(request->cmd == QUERY_CMD_WRITE)
 	{
-		request->cmd = QUERY_CMD_WRITE;
 		int affected = m_DBConn->AffectedRows();
 		log4cplus_debug("affected result, %d.", affected);
 		CBufferChain* rb = encode_mysql_ok(request, affected);
@@ -796,22 +818,6 @@ int TransactionTask::request_db_query(std::string request_sql, CTaskRequest *req
 	}
 	else
 	{
-		if(m_Sql.find("show tables") == 0 || m_Sql.find("show full tables") == 0)
-		{
-			log4cplus_debug("query tables info.");
-			request->cmd = QUERY_CMD_SHOW_TABLES;
-		}
-		else if(m_Sql.find("show databases") == 0)
-		{
-			log4cplus_debug("query db info.");
-			request->cmd = QUERY_CMD_SHOW_DB;
-		}
-		else
-		{
-			log4cplus_debug("query result.");
-			request->cmd = QUERY_CMD_NORMAL;
-		}
-
 		ret = m_DBConn->UseResult();
 		if (0 != ret) {
 			log4cplus_error("can not use result,sql[%s]", m_Sql.c_str());
