@@ -28,7 +28,8 @@ key_field_name_(config_param.key_field_name_),
 life_cycle_table_name_(config_param.life_cycle_table_name_),
 hot_db_name_(config_param.hot_db_name_),
 cold_db_name_(config_param.cold_db_name_),
-field_vec_(config_param.field_vec_){
+field_vec_(config_param.field_vec_),
+field_flag_vec_(config_param.field_flag_vec_){
     next_process_time_ = 0;
     DBHost* db_host = new DBHost();
     memset(db_host, 0, sizeof(db_host));
@@ -211,10 +212,15 @@ int DataManager::DoQuery(const std::string& query_sql, std::vector<QueryInfo>& q
             query_info.invisible_time = full_db_conn_->Row[1];
             query_info.key_info = full_db_conn_->Row[2];
             for(int row_idx = 2; row_idx < field_vec_.size() + 2; row_idx++){
-                if(full_db_conn_->Row[row_idx] == NULL)
-                    query_info.field_info.push_back("");
-                else
+                if(full_db_conn_->Row[row_idx] == NULL){
+                    if(field_flag_vec_[row_idx-2] == true){
+                        query_info.field_info.push_back("");
+                    } else {
+                        query_info.field_info.push_back("0");
+                    }
+                } else {
                     query_info.field_info.push_back(full_db_conn_->Row[row_idx]);
+                }
             }
             query_info_vec.push_back(query_info);
         }
