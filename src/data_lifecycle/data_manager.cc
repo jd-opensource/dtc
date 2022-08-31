@@ -213,7 +213,7 @@ int DataManager::DoQuery(const std::string& query_sql, std::vector<QueryInfo>& q
             query_info.key_info = full_db_conn_->Row[2];
             for(int row_idx = 2; row_idx < field_vec_.size() + 2; row_idx++){
                 if(full_db_conn_->Row[row_idx] == NULL){
-                    if(field_flag_vec_[row_idx-2] == true){
+                    if(field_flag_vec_[row_idx-2] == 1){
                         query_info.field_info.push_back("");
                     } else {
                         query_info.field_info.push_back("0");
@@ -248,13 +248,18 @@ std::set<std::string> DataManager::ConstructDeleteSql(const std::string& key){
 }
 
 std::string DataManager::ConstructDeleteSql(const std::vector<std::string>& key_vec){
-    if(field_vec_.size() != key_vec.size()){
+    if(field_vec_.size() != key_vec.size() || field_flag_vec_.size() != key_vec.size()){
+        log4cplus_debug("field_vec_.size(): %d, key_vec.size(): %d, field_flag_vec_.size(): %d", field_vec_.size(), key_vec.size(), field_flag_vec_.size());
         return "";
     }
     std::stringstream ss_sql;
     ss_sql << "delete from " << table_name_ << " where ";
     for(int i = 0; i < field_vec_.size(); i++){
-        ss_sql << field_vec_[i] << " = '" << key_vec[i] << "'";
+        if(field_flag_vec_[i] == 1){
+            ss_sql << field_vec_[i] << " = '" << key_vec[i] << "'";
+        } else {
+            ss_sql << field_vec_[i] << " = " << key_vec[i];
+        }
         ss_sql << " and ";
     }
     ss_sql << "@@without=1";
