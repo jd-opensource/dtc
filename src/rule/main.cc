@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     if(re_parse_sql(sql, &sql_ast) != 0)
         return -1;
 
-    ret = re_match_sql(&sql_ast, expr_rules);
+    ret = re_match_sql(&sql_ast, expr_rules, &sql_ast);
     if(ret == 0)
     {
         if(re_is_cache_sql(&sql_ast, key))
