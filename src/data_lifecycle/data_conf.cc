@@ -190,7 +190,7 @@ int DataConf::ParseConfig(ConfigParam& config_param){
             log4cplus_error("field_type not defined.");
             return DTC_CODE_PARSE_CONFIG_ERR;
         }
-        bool flag = (node.as<string>() == "string") ? true : false;
+        int flag = (node.as<string>() == "string" || node.as<string>() == "binary") ? 1 : 0;
         config_param.field_flag_vec_.push_back(flag);
     }
 
