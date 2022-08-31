@@ -202,7 +202,9 @@ std::string re_load_table_name()
         {
             return "";
         }
-        return node.as<string>();
+        std::string res = node.as<string>();
+        transform(res.begin(),res.end(),res.begin(),::toupper);
+        return res;
     }
 
     return "";
