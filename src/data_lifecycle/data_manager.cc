@@ -262,7 +262,7 @@ std::string DataManager::ConstructDeleteSql(const std::vector<std::string>& key_
         }
         ss_sql << " and ";
     }
-    ss_sql << "@@without=1";
+    ss_sql << "WITHOUT@@ = 1";
     log4cplus_debug("delete sql: %s", ss_sql.str().c_str());
     return ss_sql.str();
 }

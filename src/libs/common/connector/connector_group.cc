@@ -167,6 +167,13 @@ int ConnectorGroup::WriteHBLog(
     int i_check)
 {
     log4cplus_info("WriteHBLog start");
+    std::string s_value = p_job->mr.get_sql();
+    int start_pos = s_value.find("and WITHOUT@@ = 1;");
+    if (start_pos != std::string::npos) {
+        log4cplus_info("no need write hb log");
+        return 0;
+    }
+
     DTCJobOperation* p_task = new DTCJobOperation();
     if(NULL == p_task) {
         log4cplus_error("cannot WriteHBLog row, new task error, possible memory exhausted\n");
@@ -193,7 +200,6 @@ int ConnectorGroup::WriteHBLog(
 
     hotbacktask.set_packed_key(packeKey.bin.ptr , packeKey.bin.len);
     
-    const std::string& s_value = p_job->mr.get_sql();
     if (s_value.empty()) {
         log4cplus_info("WriteHBLog sql is empty");
         hotbacktask.set_flag(DTCHotBackup::NON_VALUE);
