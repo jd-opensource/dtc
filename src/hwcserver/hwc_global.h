@@ -28,7 +28,7 @@
 
 #define MAX_ASYNC_FILE_SIZE         (10<<20)	//10M
 #define ASYNC_FILE_CONTROLLER_SIZE  512	//512bytes
-#define ASYNC_FILE_PATH             "/var/log/dtc/hwc"
+#define ASYNC_FILE_PATH             "../log/hwc"
 #define ASYNC_FILE_CONTROLLER       ASYNC_FILE_PATH"/controller"
 #define ASYNC_FILE_NAME             ASYNC_FILE_PATH"/hwc_"
 #define ASYNC_FILE_END_FLAG         0xFFFFFFFFUL
