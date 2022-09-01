@@ -127,7 +127,7 @@ void my_parse_req(struct msg *r)
 		else if (r->owner->stage == CONN_STAGE_LOGGING_IN) 
 		{
 			//parse -D parameter(dbname)
-			if(input_packet_length < 34)
+			if(input_packet_length >= 34)
 			{
 				uint8_t* pp = p;
 				uint8_t* dbstart = NULL;
@@ -143,8 +143,17 @@ void my_parse_req(struct msg *r)
 						pp++;
 				}
 
+				if(*pp == 0x0) //Password
+				{
+					pp++;
+				}
+				else
+				{
+					pp += 20;
+				}
+
 				dbstart = pp;
-				while(pp - p <= input_packet_length)	//DB
+				while(pp - dbstart <= input_packet_length)	//DB
 				{
 					if(*pp == 0x0)
 					{
@@ -158,13 +167,15 @@ void my_parse_req(struct msg *r)
 				{
 					memcpy(r->owner->dbname, dbstart, pp - dbstart);
 					r->owner->dbname[pp - dbstart] = '\0';
-					log_info("client set dbname: %s", r->owner->dbname);
+					log_debug("client set dbname: %s", r->owner->dbname);
 				}
+			}
+			else
+			{
 				log_error("parse login info error amid at packet length:%d\n", input_packet_length);
-
 			}
 		}
-log_debug("AAAAAAAAA 444444444444");
+
 		p += input_packet_length;
 
 		goto success;
