@@ -9,7 +9,7 @@ env:
 
 jobs:        
   building:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       
@@ -52,6 +52,7 @@ jobs:
           cp build/src/rule/librule.so dockerfiles/devel/
           cp src/libs/hsql/libs/libsqlparser.so dockerfiles/devel/
           cp build/src/utils/conf-gen-utils dockerfiles/devel/
+          cp src/libs/api/cc_api/libs/libdtcapi.so dockerfiles/devel/
 
           cd dockerfiles/devel/
 
@@ -64,29 +65,28 @@ jobs:
 # Core Junction
   CORE:
     needs: building
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - run: echo "Core Junction."  
 
 # Agent Junction
   AGENT:
     needs: building
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - run: echo "Agent Junction."        
 
 # Layered Junction
   LAYERED:
     needs: building
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - run: echo "Layered Junction."          
 
 # Testing Cache Only
   test-dtc-cache-only:
     needs: CORE
-    if: false    
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       dtc:
         image: docker.io/kfysck/devel:all
@@ -130,7 +130,7 @@ jobs:
   test-agent-cache-only:
     needs: AGENT
     if: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       dtc:
         image: docker.io/kfysck/devel:all
@@ -189,7 +189,7 @@ jobs:
   test-agent-layered:
     if: false
     needs: LAYERED
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:5.7
@@ -258,8 +258,7 @@ jobs:
 # Testing Cache with Datasource Scene 1 (Single DB and Single Table)
   test-dtc-ds-S-db-S-table:
     needs: CORE
-    if: false    
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:5.7
@@ -317,7 +316,7 @@ jobs:
   test-agent-ds-S-db-S-table:
     needs: AGENT
     if: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:5.7
@@ -384,9 +383,8 @@ jobs:
 
 # Testing Cache with Datasource Scene 2 (Single DB and Multi Table)
   test-dtc-ds-S-db-M-table:
-    needs: CORE
-    if: false    
-    runs-on: ubuntu-latest
+    needs: CORE 
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:5.7
