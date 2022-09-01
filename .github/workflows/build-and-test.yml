@@ -52,6 +52,7 @@ jobs:
           cp build/src/rule/librule.so dockerfiles/devel/
           cp src/libs/hsql/libs/libsqlparser.so dockerfiles/devel/
           cp build/src/utils/conf-gen-utils dockerfiles/devel/
+          cp src/libs/api/cc_api/libs/libdtcapi.so dockerfiles/devel/
 
           cd dockerfiles/devel/
 
@@ -85,7 +86,6 @@ jobs:
 # Testing Cache Only
   test-dtc-cache-only:
     needs: CORE
-    if: false    
     runs-on: ubuntu-latest
     services:
       dtc:

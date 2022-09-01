@@ -26,6 +26,7 @@ COPY conf-gen-utils $binpath/conf-gen-utils
 
 COPY librule.so /usr/local/lib/librule.so
 COPY libsqlparser.so /usr/local/lib/libsqlparser.so
+COPY libdtcapi.so /usr/local/lib/libdtcapi.so
 
 RUN apt update
 RUN apt install -y iputils-ping net-tools wget default-jre
@@ -43,6 +44,7 @@ RUN chmod +x $binpath/connector
 RUN chmod +x $basepath/run.sh
 RUN chmod +x $binpath/conf-gen-utils
 RUN chmod +x $binpath/async-connector
+RUN chmod +x $binpath/hwcserver
 
 ENV LD_LIBRARY_PATH=:/usr/local/lib
 
