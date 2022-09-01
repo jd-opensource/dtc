@@ -17,7 +17,6 @@ do
         let sleep_count+=1
     fi
 done
-sleep 1000000s
 echo "Timeout waitting for dtc conf files."
 
 #cd /usr/local/lib/
