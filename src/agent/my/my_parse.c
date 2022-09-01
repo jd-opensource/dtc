@@ -124,6 +124,46 @@ void my_parse_req(struct msg *r)
 				r->cmd = MSG_REQ_SVRADMIN;
 			}
 		}
+		else if (r->owner->stage == CONN_STAGE_LOGGING_IN) 
+		{
+			//parse -D parameter(dbname)
+			if(input_packet_length < 34)
+			{
+				uint8_t* pp = p;
+				uint8_t* dbstart = NULL;
+				pp += 32;	//Client Cap + Extended Client Cap + Max Packet + Charset + Unused
+				while(pp - p <= input_packet_length)	//Username
+				{
+					if(*pp == 0x0)
+					{
+						pp++;
+						break;
+					}
+					else
+						pp++;
+				}
+
+				dbstart = pp;
+				while(pp - p <= input_packet_length)	//DB
+				{
+					if(*pp == 0x0)
+					{
+						break;
+					}
+					else
+						pp++;
+				}
+
+				if(pp - dbstart > 0 && pp - dbstart < 250)
+				{
+					memcpy(r->owner->dbname, dbstart, pp - dbstart);
+					r->owner->dbname[pp - dbstart] = '\0';
+					log_info("client set dbname: %s", r->owner->dbname);
+				}
+				log_error("parse login info error amid at packet length:%d\n", input_packet_length);
+
+			}
+		}
 log_debug("AAAAAAAAA 444444444444");
 		p += input_packet_length;
 
