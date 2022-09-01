@@ -9,7 +9,7 @@ env:
 
 jobs:        
   building:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       
@@ -65,28 +65,28 @@ jobs:
 # Core Junction
   CORE:
     needs: building
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - run: echo "Core Junction."  
 
 # Agent Junction
   AGENT:
     needs: building
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - run: echo "Agent Junction."        
 
 # Layered Junction
   LAYERED:
     needs: building
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - run: echo "Layered Junction."          
 
 # Testing Cache Only
   test-dtc-cache-only:
     needs: CORE
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       dtc:
         image: docker.io/kfysck/devel:all
@@ -130,7 +130,7 @@ jobs:
   test-agent-cache-only:
     needs: AGENT
     if: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       dtc:
         image: docker.io/kfysck/devel:all
@@ -189,7 +189,7 @@ jobs:
   test-agent-layered:
     if: false
     needs: LAYERED
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:5.7
@@ -259,7 +259,7 @@ jobs:
   test-dtc-ds-S-db-S-table:
     needs: CORE
     if: false    
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:5.7
@@ -317,7 +317,7 @@ jobs:
   test-agent-ds-S-db-S-table:
     needs: AGENT
     if: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:5.7
@@ -386,7 +386,7 @@ jobs:
   test-dtc-ds-S-db-M-table:
     needs: CORE
     if: false    
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:5.7
