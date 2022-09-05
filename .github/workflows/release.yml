@@ -3,6 +3,10 @@ name: release
 on:
   workflow_dispatch:
 
+env:
+  CC: gcc-4.9
+  CXX: g++-4.9    
+
 jobs:
   build:
     name: Release Asset
