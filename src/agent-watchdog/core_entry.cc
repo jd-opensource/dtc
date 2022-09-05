@@ -17,7 +17,7 @@
 #include "core_entry.h"
 #include <unistd.h>
 
-const char *core_name = "core";
+const char *core_name = "dtcd";
 
 CoreEntry::CoreEntry(WatchDog *watchdog, int sec)
 	: WatchDogDaemon(watchdog, sec)
