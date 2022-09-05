@@ -1,0 +1,53 @@
+name: release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Release Asset
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install gcc env
+        run: |
+          echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial main" | sudo tee -a /etc/apt/sources.list
+          echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial universe" | sudo tee -a /etc/apt/sources.list
+          sudo apt update
+          sudo apt install gcc-4.9 g++-4.9
+        shell: bash
+        
+      - name: Install dependency
+        run: |
+          sudo apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
+    
+      - name: cmake project
+        run: |
+          cd ${{github.workspace}}
+          mkdir build
+          cd build
+          cmake ../
+          make
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./my-artifact.zip
+          asset_name: my-artifact.zip
+          asset_content_type: application/zip
