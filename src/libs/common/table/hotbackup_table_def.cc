@@ -32,15 +32,7 @@ DTCTableDefinition *build_hot_backup_table(void)
 	DTCTableDefinition *tdef = new DTCTableDefinition(4);
 	tdef->set_table_name("@HOT_BACKUP");
 	struct FieldConfig *field = HBTabField;
-	int field_cnt = sizeof(HBTabField) / sizeof(HBTabField[0]);
-
-	// build hotback table key info base on the actual user definite table
-	field[0].type = TableDefinitionManager::instance()
-				->get_cur_table_def()
-				->key_type();
-	field[0].size = TableDefinitionManager::instance()
-				->get_cur_table_def()
-				->field_size(0);
+	int field_cnt = sizeof(HBTabField) / sizeof(HBTabField[0]);	
 
 	tdef->set_admin_table();
 	for (int i = 0; i < field_cnt; i++) {
