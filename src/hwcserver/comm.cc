@@ -12,6 +12,7 @@
 // common
 #include "log/log.h"
 #include "config/dbconfig.h"
+#include "table/table_def_manager.h"
 
 DTC::Server CComm::master;
 CRegistor CComm::registor;
@@ -119,7 +120,18 @@ int CComm::connect_ttc_server(
     if(ping_master) {
         int ret =  master.SetAddress(p_bind_addr.c_str());
         master.SetTimeout(30);
-        master.IntKey();
+
+        DTCTableDefinition* p_dtc_tab_def = TableDefinitionManager::instance()->get_cur_table_def();
+        if (DField::Signed == p_dtc_tab_def->key_type() ||  
+        DField::Unsigned == p_dtc_tab_def->key_type()) {
+            master.IntKey();
+            log4cplus_debug("register int key");
+        } else if(DField::String == p_dtc_tab_def->key_type() || 
+        DField::Binary == p_dtc_tab_def->key_type() ) {
+            master.StringKey();
+            log4cplus_debug("register string key");
+        }
+        
         master.SetTableName(pParser->tblFormat);
         master.SetAutoUpdateTab(false);
         if (-DTC::EC_BAD_HOST_STRING == ret

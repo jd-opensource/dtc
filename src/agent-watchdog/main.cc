@@ -469,6 +469,7 @@ int main(int argc, char* argv[])
 	}
 
 	if (load_agent || load_all) {
+		sleep(2);
 		if(start_agent(wdog, delay) < 0)
 			log4cplus_error("start full-data failed.");
 	}

@@ -60,7 +60,7 @@ extern "C" int rule_get_key_type(const char* conf)
     try {
         config = YAML::LoadFile(conf);
 	} catch (const YAML::Exception &e) {
-		log4cplus_error("config file error:%s\n", e.what());
+		log4cplus_error("config file(%s) error:%s\n", conf, e.what());
 		return -1;
 	}
 
@@ -107,17 +107,17 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
 
     log4cplus_debug("key len: %d, key: %s, sql len: %d, sql: %s, dbname len: %d, dbname: %s", key.length(), key.c_str(), sql.length(), sql.c_str(), strlen(dbname), std::string(dbname).c_str());
 
-    if(sql == "show databases" || sql == "SHOW DATABASES" || sql == "select database()" || sql == "SELECT DATABASE()")
+    if(sql == "SHOW DATABASES" || sql == "SELECT DATABASE()")
     {
         return 3;
     }
 
-    if(sql == "show tables" || sql == "SHOW TABLES")
+    if(sql == "SHOW TABLES")
     {
         if(dbname == NULL || strlen(dbname) == 0)
             return -6;
         else
-            return 3;
+            return 2;
     }
 
     log4cplus_debug("#############dbname:%s", dbname);
