@@ -24,7 +24,7 @@ jobs:
         
       - name: Install dependency
         run: |
-          sudo apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev
+          sudo apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev wget
     
       - name: cmake project
         run: |
@@ -34,20 +34,34 @@ jobs:
           cmake ../
           make
 
-      - name: tar bin.
+      - name: Tar bin
         run: |
-          mkdir bin
-          cp src/agent/dtcagent bin/
-          cp src/agent-watchdog/agent-watchdog bin/
-          cp src/complex/async-connector bin/
-          cp src/connector/connector bin/
-          cp src/core/core bin/
-          cp src/data_lifecycle/data-lifecycle-manager bin/
-          cp src/hwcserver/hwcserver bin/
-          cp src/rule/librule.so bin/
-          cp src/utils/conf-gen-utils bin/
-          cp ../src/libs/api/cc_api/libs/libdtcapi.so bin/
-          tar -zcvf bin.tar.gz bin/
+          cd ${{github.workspace}}/build/
+          mkdir dtc
+          mkdir dtc/bin
+          mkdir dtc/conf
+          mkdir dtc/log
+          mkdir dtc/lib
+          mkdir dtc/stat
+          cp src/agent/dtcagent dtc/bin/
+          cp src/agent-watchdog/agent-watchdog dtc/bin/
+          cp src/complex/async-connector dtc/bin/
+          cp src/connector/connector dtc/bin/
+          cp src/core/core dtc/bin/
+          cp src/data_lifecycle/data-lifecycle-manager dtc/bin/
+          cp src/hwcserver/hwcserver dtc/bin/
+          cp src/rule/librule.so dtc/bin/
+          cp src/utils/conf-gen-utils dtc/bin/
+          cp ../src/libs/api/cc_api/libs/libdtcapi.so dtc/bin/
+          cp ../script/dtcd.sh dtc/bin/
+
+          wget "https://dlcdn.apache.org/shardingsphere/5.1.2/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin.tar.gz" -O dtc/sharding.tar.gz
+          tar -zxvf dtc/sharding.tar.gz -C dtc
+          mv dtc/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin dtc/sharding
+          rm dtc/sharding.tar.gz
+          cp ../dockerfiles/devel/mysql-connector-java-5.1.49.jar dtc/sharding/lib/mysql-connector-java-5.1.49.jar
+
+          tar -zcvf dtc.tar.gz dtc/
 
       - name: Create Release
         id: create_release
@@ -67,6 +81,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin.tar.gz
-          asset_name: my-artifact.tar.gz
+          asset_path: ${{github.workspace}}/build/dtc.tar.gz
+          asset_name: dtc.tar.gz
           asset_content_type: application/gzip
