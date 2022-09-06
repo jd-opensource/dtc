@@ -36,6 +36,7 @@ jobs:
 
       - name: tar bin.
         run: |
+          cd ${{github.workspace}}/build/
           mkdir bin
           cp src/agent/dtcagent bin/
           cp src/agent-watchdog/agent-watchdog bin/
