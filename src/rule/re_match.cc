@@ -105,6 +105,13 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
                 else
                     return false;
             }
+            else if(input_type == kOpEquals)
+            {
+                if(input->fval < rule->fval)
+                    return true;
+                else
+                    return false;
+            }            
         }
         else if(input->isType(kExprLiteralInt))
         {
@@ -122,13 +129,20 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
                 else
                     return false;
             }
+            else if(input_type == kOpEquals)
+            {
+                if(input->ival < rule->ival)
+                    return true;
+                else
+                    return false;
+            }            
         }
     }
     else if(rule_type == kOpLessEq)
     {
         if(input->isType(kExprLiteralFloat))
         {
-            if(input_type == kOpLess || input_type == kOpLessEq)
+            if(input_type == kOpLess || input_type == kOpLessEq || input_type == kOpEquals)
             {
                 if(input->fval <= rule->fval)
                     return true;
@@ -138,7 +152,7 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
         }
         else if(input->isType(kExprLiteralInt))
         {
-            if(input_type == kOpLess || input_type == kOpLessEq)
+            if(input_type == kOpLess || input_type == kOpLessEq || input_type == kOpEquals)
             {
                 if(input->ival <= rule->ival)
                     return true;
@@ -165,6 +179,13 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
                 else
                     return false;
             }
+            else if(input_type == kOpEquals)
+            {
+                if(input->fval > rule->fval)
+                    return true;
+                else
+                    return false;
+            }
         }
         else if(input->isType(kExprLiteralInt))
         {
@@ -176,6 +197,13 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
                     return false;
             }
             else if(input_type == kOpGreaterEq)
+            {
+                if(input->ival > rule->ival)
+                    return true;
+                else
+                    return false;
+            }
+            else if(input_type == kOpEquals)
             {
                 if(input->ival > rule->ival)
                     return true;
@@ -206,6 +234,13 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
                     return false;
             }
         }
+        else if(input_type == kOpEquals)
+        {
+            if(input->ival >= rule->ival)
+                return true;
+            else
+                return false;
+        }
     }
 
     return false;
@@ -218,7 +253,7 @@ bool do_match_expr(hsql::Expr* input, hsql::Expr* rule)
     if(!input->isType(kExprOperator) || !rule->isType(kExprOperator))
         return false;
 log4cplus_debug("aaaaaaaaaaaa:%d %d", input->opType, rule->opType);
-    if(input->opType != rule->opType && (input->opType < kOpLess || input->opType > kOpGreaterEq))
+    if(input->opType != rule->opType && (input->opType < kOpEquals || input->opType > kOpGreaterEq))
         return false;
 
     log4cplus_debug("do_MATCH_EXPR:%s %s", input->expr->getName(), rule->expr->getName());

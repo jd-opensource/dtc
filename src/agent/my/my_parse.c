@@ -163,7 +163,8 @@ void my_parse_req(struct msg *r)
 						pp++;
 				}
 
-				if(pp - dbstart > 0 && pp - dbstart < 250)
+				if(pp - dbstart > 0 && pp - dbstart < 250 && pp - dbstart != strlen("caching_sha2_password") &&
+					 memcmp(pp-dbstart, "caching_sha2_password", strlen("caching_sha2_password")) != 0)
 				{
 					memcpy(r->owner->dbname, dbstart, pp - dbstart);
 					r->owner->dbname[pp - dbstart] = '\0';
@@ -725,7 +726,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 					{
 						j++;
 						//strip space.
-						while (j < str.len && str.data[j] == ' ') 
+						while (j < str.len && (str.data[j] == ' ' || str.data[j] == '\'' || str.data[j] == '\"'))
 						{
 							j++;
 						}
@@ -737,7 +738,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 							int k = 0;
 							for (k = j; k < str.len;
 							     k++) {
-								if (sql[k + 1] == ' ' || sql[k + 1] == ';' || k + 1 == str.len) 
+								if (sql[k + 1] == ' ' || sql[k + 1] == '\'' || sql[k + 1] == '\"' || sql[k + 1] == ';' || k + 1 == str.len) 
 								{
 									*end_offset = k + 1;
 									ret = layer;

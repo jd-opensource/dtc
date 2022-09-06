@@ -473,7 +473,7 @@ int DtcJob::build_field_type_r(int sql_type, char *field_name)
 
 	switch (sql_type) {
 	case hsql::ExprType::kExprLiteralInt:
-		return t_type == DField::Signed || t_type == DField::Signed ?
+		return t_type == DField::Signed || t_type == DField::Unsigned ?
 			       t_type :
 			       -1;
 	case hsql::ExprType::kExprLiteralFloat:
@@ -519,6 +519,22 @@ int build_condition_fields(Expr *expr, Expr *parent,
 	}
 
 	return count;
+}
+
+int get_compare_symbol(uint8_t opType)
+{
+	if(opType == kOpEquals)
+		return DField::EQ;
+	else if(opType == kOpNotEquals)
+		return DField::NE;
+	else if(opType == kOpLess)
+		return DField::LT;
+	else if(opType == kOpLessEq)
+		return DField::LE;
+	else if(opType == kOpGreater)
+		return DField::GT;		
+	else if(opType == kOpGreaterEq)
+		return DField::GE;							
 }
 
 void DtcJob::decode_request_v2(MyRequest *mr)
@@ -638,21 +654,22 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 					continue;
 				}
 
+				log4cplus_debug("fields name: %s, optype: %d", exprList.at(i)->expr->getName(), exprList.at(i)->opType);
 				if (DField::Signed == rtype ||
 				    DField::Unsigned == rtype) {
 					ci.add_value(exprList.at(i)->expr->getName(),
-						     DField::Set, rtype,
+						     get_compare_symbol(exprList.at(i)->opType), DField::Signed,
 						     DTCValue::Make(
 							     exprList.at(i)->expr2->ival));
 				} else if (DField::Float == rtype) {
 					ci.add_value(exprList.at(i)->expr->getName(),
-						     DField::Set, rtype,
+						     get_compare_symbol(exprList.at(i)->opType), rtype,
 						     DTCValue::Make(
 							    exprList.at(i)->expr2->fval));
 				} else if (DField::String == rtype ||
 					   DField::Binary == rtype) {
 					ci.add_value(exprList.at(i)->expr->getName(),
-						     DField::Set, rtype,
+						     get_compare_symbol(exprList.at(i)->opType), rtype,
 						     DTCValue::Make(
 							    exprList.at(i)->expr2->name));
 				}
@@ -729,6 +746,7 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 					stmt->values->at(i)->type,
 					stmt->columns->at(i));
 				if (rtype == -1) {
+					log4cplus_error("build field type_r error, type: %d, field name: %s", stmt->values->at(i)->type, stmt->columns->at(i));
 					return;
 				}
 
