@@ -13,7 +13,7 @@ RUN mkdir -p $binpath
 RUN mkdir -p $confpath
 RUN mkdir -p $logpath
 
-COPY core $binpath/core
+COPY dtcd $binpath/dtcd
 COPY dtcagent $binpath/dtcagent
 COPY agent-watchdog $binpath/agent-watchdog
 COPY async-connector $binpath/async-connector
@@ -38,7 +38,7 @@ COPY mysql-connector-java-5.1.49.jar $basepath/sharding/lib/mysql-connector-java
 
 COPY run.sh $basepath/run.sh
 
-RUN chmod +x $binpath/core
+RUN chmod +x $binpath/dtcd
 RUN chmod +x $binpath/dtcagent
 RUN chmod +x $binpath/connector
 RUN chmod +x $basepath/run.sh
