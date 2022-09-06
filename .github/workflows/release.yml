@@ -53,10 +53,12 @@ jobs:
           cp src/rule/librule.so dtc/bin/
           cp src/utils/conf-gen-utils dtc/bin/
           cp ../src/libs/api/cc_api/libs/libdtcapi.so dtc/bin/
+          cp ../script/dtcd.sh dtc/bin/
 
           wget "https://dlcdn.apache.org/shardingsphere/5.1.2/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin.tar.gz" -O dtc/sharding.tar.gz
           tar -zxvf dtc/sharding.tar.gz -C dtc
           mv dtc/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin dtc/sharding
+          rm dtc/sharding.tar.gz
           cp ../dockerfiles/devel/mysql-connector-java-5.1.49.jar dtc/sharding/lib/mysql-connector-java-5.1.49.jar
 
           tar -zcvf dtc.tar.gz dtc/
