@@ -20,4 +20,3 @@ elif [ "$1" = "start" ]; then
 else
     echo "usage: $0 stop | start |restart"
 fi
-
