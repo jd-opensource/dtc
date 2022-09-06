@@ -42,7 +42,7 @@ jobs:
       - name: Publish devel docker
         run: |
           cd ${{github.workspace}}
-          cp build/src/core/core dockerfiles/devel/
+          cp build/src/core/dtcd dockerfiles/devel/
           cp build/src/agent/dtcagent dockerfiles/devel/
           cp build/src/agent-watchdog/agent-watchdog dockerfiles/devel/
           cp build/src/complex/async-connector dockerfiles/devel/
