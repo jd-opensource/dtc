@@ -9,7 +9,7 @@ if [ "$1" = "stop" ] ; then
     pkill -9 connector
     pkill -9 hwcserver
 elif [ "$1" = "restart" ]; then
-    killall -9 $DTC_BIN
+    pkill -9 $DTC_BIN
     pkill -9 connector
     pkill -9 hwcserver
 	sleep 2
