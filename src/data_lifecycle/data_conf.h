@@ -22,20 +22,15 @@ public:
     std::string full_db_addr_;
     std::string full_db_user_;
     std::string full_db_pwd_;
+    uint32_t port_;
 };
 
 class DataConf{
 public:
     DataConf();
     ~DataConf();
-    static DataConf *Instance(){
-        return Singleton<DataConf>::instance();
-    }
-    static void Destroy(){
-        Singleton<DataConf>::destory();
-    }
-    int LoadConfig(int argc, char *argv[]);
-    int ParseConfig(ConfigParam& config_param);
+    int LoadConfig(const std::string& config_path);
+    int ParseConfig(const std::string& config_path, ConfigParam& config_param);
     bool ParseAgentConf(std::string path);
     uint32_t Port();
 private:

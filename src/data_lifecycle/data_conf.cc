@@ -52,39 +52,16 @@ uint32_t DataConf::Port(){
     return port_;
 }
 
-int DataConf::LoadConfig(int argc, char *argv[]){
+int DataConf::LoadConfig(const std::string& config_path){
     int c;
-    strcpy(table_file, "/etc/dtc/dtc-conf-1000.yaml");
-    strcpy(cache_file, "/etc/dtc/dtc-conf-1000.yaml");
-
-    while ((c = getopt(argc, argv, "df:t:hvV")) != -1) {
-        switch (c) {
-        case 'd':
-            background = 0;
-            break;
-        case 'f':
-            strncpy(cache_file, optarg, sizeof(cache_file) - 1);
-            break;
-        case 't':
-            strncpy(table_file, optarg, sizeof(table_file) - 1);
-            break;
-        case 'a':
-            strncpy(agent_file, optarg, sizeof(agent_file) - 1);
-            break;
-        case 'h':
-            show_usage();
-            return 0;
-        case '?':
-            show_usage();
-            return -1;
-        }
-    }
+    strcpy(table_file, config_path.c_str());
+    strcpy(cache_file, config_path.c_str());
 
     YAML::Node config;
     try {
-        config = YAML::LoadFile(cache_file);
+        config = YAML::LoadFile(config_path);
     } catch (const YAML::Exception &e) {
-        log4cplus_error("config file error:%s, %s\n", e.what(), cache_file);
+        log4cplus_error("config file error:%s, %s\n", e.what(), config_path.c_str());
         return DTC_CODE_LOAD_CONFIG_ERR;
     }
 
@@ -104,19 +81,20 @@ int DataConf::LoadConfig(int argc, char *argv[]){
     return 0;
 }
 
-int DataConf::ParseConfig(ConfigParam& config_param){
+int DataConf::ParseConfig(const std::string& config_path, ConfigParam& config_param){
     YAML::Node config;
     try {
-        config = YAML::LoadFile(cache_file);
+        config = YAML::LoadFile(config_path);
     } catch (const YAML::Exception &e) {
-        log4cplus_error("config file error:%s, %s\n", e.what(), cache_file);
+        log4cplus_error("config file error:%s, %s\n", e.what(), config_path.c_str());
         return DTC_CODE_LOAD_CONFIG_ERR;
     }
 
     YAML::Node node = config["data_lifecycle"]["single.query.count"];
     config_param.single_query_cnt_ = node? node.as<int>(): 10;    
     
-    node = config["data_lifecycle"]["rule.sql"];
+    //node = config["data_lifecycle"]["rule.sql"];
+    node = config["primary"]["layered.rule"];
     if(!node){
         log4cplus_error("rule.sql not defined.");
         return DTC_CODE_PARSE_CONFIG_ERR;
@@ -200,6 +178,7 @@ int DataConf::ParseConfig(ConfigParam& config_param){
         return DTC_CODE_PARSE_CONFIG_ERR;
     }
     config_param.table_name_ = node.as<string>();
+    config_param.port_ = port_;
 
     log4cplus_debug("single_query_cnt_: %d, data_rule: %s, operate_time_rule: %s, operate_type: %s, "
         "life_cycle_table_name: %s, key_field_name: %s, table_name: %s, hot_database_name: %s",
