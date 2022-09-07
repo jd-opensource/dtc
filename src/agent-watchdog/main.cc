@@ -15,8 +15,8 @@
 
 extern char cache_file[256];
 extern char table_file[256];
-#define ROOT_PATH "/etc/dtc/"
-char agent_file[256] = "/etc/dtc/agent.xml";
+#define ROOT_PATH "../conf/"
+char agent_file[256] = "../conf/agent.xml";
 std::map<std::string, std::string> map_dtc_conf; //key:value --> dtc addr:conf file name
 
 #define DA_VERSION_MAJOR	1

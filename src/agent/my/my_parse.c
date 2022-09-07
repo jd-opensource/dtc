@@ -660,7 +660,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	char conf_path[260] = {0};
 	if(mid != 0)
 	{
-		sprintf(conf_path, "/etc/dtc/dtc-conf-%d.yaml", mid);
+		sprintf(conf_path, "../conf/dtc-conf-%d.yaml", mid);
 		r->mid = mid;
 	}
 

@@ -9,7 +9,7 @@
 
 extern DbConfig *dbConfig;
 extern char cache_file[256];
-char agent_file[256] = "/etc/dtc/agent.xml";
+char agent_file[256] = "../conf/agent.xml";
 
 DataConf::DataConf(){
 }
@@ -54,8 +54,8 @@ uint32_t DataConf::Port(){
 
 int DataConf::LoadConfig(int argc, char *argv[]){
     int c;
-    strcpy(table_file, "/etc/dtc/dtc-conf-1000.yaml");
-    strcpy(cache_file, "/etc/dtc/dtc-conf-1000.yaml");
+    strcpy(table_file, "../conf/dtc-conf-1000.yaml");
+    strcpy(cache_file, "../conf/dtc-conf-1000.yaml");
 
     while ((c = getopt(argc, argv, "df:t:hvV")) != -1) {
         switch (c) {

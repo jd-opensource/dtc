@@ -592,7 +592,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         m->role[0].addr = STRDUP(dtc_config["primary"][layer]["real"][i]["addr"].as<string>().c_str());
         m->role[0].user = STRDUP(dtc_config["primary"][layer]["real"][i]["user"].as<string>().c_str());
         m->role[0].pass = STRDUP(dtc_config["primary"][layer]["real"][i]["pwd"].as<string>().c_str());
-        m->role[0].optfile = STRDUP("/etc/dtc/my.conf");
+        m->role[0].optfile = STRDUP("../conf/my.conf");
         log4cplus_info("addr:%s,user:%s" , m->role[0].addr , m->role[0].user);
 
         /* master DB settings */

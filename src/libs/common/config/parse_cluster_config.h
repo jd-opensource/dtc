@@ -21,7 +21,7 @@
 #include <map>
 namespace ClusterConfig
 {
-#define CLUSTER_CONFIG_FILE "/etc/dtc/clusterconfig.xml"
+#define CLUSTER_CONFIG_FILE "../conf/clusterconfig.xml"
 struct ClusterNode {
 	std::string name;
 	std::string addr;

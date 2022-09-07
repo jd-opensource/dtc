@@ -34,13 +34,13 @@ void ShardingEntry::exec()
 {
 	char *argv[4];
 
-	int ret = system("/usr/local/agent/bin/conf-gen-utils");
+	int ret = system("./conf-gen-utils");
 	if(ret == 0)
 	{
 		set_proc_title("agent_sharding");
-		argv[0] = (char *)"/usr/local/agent/sharding/bin/start.sh";
+		argv[0] = (char *)"../sharding/bin/start.sh";
 		argv[1] = "3307";
-		argv[2] = "/etc/dtc";
+		argv[2] = "../conf";
 		argv[3] = NULL;
 		execv(argv[0], argv);
 	}

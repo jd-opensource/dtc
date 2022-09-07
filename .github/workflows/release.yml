@@ -61,6 +61,8 @@ jobs:
           rm dtc/sharding.tar.gz
           cp ../dockerfiles/devel/mysql-connector-java-5.1.49.jar dtc/sharding/lib/mysql-connector-java-5.1.49.jar
 
+          cp ../conf/log4cplus.conf dtc/log/
+
           tar -zcvf dtc.tar.gz dtc/
 
       - name: Create Release

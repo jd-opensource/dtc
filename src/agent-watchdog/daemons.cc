@@ -86,9 +86,9 @@ void close_sharding()
 {
 	char* p[1];
 	p[0] = NULL;
-	execv("/usr/local/agent/sharding/bin/stop.sh", p);
+	execv("../sharding/bin/stop.sh", p);
 
-	system("/usr/local/agent/sharding/bin/stop.sh");
+	system("../sharding/bin/stop.sh");
 }
 
 void WatchDog::run_loop()

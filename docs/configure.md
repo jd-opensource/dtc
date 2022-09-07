@@ -1,11 +1,10 @@
 
 ## 配置文件
-配置文件目录：/etc/dtc<br/>
+配置文件目录：conf/<br/>
 - AGENT服务的配置文件是：
   * agent.xml 指定后端dtc server的主、备服务的地址信息和权重；
 - DTC服务的配置文件是：
-  * dtc.yaml 配置缓存模式，缓存大小等。
-  * table.yaml 表结构的定义、数据库连接信息在此配置。
+  * dtc.yaml dtc模块的配置文件，包括基础配置和表结构信息。
 
 下面就各配置文件具体配置选项做介绍：
 ### agent.xml
@@ -38,10 +37,7 @@ agent配置文件位置为当前项目的conf/agent.xml，主要配置以下字�
 * sharding:
 该字段用户设置分库分表的信息，key字段用于设置依照此字段进行分片。table字段用于设置分表的信息，例如分表名为opensource_0/opensource_1.....opensouce_9，则只需要设置为{prefix: [*table, _], start: 0, last: 9}
 
-#### extension 扩展库，提供多租户功能
-在dtc的基础缓存和数据代理功能之外，还提供了扩展库，通过配置此模块能够在数据库中进行复杂查询和分库分表功能。
-
-### table.yaml
+#### table
 cache配置文件位置为当前项目的conf/table.yaml，主要配置以下字段：
 * TABLE_CONF.table_name
 * TABLE_CONF.field_count
@@ -51,3 +47,6 @@ cache配置文件位置为当前项目的conf/table.yaml，主要配置以下字
   * FIELD*ID*.field_type 字段类型：1.整数型 2.无符号整数形 3.浮点型 4.字符串（大小写不明感） 5.字符串（大小写敏感）
   * FIELD*ID*.field_size 字段长度。定义了该字段的大小。例如int型可配置为4字节，long型可配置为8字节，字符串类型可根据具体使用场景配置长度，但最大长度不得超过64KB。
   * FIELD*ID*.field_unique [可选]默认值0，可配置0或1。当为0时表示该字段的值不唯一，1时表示该字段值唯一。
+
+#### extension 扩展库，提供多租户功能
+在dtc的基础缓存和数据代理功能之外，还提供了扩展库，通过配置此模块能够在数据库中进行复杂查询和分库分表功能。
