@@ -102,8 +102,9 @@ void my_parse_req(struct msg *r)
 			p = b->last;
 			goto end;
 		}
-
+log_debug("1111111111");
 		if (r->owner->stage == CONN_STAGE_LOGGED_IN) {
+			log_debug("1111111111");
 			rc = my_get_command(p, input_packet_length, r,
 					    &command);
 			if (rc) {
@@ -125,7 +126,7 @@ void my_parse_req(struct msg *r)
 			}
 		}
 		else if (r->owner->stage == CONN_STAGE_LOGGING_IN) 
-		{
+		{log_debug("1111111111");
 			//parse -D parameter(dbname)
 			if(input_packet_length >= 34)
 			{
@@ -163,12 +164,15 @@ void my_parse_req(struct msg *r)
 						pp++;
 				}
 
-				if(pp - dbstart > 0 && pp - dbstart < 250 && pp - dbstart != strlen("caching_sha2_password") &&
-					 memcmp(pp-dbstart, "caching_sha2_password", strlen("caching_sha2_password")) != 0)
-				{
-					memcpy(r->owner->dbname, dbstart, pp - dbstart);
-					r->owner->dbname[pp - dbstart] = '\0';
-					log_debug("client set dbname: %s", r->owner->dbname);
+				if(pp - dbstart > 0 && pp - dbstart < 250)
+					int len = pp - dbstart;
+					int len_sha2 = strlen("caching_sha2_password");
+					if(len != len_sha2 || (len == len_sha2 && memcmp(dbstart, "caching_sha2_password", len_sha2) != 0))
+					{
+						memcpy(r->owner->dbname, dbstart, len);
+						r->owner->dbname[len] = '\0';
+						log_debug("client set dbname: %s", r->owner->dbname);
+					}
 				}
 			}
 			else

@@ -463,7 +463,7 @@ int main(int argc, char* argv[])
 			log4cplus_error("start full-data failed.");
 	}
 
-	if (load_core || load_all) {
+	if (load_core) {
 		if(start_core(wdog, delay) < 0)
 			log4cplus_error("start core failed.");
 	}
