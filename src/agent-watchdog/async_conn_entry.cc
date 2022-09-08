@@ -19,7 +19,7 @@
 #include "log.h"
 
 #define ROOT_PATH "../conf/"
-const char *fulldata_name = "async-connector";
+const char *fulldata_name = "async-conn";
 extern std::map<std::string, std::string> map_dtc_conf; //key:value --> dtc addr:conf file name
 
 AsyncConnEntry::AsyncConnEntry(WatchDog *watchdog, int sec)

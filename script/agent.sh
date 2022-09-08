@@ -7,13 +7,13 @@ DTC_BIN="agent-watchdog"
 if [ "$1" = "stop" ] ; then
     pkill -9 $DTC_BIN
     pkill -9 dtcagent
-    pkill -9 async-connector
+    pkill -9 async-conn
     pkill -9 data-lifecycle
     ../sharding/bin/stop.sh
 elif [ "$1" = "restart" ]; then
     pkill -9 $DTC_BIN
     pkill -9 dtcagent
-    pkill -9 async-connector
+    pkill -9 async-conn
     pkill -9 data-lifecycle
     ../sharding/bin/stop.sh
     sleep 2

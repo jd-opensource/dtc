@@ -45,7 +45,7 @@ jobs:
           mkdir dtc/stat
           cp src/agent/dtcagent dtc/bin/
           cp src/agent-watchdog/agent-watchdog dtc/bin/
-          cp src/complex/async-connector dtc/bin/
+          cp src/complex/async-conn dtc/bin/
           cp src/connector/connector dtc/bin/
           cp src/core/dtcd dtc/bin/
           cp src/data_lifecycle/data-lifecycle-manager dtc/bin/
