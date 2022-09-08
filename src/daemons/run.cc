@@ -87,7 +87,10 @@ int start_dtc(int (*entry)(void *), void *args)
 					return -1;
 				}
 				if (h->new_proc_fork() < 0 || h->verify() < 0)
+				{
+					log4cplus_error("fork failed and exit.");
 					return -1;
+				}
 				nh++;
 			}
 		}

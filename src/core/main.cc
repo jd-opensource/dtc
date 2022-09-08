@@ -102,8 +102,14 @@ int main(int argc, char *argv[])
 		return DTC_CODE_FAILED;
 	Thread::set_auto_config_instance(
 		g_dtc_config->get_auto_config_instance("cache"));
+	log4cplus_debug("entry start dtc");
 	if (start_dtc(init_thread, NULL) < 0)
+	{
+		log4cplus_debug("entry will exit");
+		abort();
 		return DTC_CODE_FAILED;
+	}
+	log4cplus_debug("entry start dtc finished.");
 
 	if (init_thread(NULL))
 		return DTC_CODE_FAILED;

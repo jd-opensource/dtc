@@ -328,8 +328,7 @@ int main(int argc, char **argv)
 		proc_timeout = 0;
 		
 	addr = argv[1];
-	if (dbConfig->checkTable &&
-	    check_db_table(helperArgs.gid, helperArgs.role) != 0) {
+	if (check_db_table(helperArgs.gid, helperArgs.role) != 0) {
 		return -1;
 	}
 	int fd = -1;
