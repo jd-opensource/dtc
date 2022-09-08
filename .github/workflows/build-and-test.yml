@@ -116,6 +116,10 @@ jobs:
         run: |
           cd ${{github.workspace}}   
           sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
+          sudo cp -f conf/log4cplus-hwc.conf /usr/local/etc/ 
+          sudo cp -f conf/log4cplus-wd.conf /usr/local/etc/
+          sudo cp -f conf/log4cplus-async.conf /usr/local/etc/
+          sudo cp -f conf/log4cplus-agent.conf /usr/local/etc/
           sudo cp -f dockerfiles/devel/dtc.cacheonly.yaml /usr/local/etc/dtc.yaml
 
       - name: Run Testing Cases
@@ -172,6 +176,10 @@ jobs:
         run: |
           cd ${{github.workspace}}   
           sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
+          sudo cp -f conf/log4cplus-hwc.conf /usr/local/etc/ 
+          sudo cp -f conf/log4cplus-wd.conf /usr/local/etc/
+          sudo cp -f conf/log4cplus-async.conf /usr/local/etc/
+          sudo cp -f conf/log4cplus-agent.conf /usr/local/etc/
           sudo cp -f dockerfiles/devel/dtc.cacheonly.yaml /usr/local/etc/dtc.yaml
           sudo cp -f dockerfiles/devel/agent.single.dtcd.xml /usr/local/etc/agent.xml
 
@@ -237,6 +245,10 @@ jobs:
         run: |
           cd ${{github.workspace}}   
           sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
+          sudo cp -f conf/log4cplus-hwc.conf /usr/local/etc/ 
+          sudo cp -f conf/log4cplus-wd.conf /usr/local/etc/
+          sudo cp -f conf/log4cplus-async.conf /usr/local/etc/
+          sudo cp -f conf/log4cplus-agent.conf /usr/local/etc/
           sudo cp -f dockerfiles/devel/dtc.layered.yaml /usr/local/etc/dtc.yaml
           sudo cp -f dockerfiles/devel/agent.layered.xml /usr/local/etc/agent.xml
 
@@ -302,6 +314,10 @@ jobs:
         run: |
           cd ${{github.workspace}}   
           sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
+          sudo cp -f conf/log4cplus-wd.conf /usr/local/etc/
+          sudo cp -f conf/log4cplus-hwc.conf /usr/local/etc/ 
+          sudo cp -f conf/log4cplus-async.conf /usr/local/etc/
+          sudo cp -f conf/log4cplus-agent.conf /usr/local/etc/
           sudo cp -f dockerfiles/devel/dtc.dbaddition.s1.yaml /usr/local/etc/dtc.yaml
 
       - name: Run Testing Cases
@@ -369,6 +385,10 @@ jobs:
         run: |
           cd ${{github.workspace}}   
           sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
+          sudo cp -f conf/log4cplus-hwc.conf /usr/local/etc/ 
+          sudo cp -f conf/log4cplus-wd.conf /usr/local/etc/
+          sudo cp -f conf/log4cplus-async.conf /usr/local/etc/
+          sudo cp -f conf/log4cplus-agent.conf /usr/local/etc/
           sudo cp -f dockerfiles/devel/dtc.dbaddition.s1.yaml /usr/local/etc/dtc.yaml
           sudo cp -f dockerfiles/devel/agent.single.dtcd.xml /usr/local/etc/agent.xml          
 
@@ -427,6 +447,10 @@ jobs:
         run: |
           cd ${{github.workspace}}   
           sudo cp -f conf/log4cplus.conf /usr/local/etc/ 
+          sudo cp -f conf/log4cplus-hwc.conf /usr/local/etc/ 
+          sudo cp -f conf/log4cplus-wd.conf /usr/local/etc/
+          sudo cp -f conf/log4cplus-agent.conf /usr/local/etc/
+          sudo cp -f conf/log4cplus-async.conf /usr/local/etc/
           sudo cp -f dockerfiles/devel/dtc.dbaddition.s2.yaml /usr/local/etc/dtc.yaml
 
       - name: Run Testing Cases
