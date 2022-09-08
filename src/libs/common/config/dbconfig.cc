@@ -748,8 +748,11 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         if (i >= keyFieldCnt &&
             raw->get_int_val(NULL, "ReadOnly", 0) > 0)
             f->flags |= DB_FIELD_FLAGS_READONLY;
-        if (raw->get_int_val(NULL, "field_unique", 0) > 0)
-            f->flags |= DB_FIELD_FLAGS_UNIQ;
+        if(dtc_config["primary"]["cache"]["field"][i]["unique"])
+        {
+            if(dtc_config["primary"]["cache"]["field"][i]["unique"].as<int>() > 0)
+                f->flags |= DB_FIELD_FLAGS_UNIQ;
+        }
         if (raw->get_int_val(NULL, "Volatile", 0) > 0) {
             if (i < keyFieldCnt) {
                 log4cplus_error(
