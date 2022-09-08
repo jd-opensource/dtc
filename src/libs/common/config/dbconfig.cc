@@ -751,7 +751,10 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         if(dtc_config["primary"]["cache"]["field"][i]["unique"])
         {
             if(dtc_config["primary"]["cache"]["field"][i]["unique"].as<int>() > 0)
+            {
+                log4cplus_debug("set index: %d unique", i);
                 f->flags |= DB_FIELD_FLAGS_UNIQ;
+            }
         }
         if (raw->get_int_val(NULL, "Volatile", 0) > 0) {
             if (i < keyFieldCnt) {
