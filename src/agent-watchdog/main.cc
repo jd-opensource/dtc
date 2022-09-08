@@ -444,7 +444,7 @@ int main(int argc, char* argv[])
 		exit(0);
 	}
 
-	if(load_agent || load_sharding || load_asyncconn)
+	if(load_agent || load_sharding || load_asyncconn || load_all)
 	{
 		if(get_all_dtc_confs() < 0)
 		{

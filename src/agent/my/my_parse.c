@@ -126,7 +126,7 @@ log_debug("1111111111");
 			}
 		}
 		else if (r->owner->stage == CONN_STAGE_LOGGING_IN) 
-		{log_debug("1111111111");
+		{
 			//parse -D parameter(dbname)
 			if(input_packet_length >= 34)
 			{
@@ -165,6 +165,7 @@ log_debug("1111111111");
 				}
 
 				if(pp - dbstart > 0 && pp - dbstart < 250)
+				{
 					int len = pp - dbstart;
 					int len_sha2 = strlen("caching_sha2_password");
 					if(len != len_sha2 || (len == len_sha2 && memcmp(dbstart, "caching_sha2_password", len_sha2) != 0))
