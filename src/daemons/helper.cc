@@ -117,7 +117,7 @@ int WatchDogHelper::verify()
 	log4cplus_info("verify path:%s." , path_);
 	/* delay 100ms and verify socket */
 	//usleep(5000 * 1000);
-	sleep(5);
+	sleep(2);
 	int s = socket(unaddr.sun_family, SOCK_STREAM, 0);
 	if (connect(s, (sockaddr *)&unaddr, len) < 0) {
 		close(s);
