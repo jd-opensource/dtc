@@ -14,7 +14,7 @@
 #include "waitqueue.h"
 #include "task_request.h"
 
-#define DEF_PID_FILE "async-connector.pid"
+#define DEF_PID_FILE "async-conn.pid"
 
 using namespace std;
 
