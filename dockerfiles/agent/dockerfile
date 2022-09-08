@@ -1,8 +1,8 @@
 FROM centos:centos8
 
 ARG basepath=/usr/local/dtc
-ARG confpath=/etc/dtc
-ARG logpath=/var/log/dtc
+ARG confpath=$basepath/conf
+ARG logpath=$basepath/log
 
 RUN mkdir -p $basepath/bin
 RUN mkdir -p $confpath

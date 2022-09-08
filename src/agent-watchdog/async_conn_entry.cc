@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include "log.h"
 
-#define ROOT_PATH "/etc/dtc/"
+#define ROOT_PATH "../conf/"
 const char *fulldata_name = "async-connector";
 extern std::map<std::string, std::string> map_dtc_conf; //key:value --> dtc addr:conf file name
 

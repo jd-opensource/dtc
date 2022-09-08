@@ -47,8 +47,8 @@
 #define DA_VERSION_DETAIL \
 	DA_VERSION_STR" built at: "__DATE__" "__TIME__
 
-#define DA_CONF_PATH "/etc/dtc/agent.xml"
-#define DA_LOG_DIR "/var/log/dtc"
+#define DA_CONF_PATH "../conf/agent.xml"
+#define DA_LOG_DIR "../log"
 
 #define DA_LOG_DEFAULT  3
 #define DA_MBUF_SIZE DEF_MBUF_SIZE
@@ -344,7 +344,7 @@ static void show_usage(void) {
 	write_stderr(
 			"  -v, --verbosity=N      		: set logging level (default: 3, min: 1, max: 7)" CRLF
 			"  -o, --output=S         		: set logging dir (default: /var/log/dtc/)" CRLF
-			"  -c, --conf-file=S      		: set configuration file (default: /etc/dtc/agent.xml)" CRLF
+			"  -c, --conf-file=S      		: set configuration file (default: ../conf/agent.xml)" CRLF
 			"  -e, --event-max-timeout=S	: set epoll max timeout(ms)(default: (30*1000)ms)" CRLF
 			"  -i, --stats_interval=S	    : set stats aggregator interval(ms)(default: (10*1000)ms)" CRLF
 			"  -p, --pid-file=S       		: set pid file (default: off)" CRLF
