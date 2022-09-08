@@ -385,7 +385,6 @@ int get_all_dtc_confs()
 		std::string addr = (*it).first;
 		std::string filename = (*it).second;
 
-		//TODO: send select dtcyaml
 		char* content = NULL;
 		int content_len = 0;
 		log4cplus_debug("addr:%s", addr.c_str());
