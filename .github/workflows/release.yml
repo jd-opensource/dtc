@@ -72,6 +72,7 @@ jobs:
           cp ../conf/log4cplus-hwc.conf dtc/conf/
           cp ../conf/log4cplus-async.conf dtc/conf/
           cp ../conf/log4cplus-agent.conf dtc/conf/
+          cp ../conf/log4cplus-life.conf dtc/conf/
 
           tar -zcvf dtc.tar.gz dtc/
 

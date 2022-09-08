@@ -29,7 +29,7 @@ struct cache_instance;
 typedef void (*event_stats_cb_t)(void *, int);
 
 #define STATS_FILE "da.stats"
-#define STATS_DIR "/var/log/dtc/stats/"
+#define STATS_DIR "../stats/"
 #define STATS_INTERVAL (10 * 1000) /* in msec */
 #define DEFAULT_HTTP_TIMEOUT                                                   \
   5 /*default heep connect and request timeout in second*/

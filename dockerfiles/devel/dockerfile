@@ -3,7 +3,6 @@ FROM ubuntu:20.04
 ARG basepath=/usr/local/dtc
 ARG binpath=$basepath/bin
 ARG confpath=$basepath/conf
-ARG logpath=/var/log/dtc
 
 RUN mkdir -p $basepath
 RUN mkdir -p $basepath/data
@@ -11,7 +10,6 @@ RUN mkdir -p $basepath/stat
 RUN mkdir -p $basepath/log
 RUN mkdir -p $binpath
 RUN mkdir -p $confpath
-RUN mkdir -p $logpath
 
 COPY dtcd $binpath/dtcd
 COPY dtcagent $binpath/dtcagent

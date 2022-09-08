@@ -19,5 +19,6 @@ COPY log4cplus-hwc.conf $confpath/log4cplus-hwc.conf
 COPY log4cplus-wd.conf $confpath/log4cplus-wd.conf
 COPY log4cplus-async.conf $confpath/log4cplus-async.conf
 COPY log4cplus-agent.conf $confpath/log4cplus-agent.conf
+COPY log4cplus-life.conf $confpath/log4cplus-life.conf
 
 CMD ["/usr/local/dtc/bin/core", "-d"]
