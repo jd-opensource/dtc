@@ -8,6 +8,7 @@
 #include "re_match.h"
 #include "re_cache.h"
 #include "log.h"
+#include "mxml.h"
 #include "yaml-cpp/yaml.h"
 
 #define SPECIFIC_L1_SCHEMA "L1"
@@ -81,6 +82,79 @@ extern "C" int rule_get_key_type(const char* conf)
         else   
             return -1;
     }
+    return -1;
+}
+
+bool ParseAgentConf(std::string path, std::vector<std::string>* vec){
+    FILE *fp = fopen(path.c_str(), "r");
+    if (fp == NULL) {
+        log4cplus_error("conf: failed to open configuration '%s': %s", path.c_str(), strerror(errno));
+        return false;
+    }
+    mxml_node_t* tree = mxmlLoadFile(NULL, fp, MXML_TEXT_CALLBACK);
+    if (tree == NULL) {
+        log4cplus_error("mxmlLoadFile error, file: %s", path.c_str());
+        return false;
+    }
+    fclose(fp);
+
+	mxml_node_t *poolnode, *servernode, *instancenode, *lognode;
+
+	for (poolnode = mxmlFindElement(tree, tree, "MODULE",
+	NULL, NULL, MXML_DESCEND); poolnode != NULL;
+			poolnode = mxmlFindElement(poolnode, tree, "MODULE",
+			NULL, NULL, MXML_DESCEND)) 
+	{    
+        std::string get_str;
+
+        char* name = (char *)mxmlElementGetAttr(poolnode, "Name");
+        if(name != NULL)
+        {
+            get_str = name;
+            std::transform(get_str.begin(), get_str.end(), get_str.begin(), ::toupper);
+            vec->push_back(get_str);
+        }        
+	}
+
+    mxmlDelete(tree);
+    
+    return true;
+}
+
+int is_ext_table(hsql::SQLParserResult* ast,const char* dbname)
+{
+    //get db.tb array
+    std::vector<std::string> agent_info;
+    
+    //load agent.xml
+    if(ParseAgentConf("../conf/agent.xml", &agent_info) == false)
+    {
+        log4cplus_error("ParseAgentConf");
+        return 0;
+    }
+
+    //get table name
+    std::string table_name = get_table_name(ast);
+    if(table_name.length() == 0)
+    {
+        log4cplus_error("table name len error: %d", table_name.length());
+        return 0;
+    }
+
+    //combine db.tb
+    std::string cmp_str = dbname;
+    cmp_str += ".";
+    cmp_str += table_name;
+    std::transform(cmp_str.begin(), cmp_str.end(), cmp_str.begin(), ::toupper);
+
+    //string compare between array and above string
+    std::vector<std::string>::iterator iter;
+    for(iter = agent_info.begin(); iter < agent_info.end(); iter++)
+    {
+        if(*iter == cmp_str)
+            return 0;
+    }
+
     return -1;
 }
 
@@ -163,6 +237,9 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
     hsql::SQLParserResult sql_ast;
     if(re_parse_sql(sql, &sql_ast) != 0)
         return -1;
+
+    if(is_ext_table(&sql_ast, dbname) != 0)
+        return 2;
 
     ret = re_match_sql(&sql_ast, expr_rules, ast);
     if(ret == 0)
