@@ -19,6 +19,7 @@ INCLUDE_DIRECTORIES (
 )
 
 LINK_DIRECTORIES(
+    .
     ${PROJECT_SOURCE_DIR}/src/libs/api/cc_api/libs/
     ${PROJECT_SOURCE_DIR}/src/libs/mysql/libs
     ${PROJECT_SOURCE_DIR}/src/libs/zlib/lib

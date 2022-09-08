@@ -8,7 +8,7 @@
 #include <map>
 
 using namespace std;
-#define ROOT_PATH "/etc/dtc/"
+#define ROOT_PATH "../conf/"
 
 char conf_dir[256] = {0};
 std::map<std::string, std::vector<YAML::Node>> dbmap;

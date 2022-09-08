@@ -60,7 +60,7 @@ extern "C" int rule_get_key_type(const char* conf)
     try {
         config = YAML::LoadFile(conf);
 	} catch (const YAML::Exception &e) {
-		log4cplus_error("config file error:%s\n", e.what());
+		log4cplus_error("config file(%s) error:%s\n", conf, e.what());
 		return -1;
 	}
 
@@ -107,17 +107,17 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
 
     log4cplus_debug("key len: %d, key: %s, sql len: %d, sql: %s, dbname len: %d, dbname: %s", key.length(), key.c_str(), sql.length(), sql.c_str(), strlen(dbname), std::string(dbname).c_str());
 
-    if(sql == "show databases" || sql == "SHOW DATABASES" || sql == "select database()" || sql == "SELECT DATABASE()")
+    if(sql == "SHOW DATABASES" || sql == "SELECT DATABASE()")
     {
         return 3;
     }
 
-    if(sql == "show tables" || sql == "SHOW TABLES")
+    if(sql == "SHOW TABLES")
     {
         if(dbname == NULL || strlen(dbname) == 0)
             return -6;
         else
-            return 3;
+            return 2;
     }
 
     log4cplus_debug("#############dbname:%s", dbname);
@@ -134,18 +134,37 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
         return -5;
     }
 
-    if(sql.find("INSERT INTO") != sql.npos || sql.find("UPDATE") != sql.npos || sql.find("DELETE FROM") != sql.npos)
+    /*if(sql.find("INSERT INTO") != sql.npos || sql.find("UPDATE") != sql.npos || sql.find("DELETE FROM") != sql.npos)
     {
         log4cplus_debug("INSERT/UPDATE/DELETE request, force direct to L1.");
         //L1: DTC cache.
         return 1;
+    }*/
+
+    hsql::SQLParserResult* ast = NULL;
+    hsql::SQLParserResult ast2;
+    std::string tempsql = "SELECT * FROM TMPTB ";
+    if(sql.find("WHERE") != -1)
+    {
+        tempsql += sql.substr(sql.find("WHERE"));
+        if(re_parse_sql(tempsql, &ast2) != 0)
+            return -1;
+        log4cplus_debug("temsql: %s", tempsql.c_str());
+        ast = &ast2;
+    }
+
+
+    if(sql.find("INSERT INTO") != -1 && sql.find("WHERE") != -1)
+    {
+        sql = sql.substr(0, sql.find("WHERE"));
+        log4cplus_debug("new sql: %s", sql.c_str());
     }
 
     hsql::SQLParserResult sql_ast;
     if(re_parse_sql(sql, &sql_ast) != 0)
         return -1;
 
-    ret = re_match_sql(&sql_ast, expr_rules);
+    ret = re_match_sql(&sql_ast, expr_rules, ast);
     if(ret == 0)
     {
         if(re_is_cache_sql(&sql_ast, key))
@@ -168,6 +187,11 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
             //L2: sharding hot database.
             return 2;
         }
+    }
+    else if(ret == -100)
+    {
+        //writing without match rule, Refuse.
+        return -6;
     }
     else {
         //L3: full database.

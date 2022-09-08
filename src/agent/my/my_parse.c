@@ -102,8 +102,9 @@ void my_parse_req(struct msg *r)
 			p = b->last;
 			goto end;
 		}
-
+log_debug("1111111111");
 		if (r->owner->stage == CONN_STAGE_LOGGED_IN) {
+			log_debug("1111111111");
 			rc = my_get_command(p, input_packet_length, r,
 					    &command);
 			if (rc) {
@@ -124,7 +125,63 @@ void my_parse_req(struct msg *r)
 				r->cmd = MSG_REQ_SVRADMIN;
 			}
 		}
-log_debug("AAAAAAAAA 444444444444");
+		else if (r->owner->stage == CONN_STAGE_LOGGING_IN) 
+		{
+			//parse -D parameter(dbname)
+			if(input_packet_length >= 34)
+			{
+				uint8_t* pp = p;
+				uint8_t* dbstart = NULL;
+				pp += 32;	//Client Cap + Extended Client Cap + Max Packet + Charset + Unused
+				while(pp - p <= input_packet_length)	//Username
+				{
+					if(*pp == 0x0)
+					{
+						pp++;
+						break;
+					}
+					else
+						pp++;
+				}
+
+				if(*pp == 0x0) //Password
+				{
+					pp++;
+				}
+				else
+				{
+					pp += 20;
+				}
+
+				dbstart = pp;
+				while(pp - dbstart <= input_packet_length)	//DB
+				{
+					if(*pp == 0x0)
+					{
+						break;
+					}
+					else
+						pp++;
+				}
+
+				if(pp - dbstart > 0 && pp - dbstart < 250)
+				{
+					int len = pp - dbstart;
+					int len_sha2 = strlen("caching_sha2_password");
+					if(len != len_sha2 || (len == len_sha2 && memcmp(dbstart, "caching_sha2_password", len_sha2) != 0))
+					{
+						memcpy(r->owner->dbname, dbstart, len);
+						r->owner->dbname[len] = '\0';
+						log_debug("client set dbname: %s", r->owner->dbname);
+					}
+				}
+			}
+			else
+			{
+				log_error("parse login info error amid at packet length:%d\n", input_packet_length);
+			}
+		}
+
 		p += input_packet_length;
 
 		goto success;
@@ -608,7 +665,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	char conf_path[260] = {0};
 	if(mid != 0)
 	{
-		sprintf(conf_path, "/etc/dtc/dtc-conf-%d.yaml", mid);
+		sprintf(conf_path, "../conf/dtc-conf-%d.yaml", mid);
 		r->mid = mid;
 	}
 
@@ -674,7 +731,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 					{
 						j++;
 						//strip space.
-						while (j < str.len && str.data[j] == ' ') 
+						while (j < str.len && (str.data[j] == ' ' || str.data[j] == '\'' || str.data[j] == '\"'))
 						{
 							j++;
 						}
@@ -686,7 +743,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 							int k = 0;
 							for (k = j; k < str.len;
 							     k++) {
-								if (sql[k + 1] == ' ' || sql[k + 1] == ';' || k + 1 == str.len) 
+								if (sql[k + 1] == ' ' || sql[k + 1] == '\'' || sql[k + 1] == '\"' || sql[k + 1] == ';' || k + 1 == str.len) 
 								{
 									*end_offset = k + 1;
 									ret = layer;

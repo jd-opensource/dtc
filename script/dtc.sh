@@ -2,14 +2,16 @@
 
 ulimit -c unlimited
 
-DTC_BIN="dtcd_docker"
-rm -f "$DTC_BIN"
-ln -s core "$DTC_BIN" 
+DTC_BIN="dtcd"
 
 if [ "$1" = "stop" ] ; then
-    killall -9 $DTC_BIN
+    pkill -9 $DTC_BIN
+    pkill -9 connector
+    pkill -9 hwcserver
 elif [ "$1" = "restart" ]; then
-    killall -9 $DTC_BIN
+    pkill -9 $DTC_BIN
+    pkill -9 connector
+    pkill -9 hwcserver
 	sleep 2
     ./$DTC_BIN  >> /dev/null 2>&1
 elif [ "$1" = "start" ]; then

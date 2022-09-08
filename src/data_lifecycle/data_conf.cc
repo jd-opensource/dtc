@@ -9,7 +9,7 @@
 
 extern DbConfig *dbConfig;
 extern char cache_file[256];
-char agent_file[256] = "/etc/dtc/agent.xml";
+char agent_file[256] = "../conf/agent.xml";
 
 DataConf::DataConf(){
 }

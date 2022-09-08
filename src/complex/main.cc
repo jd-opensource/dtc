@@ -33,7 +33,7 @@ static PollerBase* workerThread;
 CTransactionGroup* FullDBGroup = NULL;
 CTransactionGroup* HotDBGroup = NULL;
 
-std::string conf_path = "/etc/dtc/dtc.yaml";
+std::string conf_path = "../dtc.yaml";
 
 static int start_main_thread()
 {

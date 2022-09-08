@@ -5,7 +5,7 @@
 #include <iostream>
 #include "re_comm.h"
 
-std::string conf_file = "/etc/dtc/dtc.yaml";
+std::string conf_file = "../conf/dtc.yaml";
 
 using namespace hsql;
 hsql::SQLParserResult rule_ast;
