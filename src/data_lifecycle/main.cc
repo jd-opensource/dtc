@@ -5,6 +5,7 @@
 #include "config.h"
 #include "proc_title.h"
 #include "dbconfig.h"
+#include "log.h"
 
 const char data_project_name[] = "data_lifecycle_manager";
 

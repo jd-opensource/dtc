@@ -68,6 +68,11 @@ jobs:
           cp ../dockerfiles/devel/mysql-connector-java-5.1.49.jar dtc/sharding/lib/mysql-connector-java-5.1.49.jar
 
           cp ../conf/log4cplus.conf dtc/conf/
+          cp ../conf/log4cplus-wd.conf dtc/conf/
+          cp ../conf/log4cplus-hwc.conf dtc/conf/
+          cp ../conf/log4cplus-async.conf dtc/conf/
+          cp ../conf/log4cplus-agent.conf dtc/conf/
+          cp ../conf/log4cplus-life.conf dtc/conf/
 
           tar -zcvf dtc.tar.gz dtc/
 

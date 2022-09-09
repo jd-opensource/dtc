@@ -5,6 +5,7 @@
 // local
 #include "comm.h"
 #include "hwc_state_manager.h"
+#include "log.h"
 
 // common
 extern "C" {

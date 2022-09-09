@@ -66,7 +66,7 @@ using namespace log4cplus::helpers;
 
 static Logger logger = Logger::getRoot();
 
-#define LOG4CPLUS_CONF_FILE "../conf/log4cplus-async.conf"
+#define LOG4CPLUS_CONF_FILE "../conf/log4cplus-hwc.conf"
 
 /*********************************************
 **TRACE：调试应用的详细步骤

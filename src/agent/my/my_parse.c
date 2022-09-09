@@ -168,7 +168,9 @@ log_debug("1111111111");
 				{
 					int len = pp - dbstart;
 					int len_sha2 = strlen("caching_sha2_password");
-					if(len != len_sha2 || (len == len_sha2 && memcmp(dbstart, "caching_sha2_password", len_sha2) != 0))
+					if(len != len_sha2 || 
+					(len == len_sha2 && 
+						(memcmp(dbstart, "caching_sha2_password", len_sha2) != 0 && memcmp(dbstart, "mysql_native_password", len_sha2) != 0)))
 					{
 						memcpy(r->owner->dbname, dbstart, len);
 						r->owner->dbname[len] = '\0';
