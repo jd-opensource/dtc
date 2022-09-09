@@ -15,6 +15,8 @@ private:
 	std::string m_data;
 	YAML::Node dtc;
 
+	void load_yaml_fields(YAML::Node node);
+
 public:
 	DBHost hot_instance;
 	DBHost full_instance;
@@ -32,7 +34,10 @@ public:
 	bool load_hot_inst_info();
 	bool load_full_inst_info();
 
+	void load_layered_info();
+
 	YAML::Node get_conf() { return dtc;}
+	std::map<std::string, std::string> table_type_info;
 };
 
 #endif
