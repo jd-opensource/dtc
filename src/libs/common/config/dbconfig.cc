@@ -592,7 +592,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         m->role[0].addr = STRDUP(dtc_config["primary"][layer]["real"][i]["addr"].as<string>().c_str());
         m->role[0].user = STRDUP(dtc_config["primary"][layer]["real"][i]["user"].as<string>().c_str());
         m->role[0].pass = STRDUP(dtc_config["primary"][layer]["real"][i]["pwd"].as<string>().c_str());
-        m->role[0].optfile = STRDUP("/etc/dtc/my.conf");
+        m->role[0].optfile = STRDUP("../conf/my.conf");
         log4cplus_info("addr:%s,user:%s" , m->role[0].addr , m->role[0].user);
 
         /* master DB settings */
@@ -748,8 +748,14 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         if (i >= keyFieldCnt &&
             raw->get_int_val(NULL, "ReadOnly", 0) > 0)
             f->flags |= DB_FIELD_FLAGS_READONLY;
-        if (raw->get_int_val(NULL, "field_unique", 0) > 0)
-            f->flags |= DB_FIELD_FLAGS_UNIQ;
+        if(dtc_config["primary"]["cache"]["field"][i]["unique"])
+        {
+            if(dtc_config["primary"]["cache"]["field"][i]["unique"].as<int>() > 0)
+            {
+                log4cplus_debug("set index: %d unique", i);
+                f->flags |= DB_FIELD_FLAGS_UNIQ;
+            }
+        }
         if (raw->get_int_val(NULL, "Volatile", 0) > 0) {
             if (i < keyFieldCnt) {
                 log4cplus_error(

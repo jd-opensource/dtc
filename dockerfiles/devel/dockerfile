@@ -1,9 +1,8 @@
-FROM ubuntu
+FROM ubuntu:20.04
 
 ARG basepath=/usr/local/dtc
 ARG binpath=$basepath/bin
 ARG confpath=$basepath/conf
-ARG logpath=/var/log/dtc
 
 RUN mkdir -p $basepath
 RUN mkdir -p $basepath/data
@@ -11,12 +10,11 @@ RUN mkdir -p $basepath/stat
 RUN mkdir -p $basepath/log
 RUN mkdir -p $binpath
 RUN mkdir -p $confpath
-RUN mkdir -p $logpath
 
-COPY core $binpath/core
+COPY dtcd $binpath/dtcd
 COPY dtcagent $binpath/dtcagent
 COPY agent-watchdog $binpath/agent-watchdog
-COPY async-connector $binpath/async-connector
+COPY async-conn $binpath/async-conn
 COPY connector $binpath/connector
 COPY data-lifecycle-manager $binpath/data-lifecycle-manager
 COPY hwcserver $binpath/hwcserver
@@ -26,6 +24,7 @@ COPY conf-gen-utils $binpath/conf-gen-utils
 
 COPY librule.so /usr/local/lib/librule.so
 COPY libsqlparser.so /usr/local/lib/libsqlparser.so
+COPY libdtcapi.so /usr/local/lib/libdtcapi.so
 
 RUN apt update
 RUN apt install -y iputils-ping net-tools wget default-jre
@@ -37,12 +36,13 @@ COPY mysql-connector-java-5.1.49.jar $basepath/sharding/lib/mysql-connector-java
 
 COPY run.sh $basepath/run.sh
 
-RUN chmod +x $binpath/core
+RUN chmod +x $binpath/dtcd
 RUN chmod +x $binpath/dtcagent
 RUN chmod +x $binpath/connector
 RUN chmod +x $basepath/run.sh
 RUN chmod +x $binpath/conf-gen-utils
-RUN chmod +x $binpath/async-connector
+RUN chmod +x $binpath/async-conn
+RUN chmod +x $binpath/hwcserver
 
 ENV LD_LIBRARY_PATH=:/usr/local/lib
 

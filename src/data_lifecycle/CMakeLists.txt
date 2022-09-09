@@ -9,7 +9,6 @@ INCLUDE_DIRECTORIES (
     ../daemons
     ../libs/stat
     ../libs/common
-    ../libs/common/log
     ../libs/common/config
     ../libs/common/daemon
     ../libs/common/socket
@@ -91,7 +90,6 @@ if(jdtestOpen)
     ../daemons
     ../libs/stat
     ../libs/common
-    ../libs/common/log
     ../libs/common/config
     ../libs/common/daemon
     ../libs/common/socket

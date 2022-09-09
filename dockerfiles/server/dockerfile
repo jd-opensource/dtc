@@ -1,15 +1,13 @@
 FROM centos:centos8
 
 ARG basepath=/usr/local/dtc
-ARG confpath=/etc/dtc
-ARG logpath=/var/log/dtc
+ARG confpath=$basepath/conf
 
 RUN mkdir -p $basepath/bin
 RUN mkdir -p $basepath/data
 RUN mkdir -p $basepath/stat
 RUN mkdir -p $basepath/log
 RUN mkdir -p $confpath
-RUN mkdir -p $logpath
 
 COPY core $basepath/bin/core
 COPY hwcserver $basepath/bin/hwcserver
@@ -17,5 +15,10 @@ COPY connector $basepath/bin/connector
 COPY table.yaml $confpath/table.yaml
 COPY dtc.yaml $confpath/dtc.yaml
 COPY log4cplus.conf $confpath/log4cplus.conf
+COPY log4cplus-hwc.conf $confpath/log4cplus-hwc.conf
+COPY log4cplus-wd.conf $confpath/log4cplus-wd.conf
+COPY log4cplus-async.conf $confpath/log4cplus-async.conf
+COPY log4cplus-agent.conf $confpath/log4cplus-agent.conf
+COPY log4cplus-life.conf $confpath/log4cplus-life.conf
 
 CMD ["/usr/local/dtc/bin/core", "-d"]

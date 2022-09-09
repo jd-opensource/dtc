@@ -1,0 +1,99 @@
+name: release
+
+on:
+  workflow_dispatch:
+
+env:
+  CC: gcc-4.9
+  CXX: g++-4.9    
+
+jobs:
+  build:
+    name: Release Asset
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install gcc env
+        run: |
+          echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial main" | sudo tee -a /etc/apt/sources.list
+          echo "deb http://dk.archive.ubuntu.com/ubuntu/ xenial universe" | sudo tee -a /etc/apt/sources.list
+          sudo apt update
+          sudo apt install gcc-4.9 g++-4.9
+        shell: bash
+        
+      - name: Install dependency
+        run: |
+          sudo apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev wget
+    
+      - name: cmake project
+        run: |
+          cd ${{github.workspace}}
+          mkdir build
+          cd build
+          cmake ../
+          make
+
+      - name: Tar bin
+        run: |
+          cd ${{github.workspace}}/build/
+          mkdir dtc
+          mkdir dtc/bin
+          mkdir dtc/conf
+          mkdir dtc/log
+          mkdir dtc/lib
+          mkdir dtc/stat
+          cp src/agent/dtcagent dtc/bin/
+          cp src/agent-watchdog/agent-watchdog dtc/bin/
+          cp src/complex/async-conn dtc/bin/
+          cp src/connector/connector dtc/bin/
+          cp src/core/dtcd dtc/bin/
+          cp src/data_lifecycle/data-lifecycle-manager dtc/bin/
+          cp src/hwcserver/hwcserver dtc/bin/
+          cp src/rule/librule.so dtc/bin/
+          cp src/utils/conf-gen-utils dtc/bin/
+          cp ../src/libs/api/cc_api/libs/libdtcapi.so dtc/bin/libdtc.so.1
+          cp ../src/libs/hsql/libs/libsqlparser.so dtc/bin/
+          cp ../script/dtc.sh dtc/bin/
+          cp ../script/agent.sh dtc/bin/
+          cp ../src/libs/api/cc_api/libs/key-hash.so dtc/lib/
+
+          chmod +x dtc/bin/dtc.sh
+          chmod +x dtc/bin/agent.sh
+
+          wget "https://dlcdn.apache.org/shardingsphere/5.1.2/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin.tar.gz" -O dtc/sharding.tar.gz
+          tar -zxvf dtc/sharding.tar.gz -C dtc
+          mv dtc/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin dtc/sharding
+          rm dtc/sharding.tar.gz
+          cp ../dockerfiles/devel/mysql-connector-java-5.1.49.jar dtc/sharding/lib/mysql-connector-java-5.1.49.jar
+
+          cp ../conf/log4cplus.conf dtc/conf/
+          cp ../conf/log4cplus-wd.conf dtc/conf/
+          cp ../conf/log4cplus-hwc.conf dtc/conf/
+          cp ../conf/log4cplus-async.conf dtc/conf/
+          cp ../conf/log4cplus-agent.conf dtc/conf/
+          cp ../conf/log4cplus-life.conf dtc/conf/
+
+          tar -zcvf dtc.tar.gz dtc/
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{github.workspace}}/build/dtc.tar.gz
+          asset_name: dtc.tar.gz
+          asset_content_type: application/gzip

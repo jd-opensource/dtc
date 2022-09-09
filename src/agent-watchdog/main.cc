@@ -15,8 +15,8 @@
 
 extern char cache_file[256];
 extern char table_file[256];
-#define ROOT_PATH "/etc/dtc/"
-char agent_file[256] = "/etc/dtc/agent.xml";
+#define ROOT_PATH "../conf/"
+char agent_file[256] = "../conf/agent.xml";
 std::map<std::string, std::string> map_dtc_conf; //key:value --> dtc addr:conf file name
 
 #define DA_VERSION_MAJOR	1
@@ -47,7 +47,7 @@ static struct option long_options[] = {
 		{ "version", no_argument, NULL, 'v' },
 		{ "data-lifecycle", no_argument, NULL,'l' },
 		{ "agent", no_argument, NULL,'a' },
-		{ "async-connector", no_argument, NULL,'y' },
+		{ "async-conn", no_argument, NULL,'y' },
 		{ "sharding", no_argument, NULL,'s' },
 		{ "recovery", no_argument, NULL,'r' },
 		{ "core", no_argument, NULL,'c' },
@@ -112,7 +112,7 @@ static void show_usage(void) {
 	printf("  -a, --agent        			: load agent module\n");
 	printf("  -c, --core        			: load dtc core module\n");
 	printf("  -l, --data-lifecycle			: load data-lifecycle module\n");
-	printf("  -y, --async-connector			: load async-connector module\n");
+	printf("  -y, --async-conn			: load async-conn module\n");
 	printf("  -s, --sharding      			: load sharding module\n");
 	printf("  -r, --recovery mode  			: auto restart when crashed\n");
 
@@ -385,7 +385,6 @@ int get_all_dtc_confs()
 		std::string addr = (*it).first;
 		std::string filename = (*it).second;
 
-		//TODO: send select dtcyaml
 		char* content = NULL;
 		int content_len = 0;
 		log4cplus_debug("addr:%s", addr.c_str());
@@ -444,7 +443,7 @@ int main(int argc, char* argv[])
 		exit(0);
 	}
 
-	if(load_agent || load_sharding || load_asyncconn)
+	if(load_agent || load_sharding || load_asyncconn || load_all)
 	{
 		if(get_all_dtc_confs() < 0)
 		{
@@ -463,12 +462,13 @@ int main(int argc, char* argv[])
 			log4cplus_error("start full-data failed.");
 	}
 
-	if (load_core || load_all) {
+	if (load_core) {
 		if(start_core(wdog, delay) < 0)
 			log4cplus_error("start core failed.");
 	}
 
 	if (load_agent || load_all) {
+		sleep(2);
 		if(start_agent(wdog, delay) < 0)
 			log4cplus_error("start full-data failed.");
 	}

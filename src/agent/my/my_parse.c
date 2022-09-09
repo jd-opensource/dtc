@@ -102,8 +102,9 @@ void my_parse_req(struct msg *r)
 			p = b->last;
 			goto end;
 		}
-
+log_debug("1111111111");
 		if (r->owner->stage == CONN_STAGE_LOGGED_IN) {
+			log_debug("1111111111");
 			rc = my_get_command(p, input_packet_length, r,
 					    &command);
 			if (rc) {
@@ -166,9 +167,16 @@ void my_parse_req(struct msg *r)
 
 				if(pp - dbstart > 0 && pp - dbstart < 250)
 				{
-					memcpy(r->owner->dbname, dbstart, pp - dbstart);
-					r->owner->dbname[pp - dbstart] = '\0';
-					log_debug("client set dbname: %s", r->owner->dbname);
+					int len = pp - dbstart;
+					int len_sha2 = strlen("caching_sha2_password");
+					if(len != len_sha2 || 
+					(len == len_sha2 && 
+						(memcmp(dbstart, "caching_sha2_password", len_sha2) != 0 && memcmp(dbstart, "mysql_native_password", len_sha2) != 0)))
+					{
+						memcpy(r->owner->dbname, dbstart, len);
+						r->owner->dbname[len] = '\0';
+						log_debug("client set dbname: %s", r->owner->dbname);
+					}
 				}
 			}
 			else
@@ -661,7 +669,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	char conf_path[260] = {0};
 	if(mid != 0)
 	{
-		sprintf(conf_path, "/etc/dtc/dtc-conf-%d.yaml", mid);
+		sprintf(conf_path, "../conf/dtc-conf-%d.yaml", mid);
 		r->mid = mid;
 	}
 
@@ -727,7 +735,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 					{
 						j++;
 						//strip space.
-						while (j < str.len && str.data[j] == ' ') 
+						while (j < str.len && (str.data[j] == ' ' || str.data[j] == '\'' || str.data[j] == '\"'))
 						{
 							j++;
 						}
@@ -739,7 +747,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 							int k = 0;
 							for (k = j; k < str.len;
 							     k++) {
-								if (sql[k + 1] == ' ' || sql[k + 1] == ';' || k + 1 == str.len) 
+								if (sql[k + 1] == ' ' || sql[k + 1] == '\'' || sql[k + 1] == '\"' || sql[k + 1] == ';' || k + 1 == str.len) 
 								{
 									*end_offset = k + 1;
 									ret = layer;

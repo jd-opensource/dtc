@@ -1,9 +1,9 @@
 ## 目录结构
 Bin文件目录：/usr/local/dtc<br/>
-配置文件目录：/etc/dtc<br/>
-日志目录：/var/log/<br/>
+配置文件目录：/usr/local/dtc/conf/<br/>
+日志目录：/usr/local/dtc/log/<br/>
 统计数据目录：/usr/local/dtc/stat/<br/>
-binlog数据目录：/usr/local/log/<br/>
+binlog数据目录：/usr/local/dtc/log/<br/>
 
 ## DTC模式
 
@@ -29,7 +29,7 @@ demo中定义的表名为dtc_opensource, <br/>
 为了省去配置环境的麻烦，Demo中提供docker镜像，直接运行即可启动服务端：<br/>
   ```shell
   docker pull dtc8/dtc:latest
-  docker run --rm --name dtc -p <MY_LISTENER_PORT>:12001 -v <MY_HOST_CONF_DIR>:/etc/dtc/ -e DTC_BIN=dtc -e DTC_ARGV=-ayc dtc8/dtc
+  docker run --rm --name dtc -p <MY_LISTENER_PORT>:12001 -v <MY_HOST_CONF_DIR>:/usr/local/dtc/conf/ -e DTC_BIN=dtc -e DTC_ARGV=-ayc dtc8/dtc
   ```
 
 ## 运行Client测试示例
@@ -78,8 +78,7 @@ mkdir -p basepath
 mkdir -p /usr/local/dtc/data
 mkdir -p /usr/local/dtc/stat
 mkdir -p /usr/local/dtc/log
-mkdir -p /etc/dtc
-mkdir -p /var/log/dtc
+mkdir -p /usr/local/dtc/conf
 ```
 * 将bin文件拷贝到/usr/local/dtc文件夹，并赋执行权限
 ```
@@ -94,7 +93,7 @@ chmod +x *
   -a, --agent                           : load agent module
   -c, --core                            : load dtc core module
   -l, --data-lifecycle                  : load data-lifecycle module
-  -y, --async-connector                 : load async-connector module
+  -y, --async-conn                 : load async-conn module
   -s, --sharding                        : load sharding module
   -r, --recovery mode                   : auto restart when crashed
 ```

@@ -37,7 +37,7 @@
 #define READER_SLEEP_TIME           500	//500ms
 #define READER_RETRY_COUNT          20
 
-#define SYS_CONFIG_FILE             "/etc/dtc/hbp.conf"
+#define SYS_CONFIG_FILE             "../conf/hbp.conf"
 /*
  *   err code
  */
