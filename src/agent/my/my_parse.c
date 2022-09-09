@@ -127,6 +127,7 @@ log_debug("1111111111");
 		}
 		else if (r->owner->stage == CONN_STAGE_LOGGING_IN) 
 		{
+#if 0			
 			//parse -D parameter(dbname)
 			if(input_packet_length >= 34)
 			{
@@ -182,6 +183,7 @@ log_debug("1111111111");
 			{
 				log_error("parse login info error amid at packet length:%d\n", input_packet_length);
 			}
+#endif			
 		}
 
 		p += input_packet_length;
