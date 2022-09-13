@@ -144,6 +144,9 @@ int DataManager::DoTaskOnce(){
             printf("GetLastId error, ret: %d\n", ret);
             return DTC_CODE_MYSQL_QRY_ERR;
         }
+        if("" == last_invisible_time){
+            last_invisible_time = "1970-01-01 08:00:00";
+        }
         std::string query_sql = ConstructQuerySql(last_delete_id, last_invisible_time);
         std::vector<QueryInfo> query_info_vec;
         ret = DoQuery(query_sql, query_info_vec);
@@ -310,7 +313,7 @@ int DataManager::DoDelete(const std::string& delete_sql){
 int DataManager::UpdateLastDeleteId(){
     std::string local_ip = GetIp();
     std::stringstream ss_sql;
-    ss_sql << "insert into " << life_cycle_table_name_
+    ss_sql << "replace into " << life_cycle_table_name_
         << " values(NULL,'" << local_ip
         << "', '" << table_name_
         << "', " << last_delete_id_
@@ -332,7 +335,8 @@ int DataManager::CreateTable(){
         << "`table_name` varchar(40) DEFAULT NULL,"
         << "`last_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '上次删除的记录对应的id',"
         << "`last_update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '上次删除的记录对应的更新时间',"
-        << "PRIMARY KEY (`id`)"
+        << "PRIMARY KEY (`id`),"
+        << "UNIQUE (`table_name`)"
         << ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
     int ret = full_db_conn_->do_query(cold_db_name_.c_str(), ss_sql.str().c_str());
     if(0 != ret){
