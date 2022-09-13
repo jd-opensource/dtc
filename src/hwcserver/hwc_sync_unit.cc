@@ -120,7 +120,7 @@ int HwcSync::Run()
 
         // 重试
         if (0 != ret) {
-            log4cplus_warning("fetch key-list from master failed, limit[%d], ret=%d, err=%s",
+            log4cplus_warning("fetch key-list from master, limit[%d], ret=%d, err=%s",
             i_limit_, ret, result_m.ErrorMessage());
             usleep(100);
             continue;
