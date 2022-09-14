@@ -28,7 +28,7 @@ int scan_file(const char* path, std::vector<std::string>& config_vec){
         if(dir_name == "." || dir_name == ".." || dir_name == "dtc-conf-0.yaml"){
             continue;
         } else if (dir_name.find("dtc") != string::npos){
-            config_vec.push_back("/etc/dtc/" + dir_name);
+            config_vec.push_back("../conf" + dir_name);
         }
     }
     return 0;
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]){
     }
 
     std::vector<std::string> config_vec;
-    int ret = scan_file("/etc/dtc", config_vec);
+    int ret = scan_file("../conf", config_vec);
     if(0 != ret){
         log4cplus_error("scan_file error.");
         return DTC_CODE_LOAD_CONFIG_ERR;

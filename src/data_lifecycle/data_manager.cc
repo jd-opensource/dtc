@@ -54,6 +54,7 @@ field_flag_vec_(config_param.field_flag_vec_){
         full_db_host->Port = stoi(full_db_vec[1]);
         strcpy(full_db_host->User, config_param.full_db_user_.c_str());
         strcpy(full_db_host->Password, config_param.full_db_pwd_.c_str());
+        strcpy(full_db_host->OptionFile, "");
         full_db_conn_ = new CDBConn(full_db_host);
         if(NULL != full_db_host){
             delete full_db_host;
@@ -149,6 +150,7 @@ int DataManager::DoTaskOnce(){
         }
         std::string query_sql = ConstructQuerySql(last_delete_id, last_invisible_time);
         std::vector<QueryInfo> query_info_vec;
+        //full_db_conn_->do_query(cold_db_name_.c_str(), "set names utf8");
         ret = DoQuery(query_sql, query_info_vec);
         if(0 != ret){
             printf("DoQuery error, ret: %d\n", ret);
@@ -172,7 +174,7 @@ int DataManager::DoTaskOnce(){
                 return DTC_CODE_MYSQL_DEL_ERR;
             }
         }
-        UpdateLastDeleteId();
+        //UpdateLastDeleteId();
     }
     return 0;
 }
@@ -343,6 +345,7 @@ int DataManager::CreateTable(){
         log4cplus_debug("create table error, ret: %d, err msg: %s", ret, full_db_conn_->get_err_msg());
         return ret;
     }
+    full_db_conn_->do_query(cold_db_name_.c_str(), "set names utf8");
     return 0;
 }
 
