@@ -75,7 +75,7 @@ bool is_complex_keyword(SQLParserResult* sql_ast)
     const SelectStatement* stmt = (const SelectStatement*)(sql_ast->getStatement(0));
     const TableRef* table = stmt->fromTable;
 
-    if(stmt->order || stmt->groupBy || table->join)
+    if(stmt->order || stmt->groupBy || table->join || table->type != kTableName)
         return true;
     
     return false;
@@ -107,47 +107,6 @@ bool is_complex_sql(SQLParserResult* sql_ast)
     return false;
 }
 
-std::string get_schema(SQLParserResult* sql_ast)
-{
-    StatementType t = sql_ast->getStatement(0)->type();
-    if(t == kStmtSelect)
-    {
-        const SelectStatement* stmt = (const SelectStatement*)(sql_ast->getStatement(0));
-        TableRef* table = stmt->fromTable;
-        if(table->hasSchema())
-        {
-            return std::string(table->schema);
-        }
-    }
-    else if(t == kStmtInsert)
-    {
-        const InsertStatement* stmt = (const InsertStatement*)(sql_ast->getStatement(0));
-        if(stmt->schema)
-        {
-            return std::string(stmt->schema);
-        }
-    }
-    else if(t == kStmtUpdate)
-    {
-        const UpdateStatement* stmt = (const UpdateStatement*)(sql_ast->getStatement(0));
-        TableRef* table = stmt->table;
-        if(table->hasSchema())
-        {
-            return std::string(table->schema);
-        }
-    }
-    else if(t == kStmtDelete)
-    {
-        const DeleteStatement* stmt = (const DeleteStatement*)(sql_ast->getStatement(0));
-        if(stmt->schema)
-        {
-            return std::string(stmt->schema);
-        }
-    }
-  
-    return "";
-}
-
 std::string get_table_name(SQLParserResult* sql_ast)
 {
     StatementType t = sql_ast->getStatement(0)->type();
@@ -157,13 +116,18 @@ std::string get_table_name(SQLParserResult* sql_ast)
         TableRef* table = stmt->fromTable;
         if(table)
         {
-            return std::string(table->getName());
+            log4cplus_debug("type: %d", table->type);
+            if(table->type == kTableName && table->name)
+            {
+                return std::string(table->name);
+            }
         }
     }
     else if(t == kStmtInsert)
     {
         const InsertStatement* stmt = (const InsertStatement*)(sql_ast->getStatement(0));
-        return std::string(stmt->tableName);
+        if(stmt && stmt->tableName)
+            return std::string(stmt->tableName);
     }
     else if(t == kStmtUpdate)
     {
@@ -171,13 +135,14 @@ std::string get_table_name(SQLParserResult* sql_ast)
         TableRef* table = stmt->table;
         if(table)
         {
-            return std::string(table->getName());
+            if(table->type == kTableName && table->name)
+                return std::string(table->name);
         }
     }
     else if(t == kStmtDelete)
     {
         const DeleteStatement* stmt = (const DeleteStatement*)(sql_ast->getStatement(0));
-        if(stmt)
+        if(stmt && stmt->tableName)
         {
             return std::string(stmt->tableName);
         }
@@ -222,12 +187,6 @@ bool re_is_cache_sql(SQLParserResult* sql_ast, std::string key)
         return false;
 
     if(!is_dtc_adapt_type(sql_ast))
-        return false;
-
-    std::string schema = get_schema(sql_ast);
-    if(schema == std::string(SPECIFIC_L1_SCHEMA))
-        return true;
-    else if(schema == std::string(SPECIFIC_L2_SCHEMA))
         return false;
 
     StatementType type = sql_ast->getStatement(0)->type();

@@ -18,6 +18,7 @@ LINK_DIRECTORIES(
 
 #添加链接库，相当于gcc -l
 LINK_LIBRARIES(liblog4cplus.a) 
+LINK_LIBRARIES(libmxml.a)
 LINK_LIBRARIES(libsqlparser.so) 
 LINK_LIBRARIES(libyaml-cpp.a)
 LINK_LIBRARIES(pthread)
@@ -28,9 +29,10 @@ ADD_DEFINITIONS("-g -rdynamic -fPIC -D_CORE_ -fpermissive -std=gnu++11 -D_GLIBCX
 ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 
 #编译为.so/.a
-#ADD_EXECUTABLE(rule ${SRC_LIST})
+ADD_EXECUTABLE(rule.bin ${SRC_LIST})
 ADD_LIBRARY(rule SHARED ${SRC_LIST})
 
 #将目标文件与库文件链接
-TARGET_LINK_LIBRARIES(rule libsqlparser.so liblog4cplus.a libyaml-cpp.a)
+TARGET_LINK_LIBRARIES(rule libsqlparser.so liblog4cplus.a libyaml-cpp.a libmxml.a)
+TARGET_LINK_LIBRARIES(rule.bin libsqlparser.so liblog4cplus.a libyaml-cpp.a libmxml.a)
 redefine_file_macro(conf-gen-utils)
