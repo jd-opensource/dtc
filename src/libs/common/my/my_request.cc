@@ -240,7 +240,10 @@ uint32_t MyRequest::get_need_num_fields()
 	hsql::SelectStatement *stmt = get_result()->getStatement(0);
 	std::vector<hsql::Expr *> *selectList = stmt->selectList;
 	log4cplus_debug("select size:%d", selectList->size());
-	return selectList->size();
+	if(selectList->size() == 1 && (*selectList)[0]->type == kExprStar)
+		return g_dtc_config->get_config_node()["primary"]["cache"]["field"].size();
+	else
+		return selectList->size();
 }
 
 uint32_t MyRequest::get_update_num_fields()
@@ -267,18 +270,20 @@ std::vector<std::string> MyRequest::get_need_array()
 
 	hsql::SelectStatement *stmt = get_result()->getStatement(0);
 	std::vector<hsql::Expr *> *selectList = stmt->selectList;
-	for (int i = 0; i < stmt->selectList->size(); i++) {
-		need.push_back(stmt->selectList->at(i)->getName());
-	}
 
-	if('*')
+	if(selectList->size() == 1 && (*selectList)[0]->type == kExprStar)
 	{
 		int num = g_dtc_config->get_config_node()["primary"]["cache"]["field"].size();
 		for(int i = 0; i < num; i++)
 		{
 			need.push_back(g_dtc_config->get_config_node()["primary"]["cache"]["field"][i]["name"].as<std::string>());
+		}	
+	}
+	else
+	{
+		for (int i = 0; i < stmt->selectList->size(); i++) {
+			need.push_back(stmt->selectList->at(i)->getName());
 		}
-		
 	}
 
 	return need;
