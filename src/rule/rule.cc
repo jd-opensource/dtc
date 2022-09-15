@@ -194,6 +194,13 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
             return 2;
     }
 
+    if(sql.find("WITHOUT@@") != sql.npos)
+    {
+        log4cplus_debug("data-lifecycle request, force direct to L1.");
+        //L1: DTC cache.
+        return 1;
+    }
+
     log4cplus_debug("#############dbname:%s", dbname);
     if(dbname != NULL && strlen(dbname) > 0 && flag == false)
     {
