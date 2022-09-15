@@ -265,6 +265,7 @@ std::vector<std::string> MyRequest::get_need_array()
 	std::vector<std::string> need;
 	int t = m_result.getStatement(0)->type();
 	if (t != hsql::StatementType::kStmtSelect) {
+		log4cplus_error("need array type: %d", t);
 		return need;
 	}
 
