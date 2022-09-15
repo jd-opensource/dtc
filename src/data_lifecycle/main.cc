@@ -28,7 +28,7 @@ int scan_file(const char* path, std::vector<std::string>& config_vec){
         if(dir_name == "." || dir_name == ".." || dir_name == "dtc-conf-0.yaml"){
             continue;
         } else if (dir_name.find("dtc") != string::npos){
-            config_vec.push_back("../conf" + dir_name);
+            config_vec.push_back("../conf/" + dir_name);
         }
     }
     return 0;
