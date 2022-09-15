@@ -16,8 +16,11 @@
 #include "../log/log.h"
 #include "my_request.h"
 #include "my_command.h"
+#include "../config/config.h"
 
 using namespace hsql;
+
+extern DTCConfig *g_dtc_config;
 
 bool MyRequest::do_mysql_protocol_parse()
 {
@@ -266,6 +269,16 @@ std::vector<std::string> MyRequest::get_need_array()
 	std::vector<hsql::Expr *> *selectList = stmt->selectList;
 	for (int i = 0; i < stmt->selectList->size(); i++) {
 		need.push_back(stmt->selectList->at(i)->getName());
+	}
+
+	if('*')
+	{
+		int num = g_dtc_config->get_config_node()["primary"]["cache"]["field"].size();
+		for(int i = 0; i < num; i++)
+		{
+			need.push_back(g_dtc_config->get_config_node()["primary"]["cache"]["field"][i]["name"].as<std::string>());
+		}
+		
 	}
 
 	return need;
