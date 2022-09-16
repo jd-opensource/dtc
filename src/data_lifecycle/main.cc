@@ -25,9 +25,10 @@ int scan_file(const char* path, std::vector<std::string>& config_vec){
     struct dirent *dirent;
     while(dirent = readdir(dir)){
         string dir_name = dirent->d_name;
+        string match_str="dtc-conf";
         if(dir_name == "." || dir_name == ".." || dir_name == "dtc-conf-0.yaml"){
             continue;
-        } else if (dir_name.find("dtc") != string::npos){
+        } else if(dir_name.size() > match_str.size() && dir_name.substr(0, match_str.size()) == match_str){
             config_vec.push_back("../conf/" + dir_name);
         }
     }
