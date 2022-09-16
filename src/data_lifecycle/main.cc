@@ -5,6 +5,7 @@
 #include "config.h"
 #include "proc_title.h"
 #include "dbconfig.h"
+#include "log.h"
 
 #include <sys/types.h>
 #include <dirent.h>

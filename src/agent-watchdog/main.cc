@@ -47,7 +47,7 @@ static struct option long_options[] = {
 		{ "version", no_argument, NULL, 'v' },
 		{ "data-lifecycle", no_argument, NULL,'l' },
 		{ "agent", no_argument, NULL,'a' },
-		{ "async-connector", no_argument, NULL,'y' },
+		{ "async-conn", no_argument, NULL,'y' },
 		{ "sharding", no_argument, NULL,'s' },
 		{ "recovery", no_argument, NULL,'r' },
 		{ "core", no_argument, NULL,'c' },
@@ -112,7 +112,7 @@ static void show_usage(void) {
 	printf("  -a, --agent        			: load agent module\n");
 	printf("  -c, --core        			: load dtc core module\n");
 	printf("  -l, --data-lifecycle			: load data-lifecycle module\n");
-	printf("  -y, --async-connector			: load async-connector module\n");
+	printf("  -y, --async-conn			: load async-conn module\n");
 	printf("  -s, --sharding      			: load sharding module\n");
 	printf("  -r, --recovery mode  			: auto restart when crashed\n");
 

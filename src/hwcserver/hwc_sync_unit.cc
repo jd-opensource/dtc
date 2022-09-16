@@ -112,7 +112,7 @@ int HwcSync::Run()
 
         DTC::Result result_m;
         int ret = request_m.Execute(result_m);
-        log4cplus_error("aliving....., return:%d", ret);
+        log4cplus_warning("hwc server is aliving....., return:%d", ret);
 
         if (-DTC::EC_BAD_HOTBACKUP_JID == ret) {
             log4cplus_error("master report journalID is not match");
@@ -120,7 +120,7 @@ int HwcSync::Run()
 
         // 重试
         if (0 != ret) {
-            log4cplus_error("fetch key-list from master failed, limit[%d], ret=%d, err=%s",
+            log4cplus_warning("fetch key-list from master, limit[%d], ret=%d, err=%s",
             i_limit_, ret, result_m.ErrorMessage());
             usleep(100);
             continue;

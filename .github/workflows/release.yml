@@ -45,7 +45,7 @@ jobs:
           mkdir dtc/stat
           cp src/agent/dtcagent dtc/bin/
           cp src/agent-watchdog/agent-watchdog dtc/bin/
-          cp src/complex/async-connector dtc/bin/
+          cp src/complex/async-conn dtc/bin/
           cp src/connector/connector dtc/bin/
           cp src/core/dtcd dtc/bin/
           cp src/data_lifecycle/data-lifecycle-manager dtc/bin/
@@ -61,13 +61,18 @@ jobs:
           chmod +x dtc/bin/dtc.sh
           chmod +x dtc/bin/agent.sh
 
-          wget "https://dlcdn.apache.org/shardingsphere/5.1.2/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin.tar.gz" -O dtc/sharding.tar.gz
+          wget "https://storage.jd.com/bq-install/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin.tar.gz" -O dtc/sharding.tar.gz
           tar -zxvf dtc/sharding.tar.gz -C dtc
           mv dtc/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin dtc/sharding
           rm dtc/sharding.tar.gz
           cp ../dockerfiles/devel/mysql-connector-java-5.1.49.jar dtc/sharding/lib/mysql-connector-java-5.1.49.jar
 
           cp ../conf/log4cplus.conf dtc/conf/
+          cp ../conf/log4cplus-wd.conf dtc/conf/
+          cp ../conf/log4cplus-hwc.conf dtc/conf/
+          cp ../conf/log4cplus-async.conf dtc/conf/
+          cp ../conf/log4cplus-agent.conf dtc/conf/
+          cp ../conf/log4cplus-life.conf dtc/conf/
 
           tar -zcvf dtc.tar.gz dtc/
 

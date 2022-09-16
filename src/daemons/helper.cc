@@ -114,15 +114,17 @@ int WatchDogHelper::verify()
 {
 	struct sockaddr_un unaddr;
 	int len = init_unix_socket_address(&unaddr, path_);
-	log4cplus_info("verify path:%s" , path_);
+	log4cplus_info("verify path:%s." , path_);
 	/* delay 100ms and verify socket */
-	usleep(100 * 1000);
+	//usleep(5000 * 1000);
+	sleep(2);
 	int s = socket(unaddr.sun_family, SOCK_STREAM, 0);
 	if (connect(s, (sockaddr *)&unaddr, len) < 0) {
 		close(s);
 		log4cplus_error("verify connect: %m");
 		return -1;
 	}
+	log4cplus_info("verify success.");
 	close(s);
 	return watchdog_object_pid_;
 }

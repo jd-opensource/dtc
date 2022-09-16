@@ -93,7 +93,7 @@ chmod +x *
   -a, --agent                           : load agent module
   -c, --core                            : load dtc core module
   -l, --data-lifecycle                  : load data-lifecycle module
-  -y, --async-connector                 : load async-connector module
+  -y, --async-conn                 : load async-conn module
   -s, --sharding                        : load sharding module
   -r, --recovery mode                   : auto restart when crashed
 ```
