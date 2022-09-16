@@ -9,6 +9,8 @@
 #include <string.h>
 #include <arpa/inet.h>
 
+#define default_option_file "../conf/my.conf"
+
 DataManager::DataManager(){
     next_process_time_ = 0;
     DBHost* db_host = new DBHost();
@@ -55,6 +57,12 @@ field_flag_vec_(config_param.field_flag_vec_){
         strcpy(full_db_host->User, config_param.full_db_user_.c_str());
         strcpy(full_db_host->Password, config_param.full_db_pwd_.c_str());
         strcpy(full_db_host->OptionFile, "");
+        if(config_param.option_file.size() != 0){
+            strcpy(full_db_host->OptionFile, config_param.option_file.c_str());
+        } else {
+            strcpy(full_db_host->OptionFile, default_option_file);
+        }
+        printf("full_db_host->OptionFile: %s\n", full_db_host->OptionFile);
         full_db_conn_ = new CDBConn(full_db_host);
         if(NULL != full_db_host){
             delete full_db_host;
@@ -169,12 +177,13 @@ int DataManager::DoTaskOnce(){
             last_delete_id_ = iter->id;
             last_invisible_time_ = iter->invisible_time;
             if(0 != ret){
-                UpdateLastDeleteId();
+                //UpdateLastDeleteId();
                 printf("DoDelete error, ret: %d\n", ret);
                 return DTC_CODE_MYSQL_DEL_ERR;
             }
         }
-        //UpdateLastDeleteId();
+        UpdateLastDeleteId();
+        sleep(1);
     }
     return 0;
 }
@@ -230,6 +239,8 @@ std::string DataManager::ConstructQuerySql(uint64_t last_delete_id, std::string 
 }
 
 int DataManager::DoQuery(const std::string& query_sql, std::vector<QueryInfo>& query_info_vec){
+    printf("begin DoQuery\n");
+    ShowVariables();
     int ret = full_db_conn_->do_query(cold_db_name_.c_str(), query_sql.c_str());
     if(0 != ret){
         printf("query error, ret: %d, err msg: %s\n", ret, full_db_conn_->get_err_msg());
@@ -263,6 +274,13 @@ int DataManager::DoQuery(const std::string& query_sql, std::vector<QueryInfo>& q
         full_db_conn_->free_result();
     }
     return 0;
+}
+
+void hextostring(char* str, int len){
+    for(int i = 0; i < len; i++){
+        printf("%02x", str[i]);
+    }
+    printf("\n");
 }
 
 std::set<std::string> DataManager::ConstructDeleteSql(const std::string& key){
@@ -329,6 +347,26 @@ int DataManager::UpdateLastDeleteId(){
     return 0;
 }
 
+int DataManager::ShowVariables(){
+    int ret = full_db_conn_->do_query(cold_db_name_.c_str(), "show variables like '%%char%%'");
+    if(0 != ret){
+        printf("query error, ret: %d, err msg: %s\n", ret, full_db_conn_->get_err_msg());
+        return ret;
+    }
+    if(0 == full_db_conn_->use_result()){
+        for (int i = 0; i < full_db_conn_->res_num; i++) {
+            ret = full_db_conn_->fetch_row();
+            if (ret != 0) {
+                full_db_conn_->free_result();
+                printf("db fetch row error: %s\n", full_db_conn_->get_err_msg());
+                return ret;
+            }
+            printf("%s: %s\n", full_db_conn_->Row[0], full_db_conn_->Row[1]);
+        }
+    }
+    return 0;
+}
+
 int DataManager::CreateTable(){
     std::stringstream ss_sql;
     ss_sql << "CREATE TABLE if not exists " << life_cycle_table_name_ << "("
@@ -345,7 +383,6 @@ int DataManager::CreateTable(){
         log4cplus_debug("create table error, ret: %d, err msg: %s", ret, full_db_conn_->get_err_msg());
         return ret;
     }
-    full_db_conn_->do_query(cold_db_name_.c_str(), "set names utf8");
     return 0;
 }
 

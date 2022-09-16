@@ -42,6 +42,7 @@ public:
     std::set<std::string> splitStr(const std::string& src, const std::string& separate_character);
     std::vector<std::string> splitVecStr(const std::string& src, const std::string& separate_character);
     int CreateTable();
+    int ShowVariables();
 private:
     std::string data_rule_; // example: status=0
     std::string operate_time_rule_; // example: 0 */5 * * * ?

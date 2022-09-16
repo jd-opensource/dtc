@@ -23,6 +23,7 @@ public:
     std::string full_db_user_;
     std::string full_db_pwd_;
     uint32_t port_;
+    std::string option_file;
 };
 
 class DataConf{

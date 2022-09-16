@@ -180,6 +180,9 @@ int DataConf::ParseConfig(const std::string& config_path, ConfigParam& config_pa
     config_param.table_name_ = node.as<string>();
     config_param.port_ = port_;
 
+    node = config["primary"]["option.file.path"];
+    config_param.option_file = node? node.as<string>(): "";
+
     log4cplus_debug("single_query_cnt_: %d, data_rule: %s, operate_time_rule: %s, operate_type: %s, "
         "life_cycle_table_name: %s, key_field_name: %s, table_name: %s, hot_database_name: %s, cold_database_name: %s",
         config_param.single_query_cnt_, config_param.data_rule_.c_str(), config_param.operate_time_rule_.c_str(),
