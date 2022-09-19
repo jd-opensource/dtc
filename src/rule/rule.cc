@@ -194,6 +194,9 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
             return 2;
     }
 
+    if(sql.find("SHOW CREATE TABLE") != string::npos)
+        return 2;
+
     log4cplus_debug("#############dbname:%s", dbname);
     if(dbname != NULL && strlen(dbname) > 0 && flag == false)
     {
