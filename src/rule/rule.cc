@@ -255,8 +255,6 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
             //L1: DTC cache.
             std::string tab_name = get_table_name(&sql_ast);
             std::string conf_tab_name = re_load_table_name();
-            if(sql.find("*") != -1)
-                return -9;
             if(tab_name == conf_tab_name)
                 return 1;
             else
