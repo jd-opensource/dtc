@@ -40,19 +40,26 @@ int load_node_to_map(YAML::Node dtc_config)
     if(dtc_config["primary"]["hot"])
     {
         log4cplus_info("loading hot.");
-        vec = 
-            dbmap[dtc_config["primary"]["hot"]["logic"]["db"].as<string>()];
-        vec.push_back(dtc_config["primary"]["hot"]);
-        dbmap[dtc_config["primary"]["hot"]["logic"]["db"].as<string>()] = vec;
+        string logic_db = dtc_config["primary"]["hot"]["logic"]["db"].as<string>();
+        if(dbmap.find(logic_db) != dbmap.end()){
+            vec = dbmap.find(logic_db)->second; 
+        }
+        vec.push_back(YAML::Load(YAML::Dump(dtc_config["primary"]["hot"])));
+        dbmap[logic_db] = vec;
+        vec.clear();        
     }
 
     //full
     if(dtc_config["primary"]["full"])
     {
         log4cplus_info("loading full.");
-        vec = dbmap[dtc_config["primary"]["full"]["logic"]["db"].as<string>()];
-        vec.push_back(dtc_config["primary"]["full"]);
-        dbmap[dtc_config["primary"]["full"]["logic"]["db"].as<string>()] = vec;
+        string logic_db = dtc_config["primary"]["full"]["logic"]["db"].as<string>();
+        if(dbmap.find(logic_db) != dbmap.end()){
+            vec = dbmap.find(logic_db)->second; 
+        }
+        vec.push_back(YAML::Load(YAML::Dump(dtc_config["primary"]["full"])));
+        dbmap[logic_db] = vec;
+        vec.clear();
     }
 
     //extension
@@ -61,9 +68,13 @@ int load_node_to_map(YAML::Node dtc_config)
         log4cplus_info("loading extension.");
         for(int i = 0; i < dtc_config["extension"].size(); i++)
         {
-            vec = dbmap[dtc_config["extension"][i]["logic"]["db"].as<string>()];
-            vec.push_back(dtc_config["extension"][i]);
-            dbmap[dtc_config["extension"][i]["logic"]["db"].as<string>()] = vec;
+            string logic_db = dtc_config["extension"][i]["logic"]["db"].as<string>();
+            if(dbmap.find(logic_db) != dbmap.end()){
+                vec = dbmap.find(logic_db)->second; 
+            }
+            vec.push_back(YAML::Load(YAML::Dump(dtc_config["extension"][i])));
+            dbmap[logic_db] = vec;
+            vec.clear();
         }
     }
 
