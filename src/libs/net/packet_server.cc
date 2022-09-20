@@ -20,13 +20,19 @@ int CPacket::EncodeResult(CTaskRequest &task, int mtu)
 	dtc_header.id = task.get_dtc_header_id();
 	dtc_header.packet_len = 0;
 	dtc_header.admin = 0;
+	dtc_header.dbname_len = 0;
 
 	CBufferChain* rb = task.get_buffer_chain();
 	if (!rb)
 		return -3;
 
 	rb->Count(nrp, lrp);
-	log4cplus_debug("dtc header id: %d, packet nrp: %d, lrp: %d", dtc_header.id, nrp, lrp);
+
+	CBufferChain* rbp = rb;
+	for (int i = 1; i <= nrp; i++, rbp = rbp->nextBuffer) {
+		dtc_header.packet_len += rbp->usedBytes;
+	}
+	log4cplus_debug("dtc header id: %d, packet nrp: %d, lrp: %d, packet_len: %d", dtc_header.id, nrp, lrp, dtc_header.packet_len);
 
 	/* pool, exist and large enough, use. else free and malloc */
 	int first_packet_len = sizeof(CBufferChain) +

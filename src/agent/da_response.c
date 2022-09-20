@@ -137,7 +137,7 @@ static void rsp_recv_done_stats(struct context *ctx, struct cache_instance *ci, 
 
 int dtc_header_remove(struct msg* msg)
 {
-	struct mbuf* mbuf = STAILQ_LAST(&msg->buf_q, mbuf, next);
+	struct mbuf* mbuf = STAILQ_FIRST(&msg->buf_q);
 	if(!mbuf)
 		return -1;
 
@@ -149,7 +149,7 @@ int dtc_header_remove(struct msg* msg)
 
 	mbuf_remove(&msg->buf_q, mbuf);
 	mbuf_put(mbuf);
-	mbuf_insert(&msg->buf_q, new_buf);
+	STAILQ_INSERT_HEAD(&msg->buf_q, new_buf, next);
 
 	msg->mlen = mbuf_length(new_buf);
 	log_debug("msg->mlen:%d mbuf_length(mbuf):%d", msg->mlen, mbuf_length(mbuf));
