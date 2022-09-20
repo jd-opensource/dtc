@@ -16,6 +16,7 @@
 #define SPECIFIC_L3_SCHEMA "L3"
 
 using namespace std;
+using namespace hsql;
 
 extern vector<vector<hsql::Expr*> > expr_rules;
 extern std::string conf_file;
@@ -44,12 +45,125 @@ std::string get_key_info(std::string conf)
 extern "C" const char* rule_get_key(const char* conf)
 {
     std::string strkey = get_key_info(conf);
-    printf("222222222222, conf file: %s\n", conf);
+    printf("conf file: %s\n", conf);
     printf("key len: %d, key: %s\n", strkey.length(), strkey.c_str());
     if(strkey.length() > 0)
         return strkey.c_str();
     else
         return NULL;
+}
+
+extern "C" int get_statement_value(char* str, int len, const char* strkey, int* start_offset, int* end_offset)
+{
+    hsql::SQLParserResult sql_ast;
+    if(re_parse_sql(str, &sql_ast) != 0)
+        return -1;
+
+    StatementType t = sql_ast.getStatement(0)->type();
+    if(t == kStmtInsert)
+    {
+        const InsertStatement* stmt = (const InsertStatement*)(sql_ast.getStatement(0));
+        if(stmt->columns == NULL)  // for all
+        {
+            int i = 0;
+            int pos = 0;
+            char sztmp[100] = {0};
+            std::string strsql;
+			switch (stmt->values->at(i)->type) 
+            {
+                case hsql::ExprType::kExprLiteralInt:
+                    sprintf(sztmp, "%d", stmt->values->at(i)->ival);
+                    strsql = str;
+                    pos = strsql.find(sztmp);
+                    if(pos != string::npos)
+                    {
+                        *start_offset = pos;
+                        *end_offset = pos + strlen(sztmp);
+                        return 0;
+                    }
+                    else
+                        return -1;
+                case hsql::ExprType::kExprLiteralFloat:
+                    sprintf(sztmp, "%f", stmt->values->at(i)->fval);
+                    strsql = str;
+                    pos = strsql.find(sztmp);
+                    if(pos != string::npos)
+                    {
+                        *start_offset = pos;
+                        *end_offset = pos + strlen(sztmp);
+                        return 0;
+                    }
+                    else
+                        return -1;
+                case hsql::ExprType::kExprLiteralString:
+                    strsql = str;
+                    pos = strsql.find(stmt->values->at(i)->name);
+                    if(pos != string::npos)
+                    {
+                        *start_offset = pos;
+                        *end_offset = pos + strlen(stmt->values->at(i)->name);
+                        return 0;
+                    }
+                    else
+                        return -1;
+                default:
+                    return -1;
+            }
+        }
+        else if(stmt->columns->size() >= 0) // specified
+        {
+            for(int i = 0; i < stmt->columns->size(); i++)
+            {
+                if(std::string(stmt->columns->at(i)) == std::string(strkey))
+                {
+                    std::string strsql;
+                    int pos = 0;
+                    char sztmp[100] = {0};
+                    switch (stmt->values->at(i)->type) {
+                    case hsql::ExprType::kExprLiteralInt:
+                        sprintf(sztmp, "%d", stmt->values->at(i)->ival);
+                        strsql = str;
+                        pos = strsql.find(sztmp);
+                        if(pos != string::npos)
+                        {
+                            *start_offset = pos;
+                            *end_offset = pos + strlen(sztmp);
+                            return 0;
+                        }
+                        else
+                            return -1;
+                    case hsql::ExprType::kExprLiteralFloat:
+                        sprintf(sztmp, "%f", stmt->values->at(i)->fval);
+                        strsql = str;
+                        pos = strsql.find(sztmp);
+                        if(pos != string::npos)
+                        {
+                            *start_offset = pos;
+                            *end_offset = pos + strlen(sztmp);
+                            return 0;
+                        }
+                        else
+                            return -1;
+                    case hsql::ExprType::kExprLiteralString:
+                        strsql = str;
+                        pos = strsql.find(stmt->values->at(i)->name);
+                        if(pos != string::npos)
+                        {
+                            *start_offset = pos;
+                            *end_offset = pos + strlen(stmt->values->at(i)->name);
+                            return 0;
+                        }
+                        else
+                            return -1;
+                    default:
+                        return -1;
+                    }
+                }
+            }
+        }
+    }
+    else
+        return -1;
 }
 
 extern "C" int rule_get_key_type(const char* conf)
@@ -151,6 +265,7 @@ int is_ext_table(hsql::SQLParserResult* ast,const char* dbname)
     std::vector<std::string>::iterator iter;
     for(iter = agent_info.begin(); iter < agent_info.end(); iter++)
     {
+        log4cplus_debug("cmp: %s, %s", iter->c_str(), cmp_str.c_str());
         if(*iter == cmp_str)
             return 0;
     }
@@ -233,7 +348,50 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
         log4cplus_debug("temsql: %s", tempsql.c_str());
         ast = &ast2;
     }
+    else if(sql.find("INSERT INTO") != -1)
+    {
+        tempsql += "WHERE ";
+        hsql::SQLParserResult allcondition;
+        if(re_parse_sql(sql, &allcondition) != 0)
+        {
+            log4cplus_error("error sql: %s", sql.c_str());
+            return -1;
+        }
+        const InsertStatement* stmt = (const InsertStatement*)(allcondition.getStatement(0));
+        if(stmt->columns == NULL)  // for all
+            return -1;
+        for(int i = 0; i < stmt->columns->size(); i ++)
+        {
+            char sztmp[100] = {0};
+            tempsql += stmt->columns->at(i);
+            tempsql += "=";
+            log4cplus_debug("name: %s, type: %d", stmt->columns->at(i), stmt->values->at(i)->type);
+            if(stmt->values->at(i)->type == hsql::ExprType::kExprLiteralInt)
+            {
+                sprintf(sztmp, "%d", stmt->values->at(i)->ival);
+                tempsql += sztmp;
+            }
+            else if(stmt->values->at(i)->type == hsql::ExprType::kExprLiteralFloat)
+            {
+                sprintf(sztmp, "%f", stmt->values->at(i)->fval);
+                tempsql += sztmp;
+            }
+            else if(stmt->values->at(i)->type == hsql::ExprType::kExprLiteralString)
+            {
+                tempsql += "'";
+                tempsql += stmt->values->at(i)->name;
+                tempsql += "'";
+            }
+            tempsql += " ";
+            if(i + 1 < stmt->columns->size())
+                tempsql += "AND ";
+        }
 
+        if(re_parse_sql(tempsql, &ast2) != 0)
+            return -1;
+        log4cplus_debug("temsql: %s", tempsql.c_str());
+        ast = &ast2;
+    }
 
     if(sql.find("INSERT INTO") != -1 && sql.find("WHERE") != -1)
     {

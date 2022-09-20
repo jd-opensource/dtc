@@ -226,8 +226,10 @@ bool re_is_cache_sql(SQLParserResult* sql_ast, std::string key)
         if(stmt->type != kInsertValues)
             return false;
         
-        if(stmt->columns->size() == 0)
-            return false;
+        if(stmt->columns == NULL && stmt->values->size() > 0)
+        {
+            return true;
+        }
 
         for(int i = 0; i < stmt->columns->size(); i++)
         {

@@ -603,9 +603,20 @@ bool check_cmd_operation(struct string *str)
 		return false;
 }
 
-bool check_cmd_select(struct string *str)
+bool check_cmd_insert(struct string *str)
 {
-	return false;
+	int i = 0;
+	char *condition_4 = "INSERT INTO ";
+	if (string_empty(str))
+		return false;
+	
+	if(str->len <= da_strlen(condition_4))
+		false;
+
+	if (da_strncmp(str->data + i, condition_4, da_strlen(condition_4)) == 0)
+		return true;
+	else
+		return false;
 }
 
 int get_mid_by_dbname(const char* dbname, const char* sql, struct msg* r)
@@ -750,63 +761,71 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	if (check_cmd_operation(&str))
 		return -2;
 
-	if (check_cmd_select(&str))
-		return -2;
-
-	i = _check_condition(&str);
-	if (i < 0) {
-		ret = -2;
-		log_error("check condition error code:%d", i);
-		goto done;
+	if (check_cmd_insert(&str))
+	{
+		if(get_statement_value(str.data, str.len, strkey, start_offset, end_offset) == 0)
+		{
+			ret = layer;
+			goto done;
+		}
 	}
+	else
+	{
+		i = _check_condition(&str);
+		if (i < 0) {
+			ret = -2;
+			log_error("check condition error code:%d", i);
+			goto done;
+		}
 
-	for (; i < str.len; i++) {
-		if (str.len - i >= strlen(strkey)) {
-			log_debug(
-				"key: %s, key len:%d, str.len:%d i:%d dtc_key_len:%d str.data + i:%s ", strkey, strlen(strkey),
-				str.len, i, strlen(strkey), str.data + i);
-			if (da_strncmp(str.data + i, strkey, strlen(strkey)) == 0) 
-			{
-				int j;
-				for (j = i + strlen(strkey); j < str.len; j++) 
+		for (; i < str.len; i++) {
+			if (str.len - i >= strlen(strkey)) {
+				log_debug(
+					"key: %s, key len:%d, str.len:%d i:%d dtc_key_len:%d str.data + i:%s ", strkey, strlen(strkey),
+					str.len, i, strlen(strkey), str.data + i);
+				if (da_strncmp(str.data + i, strkey, strlen(strkey)) == 0) 
 				{
-					if (str.data[j] == '=') 
+					int j;
+					for (j = i + strlen(strkey); j < str.len; j++) 
 					{
-						j++;
-						//strip space.
-						while (j < str.len && (str.data[j] == ' ' || str.data[j] == '\'' || str.data[j] == '\"'))
+						if (str.data[j] == '=') 
 						{
 							j++;
-						}
-
-						if (j < str.len) 
-						{
-							*start_offset = j;
-
-							int k = 0;
-							for (k = j; k < str.len;
-							     k++) {
-								if (sql[k + 1] == ' ' || sql[k + 1] == '\'' || sql[k + 1] == '\"' || sql[k + 1] == ';' || k + 1 == str.len) 
-								{
-									*end_offset = k + 1;
-									ret = layer;
-									goto done;
-								}
+							//strip space.
+							while (j < str.len && (str.data[j] == ' ' || str.data[j] == '\'' || str.data[j] == '\"'))
+							{
+								j++;
 							}
 
-							ret = -4;
-							goto done;
-						} 
-						else 
-						{
-							ret = -5;
-							goto done;
+							if (j < str.len) 
+							{
+								*start_offset = j;
+
+								int k = 0;
+								for (k = j; k < str.len;
+									k++) {
+									if (sql[k + 1] == ' ' || sql[k + 1] == '\'' || sql[k + 1] == '\"' || sql[k + 1] == ';' || k + 1 == str.len) 
+									{
+										*end_offset = k + 1;
+										ret = layer;
+										goto done;
+									}
+								}
+
+								ret = -4;
+								goto done;
+							} 
+							else 
+							{
+								ret = -5;
+								goto done;
+							}
 						}
 					}
-				}
 
-				ret = -2;
-				goto done;
+					ret = -2;
+					goto done;
+				}
 			}
 		}
 	}

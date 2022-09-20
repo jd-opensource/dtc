@@ -156,10 +156,10 @@ bool MyRequest::get_key(DTCValue *key, char *key_name)
 
 	if (hsql::StatementType::kStmtInsert == t) {
 		hsql::InsertStatement *stmt = get_result()->getStatement(0);
-		for (int i = 0; i < stmt->columns->size(); i++) {
-			if (strcmp(stmt->columns->at(i), key_name) == 0) {
-
-				switch (stmt->values->at(i)->type) {
+		if(stmt->columns == NULL)
+		{
+			int i = 0;
+			switch (stmt->values->at(i)->type) {
 				case hsql::ExprType::kExprLiteralInt:
 					*key = DTCValue::Make(
 						stmt->values->at(i)->ival);
@@ -174,6 +174,30 @@ bool MyRequest::get_key(DTCValue *key, char *key_name)
 					return true;
 				default:
 					return false;
+				}
+		}
+		else
+		{
+			for (int i = 0; i < stmt->columns->size(); i++) 
+			{
+				if (strcmp(stmt->columns->at(i), key_name) == 0) {
+
+					switch (stmt->values->at(i)->type) {
+					case hsql::ExprType::kExprLiteralInt:
+						*key = DTCValue::Make(
+							stmt->values->at(i)->ival);
+						return true;
+					case hsql::ExprType::kExprLiteralFloat:
+						*key = DTCValue::Make(
+							stmt->values->at(i)->fval);
+						return true;
+					case hsql::ExprType::kExprLiteralString:
+						*key = DTCValue::Make(
+							stmt->values->at(i)->name);
+						return true;
+					default:
+						return false;
+					}
 				}
 			}
 		}
@@ -254,7 +278,7 @@ uint32_t MyRequest::get_update_num_fields()
 		return stmt->updates->size();
 	} else if (hsql::StatementType::kStmtInsert == t) {
 		hsql::InsertStatement *stmt = get_result()->getStatement(0);
-		return stmt->columns->size();
+		return stmt->values->size();
 	}
 
 	return 0;
