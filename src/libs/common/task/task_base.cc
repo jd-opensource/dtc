@@ -556,6 +556,8 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 		requestInfo.set_key(key);
 		set_request_key(&key);
 	}
+	else
+		return ;
 	log4cplus_debug("key type:%d %d", mr->get_request_type(), key.s64);
 	set_request_code(mr->get_request_type());
 
@@ -740,42 +742,94 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 			hsql::InsertStatement *stmt =
 				mr->get_result()->getStatement(0);
 
-			count = stmt->columns->size();
-			for (int i = 0; i < count; i++) {
-				int rtype = build_field_type_r(
-					stmt->values->at(i)->type,
-					stmt->columns->at(i));
-				if (rtype == -1) {
-					log4cplus_error("build field type_r error, type: %d, field name: %s", stmt->values->at(i)->type, stmt->columns->at(i));
+			if(stmt->columns == NULL)
+			{
+				if(stmt->values->size() != table_definition()->num_fields())
+				{
+					log4cplus_error("all fields mode of insert, check num fields failed: %d %d", stmt->values->size(), table_definition()->num_fields());
 					return;
 				}
+				count = stmt->values->size();
+				for (int i = 0; i < count; i++) {
+					char* field_name = table_definition()->field_name(i);
+					int rtype = build_field_type_r(
+						stmt->values->at(i)->type,
+						field_name);
+					if (rtype == -1) {
+						log4cplus_error("build field type_r error, type: %d, field name: %s", stmt->values->at(i)->type, field_name);
+						return;
+					}
 
-				if (DField::Signed == rtype ||
-				    DField::Unsigned == rtype) {
-					ui.add_value(stmt->columns->at(i),
-						     DField::Set, rtype,
-						     DTCValue::Make(
-							     stmt->values->at(i)
-								     ->ival));
-				} else if (DField::Float == rtype) {
-					ui.add_value(stmt->columns->at(i),
-						     DField::Set, rtype,
-						     DTCValue::Make(
-							     stmt->values->at(i)
-								     ->fval));
-				} else if (DField::String == rtype ||
-					   DField::Binary == rtype) {
-					log4cplus_debug(
-						"DTCValue key: %s, value: %s",
-						stmt->columns->at(i),
-						stmt->values->at(i)->name);
-					ui.add_value(stmt->columns->at(i),
-						     DField::Set, rtype,
-						     DTCValue::Make(
-							     stmt->values->at(i)
-								     ->name));
+					if (DField::Signed == rtype ||
+						DField::Unsigned == rtype) {
+						ui.add_value(field_name,
+								DField::Set, rtype,
+								DTCValue::Make(
+									stmt->values->at(i)
+										->ival));
+					} else if (DField::Float == rtype) {
+						ui.add_value(field_name,
+								DField::Set, rtype,
+								DTCValue::Make(
+									stmt->values->at(i)
+										->fval));
+					} else if (DField::String == rtype ||
+						DField::Binary == rtype) {
+						log4cplus_debug(
+							"DTCValue key: %s, value: %s",
+							field_name,
+							stmt->values->at(i)->name);
+						ui.add_value(field_name,
+								DField::Set, rtype,
+								DTCValue::Make(
+									stmt->values->at(i)
+										->name));
+					}
 				}
 			}
+			else
+			{
+				count = stmt->columns->size();
+				if(count > 0)
+				{
+					for (int i = 0; i < count; i++) {
+						int rtype = build_field_type_r(
+							stmt->values->at(i)->type,
+							stmt->columns->at(i));
+						if (rtype == -1) {
+							log4cplus_error("build field type_r error, type: %d, field name: %s", stmt->values->at(i)->type, stmt->columns->at(i));
+							return;
+						}
+
+						if (DField::Signed == rtype ||
+							DField::Unsigned == rtype) {
+							ui.add_value(stmt->columns->at(i),
+									DField::Set, rtype,
+									DTCValue::Make(
+										stmt->values->at(i)
+											->ival));
+						} else if (DField::Float == rtype) {
+							ui.add_value(stmt->columns->at(i),
+									DField::Set, rtype,
+									DTCValue::Make(
+										stmt->values->at(i)
+											->fval));
+						} else if (DField::String == rtype ||
+							DField::Binary == rtype) {
+							log4cplus_debug(
+								"DTCValue key: %s, value: %s",
+								stmt->columns->at(i),
+								stmt->values->at(i)->name);
+							ui.add_value(stmt->columns->at(i),
+									DField::Set, rtype,
+									DTCValue::Make(
+										stmt->values->at(i)
+											->name));
+						}
+					}
+				}
+			}
+
 		}
 
 		if (count > 0) {

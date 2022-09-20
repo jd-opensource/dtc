@@ -226,49 +226,88 @@ success:
 
 void my_parse_rsp(struct msg *r)
 {
-	struct mbuf *b;
-	uint8_t *p;
-	int ret;
+	struct mbuf *b = STAILQ_FIRST(&r->buf_q);
+	int packet_len = 0;
+	uint8_t *p = NULL;
 
-	log_debug("my_parse_rsp entry.");
+	int i = 0;
+	do
+	{
+		int db_len = 0;
+		p = b->start;
 
-	b = STAILQ_LAST(&r->buf_q, mbuf, next);
-	p = r->pos;
-	r->token = NULL;
-
-	if (p < b->last) {
-		if (b->last - p <
-		    sizeof(struct DTC_HEADER_V2) + MYSQL_HEADER_SIZE) {
+		if(b->last - b->start < sizeof(struct DTC_HEADER_V2) + MYSQL_HEADER_SIZE)
+		{
 			log_error(
-				"receive size small than package header. id:%d",
-				r->id);
+					"receive size small than package header. id:%d",
+					r->id);
 			p = b->last;
-			r->parse_res = MSG_PARSE_ERROR;
-			errno = EINVAL;
-			return;
+			goto error;
 		}
-		r->peerid = ((struct DTC_HEADER_V2 *)p)->id;
-		r->admin = ((struct DTC_HEADER_V2 *)p)->admin;
-		p = p + sizeof(struct DTC_HEADER_V2);
 
-		r->pkt_nr = (uint8_t)(p[3]); // mysql sequence id
-		log_debug("pkt_nr:%d, peerid:%d, id:%d, admin:%d", r->pkt_nr,
-			  r->peerid, r->id, r->admin);
+		if(i == 0)
+		{
+			r->peerid = ((struct DTC_HEADER_V2 *)p)->id;
+			r->admin = ((struct DTC_HEADER_V2 *)p)->admin;
+			packet_len = ((struct DTC_HEADER_V2 *)p)->packet_len - sizeof(struct DTC_HEADER_V2) - ((struct DTC_HEADER_V2 *)p)->dbname_len;
+			db_len = ((struct DTC_HEADER_V2 *)p)->dbname_len;
+			p = p + sizeof(struct DTC_HEADER_V2);
+			r->pkt_nr = (uint8_t)(p[3]); // mysql sequence id
+			log_debug("pkt_nr:%d, peerid:%d, id:%d, admin:%d, packet_len:%d, db_len:%d", r->pkt_nr,
+					r->peerid, r->id, r->admin, packet_len, db_len);
+		}
 
-		p = p + MYSQL_HEADER_SIZE;
+		if((b->last - p - db_len < packet_len) && (b->last == b->end))
+		{
+			i++;
+			packet_len -= (b->last - p - db_len);
+			p = b->end;
+			b = STAILQ_NEXT(b, next);
+			continue;
+		}
+		else if((b->last - p - db_len < packet_len) && (b->last != b->end))
+		{
+			goto repair;
+		}
+		else
+		{
+			p = b->last;
+			break;
+		}
+		i++;
+		packet_len -= (b->last - p - db_len);
+		b = STAILQ_NEXT(b, next);
 
-		p = b->last;
-		r->pos = p;
-		r->parse_res = MSG_PARSE_OK;
-		log_debug("parse msg:%" PRIu64 " success!", r->id);
-	} else {
+	repair:
+		if (b->last == b->end) {
+			r->parse_res = MSG_PARSE_REPAIR;
+		} else {
+			r->parse_res = MSG_PARSE_AGAIN;
+		}
+
+		log_debug("my_parse_rsp leave.");
+		return;
+
+	error:
 		r->parse_res = MSG_PARSE_ERROR;
-		log_debug("parse msg:%" PRIu64 " error!", r->id);
 		errno = EINVAL;
+		return;
+	
+	}while(b != NULL);
+
+	if(b == NULL)
+	{
+		r->pos = p;
+		r->parse_res = MSG_PARSE_REPAIR;
+	}
+	else
+	{
+		log_debug("paese msg:%"PRIu64" success!", r->id);
+		r->pos = b->last;
+		r->parse_res = MSG_PARSE_OK;
 	}
 
-	log_debug("my_parse_rsp leave.");
-	return;
+	return;			
 }
 
 int my_get_command(uint8_t *input_raw_packet, uint32_t input_packet_length,
@@ -564,9 +603,20 @@ bool check_cmd_operation(struct string *str)
 		return false;
 }
 
-bool check_cmd_select(struct string *str)
+bool check_cmd_insert(struct string *str)
 {
-	return false;
+	int i = 0;
+	char *condition_4 = "INSERT INTO ";
+	if (string_empty(str))
+		return false;
+	
+	if(str->len <= da_strlen(condition_4))
+		false;
+
+	if (da_strncmp(str->data + i, condition_4, da_strlen(condition_4)) == 0)
+		return true;
+	else
+		return false;
 }
 
 int get_mid_by_dbname(const char* dbname, const char* sql, struct msg* r)
@@ -711,63 +761,71 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	if (check_cmd_operation(&str))
 		return -2;
 
-	if (check_cmd_select(&str))
-		return -2;
-
-	i = _check_condition(&str);
-	if (i < 0) {
-		ret = -2;
-		log_error("check condition error code:%d", i);
-		goto done;
+	if (check_cmd_insert(&str))
+	{
+		if(get_statement_value(str.data, str.len, strkey, start_offset, end_offset) == 0)
+		{
+			ret = layer;
+			goto done;
+		}
 	}
+	else
+	{
+		i = _check_condition(&str);
+		if (i < 0) {
+			ret = -2;
+			log_error("check condition error code:%d", i);
+			goto done;
+		}
 
-	for (; i < str.len; i++) {
-		if (str.len - i >= strlen(strkey)) {
-			log_debug(
-				"key: %s, key len:%d, str.len:%d i:%d dtc_key_len:%d str.data + i:%s ", strkey, strlen(strkey),
-				str.len, i, strlen(strkey), str.data + i);
-			if (da_strncmp(str.data + i, strkey, strlen(strkey)) == 0) 
-			{
-				int j;
-				for (j = i + strlen(strkey); j < str.len; j++) 
+		for (; i < str.len; i++) {
+			if (str.len - i >= strlen(strkey)) {
+				log_debug(
+					"key: %s, key len:%d, str.len:%d i:%d dtc_key_len:%d str.data + i:%s ", strkey, strlen(strkey),
+					str.len, i, strlen(strkey), str.data + i);
+				if (da_strncmp(str.data + i, strkey, strlen(strkey)) == 0) 
 				{
-					if (str.data[j] == '=') 
+					int j;
+					for (j = i + strlen(strkey); j < str.len; j++) 
 					{
-						j++;
-						//strip space.
-						while (j < str.len && (str.data[j] == ' ' || str.data[j] == '\'' || str.data[j] == '\"'))
+						if (str.data[j] == '=') 
 						{
 							j++;
-						}
-
-						if (j < str.len) 
-						{
-							*start_offset = j;
-
-							int k = 0;
-							for (k = j; k < str.len;
-							     k++) {
-								if (sql[k + 1] == ' ' || sql[k + 1] == '\'' || sql[k + 1] == '\"' || sql[k + 1] == ';' || k + 1 == str.len) 
-								{
-									*end_offset = k + 1;
-									ret = layer;
-									goto done;
-								}
+							//strip space.
+							while (j < str.len && (str.data[j] == ' ' || str.data[j] == '\'' || str.data[j] == '\"'))
+							{
+								j++;
 							}
 
-							ret = -4;
-							goto done;
-						} 
-						else 
-						{
-							ret = -5;
-							goto done;
+							if (j < str.len) 
+							{
+								*start_offset = j;
+
+								int k = 0;
+								for (k = j; k < str.len;
+									k++) {
+									if (sql[k + 1] == ' ' || sql[k + 1] == '\'' || sql[k + 1] == '\"' || sql[k + 1] == ';' || k + 1 == str.len) 
+									{
+										*end_offset = k + 1;
+										ret = layer;
+										goto done;
+									}
+								}
+
+								ret = -4;
+								goto done;
+							} 
+							else 
+							{
+								ret = -5;
+								goto done;
+							}
 						}
 					}
-				}
 
-				ret = -2;
-				goto done;
+					ret = -2;
+					goto done;
+				}
 			}
 		}
 	}

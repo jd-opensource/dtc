@@ -15,6 +15,7 @@ elif [ "$1" = "restart" ]; then
 	sleep 2
     ./$DTC_BIN  >> /dev/null 2>&1
 elif [ "$1" = "start" ]; then
+    chmod 644 ../conf/my.conf
     ./$DTC_BIN  >> /dev/null 2>&1
 	sleep 1
 else

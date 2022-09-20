@@ -57,9 +57,26 @@ def test_select():
         uid = row[0]
         name = row[1]
         print("uid=%s, name=%s" % (uid, name))
+        assert row.size() == 2
         assert uid == 1
         assert name == "hello"
     db.close()
+
+def test_select_star():
+    db = pymysql.connect(host='127.0.0.1', port=12001, user='test', password='test', database='test')
+    cursor = db.cursor()
+    sql = "select * from opensource where uid = 1"
+    cursor.execute(sql)
+    results = cursor.fetchall()
+    assert len(results) == 1
+    for row in results:
+        uid = row[0]
+        name = row[1]
+        print("uid=%s, name=%s" % (uid, name))
+        assert row.size() == 5
+        assert uid == 1
+        assert name == "hello"
+    db.close()    
 
 def test_update():
     db = pymysql.connect(host='127.0.0.1', port=12001, user='test', password='test', database='test')

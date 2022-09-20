@@ -96,6 +96,8 @@ int init_config(void)
 		return -1;
 	}
 
+	g_config.load_layered_info();
+
 	return 0;
 }
 
