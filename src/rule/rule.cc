@@ -130,15 +130,15 @@ int is_ext_table(hsql::SQLParserResult* ast,const char* dbname)
     if(ParseAgentConf("../conf/agent.xml", &agent_info) == false)
     {
         log4cplus_error("ParseAgentConf");
-        return 0;
+        return -1;
     }
 
     //get table name
     std::string table_name = get_table_name(ast);
     if(table_name.length() == 0)
     {
-        log4cplus_error("table name len error: %d", table_name.length());
-        return 0;
+        log4cplus_debug("table name can not be found");
+        return -1;
     }
 
     //combine db.tb
@@ -240,11 +240,10 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
 
     if(is_ext_table(&sql_ast, dbname) != 0)
         return 2;
-
-    ret = re_match_sql(&sql_ast, expr_rules, ast);
+    ret = re_match_sql(&sql_ast, expr_rules, ast);  //rule match
     if(ret == 0)
     {
-        if(re_is_cache_sql(&sql_ast, key))
+        if(re_is_cache_sql(&sql_ast, key))  //if exist dtc key.
         {
             //L1: DTC cache.
             std::string tab_name = get_table_name(&sql_ast);
@@ -286,7 +285,8 @@ extern "C" int sql_parse_table(const char* szsql, char* out)
 
     std::string tablename = get_table_name(&sql_ast);
     if(tablename.length() > 0)
+    {
         strcpy(out, tablename.c_str());
-
+    }
     return tablename.length();
 }

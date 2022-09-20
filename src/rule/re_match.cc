@@ -391,16 +391,14 @@ int re_match_sql(hsql::SQLParserResult* sql_ast, vector<vector<hsql::Expr*> > ex
     int ret = -1;
     bool is_write = false;
     int statment_num = 0;
-    std::string schema;
 
     log4cplus_debug("sql match start..");
     if(!sql_ast)
     {
-        log4cplus_debug("11111111111");
+        log4cplus_debug("sql_ast is null");
         ret = -1;
         goto RESULT;
     }
-log4cplus_debug("22222222");
     statment_num = sql_ast->size();
     if(statment_num > 1)
     {
@@ -408,17 +406,6 @@ log4cplus_debug("22222222");
         goto RESULT;
     }
 
-    schema = get_schema(sql_ast);
-    if(schema == std::string(SPECIFIC_L1_SCHEMA) || schema == std::string(SPECIFIC_L2_SCHEMA))
-    {
-        ret = 0;
-        goto RESULT;
-    }
-    else if(schema == std::string(SPECIFIC_L3_SCHEMA))
-    {
-        ret = 3;
-        goto RESULT;
-    }
 log4cplus_debug("3333333333");
     if(is_write_type(sql_ast))
     {
