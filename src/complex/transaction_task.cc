@@ -422,34 +422,21 @@ CBufferChain *encode_row_data(MysqlConn* dbconn, CBufferChain *bc, uint8_t &pkt_
 
 std::string build_dtc_table_type(std::string real_tbname, std::string real_dbname)
 {
-	YAML::Node dtc = g_config.get_conf();
-	if(real_dbname == dtc["primary"]["hot"]["real"][0]["db"].as<std::string>())
-	{
-		if(dtc["primary"]["full"])
-			return "LAYERED TALBE";
-		else if(dtc["primary"]["hot"]["sharding"])
-			return "SHARDING TALBE";
-		else
-			return "SINGLE TABLE";
-	}
+	std::string str = real_dbname;
+	str += ".";
+	str += real_tbname;
+	log4cplus_debug("query str: %s, map size: %d", str.c_str(), g_config.table_type_info.size());
 
-	int ext_count = dtc["extension"].size();
-	for(int i = 0; i < ext_count; i++)
-	{
-		if( dtc["extension"][i]["real"][0]["db"].as<std::string>() == real_dbname)
-		{
-			std::string dst_tbname;
-			std::string tbtype;
-			dst_tbname = dtc["extension"][i]["logic"]["table"].as<std::string>();
-
-			if(dst_tbname != real_tbname)
-				continue;
-			
-			return dtc["extension"][i]["sharding"] ? "SHARDING TALBE" : "SINGLE TABLE";
-		}
-	}
-
-	return "";
+	map<string,string>::iterator it;
+for(it=g_config.table_type_info.begin();it!=g_config.table_type_info.end();it++)
+{
+	log4cplus_debug("first: %s, second: %s", (*it).first.c_str(), (*it).second.c_str());
+}
+	std::string res = g_config.table_type_info[str];
+	if(res.length() > 0)
+		return res;
+	else
+		return "SINGLE TABLE";
 }
 
 bool ignore_system_db_name(std::string dbname)
