@@ -247,7 +247,8 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 		switch(msg->admin)
 		{
 			case CMD_NOP:
-				dtc_header_remove(msg);
+				if(msg->ismysql == 0)
+					dtc_header_remove(msg);
 				rsp_forward(ctx, c_conn, req);
 				break;
 			default:
