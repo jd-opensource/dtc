@@ -58,6 +58,75 @@ ConfigHelper::~ConfigHelper ()
 {
 }
 
+void ConfigHelper::load_yaml_fields(YAML::Node node)
+{
+	if(node["primary"])
+	{
+		std::string type_string;
+		std::string db = node["primary"]["db"].as<string>();
+		std::string table = node["primary"]["table"].as<string>();
+		std::string keystr = db;
+		keystr += ".";
+		keystr += table;
+
+		if(node["primary"]["full"])
+			type_string = "LAYERED TALBE";
+		else if(node["primary"]["hot"]["sharding"])
+			type_string = "SHARDING TALBE";
+		else
+			type_string = "";
+		table_type_info[keystr] = type_string;
+	}
+
+	if(node["extension"])
+	{
+		std::string db = node["extension"]["logic"]["db"].as<string>();
+		std::string table = node["extension"]["logic"]["table"].as<string>();
+		std::string keystr = db;
+		keystr += ".";
+		keystr += table;
+		table_type_info[keystr] = "SINGLE TABLE";
+	}
+}
+
+void ConfigHelper::load_layered_info()
+{
+	unsigned int count = 0;
+	DIR *dir;
+	struct dirent *ptr;
+	const char* rootpath = "../conf/";
+	if ((dir = opendir(rootpath)) == NULL)
+		return;
+
+	while ((ptr = readdir(dir)) != NULL) {
+		if (strcasecmp(ptr->d_name, "..") == 0 ||
+		    strcasecmp(ptr->d_name, ".") == 0)
+			continue;
+		std::string path = rootpath;
+		path += ptr->d_name;
+		if(path.find("dtc-conf-") == string::npos)
+			continue;
+		log4cplus_debug("load path: %s", path.c_str());
+		YAML::Node node;
+		try 
+		{
+			node = YAML::LoadFile(path);
+			if(node.IsNull())
+				continue;
+		}
+		catch (const YAML::Exception &e) 
+		{
+			log4cplus_error("load yaml file error:%s", e.what());
+			continue;
+		}
+
+		load_yaml_fields(node);
+	}
+
+	closedir(dir);
+	return;
+}
+
 bool ConfigHelper::load_dtc_config(std::string conf_file)
 {
 	try 

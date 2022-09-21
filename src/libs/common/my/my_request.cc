@@ -16,8 +16,11 @@
 #include "../log/log.h"
 #include "my_request.h"
 #include "my_command.h"
+#include "../config/config.h"
 
 using namespace hsql;
+
+extern DTCConfig *g_dtc_config;
 
 bool MyRequest::do_mysql_protocol_parse()
 {
@@ -153,10 +156,10 @@ bool MyRequest::get_key(DTCValue *key, char *key_name)
 
 	if (hsql::StatementType::kStmtInsert == t) {
 		hsql::InsertStatement *stmt = get_result()->getStatement(0);
-		for (int i = 0; i < stmt->columns->size(); i++) {
-			if (strcmp(stmt->columns->at(i), key_name) == 0) {
-
-				switch (stmt->values->at(i)->type) {
+		if(stmt->columns == NULL)
+		{
+			int i = 0;
+			switch (stmt->values->at(i)->type) {
 				case hsql::ExprType::kExprLiteralInt:
 					*key = DTCValue::Make(
 						stmt->values->at(i)->ival);
@@ -171,6 +174,30 @@ bool MyRequest::get_key(DTCValue *key, char *key_name)
 					return true;
 				default:
 					return false;
+				}
+		}
+		else
+		{
+			for (int i = 0; i < stmt->columns->size(); i++) 
+			{
+				if (strcmp(stmt->columns->at(i), key_name) == 0) {
+
+					switch (stmt->values->at(i)->type) {
+					case hsql::ExprType::kExprLiteralInt:
+						*key = DTCValue::Make(
+							stmt->values->at(i)->ival);
+						return true;
+					case hsql::ExprType::kExprLiteralFloat:
+						*key = DTCValue::Make(
+							stmt->values->at(i)->fval);
+						return true;
+					case hsql::ExprType::kExprLiteralString:
+						*key = DTCValue::Make(
+							stmt->values->at(i)->name);
+						return true;
+					default:
+						return false;
+					}
 				}
 			}
 		}
@@ -237,7 +264,10 @@ uint32_t MyRequest::get_need_num_fields()
 	hsql::SelectStatement *stmt = get_result()->getStatement(0);
 	std::vector<hsql::Expr *> *selectList = stmt->selectList;
 	log4cplus_debug("select size:%d", selectList->size());
-	return selectList->size();
+	if(selectList->size() == 1 && (*selectList)[0]->type == kExprStar)
+		return g_dtc_config->get_config_node()["primary"]["cache"]["field"].size();
+	else
+		return selectList->size();
 }
 
 uint32_t MyRequest::get_update_num_fields()
@@ -248,7 +278,7 @@ uint32_t MyRequest::get_update_num_fields()
 		return stmt->updates->size();
 	} else if (hsql::StatementType::kStmtInsert == t) {
 		hsql::InsertStatement *stmt = get_result()->getStatement(0);
-		return stmt->columns->size();
+		return stmt->values->size();
 	}
 
 	return 0;
@@ -259,13 +289,26 @@ std::vector<std::string> MyRequest::get_need_array()
 	std::vector<std::string> need;
 	int t = m_result.getStatement(0)->type();
 	if (t != hsql::StatementType::kStmtSelect) {
+		log4cplus_error("need array type: %d", t);
 		return need;
 	}
 
 	hsql::SelectStatement *stmt = get_result()->getStatement(0);
 	std::vector<hsql::Expr *> *selectList = stmt->selectList;
-	for (int i = 0; i < stmt->selectList->size(); i++) {
-		need.push_back(stmt->selectList->at(i)->getName());
+
+	if(selectList->size() == 1 && (*selectList)[0]->type == kExprStar)
+	{
+		int num = g_dtc_config->get_config_node()["primary"]["cache"]["field"].size();
+		for(int i = 0; i < num; i++)
+		{
+			need.push_back(g_dtc_config->get_config_node()["primary"]["cache"]["field"][i]["name"].as<std::string>());
+		}	
+	}
+	else
+	{
+		for (int i = 0; i < stmt->selectList->size(); i++) {
+			need.push_back(stmt->selectList->at(i)->getName());
+		}
 	}
 
 	return need;

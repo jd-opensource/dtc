@@ -73,6 +73,7 @@ jobs:
           cp ../conf/log4cplus-async.conf dtc/conf/
           cp ../conf/log4cplus-agent.conf dtc/conf/
           cp ../conf/log4cplus-life.conf dtc/conf/
+          cp ../conf/my.conf dtc/conf/
 
           tar -zcvf dtc.tar.gz dtc/
 
@@ -82,8 +83,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: dtc-v2.0.0-rc2
+          release_name: dtc-v2.0.0-rc2
           draft: false
           prerelease: false
 
@@ -95,5 +96,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{github.workspace}}/build/dtc.tar.gz
-          asset_name: dtc.tar.gz
+          asset_name: dtc-v2.0.0-rc2.tar.gz
           asset_content_type: application/gzip

@@ -4,13 +4,19 @@
 #include "croncpp.h"
 #include <unistd.h>
 #include <set>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <arpa/inet.h>
+
+#define default_option_file "../conf/my.conf"
 
 DataManager::DataManager(){
     next_process_time_ = 0;
     DBHost* db_host = new DBHost();
     memset(db_host, 0, sizeof(db_host));
     strcpy(db_host->Host, "127.0.0.1");
-    db_host->Port = DataConf::Instance()->Port();
+    db_host->Port = 3306;
     strcpy(db_host->User, "");
     strcpy(db_host->Password, "");
     db_conn_ = new CDBConn(db_host);
@@ -34,7 +40,7 @@ field_flag_vec_(config_param.field_flag_vec_){
     DBHost* db_host = new DBHost();
     memset(db_host, 0, sizeof(db_host));
     strcpy(db_host->Host, "127.0.0.1");
-    db_host->Port = DataConf::Instance()->Port();
+    db_host->Port = config_param.port_;
     strcpy(db_host->User, "root");
     strcpy(db_host->Password, "root");
     db_conn_ = new CDBConn(db_host);
@@ -50,6 +56,13 @@ field_flag_vec_(config_param.field_flag_vec_){
         full_db_host->Port = stoi(full_db_vec[1]);
         strcpy(full_db_host->User, config_param.full_db_user_.c_str());
         strcpy(full_db_host->Password, config_param.full_db_pwd_.c_str());
+        strcpy(full_db_host->OptionFile, "");
+        if(config_param.option_file.size() != 0){
+            strcpy(full_db_host->OptionFile, config_param.option_file.c_str());
+        } else {
+            strcpy(full_db_host->OptionFile, default_option_file);
+        }
+        printf("full_db_host->OptionFile: %s\n", full_db_host->OptionFile);
         full_db_conn_ = new CDBConn(full_db_host);
         if(NULL != full_db_host){
             delete full_db_host;
@@ -64,6 +77,31 @@ DataManager::~DataManager(){
     if(NULL != full_db_conn_){
         delete full_db_conn_;
     }
+}
+
+static std::string GetIp(){
+    struct ifaddrs * ifAddrStruct = NULL;
+    struct ifaddrs * ifAddrStruct1 = NULL;
+    void * tmpAddrPtr = NULL;
+
+    getifaddrs(&ifAddrStruct);
+    ifAddrStruct1 = ifAddrStruct;
+    std::string my_ip;
+
+    while (ifAddrStruct != NULL)
+    {
+        if (ifAddrStruct->ifa_addr->sa_family == AF_INET) {
+           tmpAddrPtr = &((struct sockaddr_in*)ifAddrStruct->ifa_addr)->sin_addr;
+           char addressBuffer[INET_ADDRSTRLEN];
+           inet_ntop(AF_INET, tmpAddrPtr, addressBuffer, INET_ADDRSTRLEN);
+           if(strcmp(ifAddrStruct->ifa_name, "eth0") == 0){
+               my_ip = addressBuffer;
+           }
+        }
+        ifAddrStruct=ifAddrStruct->ifa_next;
+    }
+    freeifaddrs(ifAddrStruct1);
+    return my_ip;
 }
 
 int DataManager::ConnectAgent(){
@@ -115,8 +153,12 @@ int DataManager::DoTaskOnce(){
             printf("GetLastId error, ret: %d\n", ret);
             return DTC_CODE_MYSQL_QRY_ERR;
         }
+        if("" == last_invisible_time){
+            last_invisible_time = "1970-01-01 08:00:00";
+        }
         std::string query_sql = ConstructQuerySql(last_delete_id, last_invisible_time);
         std::vector<QueryInfo> query_info_vec;
+        //full_db_conn_->do_query(cold_db_name_.c_str(), "set names utf8");
         ret = DoQuery(query_sql, query_info_vec);
         if(0 != ret){
             printf("DoQuery error, ret: %d\n", ret);
@@ -135,12 +177,13 @@ int DataManager::DoTaskOnce(){
             last_delete_id_ = iter->id;
             last_invisible_time_ = iter->invisible_time;
             if(0 != ret){
-                UpdateLastDeleteId();
+                //UpdateLastDeleteId();
                 printf("DoDelete error, ret: %d\n", ret);
                 return DTC_CODE_MYSQL_DEL_ERR;
             }
         }
         UpdateLastDeleteId();
+        sleep(1);
     }
     return 0;
 }
@@ -152,7 +195,9 @@ void DataManager::SetTimeRule(const std::string& time_rule){
 int DataManager::GetLastId(uint64_t& last_delete_id, std::string& last_invisible_time){
     std::stringstream ss_sql;
     ss_sql << "select id,ip,last_id,last_update_time from " << life_cycle_table_name_
-            << " order by id desc limit 1";
+            << " where table_name='" << table_name_
+            << "' order by id desc limit 1";
+    log4cplus_debug("query sql: %s", ss_sql.str().c_str());
     int ret = full_db_conn_->do_query(cold_db_name_.c_str(), ss_sql.str().c_str());
     if(0 != ret){
         log4cplus_debug("query error, ret: %d, err msg: %s", ret, full_db_conn_->get_err_msg());
@@ -184,7 +229,7 @@ std::string DataManager::ConstructQuerySql(uint64_t last_delete_id, std::string 
         }
     }
     ss_sql << " from " << table_name_
-        << " where (" << data_rule_
+        << " where not(" << data_rule_
         << ") and (invisible_time>'" << last_invisible_time
         << "' or (invisible_time='" << last_invisible_time
         << "' and id>" << last_delete_id
@@ -194,6 +239,8 @@ std::string DataManager::ConstructQuerySql(uint64_t last_delete_id, std::string 
 }
 
 int DataManager::DoQuery(const std::string& query_sql, std::vector<QueryInfo>& query_info_vec){
+    printf("begin DoQuery\n");
+    ShowVariables();
     int ret = full_db_conn_->do_query(cold_db_name_.c_str(), query_sql.c_str());
     if(0 != ret){
         printf("query error, ret: %d, err msg: %s\n", ret, full_db_conn_->get_err_msg());
@@ -227,6 +274,13 @@ int DataManager::DoQuery(const std::string& query_sql, std::vector<QueryInfo>& q
         full_db_conn_->free_result();
     }
     return 0;
+}
+
+void hextostring(char* str, int len){
+    for(int i = 0; i < len; i++){
+        printf("%02x", str[i]);
+    }
+    printf("\n");
 }
 
 std::set<std::string> DataManager::ConstructDeleteSql(const std::string& key){
@@ -277,16 +331,56 @@ int DataManager::DoDelete(const std::string& delete_sql){
 }
 
 int DataManager::UpdateLastDeleteId(){
-    std::string local_ip;
+    std::string local_ip = GetIp();
     std::stringstream ss_sql;
-    ss_sql << "insert into " << life_cycle_table_name_
+    ss_sql << "replace into " << life_cycle_table_name_
         << " values(NULL,'" << local_ip
+        << "', '" << table_name_
         << "', " << last_delete_id_
         << ", '" << last_invisible_time_
         << "')";
     int ret = full_db_conn_->do_query(cold_db_name_.c_str(), ss_sql.str().c_str());
     if(0 != ret){
         log4cplus_debug("insert error, ret: %d, err msg: %s", ret, full_db_conn_->get_err_msg());
+        return ret;
+    }
+    return 0;
+}
+
+int DataManager::ShowVariables(){
+    int ret = full_db_conn_->do_query(cold_db_name_.c_str(), "show variables like '%%char%%'");
+    if(0 != ret){
+        printf("query error, ret: %d, err msg: %s\n", ret, full_db_conn_->get_err_msg());
+        return ret;
+    }
+    if(0 == full_db_conn_->use_result()){
+        for (int i = 0; i < full_db_conn_->res_num; i++) {
+            ret = full_db_conn_->fetch_row();
+            if (ret != 0) {
+                full_db_conn_->free_result();
+                printf("db fetch row error: %s\n", full_db_conn_->get_err_msg());
+                return ret;
+            }
+            printf("%s: %s\n", full_db_conn_->Row[0], full_db_conn_->Row[1]);
+        }
+    }
+    return 0;
+}
+
+int DataManager::CreateTable(){
+    std::stringstream ss_sql;
+    ss_sql << "CREATE TABLE if not exists " << life_cycle_table_name_ << "("
+        << "`id` int(11) unsigned NOT NULL AUTO_INCREMENT,"
+        << "`ip` varchar(20) NOT NULL DEFAULT '0' COMMENT '执行清理操作的机器ip',"
+        << "`table_name` varchar(40) DEFAULT NULL,"
+        << "`last_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '上次删除的记录对应的id',"
+        << "`last_update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '上次删除的记录对应的更新时间',"
+        << "PRIMARY KEY (`id`),"
+        << "UNIQUE (`table_name`)"
+        << ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
+    int ret = full_db_conn_->do_query(cold_db_name_.c_str(), ss_sql.str().c_str());
+    if(0 != ret){
+        log4cplus_debug("create table error, ret: %d, err msg: %s", ret, full_db_conn_->get_err_msg());
         return ret;
     }
     return 0;
