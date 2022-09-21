@@ -247,12 +247,25 @@ void my_parse_rsp(struct msg *r)
 
 		if(i == 0)
 		{
+			uint8_t version = ((struct DTC_HEADER_V2 *)p)->version;
+			uint8_t layer = ((struct DTC_HEADER_V2 *)p)->layer;
 			r->peerid = ((struct DTC_HEADER_V2 *)p)->id;
 			r->admin = ((struct DTC_HEADER_V2 *)p)->admin;
-			packet_len = ((struct DTC_HEADER_V2 *)p)->packet_len - sizeof(struct DTC_HEADER_V2) - ((struct DTC_HEADER_V2 *)p)->dbname_len;
-			db_len = ((struct DTC_HEADER_V2 *)p)->dbname_len;
-			p = p + sizeof(struct DTC_HEADER_V2);
-			r->pkt_nr = (uint8_t)(p[3]); // mysql sequence id
+			if(version == 2 && r->admin == 0 && layer == 0)
+			{
+				packet_len = ((struct DTC_HEADER_V2 *)p)->packet_len - sizeof(struct DTC_HEADER_V2) - ((struct DTC_HEADER_V2 *)p)->dbname_len;
+				db_len = ((struct DTC_HEADER_V2 *)p)->dbname_len;
+				p = p + sizeof(struct DTC_HEADER_V2);
+				r->pkt_nr = (uint8_t)(p[3]); // mysql sequence id
+			}
+			else
+			{
+				packet_len = uint_trans_3(p);
+				db_len = 0;
+				r->pkt_nr = (uint8_t)(p[3]); // mysql sequence id
+				r->ismysql = 1;
+			}
+				
 			log_debug("pkt_nr:%d, peerid:%d, id:%d, admin:%d, packet_len:%d, db_len:%d", r->pkt_nr,
 					r->peerid, r->id, r->admin, packet_len, db_len);
 		}

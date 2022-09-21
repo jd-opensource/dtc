@@ -154,6 +154,7 @@ struct msg {
 	enum enum_agent_admin admin;
 	uint8_t layer;
 	int mid;
+	int ismysql;
 	struct string table_name;
 	union COM_DATA data;
 

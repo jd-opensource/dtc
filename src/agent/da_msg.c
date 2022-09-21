@@ -215,6 +215,7 @@ static struct msg *_msg_get() {
 
 	m->pkt_nr = 0;
 	m->mid = 0;
+	m->ismysql = 0;
 
 	return m;
 }
