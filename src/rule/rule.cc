@@ -395,6 +395,11 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
         log4cplus_debug("temsql: %s", tempsql.c_str());
         ast = &ast2;
     }
+    else
+    {
+        log4cplus_error("no key found in statement.");
+        return -1;
+    }
 
     if(sql.find("INSERT INTO") != -1 && sql.find("WHERE") != -1)
     {

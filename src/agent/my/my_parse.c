@@ -730,6 +730,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 
 	int mid = get_mid_by_dbname(dbname, str.data, r);
 	char conf_path[260] = {0};
+	memset(conf_path, 0, 260);
 	if(mid != 0)
 	{
 		sprintf(conf_path, "../conf/dtc-conf-%d.yaml", mid);
