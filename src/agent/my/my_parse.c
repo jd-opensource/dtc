@@ -727,6 +727,11 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	{
 		log_debug("dbname len:%d, dbname: %s", strlen(dbname), dbname);
 	}
+	else if(!is_show_db(str.data))
+	{
+		log_error("no db selected\n");
+		return -1;
+	}
 
 	int mid = get_mid_by_dbname(dbname, str.data, r);
 	char conf_path[260] = {0};

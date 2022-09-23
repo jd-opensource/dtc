@@ -273,6 +273,16 @@ int is_ext_table(hsql::SQLParserResult* ast,const char* dbname)
     return -1;
 }
 
+extern "C" bool is_show_db(const char* szsql)
+{
+    std::string sql = szsql;
+    if(sql == "SHOW DATABASES" || sql == "SELECT DATABASE()")
+    {
+        return true;
+    }
+    return false;
+}
+
 extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char* conf)
 {
     if(!szsql)
@@ -296,7 +306,7 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
 
     log4cplus_debug("key len: %d, key: %s, sql len: %d, sql: %s, dbname len: %d, dbname: %s", key.length(), key.c_str(), sql.length(), sql.c_str(), strlen(dbname), std::string(dbname).c_str());
 
-    if(sql == "SHOW DATABASES" || sql == "SELECT DATABASE()")
+    if(is_show_db(szsql))
     {
         return 3;
     }
@@ -319,13 +329,13 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
         return 1;
     }
 
-    log4cplus_debug("#############dbname:%s", dbname);
+    log4cplus_debug("dbname:%s", dbname);
     if(dbname != NULL && strlen(dbname) > 0 && flag == false)
     {
-        log4cplus_debug("#############111111111111");
-        return 3;
+        log4cplus_debug("db session & single table");
+        return 2;
     }
-    log4cplus_debug("#############22222222222");
+
     int ret = re_load_rule();
     if(ret != 0)
     {
@@ -394,11 +404,6 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
             return -1;
         log4cplus_debug("temsql: %s", tempsql.c_str());
         ast = &ast2;
-    }
-    else
-    {
-        log4cplus_error("no key found in statement.");
-        return -1;
     }
 
     if(sql.find("INSERT INTO") != -1 && sql.find("WHERE") != -1)
