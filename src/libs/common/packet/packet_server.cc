@@ -1402,7 +1402,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	log4cplus_info("result code:%d" , job.result_code());
 	BufferChain *rb = NULL;
 	int nrp = 0, lrp = 0, off = 0;
-	bool bok = false;
+	bool b_result_set = false;
 	if (mtu <= 0) {
 		mtu = MAXPACKETSIZE;
 	}
@@ -1410,7 +1410,8 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	/* rp may exist but no result */
 	if (rp && (rp->numRows || rp->totalRows)) {
 		//rb指向数据结果集缓冲区起始位置
-		log4cplus_info("line:%d" ,__LINE__);
+		log4cplus_info("result set, line:%d" ,__LINE__);
+		b_result_set = true;
 		rb = rp->bc;
 		if (rb)
 			rb->Count(nrp, lrp);
@@ -1419,9 +1420,9 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 		lrp -= off;
 		job.resultInfo.set_total_rows(rp->totalRows);
 	} else {
-		log4cplus_info("line:%d" ,__LINE__);
+		log4cplus_info("result cmd, line:%d" ,__LINE__);
 		nrp = 1;
-		bok = true;
+		b_result_set = false;
 		if (rp && rp->totalRows == 0 && rp->bc) {
 			FREE(rp->bc);
 			rp->bc = NULL;
@@ -1464,7 +1465,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	dtc_header.packet_len = 0;
 	dtc_header.admin = CMD_NOP;
 
-	if(bok == false)
+	if(b_result_set)
 	{
 		nrp = 1 /*fields count info*/ +
 			job.mr.get_need_array().size() /*fields def*/ + (job.mr.eof_packet_new ? 0 : 1) /*eof*/ +
@@ -1511,10 +1512,12 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 			sizeof(dtc_header));
 
 	rb = NULL;
-	if(bok == true)
-		rb = encode_mysql_ok(&job, job.resultInfo.affected_rows());
-	else
+	if(b_result_set)
 		rb = encode_mysql_protocol(&job);
+	else
+	{
+		rb = encode_mysql_ok(&job, job.resultInfo.affected_rows());
+	}
 	if (!rb)
 		return -3;
 
