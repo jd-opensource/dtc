@@ -8,6 +8,7 @@ extern "C"{
     int sql_parse_table(const char* szsql, char* out);
     int rule_get_key_type(const char* conf);
     const char* rule_get_key(const char* conf);
+    bool is_show_db(const char* szsql);
 
 #ifdef __cplusplus    
 }

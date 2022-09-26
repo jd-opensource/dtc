@@ -696,14 +696,12 @@ void get_tablename(struct msg* r, uint8_t* sql, int sql_len)
 	if(sql == NULL || sql_len <= 0)
 		return ;
 
-	log_debug("AAAAAAAAA 555555555555");
 	int ret = sql_parse_table(sql, &tablename);
 	if(ret > 0)
 	{
-		log_debug("AAAAAAAAA 666666666666");
 		string_copy(&r->table_name, tablename, strlen(tablename));
 	}
-	log_debug("AAAAAAAAA 77777777777 %s", tablename);
+	log_debug("tablename: %s", tablename);
 }
 
 int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
@@ -730,6 +728,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 
 	int mid = get_mid_by_dbname(dbname, str.data, r);
 	char conf_path[260] = {0};
+	memset(conf_path, 0, 260);
 	if(mid != 0)
 	{
 		sprintf(conf_path, "../conf/dtc-conf-%d.yaml", mid);

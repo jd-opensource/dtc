@@ -107,6 +107,50 @@ bool is_complex_sql(SQLParserResult* sql_ast)
     return false;
 }
 
+std::string get_schema(SQLParserResult* sql_ast)
+{
+    StatementType t = sql_ast->getStatement(0)->type();
+    if(t == kStmtSelect)
+    {
+        const SelectStatement* stmt = (const SelectStatement*)(sql_ast->getStatement(0));
+        TableRef* table = stmt->fromTable;
+        if(table)
+        {
+            log4cplus_debug("type: %d", table->type);
+            if(table->type == kTableName && table->schema)
+            {
+                return std::string(table->schema);
+            }
+        }
+    }
+    else if(t == kStmtInsert)
+    {
+        const InsertStatement* stmt = (const InsertStatement*)(sql_ast->getStatement(0));
+        if(stmt && stmt->schema)
+            return std::string(stmt->schema);
+    }
+    else if(t == kStmtUpdate)
+    {
+        const UpdateStatement* stmt = (const UpdateStatement*)(sql_ast->getStatement(0));
+        TableRef* table = stmt->table;
+        if(table)
+        {
+            if(table->type == kTableName && table->schema)
+                return std::string(table->schema);
+        }
+    }
+    else if(t == kStmtDelete)
+    {
+        const DeleteStatement* stmt = (const DeleteStatement*)(sql_ast->getStatement(0));
+        if(stmt && stmt->schema)
+        {
+            return std::string(stmt->schema);
+        }
+    }
+  
+    return "";
+}
+
 std::string get_table_name(SQLParserResult* sql_ast)
 {
     StatementType t = sql_ast->getStatement(0)->type();

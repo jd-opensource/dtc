@@ -252,11 +252,25 @@ int is_ext_table(hsql::SQLParserResult* ast,const char* dbname)
     if(table_name.length() == 0)
     {
         log4cplus_debug("table name can not be found");
-        return -1;
+        return -2;
     }
 
+    std::string schema = get_schema(ast);
     //combine db.tb
-    std::string cmp_str = dbname;
+    std::string cmp_str;
+    if(schema.length() > 0)
+    {
+        cmp_str += schema;
+    }
+    else if(dbname != NULL && strlen(dbname) > 0) 
+    {
+        cmp_str += dbname;
+    }
+    else
+    {
+        log4cplus_debug("db can not be found");
+        return -2;
+    }
     cmp_str += ".";
     cmp_str += table_name;
     std::transform(cmp_str.begin(), cmp_str.end(), cmp_str.begin(), ::toupper);
@@ -271,6 +285,16 @@ int is_ext_table(hsql::SQLParserResult* ast,const char* dbname)
     }
 
     return -1;
+}
+
+extern "C" bool is_show_db(const char* szsql)
+{
+    std::string sql = szsql;
+    if(sql == "SHOW DATABASES" || sql == "SELECT DATABASE()")
+    {
+        return true;
+    }
+    return false;
 }
 
 extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char* conf)
@@ -296,7 +320,7 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
 
     log4cplus_debug("key len: %d, key: %s, sql len: %d, sql: %s, dbname len: %d, dbname: %s", key.length(), key.c_str(), sql.length(), sql.c_str(), strlen(dbname), std::string(dbname).c_str());
 
-    if(sql == "SHOW DATABASES" || sql == "SELECT DATABASE()")
+    if(is_show_db(szsql))
     {
         return 3;
     }
@@ -319,13 +343,13 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
         return 1;
     }
 
-    log4cplus_debug("#############dbname:%s", dbname);
+    log4cplus_debug("dbname:%s", dbname);
     if(dbname != NULL && strlen(dbname) > 0 && flag == false)
     {
-        log4cplus_debug("#############111111111111");
-        return 3;
+        log4cplus_debug("db session & single table");
+        return 2;
     }
-    log4cplus_debug("#############22222222222");
+
     int ret = re_load_rule();
     if(ret != 0)
     {
@@ -406,8 +430,16 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
     if(re_parse_sql(sql, &sql_ast) != 0)
         return -1;
 
-    if(is_ext_table(&sql_ast, dbname) != 0)
+    int ext = is_ext_table(&sql_ast, dbname);
+    if(ext == -1)
+    {
         return 2;
+    }
+    else if(ext == -2)
+    {
+        return -2;
+    }
+        
     ret = re_match_sql(&sql_ast, expr_rules, ast);  //rule match
     if(ret == 0)
     {
