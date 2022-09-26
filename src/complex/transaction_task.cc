@@ -428,10 +428,10 @@ std::string build_dtc_table_type(std::string real_tbname, std::string real_dbnam
 	log4cplus_debug("query str: %s, map size: %d", str.c_str(), g_config.table_type_info.size());
 
 	map<string,string>::iterator it;
-for(it=g_config.table_type_info.begin();it!=g_config.table_type_info.end();it++)
-{
-	log4cplus_debug("first: %s, second: %s", (*it).first.c_str(), (*it).second.c_str());
-}
+	for(it=g_config.table_type_info.begin();it!=g_config.table_type_info.end();it++)
+	{
+		log4cplus_debug("first: %s, second: %s", (*it).first.c_str(), (*it).second.c_str());
+	}
 	std::string res = g_config.table_type_info[str];
 	if(res.length() > 0)
 		return res;
