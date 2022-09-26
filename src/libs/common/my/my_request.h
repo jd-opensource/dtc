@@ -58,6 +58,9 @@ class MyRequest {
 
 	int get_request_type()
 	{
+		if(m_result.isValid() == false)
+			return 0;
+			
 		int t = m_result.getStatement(0)->type();
 		if (t == hsql::StatementType::kStmtSelect)
 			return DRequest::Get;
