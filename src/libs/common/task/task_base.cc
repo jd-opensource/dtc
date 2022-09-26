@@ -254,7 +254,13 @@ void DtcJob::decode_mysql_packet(char *packetIn, int packetLen, int type)
 		gettimeofday(&tv2, NULL);
 		log4cplus_debug("load sql used time:%d us", tv2.tv_usec- tv1.tv_usec);
 
-		decode_request_v2(&mr);
+		int ret = decode_request_v2(&mr);
+		if(ret < 0)
+		{
+			log4cplus_error("decode request error: %d", ret);
+			stage = DecodeStageDataError;
+			return;
+		}
 
 		stage = DecodeStageDone;
 
@@ -313,7 +319,13 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 	gettimeofday(&tv2, NULL);
 	log4cplus_debug("load sql used time:%d us", tv2.tv_usec- tv1.tv_usec);
 
-	decode_request_v2(&mr);
+	int ret = decode_request_v2(&mr);
+	if(ret < 0)
+	{
+		log4cplus_error("decode request error: %d", ret);
+		stage = DecodeStageDataError;
+		return;
+	}
 
 	stage = DecodeStageDone;
 
@@ -537,7 +549,7 @@ int get_compare_symbol(uint8_t opType)
 		return DField::GE;							
 }
 
-void DtcJob::decode_request_v2(MyRequest *mr)
+int DtcJob::decode_request_v2(MyRequest *mr)
 {
 	char *p = mr->get_packet_ptr();
 
@@ -557,7 +569,7 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 		set_request_key(&key);
 	}
 	else
-		return ;
+		return -1;
 	log4cplus_debug("key type:%d %d", mr->get_request_type(), key.s64);
 	set_request_code(mr->get_request_type());
 
@@ -583,7 +595,7 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 		if (need.size() != mr->get_need_num_fields()) {
 			log4cplus_error("need field num error:%d, %d",
 					need.size(), mr->get_need_num_fields());
-			return;
+			return -2;
 		}
 		for (int i = 0; i < need.size(); i++) {
 			fs.add_field(need[i].c_str(), i);
@@ -618,14 +630,14 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 			where = stmt->whereClause;
 		} else {
 			log4cplus_error("StatementType error: %d", type);
-			return;
+			return -3;
 		}
 
 		int cnts = build_condition_fields(where, NULL, &exprList);
 		if (cnts != exprList.size()) {
 			log4cplus_error("build_condition_fields error: %d %d",
 					cnts, exprList.size());
-			return;
+			return -4;
 		}
 		log4cplus_debug("condition num: %d", cnts);
 
@@ -747,7 +759,7 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 				if(stmt->values->size() != table_definition()->num_fields())
 				{
 					log4cplus_error("all fields mode of insert, check num fields failed: %d %d", stmt->values->size(), table_definition()->num_fields());
-					return;
+					return -5;
 				}
 				count = stmt->values->size();
 				for (int i = 0; i < count; i++) {
@@ -757,7 +769,7 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 						field_name);
 					if (rtype == -1) {
 						log4cplus_error("build field type_r error, type: %d, field name: %s", stmt->values->at(i)->type, field_name);
-						return;
+						return -6;
 					}
 
 					if (DField::Signed == rtype ||
@@ -798,7 +810,7 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 							stmt->columns->at(i));
 						if (rtype == -1) {
 							log4cplus_error("build field type_r error, type: %d, field name: %s", stmt->values->at(i)->type, stmt->columns->at(i));
-							return;
+							return -7;
 						}
 
 						if (DField::Signed == rtype ||
@@ -845,10 +857,12 @@ void DtcJob::decode_request_v2(MyRequest *mr)
 			if (err < 0) {
 				log4cplus_error("decode update info error: %d",
 						err);
-				return;
+				return -8;
 			}
 		}
 	}
+
+	return 0;
 }
 
 void DtcJob::decode_request_v1(DTC_HEADER_V1 &header, char *p)

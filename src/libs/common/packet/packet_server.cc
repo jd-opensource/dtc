@@ -1516,7 +1516,11 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 		rb = encode_mysql_protocol(&job);
 	else
 	{
-		rb = encode_mysql_ok(&job, job.resultInfo.affected_rows());
+		log4cplus_debug("decode result:%d", job.get_decode_result());
+		if(job.get_decode_result() == DecodeDataError)
+			rb = encode_mysql_error(&job, "dtc error.", 10001);
+		else
+			rb = encode_mysql_ok(&job, job.resultInfo.affected_rows());
 	}
 	if (!rb)
 		return -3;
@@ -1640,9 +1644,10 @@ int Packet::encode_result_mysql(DtcJob &job, int mtu, uint32_t ts)
 		rb = encode_mysql_protocol(&job);
 	else
 	{
-		/*if(berror)
+		log4cplus_debug("decode result:%d", job.get_decode_result());
+		if(job.get_decode_result() == DecodeDataError)
 			rb = encode_mysql_error(&job, "dtc error.", 10001);
-		else*/
+		else
 			rb = encode_mysql_ok(&job, job.resultInfo.affected_rows());
 	}
 	if (!rb)

@@ -204,7 +204,7 @@ class DtcJob : public TableReference {
 			     DTC_HEADER_V1 *out = NULL);
 	int validate_section(DTC_HEADER_V1 &header);
 	void decode_request_v1(DTC_HEADER_V1 &header, char *p);
-	void decode_request_v2(MyRequest *mr);
+	int decode_request_v2(MyRequest *mr);
 	int decode_field_value(char *d, int l, int m);
 	int decode_field_set(char *d, int l);
 
