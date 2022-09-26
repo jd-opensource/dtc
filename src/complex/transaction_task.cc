@@ -631,6 +631,9 @@ CBufferChain *TransactionTask::encode_mysql_error(CTaskRequest *request, std::st
 	int packet_len = sizeof(CBufferChain) + sizeof(MYSQL_HEADER_SIZE) +
 		sizeof(buf) + errmsg.length();
 
+	myerrno = abs(myerrno);
+	int2store_big_endian(buf+1, myerrno);
+	log4cplus_debug("myerrno: %d, buf: %x, %x, %x", myerrno, buf[0], buf[1], buf[2]);
 	bc = (CBufferChain *)MALLOC(packet_len);
 	CBufferChain *r = bc;
 	if (r == NULL) {
