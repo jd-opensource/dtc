@@ -460,9 +460,7 @@ static void req_forward(struct context *ctx, struct conn *c_conn,
 	pool = c_conn->owner;
 
 	for(i = 0 ; i < array_n(&(ctx->pool)) ; i ++){
-		log_debug("AAAAAAAAAA 111111, len: %d, my table name: %s", msg->table_name.len, msg->table_name.data);
 		temp_pool = (struct server_pool *)array_get(&(ctx->pool), i);
-		log_debug("AAAAAAAAAA 22222222 :MSG->MID: %d, TEMP_POOL->MID: %d", msg->mid, temp_pool->mid);
 		if(msg->mid == 0)
 			break;
 		if(msg->mid == temp_pool->mid)

@@ -102,9 +102,8 @@ void my_parse_req(struct msg *r)
 			p = b->last;
 			goto end;
 		}
-log_debug("1111111111");
+
 		if (r->owner->stage == CONN_STAGE_LOGGED_IN) {
-			log_debug("1111111111");
 			rc = my_get_command(p, input_packet_length, r,
 					    &command);
 			if (rc) {

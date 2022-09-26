@@ -557,13 +557,9 @@ uint32_t msg_backend_idx(struct msg *msg, uint8_t *key, uint32_t keylen) {
 	log_debug("msg backend idx entry");
 	for(i = 0 ; i < array_n(&(ctx->pool)) ; i ++){
 		struct string tmp1, tmp2;
-		log_debug("AAAAAAAAAAA 111111111");
 		temp_pool = (struct server_pool *)array_get(&(ctx->pool), i);
 		string_copy(&tmp2, temp_pool->name.data, temp_pool->name.len);
 		string_upper(&tmp2);		
-		log_debug("AAAAAAAAAAA 222222222222: %s", tmp2.data);
-		log_debug("AAAAAAAAAAA 333333333333: %s", msg->table_name.data);
-
 		//if(string_compare(&tmp2, &msg->table_name) == 0)
 		if(msg->mid == temp_pool->mid)
 			break;

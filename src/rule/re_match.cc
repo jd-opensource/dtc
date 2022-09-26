@@ -249,10 +249,9 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
 
 bool do_match_expr(hsql::Expr* input, hsql::Expr* rule)
 {
-    log4cplus_debug("bbbbbbbbbbb");
     if(!input->isType(kExprOperator) || !rule->isType(kExprOperator))
         return false;
-log4cplus_debug("aaaaaaaaaaaa:%d %d", input->opType, rule->opType);
+
     if(input->opType != rule->opType && (input->opType < kOpEquals || input->opType > kOpGreaterEq))
         return false;
 
@@ -315,13 +314,13 @@ bool traverse_input_sql(hsql::Expr* input, vector<hsql::Expr*> rules)
 {
     bool left = false;
     bool right = false;
-log4cplus_debug("111111111111");
+
     if(!input)
         return false;
-log4cplus_debug("22222222222");
+
     if(!input->expr || !input->expr2)
         return false;
-log4cplus_debug("3333333333333: %d", input->opType);
+
     if(input->opType >= kOpEquals && input->opType <= kOpGreaterEq)
     {
         for(int i = 0; i < rules.size(); i++)
@@ -332,10 +331,9 @@ log4cplus_debug("3333333333333: %d", input->opType);
             }
         }
     }
-    log4cplus_debug("444444444444");
+
     if(input->expr->opType >= kOpEquals && input->expr->opType <= kOpGreaterEq)
     {
-        log4cplus_debug("5555555555");
         for(int i = 0; i < rules.size(); i++)
         {
             if(do_match_expr(input->expr, rules[i]))
@@ -347,13 +345,11 @@ log4cplus_debug("3333333333333: %d", input->opType);
     }
     else if(input->expr->opType == kOpAnd || input->expr->opType == kOpOr)
     {
-        log4cplus_debug("66666666666666");
         left = traverse_input_sql(input->expr, rules);
     }
 
     if(input->expr2->opType >= kOpEquals && input->expr2->opType <= kOpGreaterEq)
     {
-        log4cplus_debug("777777777777");
         for(int i = 0; i < rules.size(); i++)
         {
             if(do_match_expr(input->expr2, rules[i]))
@@ -366,10 +362,9 @@ log4cplus_debug("3333333333333: %d", input->opType);
     }
     else if(input->expr2->opType == kOpAnd || input->expr2->opType == kOpOr)
     {
-        log4cplus_debug("8888888888888");
         right = traverse_input_sql(input->expr2, rules);
     }
-log4cplus_debug("99999999999999");
+
     if(input->opType == kOpAnd)
     {
         if(left || right)
@@ -380,7 +375,7 @@ log4cplus_debug("99999999999999");
         if(left && right)
             return true;
     }
-log4cplus_debug("000000000000000000");
+
     return false;
 }
 
@@ -406,10 +401,8 @@ int re_match_sql(hsql::SQLParserResult* sql_ast, vector<vector<hsql::Expr*> > ex
         goto RESULT;
     }
 
-log4cplus_debug("3333333333");
     if(is_write_type(sql_ast))
     {
-        log4cplus_debug("33333333");
         is_write = true;
         input_expr = get_expr(ast);            
     }
@@ -417,12 +410,11 @@ log4cplus_debug("3333333333");
     {
         input_expr = get_expr(sql_ast);
     }
-log4cplus_debug("444444444");
+
     if(!input_expr)
     {
         if(is_write)
             return -100;
-        log4cplus_debug("11111111111");
         ret = -1;
         goto RESULT;
     }
