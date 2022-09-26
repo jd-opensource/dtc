@@ -428,10 +428,10 @@ std::string build_dtc_table_type(std::string real_tbname, std::string real_dbnam
 	log4cplus_debug("query str: %s, map size: %d", str.c_str(), g_config.table_type_info.size());
 
 	map<string,string>::iterator it;
-for(it=g_config.table_type_info.begin();it!=g_config.table_type_info.end();it++)
-{
-	log4cplus_debug("first: %s, second: %s", (*it).first.c_str(), (*it).second.c_str());
-}
+	for(it=g_config.table_type_info.begin();it!=g_config.table_type_info.end();it++)
+	{
+		log4cplus_debug("first: %s, second: %s", (*it).first.c_str(), (*it).second.c_str());
+	}
 	std::string res = g_config.table_type_info[str];
 	if(res.length() > 0)
 		return res;
@@ -631,6 +631,9 @@ CBufferChain *TransactionTask::encode_mysql_error(CTaskRequest *request, std::st
 	int packet_len = sizeof(CBufferChain) + sizeof(MYSQL_HEADER_SIZE) +
 		sizeof(buf) + errmsg.length();
 
+	myerrno = abs(myerrno);
+	int2store_big_endian(buf+1, myerrno);
+	log4cplus_debug("myerrno: %d, buf: %x, %x, %x", myerrno, buf[0], buf[1], buf[2]);
 	bc = (CBufferChain *)MALLOC(packet_len);
 	CBufferChain *r = bc;
 	if (r == NULL) {

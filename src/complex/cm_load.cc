@@ -62,6 +62,7 @@ void ConfigHelper::load_yaml_fields(YAML::Node node)
 {
 	if(node["primary"])
 	{
+		log4cplus_debug("primary");
 		std::string type_string;
 		std::string db = node["primary"]["db"].as<string>();
 		std::string table = node["primary"]["table"].as<string>();
@@ -80,12 +81,16 @@ void ConfigHelper::load_yaml_fields(YAML::Node node)
 
 	if(node["extension"])
 	{
-		std::string db = node["extension"]["logic"]["db"].as<string>();
-		std::string table = node["extension"]["logic"]["table"].as<string>();
-		std::string keystr = db;
-		keystr += ".";
-		keystr += table;
-		table_type_info[keystr] = "SINGLE TABLE";
+		log4cplus_debug("extension");
+		for(int i = 0; i < node["extension"].size(); i++)
+		{
+			std::string db = node["extension"][i]["logic"]["db"].as<string>();
+			std::string table = node["extension"][i]["logic"]["table"].as<string>();
+			std::string keystr = db;
+			keystr += ".";
+			keystr += table;
+			table_type_info[keystr] = "SINGLE TABLE";
+		}
 	}
 }
 

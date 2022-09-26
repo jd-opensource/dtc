@@ -136,6 +136,7 @@ class Packet {
 
 	BufferChain *encode_mysql_protocol(DtcJob *job);
 	BufferChain *encode_mysql_ok(DtcJob *job, int affected_rows);
+	BufferChain *encode_mysql_error(DtcJob *job, std::string errmsg, int myerrno);	
 
 private:
 	int load_table(const char* p_filename, char*& file , int& i_length);
