@@ -83,8 +83,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: dtc-v2.0.0-rc2
-          release_name: dtc-v2.0.0-rc2
+          tag_name: dtc-v2.0.1
+          release_name: dtc-v2.0.1
           draft: false
           prerelease: false
 
@@ -96,5 +96,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{github.workspace}}/build/dtc.tar.gz
-          asset_name: dtc-v2.0.0-rc2.tar.gz
+          asset_name: dtc-v2.0.1.tar.gz
           asset_content_type: application/gzip
