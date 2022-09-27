@@ -258,6 +258,7 @@ void DtcJob::decode_mysql_packet(char *packetIn, int packetLen, int type)
 		if(ret < 0)
 		{
 			log4cplus_error("decode request error: %d", ret);
+			mr.set_mr_invalid();
 			stage = DecodeStageDataError;
 			return;
 		}
@@ -323,6 +324,7 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 	if(ret < 0)
 	{
 		log4cplus_error("decode request error: %d", ret);
+		mr.set_mr_invalid();
 		stage = DecodeStageDataError;
 		return;
 	}
@@ -703,7 +705,7 @@ int DtcJob::decode_request_v2(MyRequest *mr)
 					log4cplus_error(
 						"decode condition info error: %d",
 						err);
-					return;
+					return -10;
 				}
 				clear_all_rows();
 			}
@@ -724,7 +726,7 @@ int DtcJob::decode_request_v2(MyRequest *mr)
 					stmt->updates->at(i)->value->type,
 					stmt->updates->at(i)->column);
 				if (rtype == -1) {
-					return;
+					return -11;
 				}
 
 				if (DField::Signed == rtype ||
