@@ -56,6 +56,11 @@ class MyRequest {
 		this->pkt_nr = pkt_nr;
 	}
 
+	void set_mr_invalid()
+	{
+		m_result.setIsValid(false);
+	}
+
 	int get_request_type()
 	{
 		if(m_result.isValid() == false)

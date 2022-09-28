@@ -1516,8 +1516,8 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 		rb = encode_mysql_protocol(&job);
 	else
 	{
-		log4cplus_debug("decode result:%d", job.get_decode_result());
-		if(job.mr.get_request_type() == 0 && job.get_decode_result() == DecodeDataError)
+		log4cplus_debug("decode result:%d, type: %d", job.get_decode_result(), job.mr.get_request_type());
+		if((job.mr.get_request_type() == 0 && job.get_decode_result() == DecodeDataError) || job.result_code() < 0)
 			rb = encode_mysql_error(&job, "dtc error.", 10001);
 		else
 			rb = encode_mysql_ok(&job, job.resultInfo.affected_rows());

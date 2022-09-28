@@ -52,7 +52,7 @@
 
 #define DA_LOG_DEFAULT  3
 #define DA_MBUF_SIZE DEF_MBUF_SIZE
-#define DA_EVENT_INTERVAL (2 * 1000) /* in msec */
+#define DA_EVENT_INTERVAL (10 * 1000) /* in msec */
 
 extern void _set_remote_log_config_(const char *addr, int port, const char *own_addr, int own_port, int businessid, int iSwitch);
 
