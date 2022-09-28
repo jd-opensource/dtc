@@ -674,7 +674,7 @@ int get_mid_by_dbname(const char* dbname, const char* sql, struct msg* r)
 				string_upper(&cmp_name);
 				for(j = 0; j < sql_len; j++)
 				{
-					if(sql_len - j > cmp_name.len && da_strncmp(sql + j, cmp_name.data, cmp_name.len) == 0)
+					if(sql_len - j >= cmp_name.len && da_strncmp(sql + j, cmp_name.data, cmp_name.len) == 0)
 					{
 						mid = p->mid;
 					}
