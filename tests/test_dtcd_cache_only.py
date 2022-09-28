@@ -113,7 +113,7 @@ def test_check_tablename():
 def test_insert_remove_where_cluster():
     db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
     cursor = db.cursor()
-    sql = "insert into opensource(uid, name) values(1, \"hello\")"
+    sql = "insert into opensource(uid, name) values(1, 'hello')"
     cursor.execute(sql)
     db.commit()
     rowsaffected = cursor.rowcount
@@ -125,7 +125,7 @@ def test_insert_remove_where_cluster():
 def test_insert_remove_where_cluster_without_specify_key():
     db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
     cursor = db.cursor()
-    sql = "insert into opensource values(1, \"Jack\", \"Shanghai\", 1, 18)"
+    sql = "insert into opensource values(1, 'Jack', 'Shanghai', 1, 18)"
     cursor.execute(sql)
     db.commit()
     rowsaffected = cursor.rowcount
@@ -149,7 +149,7 @@ def test_select_limit():
     assert len(results) == 1
 
     cursor = db.cursor()
-    sql = "insert into opensource values(1, \"Jack\", \"Shanghai\", 1, 19)"
+    sql = "insert into opensource values(1, 'Jack', 'Shanghai', 1, 19)"
     cursor.execute(sql)
     db.commit()
 
