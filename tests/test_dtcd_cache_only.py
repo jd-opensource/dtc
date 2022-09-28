@@ -24,28 +24,6 @@ def test_insert_with_double_quotes():
     db.close()
 '''    
 
-'''
-def test_insert_remove_where_cluster():
-    db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
-    cursor = db.cursor()
-    sql = "insert into opensource(uid, name) values(1, \"hello\")"
-    cursor.execute(sql)
-    db.commit()
-    cursor.close()
-    db.close()
-'''
-
-'''
-def test_insert_remove_where_cluster_without_specify_key():
-    db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
-    cursor = db.cursor()
-    sql = "insert into opensource values(1, \"Jack\", \"Shanghai\", 1, 18)"
-    cursor.execute(sql)
-    db.commit()
-    cursor.close()
-    db.close()
-'''
-
 def test_select():
     db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
     cursor = db.cursor()
@@ -131,3 +109,56 @@ def test_delete():
 '''
 def test_check_tablename():
 '''    
+
+def test_insert_remove_where_cluster():
+    db = pymysql.connect(host='127.0.0.1', port=12001, user='test', password='test', database='test')
+    cursor = db.cursor()
+    sql = "insert into opensource(uid, name) values(1, \"hello\")"
+    cursor.execute(sql)
+    db.commit()
+    rowsaffected = cursor.rowcount
+    print("affected rows: %s" % (rowsaffected))
+    cursor.close()
+    db.close()
+    assert rowsaffected == 1
+
+def test_insert_remove_where_cluster_without_specify_key():
+    db = pymysql.connect(host='127.0.0.1', port=12001, user='test', password='test', database='test')
+    cursor = db.cursor()
+    sql = "insert into opensource values(1, \"Jack\", \"Shanghai\", 1, 18)"
+    cursor.execute(sql)
+    db.commit()
+    rowsaffected = cursor.rowcount
+    print("affected rows: %s" % (rowsaffected))    
+    cursor.close()
+    db.close()
+    assert rowsaffected == 1
+
+def test_select_limit():
+    db = pymysql.connect(host='127.0.0.1', port=12001, user='test', password='test', database='test')
+    cursor = db.cursor()
+    sql = "select uid, name from opensource where uid = 1 limit 2"
+    cursor.execute(sql)
+    results = cursor.fetchall()
+    assert len(results) == 2
+   
+    cursor = db.cursor()
+    sql = "select uid, name from opensource where uid = 1 limit 1"
+    cursor.execute(sql)
+    results = cursor.fetchall()
+    assert len(results) == 1
+
+    cursor = db.cursor()
+    sql = "insert into opensource values(1, \"Jack\", \"Shanghai\", 1, 19)"
+    cursor.execute(sql)
+    db.commit()
+
+    cursor = db.cursor()
+    sql = "select uid, name from opensource where uid = 1 limit 1,3"
+    cursor.execute(sql)
+    results = cursor.fetchall()
+    assert len(results) == 2
+    assert results[0][4] == 18
+    assert results[1][4] == 19
+
+    db.close()
