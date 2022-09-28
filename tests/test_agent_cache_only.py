@@ -176,6 +176,6 @@ def test_select_limit():
     results = cursor.fetchall()
     assert len(results) == 2
     assert results[0][4] == 18
-    assert results[1][4] != 19
+    assert results[1][4] == 19
 
     db.close()
