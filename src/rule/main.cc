@@ -20,6 +20,18 @@ int main(int argc, char* argv[])
     std::string sql = argv[2];
     char szkey[50] = {0};
 
+    cout<<"sql: "<<sql<<endl;
+
+    hsql::SQLParserResult sql_ast;
+    if(re_parse_sql(sql, &sql_ast) != 0)
+    {
+        cout<<"parsing failed."<<endl;
+        return -1;
+    }
+    
+    cout<<"parsing success."<<sql_ast.isValid()<<endl;
+
+#if 0
     if(re_load_table_key(szkey) < 0)
         return -1;
     key = szkey;
@@ -58,6 +70,6 @@ int main(int argc, char* argv[])
     else {
         printf("RULE MATCH : L3 - full data\n");
     }
-
+#endif
     return 0;
 }
