@@ -161,7 +161,7 @@ def test_select_limit():
     db.commit()
 
     cursor = db.cursor()
-    sql = "select uid, name from opensource where uid = 1 limit 1,3"
+    sql = "select uid, name,city,sex,age from opensource where uid = 1 limit 1,3"
     cursor.execute(sql)
     results = cursor.fetchall()
     assert len(results) == 2
