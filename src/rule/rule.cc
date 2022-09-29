@@ -168,23 +168,24 @@ extern "C" int get_statement_value(char* str, int len, const char* strkey, int* 
 
 extern "C" int get_table_with_db(const char* sessiondb, const char* sql, char* result)
 {
+    log4cplus_debug("222222222222222");
 	if(result == NULL)
 		return -1;
-
+log4cplus_debug("222222222222222");
     hsql::SQLParserResult sql_ast;
     if(re_parse_sql(sql, &sql_ast) != 0)
         return -2;
-
+log4cplus_debug("222222222222222");
 	memset(result, 0, 300);
-
+log4cplus_debug("222222222222222");
     // Get db name
     std::string sqldb = get_schema(&sql_ast);
     if(sqldb.length() > 0)
-    {
+    {log4cplus_debug("222222222222222");
         strcat(result, sqldb.c_str());
     }
     else if(exist_session_db(sessiondb))
-    {
+    {log4cplus_debug("222222222222222");
         strcat(result, sessiondb);
     }
     else
@@ -192,28 +193,31 @@ extern "C" int get_table_with_db(const char* sessiondb, const char* sql, char* r
         log4cplus_error("no database selected.");
         return -3;
     }
-
+log4cplus_debug("222222222222222");
     //Append symbol.
     strcat(result, ".");
-
+log4cplus_debug("222222222222222");
     // Get table name
     std::string sqltb = get_table_name(&sql_ast);
     if(sqltb.length() > 0)
-    {
+    {log4cplus_debug("222222222222222");
         strcat(result, sqltb.c_str());
     }
     else
-    {
+    {log4cplus_debug("222222222222222");
         return -4;
     }
-
-    return -5;
+log4cplus_debug("222222222222222");
+    return 0;
 }
 
 extern "C" int rule_get_key_type(const char* conf)
 {
     YAML::Node config;
     if(conf == NULL)
+        return -1;
+    
+    if(strlen(conf) <= 0)
         return -1;
 
     try {
@@ -362,12 +366,14 @@ bool is_show_db_with_ast(hsql::SQLParserResult* ast)
     int t = ast->getStatement(0)->type();
     if(t == kStmtShow)
     {
+        //show databases;
         ShowStatement* stmt = (ShowStatement*)ast->getStatement(0);
         if(stmt->type == ShowType::kShowDatabases)
             return true;
     }
     else if(t == kStmtSelect)
     {
+        //select database();
         SelectStatement* stmt = (SelectStatement*)ast->getStatement(0);
         if(stmt->select_object_type == SelectObjectType::kDataBase)
             return true;
@@ -407,7 +413,7 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
     {
         conf_file = std::string(conf);
         flag = true;
-
+        log4cplus_debug("flag is true, conf: %s", conf);
         key = get_key_info(conf_file);
         if(key.length() == 0)
             return -1;
@@ -434,14 +440,15 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
     if(is_show_table_with_ast(&sql_ast))
     {
         if(exist_session_db(dbname))
-            return -6;
-        else
             return 2;
+        else
+            return -6;
     }
 
     if(is_show_create_table_with_ast(&sql_ast))
         return 2;
 
+    log4cplus_debug("flag: %d %d %d", flag, exist_session_db(dbname), exist_sql_db(&sql_ast));
     if((exist_session_db(dbname) || (exist_sql_db(&sql_ast))) && flag == false)
     {
         log4cplus_debug("db session & single table");

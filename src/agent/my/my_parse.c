@@ -642,7 +642,7 @@ int get_mid_by_dbname(const char* sessiondb, const char* sql, struct msg* r)
 	struct string req_string; 
 	c_conn = r->owner;
 	ctx = conn_to_ctx(c_conn);
-
+log_debug("111111111111");
 	ret = get_table_with_db(sessiondb, sql, &cmp_string);
 	if(ret >= 0)
 	{
@@ -662,7 +662,7 @@ int get_mid_by_dbname(const char* sessiondb, const char* sql, struct msg* r)
 			string_upper(&xmlname);
 
 			log_info("xml name: %s, cmp string: %s", xmlname.data, req_string.data);
-			if(da_strncmp(p->name.data, cmp_string, strlen(cmp_string)) == 0)
+			if(da_strncmp(xmlname.data, req_string.data, req_string.len) == 0)
 			{
 				mid = p->mid;
 			}
