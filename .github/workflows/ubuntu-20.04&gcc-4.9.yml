@@ -32,6 +32,7 @@ jobs:
         cd hsql
         cp -rf include/ ${{github.workspace}}/src/libs/hsql/
         cp -f libs/libsqlparser.so ${{github.workspace}}/src/libs/hsql/libs/libsqlparser.so
+        cp -f libs/libsqlparser.a ${{github.workspace}}/src/libs/hsql/libs/libsqlparser.a
       
     - name: cmake project
       run: |
