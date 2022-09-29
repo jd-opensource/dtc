@@ -25,6 +25,15 @@ jobs:
       - name: Install dependency
         run: |
           sudo apt-get install -y make zlib1g zlib1g-dev bzip2 liblz4-dev libasan0 openssl libmxml-dev wget
+
+      - name: update hsql
+        run: |
+          wget https://github.com/DTC8/sql-parser/releases/download/hsql.forked-v1/hsql.forked-v1.tar.gz -O hsql.tar.gz
+          tar -zxvf hsql.tar.gz
+          cd hsql
+          cp -rf include/ ${{github.workspace}}/src/libs/hsql/
+          cp -f libs/libsqlparser.so ${{github.workspace}}/src/libs/hsql/libs/libsqlparser.so
+          cp -f libs/libsqlparser.a ${{github.workspace}}/src/libs/hsql/libs/libsqlparser.a          
     
       - name: cmake project
         run: |
@@ -83,8 +92,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: dtc-v2.0.0-rc3
-          release_name: dtc-v2.0.0-rc3
+          tag_name: dtc-v2.0.1
+          release_name: dtc-v2.0.1
           draft: false
           prerelease: true
 
@@ -96,5 +105,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{github.workspace}}/build/dtc.tar.gz
-          asset_name: dtc-v2.0.0-rc3.tar.gz
+          asset_name: dtc-v2.0.1.tar.gz
           asset_content_type: application/gzip

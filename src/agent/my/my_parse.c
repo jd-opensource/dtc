@@ -707,11 +707,13 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 		     int *end_offset, const char* dbname, struct msg* r)
 {
 	int i = 0;
-	struct string str;
+	struct string str, ostr;
 	int ret = 0;
 	int layer = 0;
 	string_init(&str);
 	string_copy(&str, sql, sql_len);
+	string_init(&ostr);
+	string_copy(&ostr, sql, sql_len);
 
 	if (string_empty(&str))
 		return -1;
@@ -760,7 +762,7 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 	log_debug("strkey type: %d", r->keytype);
 
 	//agent sql route, rule engine
-	layer = rule_sql_match(str.data, dbname, strlen(conf_path) > 0 ? conf_path : NULL);
+	layer = rule_sql_match(str.data, ostr.data, dbname, strlen(conf_path) > 0 ? conf_path : NULL);
 	log_debug("rule layer: %d", layer);
 
 	if(layer != 1)
