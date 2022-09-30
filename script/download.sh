@@ -1,1 +1,1 @@
-wget https://github.com/DTC8/sql-parser/releases/download/hsql.plus-2ebcb05/hsql.plus-2ebcb05.tar.gz -O hsql.tar.gz
+wget https://github.com/DTC8/sql-parser/releases/download/hsql.plus-daefd23/hsql.plus-daefd23.tar.gz -O hsql.tar.gz

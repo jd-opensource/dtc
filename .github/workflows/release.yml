@@ -6,7 +6,7 @@ on:
 env:
   CC: gcc-4.9
   CXX: g++-4.9    
-  ver: dtc-v2.0.1-rc2
+  ver: dtc-v2.0.1-rc3
 
 jobs:
   build:
