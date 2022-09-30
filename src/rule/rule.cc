@@ -297,7 +297,7 @@ extern "C" bool is_show_db(const char* szsql)
     return false;
 }
 
-extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char* conf)
+extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* dbname, const char* conf)
 {
     if(!szsql)
         return -1;
@@ -318,7 +318,7 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbname, const char*
             return -1;
     }
 
-    log4cplus_debug("key len: %d, key: %s, sql len: %d, sql: %s, dbname len: %d, dbname: %s", key.length(), key.c_str(), sql.length(), sql.c_str(), strlen(dbname), std::string(dbname).c_str());
+    log4cplus_debug("key len: %d, key: %s, sql len: %d, sql: %s, dbname len: %d, dbname: %s", key.length(), key.c_str(), key.length(), osql, strlen(dbname), std::string(dbname).c_str());
 
     if(is_show_db(szsql))
     {

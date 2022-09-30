@@ -38,7 +38,7 @@ DTC provides docker images for quick start:
 docker pull dtc8/server:latest
 docker run -i -t --name dtc-server -p 127.0.0.1:20015:20015 dtc8/server:latest
 ```
-
+Depending on 3rd-party sql parsing engine [hsql](https://github.com/DTC8/sql-parser) .
 For more compile information, click [Building](docs/building.md).<br/>
 Trying a demo, visit [QuickStart](docs/quickstart.md).
 

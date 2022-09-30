@@ -247,11 +247,45 @@ bool MyRequest::get_key(DTCValue *key, char *key_name)
 
 uint32_t MyRequest::get_limit_start()
 {
+	int t = m_result.getStatement(0)->type();
+	if (t != hsql::StatementType::kStmtSelect) {
+		return 0;
+	}
+	hsql::SelectStatement *stmt = get_result()->getStatement(0);
+	LimitDescription* limit = stmt->limit;
+	if(limit)
+	{
+		if(limit->offset)
+		{
+			int val = limit->offset->ival;
+			log4cplus_debug("limit- offset: %d", val);
+			if(val >= 0)
+				return val;
+		}
+	}
+
 	return 0;
 }
 
 uint32_t MyRequest::get_limit_count()
 {
+	int t = m_result.getStatement(0)->type();
+	if (t != hsql::StatementType::kStmtSelect) {
+		return 0;
+	}
+	hsql::SelectStatement *stmt = get_result()->getStatement(0);
+	LimitDescription* limit = stmt->limit;
+	if(limit)
+	{
+		if(limit->limit)
+		{
+			int val = limit->limit->ival;
+			log4cplus_debug("limit- limit: %d", val);
+			if(val >= 0)
+				return val;
+		}
+	}
+
 	return 0;
 }
 
