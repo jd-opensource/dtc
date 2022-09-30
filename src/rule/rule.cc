@@ -166,10 +166,55 @@ extern "C" int get_statement_value(char* str, int len, const char* strkey, int* 
         return -1;
 }
 
+extern "C" int get_table_with_db(const char* sessiondb, const char* sql, char* result)
+{
+	if(result == NULL)
+		return -1;
+    hsql::SQLParserResult sql_ast;
+    if(re_parse_sql(sql, &sql_ast) != 0)
+        return -2;
+	memset(result, 0, 300);
+
+    // Get db name
+    std::string sqldb = get_schema(&sql_ast);
+    if(sqldb.length() > 0)
+    {
+        strcat(result, sqldb.c_str());
+    }
+    else if(exist_session_db(sessiondb))
+    {
+        strcat(result, sessiondb);
+    }
+    else
+    {
+        log4cplus_error("no database selected.");
+        return -3;
+    }
+
+    //Append symbol.
+    strcat(result, ".");
+
+    // Get table name
+    std::string sqltb = get_table_name(&sql_ast);
+    if(sqltb.length() > 0)
+    {
+        strcat(result, sqltb.c_str());
+    }
+    else
+    {
+        return -4;
+    }
+
+    return 0;
+}
+
 extern "C" int rule_get_key_type(const char* conf)
 {
     YAML::Node config;
     if(conf == NULL)
+        return -1;
+    
+    if(strlen(conf) <= 0)
         return -1;
 
     try {
@@ -287,13 +332,66 @@ int is_ext_table(hsql::SQLParserResult* ast,const char* dbname)
     return -1;
 }
 
-extern "C" bool is_show_db(const char* szsql)
+bool is_show_create_table_with_ast(hsql::SQLParserResult* ast)
 {
-    std::string sql = szsql;
-    if(sql == "SHOW DATABASES" || sql == "SELECT DATABASE()")
+    int t = ast->getStatement(0)->type();
+    if(t == kStmtShow)
     {
-        return true;
+        ShowStatement* stmt = (ShowStatement*)ast->getStatement(0);
+        if(stmt->type == ShowType::kShowCreateTables)
+            return true;
     }
+
+    return false;
+}
+
+bool is_show_table_with_ast(hsql::SQLParserResult* ast)
+{
+    int t = ast->getStatement(0)->type();
+    if(t == kStmtShow)
+    {
+        ShowStatement* stmt = (ShowStatement*)ast->getStatement(0);
+        if(stmt->type == ShowType::kShowTables)
+            return true;
+    }
+
+    return false;
+}
+
+bool is_show_db_with_ast(hsql::SQLParserResult* ast)
+{
+    int t = ast->getStatement(0)->type();
+    if(t == kStmtShow)
+    {
+        //show databases;
+        ShowStatement* stmt = (ShowStatement*)ast->getStatement(0);
+        if(stmt->type == ShowType::kShowDatabases)
+            return true;
+    }
+    else if(t == kStmtSelect)
+    {
+        //select database();
+        SelectStatement* stmt = (SelectStatement*)ast->getStatement(0);
+        if(stmt->select_object_type == SelectObjectType::kDataBase)
+            return true;
+    }
+
+    return false;
+}
+
+bool exist_session_db(const char* dbname)
+{
+    if(dbname != NULL && strlen(dbname) > 0)
+        return true;
+    
+    return false;
+}
+
+bool exist_sql_db(hsql::SQLParserResult* ast)
+{
+    if(get_schema(ast).length() > 0)
+        return true;
+    
     return false;
 }
 
@@ -312,29 +410,13 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
     {
         conf_file = std::string(conf);
         flag = true;
-
+        log4cplus_debug("flag is true, conf: %s", conf);
         key = get_key_info(conf_file);
         if(key.length() == 0)
             return -1;
     }
 
     log4cplus_debug("key len: %d, key: %s, sql len: %d, sql: %s, dbname len: %d, dbname: %s", key.length(), key.c_str(), key.length(), osql, strlen(dbname), std::string(dbname).c_str());
-
-    if(is_show_db(szsql))
-    {
-        return 3;
-    }
-
-    if(sql == "SHOW TABLES")
-    {
-        if(dbname == NULL || strlen(dbname) == 0)
-            return -6;
-        else
-            return 2;
-    }
-
-    if(sql.find("SHOW CREATE TABLE") != string::npos)
-        return 2;
 
     if(sql.find("WITHOUT@@") != sql.npos)
     {
@@ -343,8 +425,28 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
         return 1;
     }
 
-    log4cplus_debug("dbname:%s", dbname);
-    if(dbname != NULL && strlen(dbname) > 0 && flag == false)
+    hsql::SQLParserResult sql_ast;
+    if(re_parse_sql(sql, &sql_ast) != 0)
+        return -1;
+
+    if(is_show_db_with_ast(&sql_ast))
+    {
+        return 3;
+    }
+
+    if(is_show_table_with_ast(&sql_ast))
+    {
+        if(exist_session_db(dbname))
+            return 2;
+        else
+            return -6;
+    }
+
+    if(is_show_create_table_with_ast(&sql_ast))
+        return 2;
+
+    log4cplus_debug("flag: %d %d %d", flag, exist_session_db(dbname), exist_sql_db(&sql_ast));
+    if((exist_session_db(dbname) || (exist_sql_db(&sql_ast))) && flag == false)
     {
         log4cplus_debug("db session & single table");
         return 2;
@@ -357,13 +459,7 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
         return -5;
     }
 
-    /*if(sql.find("INSERT INTO") != sql.npos || sql.find("UPDATE") != sql.npos || sql.find("DELETE FROM") != sql.npos)
-    {
-        log4cplus_debug("INSERT/UPDATE/DELETE request, force direct to L1.");
-        //L1: DTC cache.
-        return 1;
-    }*/
-
+    //Building condition sql tree, in order to do layered rule matching.
     hsql::SQLParserResult* ast = NULL;
     hsql::SQLParserResult ast2;
     std::string tempsql = "SELECT * FROM TMPTB ";
@@ -375,17 +471,11 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
         log4cplus_debug("temsql: %s", tempsql.c_str());
         ast = &ast2;
     }
-    else if(sql.find("INSERT INTO") != -1)
+    else if(sql_ast.getStatement(0)->type() == StatementType::kStmtInsert)
     {
         tempsql += "WHERE ";
-        hsql::SQLParserResult allcondition;
-        if(re_parse_sql(sql, &allcondition) != 0)
-        {
-            log4cplus_error("error sql: %s", sql.c_str());
-            return -1;
-        }
-        const InsertStatement* stmt = (const InsertStatement*)(allcondition.getStatement(0));
-        if(stmt->columns == NULL)  // for all
+        const InsertStatement* stmt = (const InsertStatement*)(sql_ast.getStatement(0));
+        if(stmt->columns == NULL)  // for all, not supported right now.
             return -1;
         for(int i = 0; i < stmt->columns->size(); i ++)
         {
@@ -419,16 +509,6 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
         log4cplus_debug("temsql: %s", tempsql.c_str());
         ast = &ast2;
     }
-
-    if(sql.find("INSERT INTO") != -1 && sql.find("WHERE") != -1)
-    {
-        sql = sql.substr(0, sql.find("WHERE"));
-        log4cplus_debug("new sql: %s", sql.c_str());
-    }
-
-    hsql::SQLParserResult sql_ast;
-    if(re_parse_sql(sql, &sql_ast) != 0)
-        return -1;
 
     int ext = is_ext_table(&sql_ast, dbname);
     if(ext == -1)

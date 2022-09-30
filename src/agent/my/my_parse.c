@@ -631,58 +631,46 @@ bool check_cmd_insert(struct string *str)
 		return false;
 }
 
-int get_mid_by_dbname(const char* dbname, const char* sql, struct msg* r)
+int get_mid_by_dbname(const char* sessiondb, const char* sql, struct msg* r)
 {
 	int mid = 0;
 	struct context* ctx = NULL;
 	struct conn *c_conn = NULL;
 	int sql_len = 0;
+	int ret = 0;
+	char cmp_string[300] = {0};
+	struct string req_string; 
 	c_conn = r->owner;
 	ctx = conn_to_ctx(c_conn);
-	if(dbname && strlen(dbname) > 0)
+
+	ret = get_table_with_db(sessiondb, sql, &cmp_string);
+	if(ret >= 0)
 	{
-		char* cmp_dbname[250] = {0};
-		sprintf(cmp_dbname, "%s.", dbname);
 		struct array *pool = &(ctx->pool);
 		int i;
+
+		string_copy(&req_string, cmp_string, strlen(cmp_string));
+		string_upper(&req_string);
+
 		for (i = 0; i < array_n(pool); i++) {
 			struct server_pool *p = (struct server_pool *)array_get(pool, i);
+			struct string xmlname; 
 			if(string_empty(&p->name))
 				continue;
-			log_info("server pool module name: %s, cmp dbname: %s", p->name.data, cmp_dbname);
-			if(da_strncmp(p->name.data, cmp_dbname, strlen(cmp_dbname)) == 0)
+
+			string_duplicate(&xmlname, &(p->name));
+			string_upper(&xmlname);
+
+			log_info("xml name: %s, cmp string: %s", xmlname.data, req_string.data);
+			if(da_strncmp(xmlname.data, req_string.data, req_string.len) == 0)
 			{
 				mid = p->mid;
 			}
-		}
-	}
 
-	if(sql)
-	{
-		sql_len = strlen(sql);
-		if(sql_len > 0)
-		{
-			struct array *pool = &(ctx->pool);
-			int i, j;
-			for (i = 0; i < array_n(pool); i++) {
-				struct string cmp_name; 
-				struct server_pool *p = (struct server_pool *)array_get(pool, i);
-				if(string_empty(&p->name))
-					continue;
-				
-				string_copy(&cmp_name, p->name.data, p->name.len);
-				string_upper(&cmp_name);
-				for(j = 0; j < sql_len; j++)
-				{
-					if(sql_len - j >= cmp_name.len && da_strncmp(sql + j, cmp_name.data, cmp_name.len) == 0)
-					{
-						mid = p->mid;
-					}
-				}
-				log_info("server pool module name: %s, cmp sql: %s", cmp_name.data, sql);
-			}
+			string_deinit(&xmlname);
 		}
-		
+
+		string_deinit(&req_string);
 	}
 
 	log_info("mid result: %d", mid);
