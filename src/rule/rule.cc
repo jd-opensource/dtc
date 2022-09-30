@@ -168,24 +168,21 @@ extern "C" int get_statement_value(char* str, int len, const char* strkey, int* 
 
 extern "C" int get_table_with_db(const char* sessiondb, const char* sql, char* result)
 {
-    log4cplus_debug("222222222222222");
 	if(result == NULL)
 		return -1;
-log4cplus_debug("222222222222222");
     hsql::SQLParserResult sql_ast;
     if(re_parse_sql(sql, &sql_ast) != 0)
         return -2;
-log4cplus_debug("222222222222222");
 	memset(result, 0, 300);
-log4cplus_debug("222222222222222");
+
     // Get db name
     std::string sqldb = get_schema(&sql_ast);
     if(sqldb.length() > 0)
-    {log4cplus_debug("222222222222222");
+    {
         strcat(result, sqldb.c_str());
     }
     else if(exist_session_db(sessiondb))
-    {log4cplus_debug("222222222222222");
+    {
         strcat(result, sessiondb);
     }
     else
@@ -193,21 +190,21 @@ log4cplus_debug("222222222222222");
         log4cplus_error("no database selected.");
         return -3;
     }
-log4cplus_debug("222222222222222");
+
     //Append symbol.
     strcat(result, ".");
-log4cplus_debug("222222222222222");
+
     // Get table name
     std::string sqltb = get_table_name(&sql_ast);
     if(sqltb.length() > 0)
-    {log4cplus_debug("222222222222222");
+    {
         strcat(result, sqltb.c_str());
     }
     else
-    {log4cplus_debug("222222222222222");
+    {
         return -4;
     }
-log4cplus_debug("222222222222222");
+
     return 0;
 }
 
