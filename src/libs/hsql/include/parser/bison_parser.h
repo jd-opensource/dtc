@@ -1,8 +1,9 @@
-/* A Bison parser, made by GNU Bison 3.0.4.  */
+/* A Bison parser, made by GNU Bison 3.5.1.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2020 Free Software Foundation,
+   Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -30,8 +31,11 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_HSQL_BISON_PARSER_TAB_H_INCLUDED
-# define YY_HSQL_BISON_PARSER_TAB_H_INCLUDED
+/* Undocumented macros, especially those whose name start with YY_,
+   are private implementation details.  Do not rely on them.  */
+
+#ifndef YY_HSQL_BISON_PARSER_H_INCLUDED
+# define YY_HSQL_BISON_PARSER_H_INCLUDED
 /* Debug traces.  */
 #ifndef HSQL_DEBUG
 # if defined YYDEBUG
@@ -41,14 +45,14 @@
 #   define HSQL_DEBUG 0
 #  endif
 # else /* ! defined YYDEBUG */
-#  define HSQL_DEBUG 1
+#  define HSQL_DEBUG 0
 # endif /* ! defined YYDEBUG */
 #endif  /* ! defined HSQL_DEBUG */
 #if HSQL_DEBUG
 extern int hsql_debug;
 #endif
 /* "%code requires" blocks.  */
-#line 38 "bison_parser.y" /* yacc.c:1909  */
+#line 38 "bison_parser.y"
 
   // clang-format on
   // %code requires block
@@ -72,7 +76,7 @@ extern int hsql_debug;
     }                                         \
   }
 
-#line 76 "bison_parser.tab.h" /* yacc.c:1909  */
+#line 80 "bison_parser.h"
 
 /* Token type.  */
 #ifndef HSQL_TOKENTYPE
@@ -250,183 +254,12 @@ extern int hsql_debug;
     SQL_UMINUS = 426
   };
 #endif
-/* Tokens.  */
-#define SQL_IDENTIFIER 258
-#define SQL_STRING 259
-#define SQL_FLOATVAL 260
-#define SQL_INTVAL 261
-#define SQL_DEALLOCATE 262
-#define SQL_PARAMETERS 263
-#define SQL_INTERSECT 264
-#define SQL_TEMPORARY 265
-#define SQL_TIMESTAMP 266
-#define SQL_DISTINCT 267
-#define SQL_NVARCHAR 268
-#define SQL_RESTRICT 269
-#define SQL_TRUNCATE 270
-#define SQL_ANALYZE 271
-#define SQL_BETWEEN 272
-#define SQL_CASCADE 273
-#define SQL_COLUMNS 274
-#define SQL_CONTROL 275
-#define SQL_DEFAULT 276
-#define SQL_EXECUTE 277
-#define SQL_EXPLAIN 278
-#define SQL_INTEGER 279
-#define SQL_NATURAL 280
-#define SQL_PREPARE 281
-#define SQL_PRIMARY 282
-#define SQL_SCHEMAS 283
-#define SQL_CHARACTER_VARYING 284
-#define SQL_REAL 285
-#define SQL_DECIMAL 286
-#define SQL_SMALLINT 287
-#define SQL_BIGINT 288
-#define SQL_SPATIAL 289
-#define SQL_VARCHAR 290
-#define SQL_VIRTUAL 291
-#define SQL_DESCRIBE 292
-#define SQL_BEFORE 293
-#define SQL_COLUMN 294
-#define SQL_CREATE 295
-#define SQL_DELETE 296
-#define SQL_DIRECT 297
-#define SQL_DOUBLE 298
-#define SQL_ESCAPE 299
-#define SQL_EXCEPT 300
-#define SQL_EXISTS 301
-#define SQL_EXTRACT 302
-#define SQL_CAST 303
-#define SQL_FORMAT 304
-#define SQL_GLOBAL 305
-#define SQL_HAVING 306
-#define SQL_IMPORT 307
-#define SQL_INSERT 308
-#define SQL_ISNULL 309
-#define SQL_OFFSET 310
-#define SQL_RENAME 311
-#define SQL_SCHEMA 312
-#define SQL_SELECT 313
-#define SQL_SORTED 314
-#define SQL_TABLES 315
-#define SQL_UNIQUE 316
-#define SQL_UNLOAD 317
-#define SQL_UPDATE 318
-#define SQL_VALUES 319
-#define SQL_AFTER 320
-#define SQL_ALTER 321
-#define SQL_CROSS 322
-#define SQL_DATABASES 323
-#define SQL_DATABASE 324
-#define SQL_DELTA 325
-#define SQL_FLOAT 326
-#define SQL_GROUP 327
-#define SQL_INDEX 328
-#define SQL_INNER 329
-#define SQL_LIMIT 330
-#define SQL_LOCAL 331
-#define SQL_MERGE 332
-#define SQL_MINUS 333
-#define SQL_ORDER 334
-#define SQL_OUTER 335
-#define SQL_RIGHT 336
-#define SQL_TABLE 337
-#define SQL_UNION 338
-#define SQL_USING 339
-#define SQL_WHERE 340
-#define SQL_CALL 341
-#define SQL_CASE 342
-#define SQL_CHAR 343
-#define SQL_COPY 344
-#define SQL_DATE 345
-#define SQL_DATETIME 346
-#define SQL_DESC 347
-#define SQL_DROP 348
-#define SQL_ELSE 349
-#define SQL_FILE 350
-#define SQL_FROM 351
-#define SQL_FULL 352
-#define SQL_HASH 353
-#define SQL_HINT 354
-#define SQL_INTO 355
-#define SQL_JOIN 356
-#define SQL_LEFT 357
-#define SQL_LIKE 358
-#define SQL_LOAD 359
-#define SQL_LONG 360
-#define SQL_NULL 361
-#define SQL_PLAN 362
-#define SQL_SHOW 363
-#define SQL_TEXT 364
-#define SQL_THEN 365
-#define SQL_TIME 366
-#define SQL_VIEW 367
-#define SQL_WHEN 368
-#define SQL_WITH 369
-#define SQL_ADD 370
-#define SQL_ALL 371
-#define SQL_AND 372
-#define SQL_ASC 373
-#define SQL_END 374
-#define SQL_FOR 375
-#define SQL_INT 376
-#define SQL_KEY 377
-#define SQL_NOT 378
-#define SQL_OFF 379
-#define SQL_SET 380
-#define SQL_TOP 381
-#define SQL_AS 382
-#define SQL_BY 383
-#define SQL_IF 384
-#define SQL_IN 385
-#define SQL_IS 386
-#define SQL_OF 387
-#define SQL_ON 388
-#define SQL_OR 389
-#define SQL_TO 390
-#define SQL_NO 391
-#define SQL_ARRAY 392
-#define SQL_CONCAT 393
-#define SQL_ILIKE 394
-#define SQL_SECOND 395
-#define SQL_MINUTE 396
-#define SQL_HOUR 397
-#define SQL_DAY 398
-#define SQL_MONTH 399
-#define SQL_YEAR 400
-#define SQL_SECONDS 401
-#define SQL_MINUTES 402
-#define SQL_HOURS 403
-#define SQL_DAYS 404
-#define SQL_MONTHS 405
-#define SQL_YEARS 406
-#define SQL_INTERVAL 407
-#define SQL_TRUE 408
-#define SQL_FALSE 409
-#define SQL_BOOLEAN 410
-#define SQL_TRANSACTION 411
-#define SQL_BEGIN 412
-#define SQL_COMMIT 413
-#define SQL_ROLLBACK 414
-#define SQL_NOWAIT 415
-#define SQL_SKIP 416
-#define SQL_LOCKED 417
-#define SQL_SHARE 418
-#define SQL_EQUALS 419
-#define SQL_NOTEQUALS 420
-#define SQL_LESS 421
-#define SQL_GREATER 422
-#define SQL_LESSEQ 423
-#define SQL_GREATEREQ 424
-#define SQL_NOTNULL 425
-#define SQL_UMINUS 426
 
 /* Value type.  */
 #if ! defined HSQL_STYPE && ! defined HSQL_STYPE_IS_DECLARED
-
 union HSQL_STYPE
 {
-#line 98 "bison_parser.y" /* yacc.c:1909  */
+#line 98 "bison_parser.y"
 
   // clang-format on
   bool bval;
@@ -490,9 +323,9 @@ union HSQL_STYPE
   hsql::RowLockMode lock_mode_t;
   hsql::RowLockWaitPolicy lock_wait_policy_t;
 
-#line 494 "bison_parser.tab.h" /* yacc.c:1909  */
-};
+#line 327 "bison_parser.h"
 
+};
 typedef union HSQL_STYPE HSQL_STYPE;
 # define HSQL_STYPE_IS_TRIVIAL 1
 # define HSQL_STYPE_IS_DECLARED 1
@@ -516,4 +349,4 @@ struct HSQL_LTYPE
 
 int hsql_parse (hsql::SQLParserResult* result, yyscan_t scanner);
 
-#endif /* !YY_HSQL_BISON_PARSER_TAB_H_INCLUDED  */
+#endif /* !YY_HSQL_BISON_PARSER_H_INCLUDED  */
