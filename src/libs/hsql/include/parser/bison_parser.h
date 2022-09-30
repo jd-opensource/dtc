@@ -283,6 +283,7 @@ union HSQL_STYPE
   hsql::SQLStatement* statement;
   hsql::TransactionStatement* transaction_stmt;
   hsql::UpdateStatement* update_stmt;
+  hsql::SetStatement* set_stmt;
 
   hsql::Alias* alias_t;
   hsql::AlterAction* alter_action_t;
@@ -323,7 +324,7 @@ union HSQL_STYPE
   hsql::RowLockMode lock_mode_t;
   hsql::RowLockWaitPolicy lock_wait_policy_t;
 
-#line 327 "bison_parser.h"
+#line 328 "bison_parser.h"
 
 };
 typedef union HSQL_STYPE HSQL_STYPE;
