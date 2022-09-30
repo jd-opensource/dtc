@@ -6,6 +6,7 @@ on:
 env:
   CC: gcc-4.9
   CXX: g++-4.9    
+  ver: dtc-v2.0.1
 
 jobs:
   build:
@@ -92,8 +93,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: dtc-v2.0.1
-          release_name: dtc-v2.0.1
+          tag_name: ${{ env.ver }}
+          release_name: ${{ env.ver }}
           draft: false
           prerelease: true
 
@@ -105,5 +106,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{github.workspace}}/build/dtc.tar.gz
-          asset_name: dtc-v2.0.1.tar.gz
+          asset_name: ${{ env.ver }}.tar.gz
           asset_content_type: application/gzip
