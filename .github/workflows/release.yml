@@ -6,7 +6,7 @@ on:
 env:
   CC: gcc-4.9
   CXX: g++-4.9    
-  ver: dtc-v2.0.1-rc2
+  ver: dtc-v2.0.1-rc3
 
 jobs:
   build:
@@ -29,7 +29,7 @@ jobs:
 
       - name: update hsql
         run: |
-          wget https://github.com/DTC8/sql-parser/releases/download/hsql.plus-cb91252/hsql.plus-cb91252.tar.gz -O hsql.tar.gz
+          sh ${{github.workspace}}/script/download.sh
           tar -zxvf hsql.tar.gz
           cd hsql
           cp -rf include/ ${{github.workspace}}/src/libs/hsql/

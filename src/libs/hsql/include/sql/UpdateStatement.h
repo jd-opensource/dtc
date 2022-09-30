@@ -2,6 +2,7 @@
 #define SQLPARSER_UPDATE_STATEMENT_H
 
 #include "SQLStatement.h"
+#include "SelectStatement.h"
 
 namespace hsql {
 
@@ -20,6 +21,7 @@ struct UpdateStatement : SQLStatement {
   TableRef* table;
   std::vector<UpdateClause*>* updates;
   Expr* where;
+  LimitDescription* limit;
 };
 
 }  // namespace hsql

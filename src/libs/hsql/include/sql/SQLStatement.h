@@ -21,7 +21,8 @@ enum StatementType {
   kStmtRename,
   kStmtAlter,
   kStmtShow,
-  kStmtTransaction
+  kStmtTransaction,
+  kStmtSet
 };
 
 // Base struct for every SQL statement

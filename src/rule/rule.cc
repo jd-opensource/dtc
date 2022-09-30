@@ -332,6 +332,17 @@ int is_ext_table(hsql::SQLParserResult* ast,const char* dbname)
     return -1;
 }
 
+bool is_set_with_ast(hsql::SQLParserResult* ast)
+{
+    int t = ast->getStatement(0)->type();
+    if(t == kStmtSet)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 bool is_show_create_table_with_ast(hsql::SQLParserResult* ast)
 {
     int t = ast->getStatement(0)->type();
@@ -433,6 +444,9 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
     {
         return 3;
     }
+
+    if(is_set_with_ast(&sql_ast))
+        return 2;
 
     if(is_show_table_with_ast(&sql_ast))
     {
