@@ -42,15 +42,18 @@ std::string get_key_info(std::string conf)
     return "";
 }
 
-extern "C" const char* rule_get_key(const char* conf)
+extern "C" int rule_get_key(const char* conf, char* out)
 {
     std::string strkey = get_key_info(conf);
     printf("conf file: %s\n", conf);
     printf("key len: %d, key: %s\n", strkey.length(), strkey.c_str());
     if(strkey.length() > 0)
-        return strkey.c_str();
-    else
-        return NULL;
+    {
+        strcpy(out, strkey.c_str());
+        return strkey.length();
+    }
+
+    return 0;
 }
 
 extern "C" int get_statement_value(char* str, int len, const char* strkey, int* start_offset, int* end_offset)
