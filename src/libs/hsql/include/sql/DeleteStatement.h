@@ -2,6 +2,7 @@
 #define SQLPARSER_DELETE_STATEMENT_H
 
 #include "SQLStatement.h"
+#include "SelectStatement.h"
 
 // Note: Implementations of constructors and destructors can be found in statements.cpp.
 namespace hsql {
@@ -16,6 +17,7 @@ struct DeleteStatement : SQLStatement {
   char* schema;
   char* tableName;
   Expr* expr;
+  LimitDescription* limit;
 };
 
 }  // namespace hsql

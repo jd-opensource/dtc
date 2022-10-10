@@ -30,7 +30,8 @@ enum ExprType {
   kExprArray,
   kExprArrayIndex,
   kExprExtract,
-  kExprCast
+  kExprCast,
+  kExprEqual
 };
 
 // Operator types. These are important for expressions of type kExprOperator.
@@ -99,6 +100,7 @@ struct Expr {
   Expr* expr2;
   std::vector<Expr*>* exprList;
   SelectStatement* select;
+  DataType data_type;
   char* name;
   char* table;
   char* alias;
