@@ -1164,16 +1164,6 @@ int ConnectorProcess::process_insert(DtcJob *Task)
         }
     }
 
-    for (int i = 1; i <= table_def->num_fields(); ++i) {
-        if (table_def->is_volatile(i))
-            continue;
-        if (fieldValues.find(table_def->field_name(i)) !=
-            fieldValues.end())
-            continue;
-        fieldValues[table_def->field_name(i)] = value_to_str(
-            table_def->default_value(i), table_def->field_type(i));
-    }
-
     for (std::map<std::string, std::string>::iterator iter =
              fieldValues.begin();
          iter != fieldValues.end(); ++iter) {
@@ -1402,7 +1392,6 @@ int ConnectorProcess::process_replace(DtcJob *Task)
     else if (sql.at(-1) == ',') {
         sql.trunc(-1);
     }
-    default_value_concate(Task->request_operation());
 
     if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
