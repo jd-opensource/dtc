@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include <stdint.h>
 // mysql include files
 #define list_add my_list_add
@@ -44,6 +45,7 @@ class CDBConn {
 	char achErr[400];
 	int db_err;
 	int use_matched;
+	std::string s_charac_set;
 
     public:
 	MYSQL_RES *Res;
@@ -91,6 +93,7 @@ class CDBConn {
 	{
 		return mysql_fetch_lengths(Res);
 	}
+	const std::string& GetCharacSet() const { return s_charac_set;};
 
 	~CDBConn();
 };

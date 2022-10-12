@@ -207,7 +207,7 @@ int DbConfig::load_key_hash(DTCConfig *raw)
         return -1;
     }
 
-    /* check passed， enable key-hash */
+    /* check passed, enable key-hash */
     keyHashConfig.keyHashEnable = 1;
 
     log4cplus_info("key-hash plugin %s->%s(%d, %d) %s",
@@ -1067,9 +1067,23 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
                     }
                     break;
                 }
+                f->flags |= DB_FIELD_FLAGS_HAS_DEFAULT;
             }
         }
         
+        if (dtc_config["primary"]["cache"]["field"][i]["nullable"]) {
+            YAML::Node nullable_node = dtc_config["primary"]["cache"]["field"][i]["nullable"];
+            int null_val = nullable_node.as<int>();
+            if (null_val) {
+                if (f->flags & DB_FIELD_FLAGS_UNIQ) {
+                    log4cplus_error(
+                        "field%d: can't be null",
+                        i + 1);
+                    return -1;
+                }
+                f->flags |= DB_FIELD_FLAGS_NULLABLE;
+            }
+        }
     }
 
     if (field[0].type == DField::Float) {

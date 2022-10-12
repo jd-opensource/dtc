@@ -33,6 +33,8 @@
 #define DB_FIELD_FLAGS_DESC_ORDER 4
 #define DB_FIELD_FLAGS_VOLATILE 8
 #define DB_FIELD_FLAGS_DISCARD 0x10
+#define DB_FIELD_FLAGS_HAS_DEFAULT 0x20
+#define DB_FIELD_FLAGS_NULLABLE 0x40
 
 /* 默认key-hash so文件名及路径 */
 #define DEFAULT_KEY_HASH_SO_NAME "../lib/key-hash.so"
@@ -86,7 +88,7 @@ struct FieldConfig {
 struct KeyHash {
 	int keyHashEnable;
 	int keyHashLeftBegin; /* buff 的左起始位置 */
-	int keyHashRightBegin; /* buff 的右起始位置 */
+	int keyHashRightBegin; /* buff  的右起始位置 */
 	key_hash_interface keyHashFunction;
 };
 

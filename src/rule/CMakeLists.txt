@@ -14,7 +14,8 @@ LINK_DIRECTORIES(
     .
     ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/libs
     ${PROJECT_SOURCE_DIR}/src/libs/yaml-cpp/libs
-    ${PROJECT_SOURCE_DIR}/src/libs/hsql/libs)
+    ${PROJECT_SOURCE_DIR}/src/libs/hsql/libs
+    ${PROJECT_SOURCE_DIR}/src/libs/mxml/libs)
 
 #添加链接库，相当于gcc -l
 LINK_LIBRARIES(liblog4cplus.a) 

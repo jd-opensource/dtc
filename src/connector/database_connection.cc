@@ -29,6 +29,7 @@
 #include "database_connection.h"
 // mysql include files
 #include "errmsg.h"
+#include "m_ctype.h"
 
 #define STRCPY(a, s)                                                           \
     do {                                                                   \
@@ -37,6 +38,7 @@
     } while (0)
 
 CDBConn::CDBConn()
+    : s_charac_set("")
 {
     Connected = 0;
     need_free = 0;
@@ -170,6 +172,9 @@ int CDBConn::Connect(const char *DBName)
                  mysql_error(&Mysql));
             return (-2);
         }
+
+        s_charac_set = (Mysql.charset != NULL && Mysql.charset->csname != NULL) 
+                        ? Mysql.charset->csname : "utf8";
 
         Connected = 1;
     }

@@ -30,6 +30,8 @@ struct FieldDefinition {
 	       FF_DISCARD = 4,
 	       FF_DESC = 0x10,
 	       FF_TIMESTAMP = 0x20,
+		   FF_HAS_DEFAULT = 0x40,
+		   FF_NULLABLE = 0x80
 	};
 
 	typedef uint8_t fieldflag_t;
@@ -240,6 +242,14 @@ class DTCTableDefinition {
 	{
 		return fieldList[0].fieldSize;
 	}
+	int has_default(int n) const 
+	{
+		return fieldList[n].flags & FieldDefinition::FF_HAS_DEFAULT;
+	}
+	int is_nullable(int n) const 
+	{
+		return fieldList[n].flags & FieldDefinition::FF_NULLABLE;
+	}
 	int is_read_only(int n) const
 	{
 		return fieldList[n].flags & FieldDefinition::FF_READONLY;
@@ -405,6 +415,12 @@ class DTCTableDefinition {
 	int expire_time_field_id(void) const
 	{
 		return hasExpireTime;
+	}
+	void mark_as_has_default(int n) {
+		fieldList[n].flags |= FieldDefinition::FF_HAS_DEFAULT;
+	}
+	void mark_as_nullable(int n) {
+		fieldList[n].flags |= FieldDefinition::FF_NULLABLE;
 	}
 	void mark_as_read_only(int n)
 	{

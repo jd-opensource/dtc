@@ -103,6 +103,7 @@ public:
 		    DTCTableDefinition *tdef, int slave);
 
 	int try_ping(void);
+	int create_tab_if_not_exist();
 
 	void init_ping_timeout(void);
 	int check_table();

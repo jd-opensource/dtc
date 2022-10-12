@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Copyright [2021] JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,9 @@
 #include <arpa/inet.h>
 #include <map>
 #include <string>
+#include <sstream>
+#include <string>
+#include <iostream>
 // local include files
 #include "mysql_operation.h"
 // common include files
@@ -78,18 +81,28 @@ int ConnectorProcess::config_db_by_struct(const DbConfig *cf)
     return (0);
 }
 
+static char HiddenMysqlFields[][32] = {
+    "id",
+    "invisible_time"
+};
+
 #define DIM(a) (sizeof(a) / sizeof(a[0]))
-static int get_field_type(const char *szType, int &i_type,
-              unsigned int &ui_size)
-{
-    unsigned int i;
-    int iTmp;
-    typedef struct {
-        char m_szName[256];
-        int m_iType;
-        int m_uiSize;
-    } CMysqlField;
-    static CMysqlField astField[] = { { "tinyint", 1, 1 },
+
+typedef struct {
+    char m_szName[256];
+    int m_iType;
+    int m_uiSize;
+
+    int CheckSizeInInteger(int size) {
+        if (DField::Signed == m_iType ||
+        DField::Unsigned == m_iType) {
+            return (m_uiSize == size) ? 0 : -1;
+        } 
+        return -2;
+    };
+} CMysqlField , CDtcField;
+
+static CMysqlField astField[] = { { "tinyint", 1, 1 },
                       { "smallint", 1, 2 },
                       { "mediumint", 1, 4 },
                       { "int", 1, 4 },
@@ -117,6 +130,74 @@ static int get_field_type(const char *szType, int &i_type,
                       { "enum", 4, 255 },
                       { "set", 2, 8 } };
 
+/**
+ * when m_iType is Signed or Unsigned , m_uiSize is useful
+ * but when m_iType is Float , String or Binary , m_uiSize is workless
+*/
+static CDtcField dtcFieldTab[] = { 
+            {"tinyint" , DField::Signed , 1},
+            {"smallint" , DField::Signed , 2},
+            {"mediumint" , DField::Signed , 3},
+            {"int" , DField::Signed , 4},
+            {"bigint" , DField::Signed , 8},
+            {"float" , DField::Float , 4},
+            {"varchar" , DField::String , 65535U},
+            {"varchar" , DField::Binary , 65535U}
+};
+
+static int get_field_type(
+    std::string& szType,
+    int i_type,
+    unsigned int ui_size)
+{
+    int i = 0;
+    for (; i < DIM(dtcFieldTab); i++) {
+        int i_tmp_type = (DField::Unsigned == i_type) ? DField::Signed : i_type;
+        
+        if (dtcFieldTab[i].m_iType == i_tmp_type) {
+            int i_ret = dtcFieldTab[i].CheckSizeInInteger(ui_size);
+            if (i_ret == 0 || i_ret == -2) {
+                szType =  dtcFieldTab[i].m_szName;
+                break;
+            }
+        }
+    }
+
+    if (i >= DIM(dtcFieldTab)) {
+        log4cplus_error("dtc-yaml config field info has no responding mysql type, dtc type:%d , type size:%d",
+             i_type , ui_size);
+        return -1;
+    }
+
+    switch (i_type)
+    {
+    case DField::Unsigned:
+        {
+            szType.append(" UNSIGNED ");
+        }
+        break;
+    case DField::String:
+    case DField::Binary:
+        {
+            std::stringstream s_temp;
+            s_temp << "(";
+            s_temp << ui_size;
+            s_temp << ")";
+            szType.append(s_temp.str());
+        }
+        break;
+    default:
+        break;
+    }
+    
+    return 0;
+}
+
+static int get_field_type(const char *szType, int &i_type,
+              unsigned int &ui_size)
+{
+    unsigned int i;
+    int iTmp;
     for (i = 0; i < DIM(astField); i++) {
         if (strncasecmp(szType, astField[i].m_szName,
                 strlen(astField[i].m_szName)) == 0) {
@@ -147,6 +228,91 @@ static int get_field_type(const char *szType, int &i_type,
     }
 
     return (0);
+}
+
+static 
+
+int ConnectorProcess::create_tab_if_not_exist()
+{
+    snprintf(table_name, sizeof(table_name), dbConfig->tblFormat, 0);
+    init_sql_buffer();
+    sql_append_const("create table if not exists `");
+    sql_append_string(table_name);
+    sql_append_const("`");
+
+    sql_append_const("(");
+
+    std::string s_unique_key("");
+    for (int i = 0; i <= table_def->num_fields(); i++) {
+        int field_id = table_def->field_id(table_def->field_name(i));
+        log4cplus_debug("field name:%s , id:%d , type:%d , size:%d , default:%d" , 
+                table_def->field_name(i) ,
+                field_id,
+                table_def->field_type(i),
+                table_def->field_size(i),
+                table_def->has_default(i));
+
+        bool is_primary_key = false;
+        uint8_t* uniq_fields = table_def->uniq_fields_list();
+        for (int j = 0; j < table_def->uniq_fields(); j++) {
+                if (uniq_fields[j] == field_id) { 
+                    s_unique_key.append("`");
+                    s_unique_key.append(table_def->field_name(i));
+                    s_unique_key.append("`,");
+                    is_primary_key = true;
+                    break;
+                }
+        }
+
+        sql_append_const("`");
+        sql_append_string(table_def->field_name(i));
+        sql_append_const("` ");
+
+        std::string stype = "";
+        if (get_field_type(stype , table_def->field_type(i)
+            ,table_def->field_size(i))) {
+            return -1;
+        }
+
+        sql_append_string(stype.c_str());
+
+        if (is_primary_key || !table_def->is_nullable(i)) {
+            sql_append_string(" NOT NULL ");
+        }
+
+        if (table_def->has_default(i)) {
+            sql_append_string("default ");
+            format_sql_value(table_def->default_value(i), table_def->field_type(i));
+        }
+        
+        sql_append_const(",");
+    }
+    sql_append_string("`id` INT(11) NOT NULL AUTO_INCREMENT,");
+    sql_append_string("`invisible_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,");
+
+    sql_append_string("UNIQUE INDEX (");
+    sql_append_string(s_unique_key.c_str() , s_unique_key.length() - 1);
+    sql_append_const("),");
+
+    sql_append_string("PRIMARY KEY (`id`)");
+    sql_append_string(")ENGINE=InnoDB DEFAULT CHARSET=");
+    sql_append_string(db_conn.GetCharacSet().c_str());
+
+    snprintf(DBName, sizeof(DBName), dbConfig->dbFormat,
+         dbConfig->mach[self_group_id].dbIdx[0]);
+
+    log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
+
+    int i_ret = db_conn.do_query(DBName, sql.c_str());
+    log4cplus_debug("create table ret:%d %d", i_ret, db_conn.get_raw_err_no());
+    if (i_ret != 0) {
+        log4cplus_warning("db query error: %s, pid: %d, group-id: %d",
+                  db_conn.get_err_msg(), getpid(),
+                  self_group_id);
+        return -1;
+    }
+
+    return 0;
 }
 
 int ConnectorProcess::check_table()
@@ -223,6 +389,16 @@ int ConnectorProcess::check_table()
             255);
         i_field_num++;
 
+        int j = 0;
+        for (; j < DIM(HiddenMysqlFields); j++) {
+            if (!strncmp(db_conn.Row[i_name_idx] , HiddenMysqlFields[j] , 31)) {
+                log4cplus_info("field:%s is no need check" , HiddenMysqlFields[j]);
+                break;
+            }
+        }
+
+        if (j < DIM(HiddenMysqlFields)) { continue; }
+        
         iFid = table_def->field_id(db_conn.Row[i_name_idx]);
         if (iFid == -1) {
             log4cplus_debug("field[%s] not found in table.yaml",
@@ -382,9 +558,10 @@ int ConnectorProcess::machine_init(int GroupID, int r)
         return (-6);
     }
 
-    log4cplus_debug("group-id: %d, pid: %d, db: %s, user: %s, pwd: %s",
+    log4cplus_debug("group-id: %d, pid: %d, db: %s, user: %s, pwd: %s , client charac_set:%s",
             self_group_id, getpid(), db_host_conf.Host,
-            db_host_conf.User, db_host_conf.Password);
+            db_host_conf.User, db_host_conf.Password,
+            db_conn.GetCharacSet().c_str());
 
     return (0);
 }
