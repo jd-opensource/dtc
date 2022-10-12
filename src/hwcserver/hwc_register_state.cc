@@ -24,7 +24,14 @@ void RegisterState::Enter()
         p_hwc_state_manager_->ChangeState(E_HWC_STATE_FAULT);
         return;
     }
-    // 校验冷数据库表结构与dtc配置表结构
+    // 根据dtc配置表结构 创建冷库表
+    if (CComm::mysql_process_.create_tab_if_not_exist()) {
+        log4cplus_error("create hwc table error.");
+        p_hwc_state_manager_->ChangeState(E_HWC_STATE_FAULT);
+        return;
+    }
+    
+    // double check 冷库表与dtc配置表结构
     if (CComm::mysql_process_.check_table() != 0) {
         log4cplus_error("mysql field setting is not same as dtc");
         p_hwc_state_manager_->ChangeState(E_HWC_STATE_FAULT);

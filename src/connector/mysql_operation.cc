@@ -25,6 +25,9 @@
 #include <arpa/inet.h>
 #include <map>
 #include <string>
+#include <sstream>
+#include <string>
+#include <iostream>
 // local include files
 #include "mysql_operation.h"
 // common include files
@@ -78,18 +81,28 @@ int ConnectorProcess::config_db_by_struct(const DbConfig *cf)
     return (0);
 }
 
+static char HiddenMysqlFields[][32] = {
+    "id",
+    "invisible_time"
+};
+
 #define DIM(a) (sizeof(a) / sizeof(a[0]))
-static int get_field_type(const char *szType, int &i_type,
-              unsigned int &ui_size)
-{
-    unsigned int i;
-    int iTmp;
-    typedef struct {
-        char m_szName[256];
-        int m_iType;
-        int m_uiSize;
-    } CMysqlField;
-    static CMysqlField astField[] = { { "tinyint", 1, 1 },
+
+typedef struct {
+    char m_szName[256];
+    int m_iType;
+    int m_uiSize;
+
+    int CheckSizeInInteger(int size) {
+        if (DField::Signed == m_iType ||
+        DField::Unsigned == m_iType) {
+            return (m_uiSize == size) ? 0 : -1;
+        } 
+        return -2;
+    };
+} CMysqlField , CDtcField;
+
+static CMysqlField astField[] = { { "tinyint", 1, 1 },
                       { "smallint", 1, 2 },
                       { "mediumint", 1, 4 },
                       { "int", 1, 4 },
@@ -117,6 +130,74 @@ static int get_field_type(const char *szType, int &i_type,
                       { "enum", 4, 255 },
                       { "set", 2, 8 } };
 
+/**
+ * when m_iType is Signed or Unsigned , m_uiSize is useful
+ * but when m_iType is Float , String or Binary , m_uiSize is workless
+*/
+static CDtcField dtcFieldTab[] = { 
+            {"tinyint" , DField::Signed , 1},
+            {"smallint" , DField::Signed , 2},
+            {"mediumint" , DField::Signed , 3},
+            {"int" , DField::Signed , 4},
+            {"bigint" , DField::Signed , 8},
+            {"float" , DField::Float , 4},
+            {"varchar" , DField::String , 65535U},
+            {"varchar" , DField::Binary , 65535U}
+};
+
+static int get_field_type(
+    std::string& szType,
+    int i_type,
+    unsigned int ui_size)
+{
+    int i = 0;
+    for (; i < DIM(dtcFieldTab); i++) {
+        int i_tmp_type = (DField::Unsigned == i_type) ? DField::Signed : i_type;
+        
+        if (dtcFieldTab[i].m_iType == i_tmp_type) {
+            int i_ret = dtcFieldTab[i].CheckSizeInInteger(ui_size);
+            if (i_ret == 0 || i_ret == -2) {
+                szType =  dtcFieldTab[i].m_szName;
+                break;
+            }
+        }
+    }
+
+    if (i >= DIM(dtcFieldTab)) {
+        log4cplus_error("dtc-yaml config field info has no responding mysql type, dtc type:%d , type size:%d",
+             i_type , ui_size);
+        return -1;
+    }
+
+    switch (i_type)
+    {
+    case DField::Unsigned:
+        {
+            szType.append(" UNSIGNED ");
+        }
+        break;
+    case DField::String:
+    case DField::Binary:
+        {
+            std::stringstream s_temp;
+            s_temp << "(";
+            s_temp << ui_size;
+            s_temp << ")";
+            szType.append(s_temp.str());
+        }
+        break;
+    default:
+        break;
+    }
+    
+    return 0;
+}
+
+static int get_field_type(const char *szType, int &i_type,
+              unsigned int &ui_size)
+{
+    unsigned int i;
+    int iTmp;
     for (i = 0; i < DIM(astField); i++) {
         if (strncasecmp(szType, astField[i].m_szName,
                 strlen(astField[i].m_szName)) == 0) {
@@ -147,6 +228,91 @@ static int get_field_type(const char *szType, int &i_type,
     }
 
     return (0);
+}
+
+static 
+
+int ConnectorProcess::create_tab_if_not_exist()
+{
+    snprintf(table_name, sizeof(table_name), dbConfig->tblFormat, 0);
+    init_sql_buffer();
+    sql_append_const("create table if not exists `");
+    sql_append_string(table_name);
+    sql_append_const("`");
+
+    sql_append_const("(");
+
+    std::string s_unique_key("");
+    for (int i = 0; i <= table_def->num_fields(); i++) {
+        int field_id = table_def->field_id(table_def->field_name(i));
+        log4cplus_debug("field name:%s , id:%d , type:%d , size:%d , default:%d" , 
+                table_def->field_name(i) ,
+                field_id,
+                table_def->field_type(i),
+                table_def->field_size(i),
+                table_def->has_default(i));
+
+        // 判断 该字段的属�? �?否为dtc的unique属�?
+        bool is_primary_key = false;
+        uint8_t* uniq_fields = table_def->uniq_fields_list();
+        for (int j = 0; j < table_def->uniq_fields(); j++) {
+                if (uniq_fields[j] == field_id) { 
+                    s_unique_key.append("`");
+                    s_unique_key.append(table_def->field_name(i));
+                    s_unique_key.append("`,");
+                    is_primary_key = true;
+                    break;
+                }
+        }
+
+        sql_append_const("`");
+        sql_append_string(table_def->field_name(i));
+        sql_append_const("` ");
+
+        std::string stype = "";
+        if (get_field_type(stype , table_def->field_type(i)
+            ,table_def->field_size(i))) {
+            return -1;
+        }
+
+        sql_append_string(stype.c_str());
+
+        if (is_primary_key || !table_def->is_nullable(i)) {
+            sql_append_string(" NOT NULL ");
+        }
+
+        if (table_def->has_default(i)) {
+            sql_append_string("default ");
+            format_sql_value(table_def->default_value(i), table_def->field_type(i));
+        }
+        
+        sql_append_const(",");
+    }
+    sql_append_string("`id` INT(11) NOT NULL AUTO_INCREMENT,");
+    sql_append_string("`invisible_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,");
+
+    sql_append_string("UNIQUE INDEX (");
+    sql_append_string(s_unique_key.c_str() , s_unique_key.length() - 1);
+    sql_append_const("),");
+
+    sql_append_string("PRIMARY KEY (`id`)");
+    sql_append_string(")ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+    snprintf(DBName, sizeof(DBName), dbConfig->dbFormat,
+         dbConfig->mach[self_group_id].dbIdx[0]);
+
+    log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
+
+    int i_ret = db_conn.do_query(DBName, sql.c_str());
+    log4cplus_debug("create table ret:%d %d", i_ret, db_conn.get_raw_err_no());
+    if (i_ret != 0) {
+        log4cplus_warning("db query error: %s, pid: %d, group-id: %d",
+                  db_conn.get_err_msg(), getpid(),
+                  self_group_id);
+        return -1;
+    }
+
+    return 0;
 }
 
 int ConnectorProcess::check_table()
@@ -183,7 +349,7 @@ int ConnectorProcess::check_table()
         return (-2);
     }
 
-    // 获取返回结果的各列位置
+    // 获取返回结果的各列位�?
     int i_name_idx = 0, i_type_idx = 0;
     int i_null_idx = 0, i_key_idx = 0;
     int i_default_idx = 0, i_extra_idx = 0;
@@ -223,6 +389,16 @@ int ConnectorProcess::check_table()
             255);
         i_field_num++;
 
+        int j = 0;
+        for (; j < DIM(HiddenMysqlFields); j++) {
+            if (!strncmp(db_conn.Row[i_name_idx] , HiddenMysqlFields[j] , 31)) {
+                log4cplus_info("field:%s is no need check" , HiddenMysqlFields[j]);
+                break;
+            }
+        }
+
+        if (j < DIM(HiddenMysqlFields)) { continue; }
+        
         iFid = table_def->field_id(db_conn.Row[i_name_idx]);
         if (iFid == -1) {
             log4cplus_debug("field[%s] not found in table.yaml",
@@ -312,7 +488,7 @@ int ConnectorProcess::check_table()
     }
 
     for (int i = 0; i <= table_def->num_fields(); i++) {
-        //bug fix volatile不在db中
+        //bug fix volatile不在db�?
         if (table_def->is_volatile(i))
             continue;
 
@@ -344,7 +520,7 @@ int ConnectorProcess::machine_init(int GroupID, int r)
 {
     const char *p;
 
-    // 初始化db配置信息
+    // 初�?�化db配置信息
     if (dbConfig->machineCnt <= GroupID) {
         log4cplus_error(
             "parse config error, machineCnt[%d] <= GroupID[%d]",
@@ -426,7 +602,7 @@ void ConnectorProcess::sql_append_string(const char *str, int len)
     }
 }
 
-/* 将字符串printf在原来字符串的后面，如果buffer不够大会自动重新分配buffer */
+/* 将字符串printf在原来字符串的后�?，�?�果buffer不�?�大会自动重新分配buffer */
 void ConnectorProcess::sql_printf(const char *Format, ...)
 {
     va_list Arg;
@@ -616,7 +792,7 @@ std::string ConnectorProcess::value_to_str(const DTCValue *v, int fieldType)
             return "NULL";
         }
         db_conn.escape_string(esc.c_str(), v->str.ptr,
-                      v->str.len); // 先对字符串进行escape
+                      v->str.len); // 先�?�字符串进�?�escape
         ret = '\'';
         ret += esc.c_str();
         ret += "\'";
@@ -665,7 +841,7 @@ inline int ConnectorProcess::format_sql_value(const DTCValue *Value,
                 }
                 db_conn.escape_string(
                     esc.c_str(), Value->str.ptr,
-                    Value->str.len); // 先对字符串进行escape
+                    Value->str.len); // 先�?�字符串进�?�escape
                 if (sql.append(esc.c_str()) < 0)
                     error_no = -1;
             }
@@ -767,7 +943,7 @@ inline int ConnectorProcess::str_to_value(char *Str, int fieldid,
     case DField::String:
         Value.str.len = _lengths[fieldid];
         Value.str.ptr =
-            Str; // 不重新new，要等这个value使用完后释放内存(如果Str是动态分配的)
+            Str; // 不重新new，�?�等这个value使用完后释放内存(如果Str�?动态分配的)
         break;
 
     case DField::Binary:
@@ -792,8 +968,8 @@ int ConnectorProcess::save_row(RowValue *Row, DtcJob *Task)
         return (-1);
 
     for (i = 1; i <= table_def->num_fields(); i++) {
-        //db_conn.Row[0]是key的值，table_def->Field[0]也是key，
-        //因此从1开始。结果Row也是从1开始的(不包括key)
+        //db_conn.Row[0]是key的值，table_def->Field[0]也是key�?
+        //因�?�从1开始。结果Row也是�?1开始的(不包括key)
         Ret = str_to_value(db_conn.Row[i], i, table_def->field_type(i),
                    (*Row)[i]);
 
@@ -819,11 +995,11 @@ int ConnectorProcess::process_statement_query(
     const DTCValue* key,
     std::string& s_sql)
 {
-    // hash 计算key落在哪库哪表
+    // hash 计算key落在�?库哪�?
     init_table_name(key, table_def->field_type(0));
     log4cplus_debug("db: %s, sql: %s", DBName, s_sql.c_str());
 
-    // 分表时，需更更换表名
+    // 分表时，需更更换表�?
     if (dbConfig->depoly&2) {
         const char* p_table_name = table_def->table_name();
         if (NULL == p_table_name) {
@@ -837,7 +1013,7 @@ int ConnectorProcess::process_statement_query(
         }
     }
     
-    // 重新选库，并查询
+    // 重新选库，并查�??
     int i_ret = db_conn.do_query(DBName, s_sql.c_str());
     if (i_ret != 0) {
         int i_err = db_conn.get_err_no();
@@ -886,7 +1062,7 @@ int ConnectorProcess::process_select(DtcJob *Task)
         sql_append_const("SELECT SQL_CALC_FOUND_ROWS ");
     else
         sql_append_const("SELECT ");
-    select_field_concate(Task->request_fields()); // 总是SELECT所有字段
+    select_field_concate(Task->request_fields()); // 总是SELECT所有字�?
     sql_append_const(" FROM ");
     sql_append_table();
     log4cplus_info("line:%d" ,__LINE__);
@@ -915,7 +1091,7 @@ int ConnectorProcess::process_select(DtcJob *Task)
     }
     log4cplus_info("line:%d" ,__LINE__);
     if (error_no !=
-        0) { // 主要检查PrintfAppend是否发生过错误，这里统一检查一次
+        0) { // 主�?��?��?PrintfAppend�?否发生过错�??，这里统一检查一�?
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
         log4cplus_error("error occur: %d", error_no);
         return (-1);
@@ -990,7 +1166,7 @@ int ConnectorProcess::process_select(DtcJob *Task)
             return (-6);
         }
 
-        // 将结果转换，并保存到task的result里
+        // 将结果转�?，并保存到task的result�?
         if (Task->count_only()) {
             nRows = atoi(db_conn.Row[0]);
             //bug fixed return count *
@@ -1013,8 +1189,8 @@ int ConnectorProcess::process_select(DtcJob *Task)
     delete Row;
     db_conn.free_result();
 
-    //bug fixed确认客户端带Limit限制
-    if (haslimit) { // 获取总行数
+    //bug fixed�?认�?�户�?�?Limit限制
+    if (haslimit) { // 获取总�?�数
         init_sql_buffer();
         sql_append_const("SELECT FOUND_ROWS() ");
 
@@ -1188,7 +1364,7 @@ int ConnectorProcess::process_insert(DtcJob *Task)
     if (sql.at(-1) == ',')
         sql.trunc(-1);
 
-    if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
+    if (error_no != 0) { // 主�?��?��?PrintfAppend�?否发生过错�??
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
         log4cplus_error("error occur: %d", error_no);
         return (-1);
@@ -1263,7 +1439,7 @@ int ConnectorProcess::process_update(DtcJob *Task)
         return (-7);
     }
 
-    if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
+    if (error_no != 0) { // 主�?��?��?PrintfAppend�?否发生过错�??
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
         log4cplus_error("error occur: %d", error_no);
         return (-1);
@@ -1316,7 +1492,7 @@ int ConnectorProcess::process_delete(DtcJob *Task)
     }
 
     if (error_no !=
-        0) { // 主要检查PrintfAppend是否发生过错误，这里统一检查一次
+        0) { // 主�?��?��?PrintfAppend�?否发生过错�??，这里统一检查一�?
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
         log4cplus_error("error occur: %d", error_no);
         return (-1);
@@ -1396,7 +1572,7 @@ int ConnectorProcess::process_replace(DtcJob *Task)
     format_sql_value(Task->request_key(), table_def->field_type(0));
     sql_append_const(",");
 
-    /* 补全缺失的默认值 */
+    /* 补全缺失的默认�? */
     if (Task->request_operation())
         update_field_concate(Task->request_operation());
     else if (sql.at(-1) == ',') {
@@ -1404,12 +1580,12 @@ int ConnectorProcess::process_replace(DtcJob *Task)
     }
     default_value_concate(Task->request_operation());
 
-    if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
+    if (error_no != 0) { // 主�?��?��?PrintfAppend�?否发生过错�??
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
         log4cplus_error("error occur: %d", error_no);
         return (-1);
     }
-    if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
+    if (error_no != 0) { // 主�?��?��?PrintfAppend�?否发生过错�??
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
         log4cplus_error("error occur: %d", error_no);
         return (-1);

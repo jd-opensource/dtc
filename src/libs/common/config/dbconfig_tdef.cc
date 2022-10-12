@@ -32,6 +32,10 @@ DTCTableDefinition *DbConfig::build_table_definition(void)
 			return NULL;
 		}
 		tdef->set_default_value(i, &field[i].dval);
+		if (field[i].flags & DB_FIELD_FLAGS_HAS_DEFAULT) {
+			tdef->mark_as_has_default(i);}
+		if (field[i].flags & DB_FIELD_FLAGS_NULLABLE) {
+			tdef->mark_as_nullable(i);}
 		if ((field[i].flags & DB_FIELD_FLAGS_READONLY))
 			tdef->mark_as_read_only(i);
 		if ((field[i].flags & DB_FIELD_FLAGS_VOLATILE))

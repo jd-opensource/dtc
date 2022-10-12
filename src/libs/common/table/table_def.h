@@ -30,6 +30,8 @@ struct FieldDefinition {
 	       FF_DISCARD = 4,
 	       FF_DESC = 0x10,
 	       FF_TIMESTAMP = 0x20,
+		   FF_HAS_DEFAULT = 0x40,
+		   FF_NULLABLE = 0x80
 	};
 
 	typedef uint8_t fieldflag_t;
@@ -42,7 +44,7 @@ struct FieldDefinition {
 	uint8_t offset;
 	fieldflag_t flags;
 
-	int boffset; //field的bits起始偏移
+	int boffset; //field的bits起�?�偏�?
 	int bsize; //bits
 	uint16_t next;
 };
@@ -89,8 +91,8 @@ class TableAttribute : public SimpleSection {
 		set_tag(3, n);
 	}
 
-	//压缩字段用来表示设置compressflag的字段id，传给client端使用。
-	//该标识占用tag1的高八位，共计一个字节
+	//压缩字�?�用来表示�?�置compressflag的字段id，传给client�?使用�?
+	//该标识占用tag1的高�?位，共�?�一�?字节
 	int compress_field_id(void) const
 	{
 		return get_tag(1) ? (((get_tag(1)->u64) >> 56) & 0xFF) : -1;
@@ -239,6 +241,14 @@ class DTCTableDefinition {
 	int key_size(void) const
 	{
 		return fieldList[0].fieldSize;
+	}
+	int has_default(int n) const 
+	{
+		return fieldList[n].flags & FieldDefinition::FF_HAS_DEFAULT;
+	}
+	int is_nullable(int n) const 
+	{
+		return fieldList[n].flags & FieldDefinition::FF_NULLABLE;
 	}
 	int is_read_only(int n) const
 	{
@@ -405,6 +415,12 @@ class DTCTableDefinition {
 	int expire_time_field_id(void) const
 	{
 		return hasExpireTime;
+	}
+	void mark_as_has_default(int n) {
+		fieldList[n].flags |= FieldDefinition::FF_HAS_DEFAULT;
+	}
+	void mark_as_nullable(int n) {
+		fieldList[n].flags |= FieldDefinition::FF_NULLABLE;
 	}
 	void mark_as_read_only(int n)
 	{

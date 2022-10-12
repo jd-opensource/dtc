@@ -29,9 +29,9 @@ primary:
   cache:
     field:
       - {name: &key uid, type: signed/unsigned/float/string/binary, size: 4}
-      - {name: name, type: binary, size: 50}
-      - {name: city, type: string, size: 50}
-      - {name: sex, type: signed, size: 4}
+      - {name: name, type: binary, size: 50, nullable: 1}
+      - {name: city, type: string, size: 50, default: ""}
+      - {name: sex, type: signed, size: 4, default: 0}
       - {name: age, type: signed, size: 4}
   hot:
     logic:
