@@ -295,7 +295,8 @@ int ConnectorProcess::create_tab_if_not_exist()
     sql_append_const("),");
 
     sql_append_string("PRIMARY KEY (`id`)");
-    sql_append_string(")ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    sql_append_string(")ENGINE=InnoDB DEFAULT CHARSET=");
+    sql_append_string(db_conn.GetCharacSet().c_str());
 
     snprintf(DBName, sizeof(DBName), dbConfig->dbFormat,
          dbConfig->mach[self_group_id].dbIdx[0]);
@@ -557,9 +558,10 @@ int ConnectorProcess::machine_init(int GroupID, int r)
         return (-6);
     }
 
-    log4cplus_debug("group-id: %d, pid: %d, db: %s, user: %s, pwd: %s",
+    log4cplus_debug("group-id: %d, pid: %d, db: %s, user: %s, pwd: %s , client charac_set:%s",
             self_group_id, getpid(), db_host_conf.Host,
-            db_host_conf.User, db_host_conf.Password);
+            db_host_conf.User, db_host_conf.Password,
+            db_conn.GetCharacSet().c_str());
 
     return (0);
 }
@@ -601,7 +603,7 @@ void ConnectorProcess::sql_append_string(const char *str, int len)
     }
 }
 
-/* 将字符串printf在原来字符串的后�?，�?�果buffer不�?�大会自动重新分配buffer */
+/* 将字符串printf在原来字符串的后面，如果buffer不够大会自动重新分配buffer */
 void ConnectorProcess::sql_printf(const char *Format, ...)
 {
     va_list Arg;
@@ -1571,7 +1573,7 @@ int ConnectorProcess::process_replace(DtcJob *Task)
     format_sql_value(Task->request_key(), table_def->field_type(0));
     sql_append_const(",");
 
-    /* 补全缺失的默认�? */
+    /* 补全缺失的默认值 */
     if (Task->request_operation())
         update_field_concate(Task->request_operation());
     else if (sql.at(-1) == ',') {
