@@ -63,7 +63,7 @@ static int ParseDbLine(const char *buf, uint16_t *dbIdx)
     return n;
 }
 
-/* 前置空格已经过滤�? */
+/* 前置空格已经过滤了 */
 static char *skip_blank(char *p)
 {
     char *iter = p;
@@ -162,7 +162,7 @@ int DbConfig::load_key_hash(DTCConfig *raw)
     const char *iter = strchr(var.c_str(), '(');
     if (NULL == iter) {
         /* 
-         * 按照整个buffer来�?�理
+         * 按照整个buffer来处理
          */
         keyHashConfig.keyHashLeftBegin = 1;
         keyHashConfig.keyHashRightBegin = -1;
@@ -185,7 +185,7 @@ int DbConfig::load_key_hash(DTCConfig *raw)
             keyHashConfig.keyHashRightBegin = -1;
     }
 
-    /* 过滤fun�?的空�?*/
+    /* 过滤fun中的空格*/
     fun = skip_blank(fun);
 
     void *dll = dlopen(so.c_str(), RTLD_NOW | RTLD_GLOBAL);
@@ -207,7 +207,7 @@ int DbConfig::load_key_hash(DTCConfig *raw)
         return -1;
     }
 
-    /* check passed�? enable key-hash */
+    /* check passed, enable key-hash */
     keyHashConfig.keyHashEnable = 1;
 
     log4cplus_info("key-hash plugin %s->%s(%d, %d) %s",

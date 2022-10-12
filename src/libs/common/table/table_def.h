@@ -44,7 +44,7 @@ struct FieldDefinition {
 	uint8_t offset;
 	fieldflag_t flags;
 
-	int boffset; //field的bits起�?�偏�?
+	int boffset; //field的bits起始偏移
 	int bsize; //bits
 	uint16_t next;
 };
@@ -91,8 +91,8 @@ class TableAttribute : public SimpleSection {
 		set_tag(3, n);
 	}
 
-	//压缩字�?�用来表示�?�置compressflag的字段id，传给client�?使用�?
-	//该标识占用tag1的高�?位，共�?�一�?字节
+	//压缩字段用来表示设置compressflag的字段id，传给client端使用。
+	//该标识占用tag1的高八位，共计一个字节
 	int compress_field_id(void) const
 	{
 		return get_tag(1) ? (((get_tag(1)->u64) >> 56) & 0xFF) : -1;
