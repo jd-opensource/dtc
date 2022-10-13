@@ -73,7 +73,6 @@ jobs:
 
           wget "https://storage.jd.com/bq-install/shardingsphere/sharding-f15078.tgz" -O dtc/sharding.tar.gz
           tar -zxvf dtc/sharding.tar.gz -C dtc
-          mv dtc/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin dtc/sharding
           rm dtc/sharding.tar.gz
           cp ../dockerfiles/devel/mysql-connector-java-5.1.49.jar dtc/sharding/lib/mysql-connector-java-5.1.49.jar
 
