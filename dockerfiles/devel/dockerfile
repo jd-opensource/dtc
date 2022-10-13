@@ -29,9 +29,9 @@ COPY libdtcapi.so /usr/local/lib/libdtcapi.so
 RUN apt update
 RUN apt install -y iputils-ping net-tools wget default-jre
 
-RUN wget "https://storage.jd.com/bq-install/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin.tar.gz" -O $basepath/sharding.tar.gz
+RUN wget "https://storage.jd.com/bq-install/shardingsphere/sharding-f15078.tgz" -O $basepath/sharding.tar.gz
 RUN tar -zxvf $basepath/sharding.tar.gz -C $basepath
-RUN mv $basepath/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin $basepath/sharding
+#RUN mv $basepath/apache-shardingsphere-5.1.2-shardingsphere-proxy-bin $basepath/sharding
 COPY mysql-connector-java-5.1.49.jar $basepath/sharding/lib/mysql-connector-java-5.1.49.jar
 
 COPY run.sh $basepath/run.sh
