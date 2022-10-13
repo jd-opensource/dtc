@@ -485,20 +485,79 @@ int DtcJob::build_field_type_r(int sql_type, char *field_name)
 	const DTCTableDefinition *tdef = this->table_definition();
 	int t_type = tdef->field_type(tdef->field_id(field_name));
 
-	switch (sql_type) {
-	case hsql::ExprType::kExprLiteralInt:
-		return t_type == DField::Signed || t_type == DField::Unsigned ?
-			       t_type :
-			       -1;
-	case hsql::ExprType::kExprLiteralFloat:
-		return t_type == DField::Float ? t_type : -1;
-	case hsql::ExprType::kExprLiteralString:
-		return t_type == DField::String || t_type == DField::Binary ?
-			       t_type :
-			       -1;
-	}
+	return t_type;
+}
 
-	return -1;
+bool hsql_convert_value_int(hsql::Expr* input, int* out)
+{
+    if(input->isType(kExprLiteralInt))
+    {
+        *out = input->ival;
+        return true;
+    }
+    else if(input->isType(kExprLiteralString))
+    {
+        char *endptr = NULL;
+        long result = strtol(input->name, &endptr, 10);
+        if(endptr == input->name)
+            return false;
+        if(strlen(endptr) > 0)
+            return false;
+        *out = result;
+        return true;    
+    }
+    else if(input->isType(kExprLiteralFloat))
+    {
+        *out = static_cast<int>(input->fval);
+        return true;
+    }
+
+    return false;
+}
+
+std::string hsql_convert_value_string(hsql::Expr* input)
+{
+    if(input->isType(kExprLiteralInt))
+    {
+        return to_string(input->ival);
+    }
+    else if(input->isType(kExprLiteralString))
+    {
+        return input->name;
+    }
+    else if(input->isType(kExprLiteralFloat))
+    {
+        return to_string(input->fval);
+    }
+
+    return "";
+}
+
+bool hsql_convert_value_float(hsql::Expr* input, double* out)
+{
+    if(input->isType(kExprLiteralFloat))
+    {
+        *out = input->fval;
+        return true;
+    }
+    else if(input->isType(kExprLiteralString))
+    {
+        char *endptr = NULL;
+        double result = strtod(input->name, &endptr);
+        if(endptr == input->name)
+            return false;
+        if(strlen(endptr) > 0)
+            return false;
+        *out = result;
+        return true;    
+    }
+    else if(input->isType(kExprLiteralInt))
+    {
+        *out = static_cast<double>(input->ival);
+        return true;
+    }
+
+    return false;
 }
 
 int build_condition_fields(Expr *expr, Expr *parent,
@@ -731,24 +790,25 @@ int DtcJob::decode_request_v2(MyRequest *mr)
 
 				if (DField::Signed == rtype ||
 				    DField::Unsigned == rtype) {
+					int v = 0;
+					if(!hsql_convert_value_int(stmt->updates->at(i)->value, &v))
+						return -12;
 					ui.add_value(stmt->updates->at(i)->column,
 						     DField::Set, rtype,
-						     DTCValue::Make(
-							     stmt->updates->at(i)
-							       ->value->ival));
+						     DTCValue::Make(v));
 				} else if (DField::Float == rtype) {
+					double v = 0;
+					if(!hsql_convert_value_float(stmt->updates->at(i)->value, &v))
+						return -12;
 					ui.add_value(stmt->updates->at(i)->column,
 						     DField::Set, rtype,
-						     DTCValue::Make(
-							     stmt->updates->at(i)
-							       ->value->fval));
+						     DTCValue::Make(v));
 				} else if (DField::String == rtype ||
 					   DField::Binary == rtype) {
+					std::string v = hsql_convert_value_string(stmt->updates->at(i)->value);
 					ui.add_value(stmt->updates->at(i)->column,
 						     DField::Set, rtype,
-						     DTCValue::Make(
-							    stmt->updates->at(i)
-							       ->value->name));
+						     DTCValue::Make(v.c_str()));
 				}
 			}
 
@@ -776,28 +836,29 @@ int DtcJob::decode_request_v2(MyRequest *mr)
 
 					if (DField::Signed == rtype ||
 						DField::Unsigned == rtype) {
+						int v = 0;
+						if(!hsql_convert_value_int(stmt->values->at(i), &v))
+							return -12;
 						ui.add_value(field_name,
 								DField::Set, rtype,
-								DTCValue::Make(
-									stmt->values->at(i)
-										->ival));
+								DTCValue::Make(v));
 					} else if (DField::Float == rtype) {
+						double v = 0;
+						if(!hsql_convert_value_float(stmt->values->at(i), &v))
+							return -12;
 						ui.add_value(field_name,
 								DField::Set, rtype,
-								DTCValue::Make(
-									stmt->values->at(i)
-										->fval));
+								DTCValue::Make(v));
 					} else if (DField::String == rtype ||
 						DField::Binary == rtype) {
 						log4cplus_debug(
 							"DTCValue key: %s, value: %s",
 							field_name,
 							stmt->values->at(i)->name);
+						std::string v = hsql_convert_value_string(stmt->values->at(i));
 						ui.add_value(field_name,
 								DField::Set, rtype,
-								DTCValue::Make(
-									stmt->values->at(i)
-										->name));
+								DTCValue::Make(v.c_str()));
 					}
 				}
 			}
@@ -817,28 +878,29 @@ int DtcJob::decode_request_v2(MyRequest *mr)
 
 						if (DField::Signed == rtype ||
 							DField::Unsigned == rtype) {
+							int v = 0;
+							if(!hsql_convert_value_int(stmt->values->at(i), &v))
+								return -12;
 							ui.add_value(stmt->columns->at(i),
 									DField::Set, rtype,
-									DTCValue::Make(
-										stmt->values->at(i)
-											->ival));
+									DTCValue::Make(v));
 						} else if (DField::Float == rtype) {
+							double v = 0;
+							if(!hsql_convert_value_float(stmt->values->at(i), &v))
+								return -12;							
 							ui.add_value(stmt->columns->at(i),
 									DField::Set, rtype,
-									DTCValue::Make(
-										stmt->values->at(i)
-											->fval));
+									DTCValue::Make(v));
 						} else if (DField::String == rtype ||
 							DField::Binary == rtype) {
 							log4cplus_debug(
 								"DTCValue key: %s, value: %s",
 								stmt->columns->at(i),
 								stmt->values->at(i)->name);
+							std::string v = hsql_convert_value_string(stmt->values->at(i));
 							ui.add_value(stmt->columns->at(i),
 									DField::Set, rtype,
-									DTCValue::Make(
-										stmt->values->at(i)
-											->name));
+									DTCValue::Make(v.c_str()));
 						}
 					}
 				}

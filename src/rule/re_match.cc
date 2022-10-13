@@ -31,33 +31,117 @@ int re_parse_sql(std::string sql, hsql::SQLParserResult* sql_ast)
     return 0;
 }
 
+bool hsql_convert_value_int(hsql::Expr* input, int* out)
+{
+    if(input->isType(kExprLiteralInt))
+    {
+        *out = input->ival;
+        return true;
+    }
+    else if(input->isType(kExprLiteralString))
+    {
+        char *endptr = NULL;
+        long result = strtol(input->name, &endptr, 10);
+        if(endptr == input->name)
+            return false;
+        if(strlen(endptr) > 0)
+            return false;
+        *out = result;
+        return true;    
+    }
+    else if(input->isType(kExprLiteralFloat))
+    {
+        *out = static_cast<int>(input->fval);
+        return true;
+    }
+
+    return false;
+}
+
+std::string hsql_convert_value_string(hsql::Expr* input)
+{
+    if(input->isType(kExprLiteralInt))
+    {
+        return to_string(input->ival);
+    }
+    else if(input->isType(kExprLiteralString))
+    {
+        return input->name;
+    }
+    else if(input->isType(kExprLiteralFloat))
+    {
+        return to_string(input->fval);
+    }
+
+    return "";
+}
+
+bool hsql_convert_value_float(hsql::Expr* input, double* out)
+{
+    if(input->isType(kExprLiteralFloat))
+    {
+        *out = input->fval;
+        return true;
+    }
+    else if(input->isType(kExprLiteralString))
+    {
+        char *endptr = NULL;
+        double result = strtod(input->name, &endptr);
+        if(endptr == input->name)
+            return false;
+        if(strlen(endptr) > 0)
+            return false;
+        *out = result;
+        return true;    
+    }
+    else if(input->isType(kExprLiteralInt))
+    {
+        *out = static_cast<double>(input->ival);
+        return true;
+    }
+
+    return false;
+}
+
 bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type, OperatorType rule_type)
 {
     if(input->type != rule->type)
-        return false;
+    {
+        if(input->type > kExprLiteralInt || rule->type > kExprLiteralInt)
+            return false;
+    }
 
     if(input_type >= kOpLess && input_type <= kOpGreaterEq && input->isType(kExprLiteralString))
         return false;
 
     if(input_type == kOpEquals && rule_type == kOpEquals)
     {
-        if(input->isType(kExprLiteralFloat))
+        if(rule->isType(kExprLiteralFloat))
         {
-            if(input->fval == rule->fval)
+            double v;
+            bool valid = hsql_convert_value_float(input, &v);
+            if(!valid)
+                return false;
+            if(v == rule->fval)
                 return true;
             else
                 return false;
         }
-        else if(input->isType(kExprLiteralInt))
+        else if(rule->isType(kExprLiteralInt))
         {
-            if(input->ival == rule->ival)
+            int v;
+            bool valid = hsql_convert_value_int(input, &v);
+            if(!valid)
+                return false;
+            if(v == rule->ival)
                 return true;
             else
                 return false;
         }
-        else if(input->isType(kExprLiteralString))
+        else if(rule->isType(kExprLiteralString))
         {
-            if(strcasecmp(input->name, rule->name) == 0)
+            std::string v = hsql_convert_value_string(input);
+            if(v == std::string(rule->name))
                 return true;
             else
                 return false;
@@ -65,23 +149,32 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
     }
     else if(input_type == kOpNotEquals && rule_type == kOpNotEquals)
     {
-        if(input->isType(kExprLiteralFloat))
+        if(rule->isType(kExprLiteralFloat))
         {
-            if(input->fval != rule->fval)
+            double v;
+            bool valid = hsql_convert_value_float(input, &v);
+            if(!valid)
+                return false;
+            if(v != rule->fval)
                 return true;
             else
                 return false;
         }
-        else if(input->isType(kExprLiteralInt))
+        else if(rule->isType(kExprLiteralInt))
         {
-            if(input->ival != rule->ival)
+            int v;
+            bool valid = hsql_convert_value_int(input, &v);
+            if(!valid)
+                return false;
+            if(v != rule->ival)
                 return true;
             else
                 return false;
         }
-        else if(input->isType(kExprLiteralString))
+        else if(rule->isType(kExprLiteralString))
         {
-            if(strcasecmp(input->name, rule->name) == 0)
+            std::string v = hsql_convert_value_string(input);
+            if(v == std::string(rule->name))
                 return false;
             else
                 return true;
@@ -89,49 +182,58 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
     }
     else if(rule_type == kOpLess)
     {
-        if(input->isType(kExprLiteralFloat))
+        if(rule->isType(kExprLiteralFloat))
         {
+            double v;
+            bool valid = hsql_convert_value_float(input, &v);
+            if(!valid)
+                return false;
             if(input_type == kOpLess)
             {
-                if(input->fval <= rule->fval)
+                if(v <= rule->fval)
                     return true;
                 else
                     return false;
             }
             else if(input_type == kOpLessEq)
             {
-                if(input->fval < rule->fval)
+                if(v < rule->fval)
                     return true;
                 else
                     return false;
             }
             else if(input_type == kOpEquals)
             {
-                if(input->fval < rule->fval)
+                if(v < rule->fval)
                     return true;
                 else
                     return false;
             }            
         }
-        else if(input->isType(kExprLiteralInt))
+        else if(rule->isType(kExprLiteralInt))
         {
+            int v;
+            bool valid = hsql_convert_value_int(input, &v);
+            if(!valid)
+                return false;
+
             if(input_type == kOpLess)
             {
-                if(input->ival <= rule->ival)
+                if(v <= rule->ival)
                     return true;
                 else
                     return false;
             }
             else if(input_type == kOpLessEq)
             {
-                if(input->ival < rule->ival)
+                if(v < rule->ival)
                     return true;
                 else
                     return false;
             }
             else if(input_type == kOpEquals)
             {
-                if(input->ival < rule->ival)
+                if(v < rule->ival)
                     return true;
                 else
                     return false;
@@ -140,21 +242,29 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
     }
     else if(rule_type == kOpLessEq)
     {
-        if(input->isType(kExprLiteralFloat))
+        if(rule->isType(kExprLiteralFloat))
         {
             if(input_type == kOpLess || input_type == kOpLessEq || input_type == kOpEquals)
             {
-                if(input->fval <= rule->fval)
+                double v;
+                bool valid = hsql_convert_value_float(input, &v);
+                if(!valid)
+                    return false;
+                if(v <= rule->fval)
                     return true;
                 else
                     return false;
             }
         }
-        else if(input->isType(kExprLiteralInt))
+        else if(rule->isType(kExprLiteralInt))
         {
+            int v;
+            bool valid = hsql_convert_value_int(input, &v);
+            if(!valid)
+                return false;
             if(input_type == kOpLess || input_type == kOpLessEq || input_type == kOpEquals)
             {
-                if(input->ival <= rule->ival)
+                if(v <= rule->ival)
                     return true;
                 else
                     return false;
@@ -163,49 +273,58 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
     }
     else if(rule_type == kOpGreater)
     {
-        if(input->isType(kExprLiteralFloat))
+        if(rule->isType(kExprLiteralFloat))
         {
+            double v;
+            bool valid = hsql_convert_value_float(input, &v);
+            if(!valid)
+                return false;
             if(input_type == kOpGreater)
             {
-                if(input->fval >= rule->fval)
+                if(v >= rule->fval)
                     return true;
                 else
                     return false;
             }
             else if(input_type == kOpGreaterEq)
             {
-                if(input->fval > rule->fval)
+                if(v > rule->fval)
                     return true;
                 else
                     return false;
             }
             else if(input_type == kOpEquals)
             {
-                if(input->fval > rule->fval)
+                if(v > rule->fval)
                     return true;
                 else
                     return false;
             }
         }
-        else if(input->isType(kExprLiteralInt))
+        else if(rule->isType(kExprLiteralInt))
         {
+            int v;
+            bool valid = hsql_convert_value_int(input, &v);
+            if(!valid)
+                return false;
+
             if(input_type == kOpGreater)
             {
-                if(input->ival >= rule->ival)
+                if(v >= rule->ival)
                     return true;
                 else
                     return false;
             }
             else if(input_type == kOpGreaterEq)
             {
-                if(input->ival > rule->ival)
+                if(v > rule->ival)
                     return true;
                 else
                     return false;
             }
             else if(input_type == kOpEquals)
             {
-                if(input->ival > rule->ival)
+                if(v > rule->ival)
                     return true;
                 else
                     return false;
@@ -214,32 +333,33 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
     }
     else if(rule_type == kOpGreaterEq)
     {
-        if(input->isType(kExprLiteralFloat))
+        if(rule->isType(kExprLiteralFloat))
         {
-            if(input_type == kOpGreater || input_type == kOpGreaterEq)
+            if(input_type == kOpGreater || input_type == kOpGreaterEq || input_type == kOpEquals)
             {
-                if(input->fval >= rule->fval)
+                double v;
+                bool valid = hsql_convert_value_float(input, &v);
+                if(!valid)
+                    return false;
+                if(v >= rule->fval)
                     return true;
                 else
                     return false;
             }
         }
-        else if(input->isType(kExprLiteralInt))
+        else if(rule->isType(kExprLiteralInt))
         {
-            if(input_type == kOpGreater || input_type == kOpGreaterEq)
+            if(input_type == kOpGreater || input_type == kOpGreaterEq || input_type == kOpEquals)
             {
-                if(input->ival >= rule->ival)
+                int v;
+                bool valid = hsql_convert_value_int(input, &v);
+                if(!valid)
+                    return false;                
+                if(v >= rule->ival)
                     return true;
                 else
                     return false;
             }
-        }
-        else if(input_type == kOpEquals)
-        {
-            if(input->ival >= rule->ival)
-                return true;
-            else
-                return false;
         }
     }
 
