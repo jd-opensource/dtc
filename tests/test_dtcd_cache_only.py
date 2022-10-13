@@ -169,3 +169,36 @@ def test_select_limit():
     assert results[1][4] == 19
 
     db.close()
+
+def test_insert_automated_conversion():
+    db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
+    cursor = db.cursor()
+
+    #name num to string
+    sql = "insert into opensource(uid,name,city,sex,age) values(1, 123, 'Shanghai', 1, 18)"
+    insert = cursor.execute(sql)
+    assert insert == 1
+
+    #name num to string
+    sql = "insert into opensource(uid,name,city,sex,age) values(1, 123a, 'Shanghai', 1, 18)"
+    insert = cursor.execute(sql)
+    assert insert == 0    
+
+    #name num(float) to string
+    sql = "insert into opensource(uid,name,city,sex,age) values(1, 123.3, 'Shanghai', 1, 18)"
+    insert = cursor.execute(sql)
+    assert insert == 1
+
+    #name string to num
+    sql = "insert into opensource(uid,name,city,sex,age) values(1, 'jack', 'Shanghai', 1, '18')"
+    insert = cursor.execute(sql)
+    assert insert == 1
+
+    #name string to num, error
+    sql = "insert into opensource(uid,name,city,sex,age) values(1, 'jack', 'Shanghai', 1, '18a')"
+    insert = cursor.execute(sql)
+    assert insert == 0
+
+    db.commit()
+
+    db.close()
