@@ -7,7 +7,7 @@ extern "C"{
     int re_load_table_key(char* key);
     int sql_parse_table(const char* szsql, char* out);
     int rule_get_key_type(const char* conf);
-    const char* rule_get_key(const char* conf);
+    int rule_get_key(const char* conf, char* out);
     int get_table_with_db(const char* sessiondb, const char* sql, char* result);    
 
 #ifdef __cplusplus    
