@@ -29,6 +29,8 @@
 #include "da_time.h"
 #include "my/my_comm.h"
 
+#define LAYER3_DEF "layer3"
+
 void req_put(struct msg *msg)
 {
 	struct msg *pmsg; /* peer message (response) */
@@ -340,10 +342,18 @@ int dtc_header_add(struct msg *msg, enum enum_agent_admin admin, char* dbname)
 	dtc_header.dbname_len = dbname && strlen(dbname) > 0 ? strlen(dbname) : 0;
 	dtc_header.packet_len = mbuf_length(mbuf) + sizeof(dtc_header) + dtc_header.dbname_len;
 	dtc_header.layer = msg->layer;
+	if(msg->layer == 3)
+	{
+		dtc_header.dbname_len = strlen(LAYER3_DEF);
+	}
 
 	mbuf_copy(new_buf, &dtc_header, sizeof(dtc_header));
-	if(dbname && strlen(dbname) > 0)
+	if(dbname && strlen(dbname) > 0 && msg->layer != 3)
 		mbuf_copy(new_buf, dbname, dtc_header.dbname_len);
+	if(msg->layer == 3)
+	{
+		mbuf_copy(new_buf, LAYER3_DEF, dtc_header.dbname_len);
+	}
 	mbuf_copy(new_buf, mbuf->start, mbuf_length(mbuf));
 
 	log_debug("dtc_header.dbname_len: %d, %s", dtc_header.dbname_len, dbname);
