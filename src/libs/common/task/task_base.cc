@@ -259,6 +259,7 @@ void DtcJob::decode_mysql_packet(char *packetIn, int packetLen, int type)
 		{
 			log4cplus_error("decode request error: %d", ret);
 			mr.set_mr_invalid();
+			mr.set_mr_msg("decode request error.");
 			stage = DecodeStageDataError;
 			return;
 		}

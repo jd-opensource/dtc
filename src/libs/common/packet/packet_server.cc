@@ -1517,8 +1517,10 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	else
 	{
 		log4cplus_debug("decode result:%d, type: %d", job.get_decode_result(), job.mr.get_request_type());
-		if((job.mr.get_request_type() == 0 && job.get_decode_result() == DecodeDataError) || job.result_code() < 0)
-			rb = encode_mysql_error(&job, "dtc error.", 10001);
+		if((job.mr.get_request_type() == 0 && job.get_decode_result() == DecodeDataError))
+			rb = encode_mysql_error(&job, job.mr.get_mr_msg().length() > 0 ? job.mr.get_mr_msg() : "dtc request decode error.", 10000);
+		else if(job.result_code() < 0)
+			rb = encode_mysql_error(&job, job.resultInfo.error_message(), 10000 + abs(job.result_code()));
 		else
 			rb = encode_mysql_ok(&job, job.resultInfo.affected_rows());
 	}

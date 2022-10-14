@@ -100,6 +100,16 @@ class MyRequest {
 		return str;
 	}
 
+	void set_mr_msg(std::string msg)
+	{
+		mr_error = msg;
+	}
+
+	std::string get_mr_msg()
+	{
+		return mr_error;
+	}
+
 	bool get_key(DTCValue *key, char *key_name);
 	uint32_t get_limit_start();
 	uint32_t get_limit_count();
@@ -114,6 +124,7 @@ class MyRequest {
 	char *raw;
 	int raw_len;
 	std::string m_sql;
+	std::string mr_error;
 	hsql::SQLParserResult m_result;
 	bool eof_packet_new;
 	uint8_t pkt_nr;
