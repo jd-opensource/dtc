@@ -142,6 +142,7 @@ jobs:
 
 # Testing Cache Only via Agent.
   test-agent-cache-only:
+    if: false
     needs: AGENT
     runs-on: ubuntu-20.04
     services:
