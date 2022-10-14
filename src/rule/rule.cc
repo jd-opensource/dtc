@@ -576,9 +576,17 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
         }
         else
         {
-            //L2: sharding hot database.
-            log4cplus_debug("layered: L2.");
-            return 2;
+            if(is_write_type(&sql_ast))
+            {
+                log4cplus_debug("layered: ERROR, writing without key, Refuse.");
+                return -6;
+            }
+            else
+            {
+                //L2: sharding hot database.
+                log4cplus_debug("layered: L2.");
+                return 2;
+            }
         }
     }
     else if(ret == -100)
