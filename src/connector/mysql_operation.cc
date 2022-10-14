@@ -290,9 +290,11 @@ int ConnectorProcess::create_tab_if_not_exist()
     sql_append_string("`id` INT(11) NOT NULL AUTO_INCREMENT,");
     sql_append_string("`invisible_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,");
 
-    sql_append_string("UNIQUE INDEX (");
-    sql_append_string(s_unique_key.c_str() , s_unique_key.length() - 1);
-    sql_append_const("),");
+    if (!s_unique_key.empty()) {
+        sql_append_string("UNIQUE INDEX (");
+        sql_append_string(s_unique_key.c_str() , s_unique_key.length() - 1);
+        sql_append_const("),");
+    }
 
     sql_append_string("PRIMARY KEY (`id`)");
     sql_append_string(")ENGINE=InnoDB DEFAULT CHARSET=");
@@ -646,7 +648,6 @@ void ConnectorProcess::sql_append_comparator(uint8_t op)
 
 void ConnectorProcess::init_table_name(const DTCValue *Key, int field_type)
 {
-    log4cplus_info("line:%d" ,__LINE__);
     int dbid = 0, tableid = 0;
     uint64_t n;
     double f;
@@ -730,7 +731,6 @@ void ConnectorProcess::init_table_name(const DTCValue *Key, int field_type)
             break;
         }
     }
-    log4cplus_info("line:%d" ,__LINE__);
     snprintf(DBName, sizeof(DBName), dbConfig->dbFormat, dbid);
     snprintf(table_name, sizeof(table_name), dbConfig->tblFormat, tableid);
     log4cplus_info("DBName:%s , table_name:%s" ,DBName , table_name);
