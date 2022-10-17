@@ -259,7 +259,7 @@ void DtcJob::decode_mysql_packet(char *packetIn, int packetLen, int type)
 		{
 			log4cplus_error("decode request error: %d", ret);
 			mr.set_mr_invalid();
-			mr.set_mr_msg("decode request error.");
+			mr.set_mr_msg("dtc syntax error: unexpected identifier.");
 			stage = DecodeStageDataError;
 			return;
 		}
@@ -326,6 +326,7 @@ void DtcJob::decode_packet_v2(char *packetIn, int packetLen, int type)
 	{
 		log4cplus_error("decode request error: %d", ret);
 		mr.set_mr_invalid();
+		mr.set_mr_msg("dtc syntax error: unexpected identifier.");
 		stage = DecodeStageDataError;
 		return;
 	}
