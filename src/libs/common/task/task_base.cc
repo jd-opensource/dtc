@@ -685,6 +685,13 @@ int DtcJob::decode_request_v2(MyRequest *mr)
 			hsql::DeleteStatement *stmt =
 				mr->get_result()->getStatement(0);
 			where = stmt->expr;
+
+			if (stmt->schema != NULL) {
+				mr->m_sql.replace(stmt->st_start_idx ,
+					 stmt->st_end_idx - stmt->st_start_idx,
+					stmt->tableName);
+				log4cplus_info("delete replace sql to :%s" , mr->m_sql.c_str());
+			}
 		} else if (type == hsql::StatementType::kStmtSelect) {
 			hsql::SelectStatement *stmt =
 				mr->get_result()->getStatement(0);
@@ -778,6 +785,13 @@ int DtcJob::decode_request_v2(MyRequest *mr)
 		if (hsql::StatementType::kStmtUpdate == t) {
 			hsql::UpdateStatement *stmt =
 				mr->get_result()->getStatement(0);
+			
+			if (stmt->table->schema != NULL) {
+				mr->m_sql.replace(stmt->table->st_start_idx ,
+					 stmt->table->st_end_idx - stmt->table->st_start_idx,
+					stmt->table->name);
+				log4cplus_info(" update replace sql to :%s" , mr->m_sql.c_str());
+			}
 
 			count = stmt->updates->size();
 			for (int i = 0; i < count; i++) {
@@ -815,6 +829,12 @@ int DtcJob::decode_request_v2(MyRequest *mr)
 		} else if (hsql::StatementType::kStmtInsert == t) {
 			hsql::InsertStatement *stmt =
 				mr->get_result()->getStatement(0);
+			if (stmt->schema != NULL) {
+				mr->m_sql.replace(stmt->st_start_idx ,
+					 stmt->st_end_idx - stmt->st_start_idx,
+					stmt->tableName);
+				log4cplus_info("insert replace sql to :%s" , mr->m_sql.c_str());
+			}
 
 			if(stmt->columns == NULL)
 			{
