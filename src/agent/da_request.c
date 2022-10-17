@@ -344,7 +344,7 @@ int dtc_header_add(struct msg *msg, enum enum_agent_admin admin, char* dbname)
 	dtc_header.layer = msg->layer;
 
 	mbuf_copy(new_buf, &dtc_header, sizeof(dtc_header));
-	if(dbname && strlen(dbname) > 0 && msg->layer != 3)
+	if(dbname && strlen(dbname) > 0)
 		mbuf_copy(new_buf, dbname, dtc_header.dbname_len);
 
 	mbuf_copy(new_buf, mbuf->start, mbuf_length(mbuf));
