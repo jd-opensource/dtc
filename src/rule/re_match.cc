@@ -395,6 +395,17 @@ bool is_write_type(SQLParserResult* sql_ast)
         return false;
 }
 
+bool is_update_delete_type(SQLParserResult* sql_ast)
+{
+    StatementType t = sql_ast->getStatement(0)->type();
+    if(t == kStmtUpdate)
+        return true;
+    else if(t == kStmtDelete)
+        return true;        
+    else
+        return false;
+}
+
 
 Expr* get_expr(SQLParserResult* sql_ast)
 {
@@ -554,65 +565,6 @@ int re_match_sql(hsql::SQLParserResult* sql_ast, vector<vector<hsql::Expr*> > ex
         ret = -100;
         goto RESULT;
     }
-
-#if 0 
-    for(int i = 0; i < expr_rules.size(); i++)
-    {
-        expr_properity ep = expr_rules[i];
-
-        hsql::Expr* rule = ep.rule;
-
-        if(ep.condition_num == 1 && input_expr->opType >=kOpEquals && input_expr->opType <= kOpGreaterEq)
-        {
-            if(do_match_expr(input_expr, ep.rule))
-            {
-                ret = 0;
-                goto RESULT;
-            }
-        }
-        else
-        {
-            if(input_expr->isType(kExprOperator) && input_expr->opType == kOpAnd)
-            {
-                if(ep.condition_num == 1)
-                {
-                    if(do_match_expr(input_expr->expr, ep.rule) || do_match_expr(input_expr->expr2, ep.rule))
-                    {
-                        ret = 0;
-                        goto RESULT;
-                    }
-                }
-                else if(ep.condition_num > 1)
-                {
-                    if(ep.rule->isType(kExprOperator) && ep.rule->opType == kOpAnd)
-                    {
-                        if((do_match_expr(input_expr->expr, ep.rule->expr) && do_match_expr(input_expr->expr2, ep.rule->expr2)) ||
-                        (do_match_expr(input_expr->expr, ep.rule->expr2) && do_match_expr(input_expr->expr2, ep.rule->expr)))
-                        {
-                            ret = 0;
-                            goto RESULT;
-                        }
-                    }
-                }
-                else
-                {
-                    continue;
-                }
-            }
-            else if(input_expr->isType(kExprOperator) && input_expr->opType == kOpOr)
-            {
-                if((do_match_expr(input_expr->expr, ep.rule->expr) && do_match_expr(input_expr->expr2, ep.rule->expr2)) ||
-                        (do_match_expr(input_expr->expr, ep.rule->expr2) && do_match_expr(input_expr->expr2, ep.rule->expr)))
-                    {
-                        ret = 0;
-                        goto RESULT;
-                    }
-            }
-        }
-
-        
-    }
-#endif
 
     ret = -2;
 

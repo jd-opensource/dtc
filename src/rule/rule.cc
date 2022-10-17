@@ -434,38 +434,54 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
 
     if(sql.find("WITHOUT@@") != sql.npos)
     {
-        log4cplus_debug("data-lifecycle request, force direct to L1.");
         //L1: DTC cache.
+        log4cplus_debug("layered: L1, data-lifecycle request, force routed.");
         return 1;
     }
 
     hsql::SQLParserResult sql_ast;
     if(re_parse_sql(sql, &sql_ast) != 0)
+    {
+        log4cplus_debug("layered: error, parse sql failed.");
         return -1;
+    }
 
     if(is_show_db_with_ast(&sql_ast))
     {
+        log4cplus_debug("layered: L3, SHOW statment.");
         return 3;
     }
 
     if(is_set_with_ast(&sql_ast))
+    {
+        log4cplus_debug("layered: L2, SET statement.");
         return 2;
+    }
 
     if(is_show_table_with_ast(&sql_ast))
     {
         if(exist_session_db(dbname))
+        {
+            log4cplus_debug("layered: L2, session db.");
             return 2;
+        }
         else
+        {
+            log4cplus_debug("layered: error, no session db.");
             return -6;
+        }
     }
 
     if(is_show_create_table_with_ast(&sql_ast))
+    {
+        log4cplus_debug("layered: L2, show create table.");
         return 2;
+    }
 
     log4cplus_debug("flag: %d %d %d", flag, exist_session_db(dbname), exist_sql_db(&sql_ast));
     if((exist_session_db(dbname) || (exist_sql_db(&sql_ast))) && flag == false)
     {
-        log4cplus_debug("db session & single table");
+        log4cplus_debug("layered: L2, db session & single table");
         return 2;
     }
 
@@ -530,15 +546,17 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
     int ext = is_ext_table(&sql_ast, dbname);
     if(ext == -1)
     {
+        log4cplus_debug("layered: L2, ext table.");
         return 2;
     }
     else if(ext == -2)
     {
+        log4cplus_debug("layered: error.");
         return -2;
     }
         
     ret = re_match_sql(&sql_ast, expr_rules, ast);  //rule match
-    if(ret == 0)
+    if(ret == 0 || is_update_delete_type(&sql_ast))
     {
         if(re_is_cache_sql(&sql_ast, key))  //if exist dtc key.
         {
@@ -546,29 +564,44 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
             std::string tab_name = get_table_name(&sql_ast);
             std::string conf_tab_name = re_load_table_name();
             if(tab_name == conf_tab_name)
+            {
+                log4cplus_debug("layered: L1.");
                 return 1;
+            }
             else
             {
-                log4cplus_error("table name dismatch: %s, %s", tab_name.c_str(), conf_tab_name.c_str());
+                log4cplus_error("layered: L3, table name dismatch: %s, %s", tab_name.c_str(), conf_tab_name.c_str());
                 return 3;
             }
         }
         else
         {
-            //L2: sharding hot database.
-            return 2;
+            if(is_write_type(&sql_ast))
+            {
+                log4cplus_debug("layered: ERROR, writing without key, Refuse.");
+                return -6;
+            }
+            else
+            {
+                //L2: sharding hot database.
+                log4cplus_debug("layered: L2.");
+                return 2;
+            }
         }
     }
     else if(ret == -100)
     {
         //writing without match rule, Refuse.
+        log4cplus_debug("layered: ERROR, writing without match rule, Refuse.");
         return -6;
     }
     else {
         //L3: full database.
+        log4cplus_debug("layered: L3.");
         return 3;
     }
 
+    log4cplus_debug("layered: L3.");
     return 3;
 }
 
