@@ -142,8 +142,8 @@ jobs:
 
 # Testing Cache Only via Agent.
   test-agent-cache-only:
-    needs: AGENT
     if: false
+    needs: AGENT
     runs-on: ubuntu-20.04
     services:
       dtc:
