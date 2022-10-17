@@ -14,6 +14,8 @@ struct InsertStatement : SQLStatement {
   ~InsertStatement() override;
 
   InsertType type;
+  int st_start_idx;
+  int st_end_idx;
   char* schema;
   char* tableName;
   std::vector<char*>* columns;

@@ -15,6 +15,8 @@ struct TableRef;
 enum TableRefType { kTableName, kTableSelect, kTableJoin, kTableCrossProduct };
 
 struct TableName {
+  int st_start_idx;
+  int st_end_idx;
   char* schema;
   char* name;
 };
@@ -34,6 +36,8 @@ struct TableRef {
 
   TableRefType type;
 
+  int st_start_idx;
+  int st_end_idx;
   char* schema;
   char* name;
   Alias* alias;
