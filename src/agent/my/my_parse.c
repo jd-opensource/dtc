@@ -492,7 +492,8 @@ int my_fragment(struct msg *r, uint32_t ncontinuum, struct msg_tqh *frag_msgq)
 		return 0;
 	}
 	else if(r->layer == 2 || r->layer == 3) {
-		r->idx = msg_backend_idx(r, NULL, 0);
+		r->idx = 0;
+		log_debug("my fragment layer 2.3");
 		return 0;
 	} else {
 		if (r->keyCount == 0) {

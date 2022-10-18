@@ -61,6 +61,6 @@ uint32_t hash_murmur(const char *key, size_t length);
 uint32_t hash_chash(const char *k, size_t length);
 
 int ketama_update(struct server_pool *pool);
-uint32_t ketama_dispatch(struct continuum *continuum, uint32_t ncontinuum, uint32_t hash, uint32_t layer);
+uint32_t ketama_dispatch(struct continuum *continuum, uint32_t ncontinuum, uint32_t hash);
 
 #endif

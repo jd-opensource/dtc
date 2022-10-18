@@ -112,23 +112,9 @@ uint32_t server_pool_idx(struct server_pool *pool, uint8_t *key,
 	ASSERT(array_n(&pool->server) != 0);
 	//ASSERT(key != NULL && keylen != 0);
 	uint32_t hash, idx;
-
-	if(key == NULL && keylen == 0)
-	{
-		log_debug("server_pool_idx 2: %d\n", array_n(&pool->server));
-		return array_n(&pool->server) - 1;
-
-		hash = server_pool_hash(pool, key, keylen);
-		idx = ketama_dispatch(pool->continuum, pool->ncontinuum, hash, 2);
-	}
-	else
-	{
-		log_debug("server_pool_idx 1\n");
-		return 0;
-
-		hash = server_pool_hash(pool, key, keylen);
-		idx = ketama_dispatch(pool->continuum, pool->ncontinuum, hash, 1);
-	}
+	
+	hash = server_pool_hash(pool, key, keylen);
+	idx = ketama_dispatch(pool->continuum, pool->ncontinuum, hash);
 
 	log_debug("server_pool_idx keylen:%d, key:%p, server num: %d, idx: %d\n", keylen, key, array_n(&pool->server), idx);
 	ASSERT(idx < array_n(&pool->server));
@@ -330,92 +316,7 @@ static struct cache_instance *get_instance_from_server(struct server *server) {
 	return ci;
 }
 
-//static struct cache_instance *get_instance_from_server(struct server *server){
-//
-//	struct cache_instance *ci;
-//	int nreplica_q1, nreplica_q2,w,i,idx;
-//	uint64_t t ;
-//	nreplica_q1 = array_n(&server->high_ptry_ins);
-//	if (nreplica_q1 != 0)
-//	{
-//		for (i = 0; i < nreplica_q1 + 1; i++) {
-//			idx = (i + server->high_prty_idx + nreplica_q1) % nreplica_q1;
-//			ci = array_get(&server->high_ptry_ins, idx);
-//			w = ci->weight;
-//			if (server->high_prty_cnt < w && ci->nerr < ci->ns_conn_q) {
-//				server->high_prty_cnt++;
-//				server->high_prty_idx = idx;
-//				printf("FFF i :%.*s nerr%d failtime%d  \n", ci->pname.len, ci->pname.data, ci->nerr, ci->failure_num);
-//				return ci;
-//			}
-//			else if (ci->nerr >= ci->ns_conn_q && ci->failure_num < FAIL_TIME_LIMIT) {
-//				t = 1;
-//				t = t << ci->failure_num;
-//				t = t * 1000;
-//				printf("i :%.*s now_ms%"PRIu64" failtime%"PRIu64"  t%"PRIu64" \n", ci->pname.len, ci->pname.data, now_ms, ci->last_failure_ms, t);
-//				if ((now_ms - ci->last_failure_ms) > t){
-//					server->high_prty_cnt = 1;
-//					server->high_prty_idx = idx;
-//					ci->nerr = 0;
-//					return ci;
-//				}
-//				else{
-//					server->high_prty_cnt = 0;
-//					continue;
-//				}
-//				
-//			}
-//			else {
-//				server->high_prty_cnt = 0;
-//				continue;
-//			}
-//
-//		}
-//		server->high_prty_idx = idx;
-//	}
-//	nreplica_q2 = array_n(&server->low_prty_ins);
-//	if (nreplica_q2 != 0)
-//	{
-//		for (i = 0; i < nreplica_q2 + 1; i++) {
-//			idx = (i + server->low_prty_idx + nreplica_q2) % nreplica_q2;
-//			ci = array_get(&server->low_prty_ins, idx);
-//			w = ci->weight;
-//			if (server->low_prty_cnt < w && ci->nerr < ci->ns_conn_q) {
-//				server->low_prty_cnt++;
-//				server->low_prty_idx = idx;
-//				return ci;
-//			}
-//			else if (ci->nerr >= ci->ns_conn_q && ci->failure_num < FAIL_TIME_LIMIT) {
-//				t = 1;
-//				t = t << ci->failure_num;
-//				t = t * 1000;
-//				//printf("i :%.*s now_ms%"PRIu64" failtime%"PRIu64"  t%"PRIu64" \n", ci->pname.len, ci->pname.data, now_ms, ci->last_failure_ms, t);
-//				if ((now_ms - ci->last_failure_ms) > t) {
-//					server->low_prty_cnt = 1;
-//					server->low_prty_idx = idx;
-//					ci->nerr = 0;
-//					return ci;
-//				}
-//				else {
-//					server->low_prty_cnt = 0;
-//					continue;
-//				}
-//
-//			}
-//			else {
-//				server->low_prty_cnt = 0;
-//				continue;
-//			}
-//		}
-//
-//		server->low_prty_idx = idx;
-//	}
-//	return NULL;
-//}
-
-
-
-struct conn *server_pool_conn(struct context *ctx, struct server_pool *pool,
+struct conn *server_pool_conn(struct context *ctx, struct server_pool *pool, 
 		struct msg *msg) {
 	int status;
 	struct server *server;
