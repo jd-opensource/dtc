@@ -1430,6 +1430,10 @@ int ConnectorProcess::process_update(DtcJob *Task)
         return (-7);
     }
 
+    if (Task->requestInfo.limit_count() > 0) {
+            sql_printf(" LIMIT %u", Task->requestInfo.limit_count());
+    }
+
     if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
         log4cplus_error("error occur: %d", error_no);
@@ -1480,6 +1484,10 @@ int ConnectorProcess::process_delete(DtcJob *Task)
         Task->set_error(-EC_BAD_COMMAND, __FUNCTION__,
                 "Volatile condition not allowed");
         return (-7);
+    }
+
+    if (Task->requestInfo.limit_count() > 0) {
+            sql_printf(" LIMIT %u", Task->requestInfo.limit_count());
     }
 
     if (error_no !=

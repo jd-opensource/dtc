@@ -270,11 +270,24 @@ uint32_t MyRequest::get_limit_start()
 uint32_t MyRequest::get_limit_count()
 {
 	int t = m_result.getStatement(0)->type();
-	if (t != hsql::StatementType::kStmtSelect) {
-		return 0;
+	LimitDescription* limit;
+	if (t == hsql::StatementType::kStmtSelect) {
+		hsql::SelectStatement *stmt = get_result()->getStatement(0);
+		limit = stmt->limit;
 	}
-	hsql::SelectStatement *stmt = get_result()->getStatement(0);
-	LimitDescription* limit = stmt->limit;
+	else if(t == hsql::StatementType::kStmtUpdate)
+	{
+		hsql::UpdateStatement *stmt = get_result()->getStatement(0);
+		limit = stmt->limit;
+	}
+	else if(t == hsql::StatementType::kStmtDelete)
+	{
+		hsql::DeleteStatement *stmt = get_result()->getStatement(0);
+		limit = stmt->limit;
+	}
+	else
+		return 0;
+	
 	if(limit)
 	{
 		if(limit->limit)
