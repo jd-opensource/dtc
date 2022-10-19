@@ -21,7 +21,12 @@ int do_check_sql()
 int re_parse_sql(std::string sql, hsql::SQLParserResult* sql_ast)
 {
     log4cplus_debug("input sql parse start..");
-    hsql::SQLParser::parse(sql, sql_ast);
+    bool r = hsql::SQLParser::parse(sql, sql_ast);
+    if(r == false)
+    {
+        log4cplus_debug("parse failed, sql: %s", sql.c_str());
+        return -1; 
+    }
     if (!sql_ast->isValid() || sql_ast->size() <= 0)
     {
         log4cplus_debug("valid:%d, size:%d, %s", sql_ast->isValid(), sql_ast->size(), sql.c_str());

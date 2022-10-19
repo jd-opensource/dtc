@@ -96,8 +96,8 @@ bool MyRequest::load_sql()
 	}
 
 	log4cplus_debug("sql: %s", m_sql.c_str());
-	hsql::SQLParser::parse(m_sql, &m_result);
-	if (m_result.isValid()) {
+	bool r = hsql::SQLParser::parse(m_sql, &m_result);
+	if (r && m_result.isValid()) {
 		log4cplus_debug("load_sql success.");
 		return true;
 	} else {
