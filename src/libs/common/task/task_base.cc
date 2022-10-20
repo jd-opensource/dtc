@@ -797,6 +797,9 @@ int DtcJob::decode_request_v2(MyRequest *mr)
 
 			count = stmt->updates->size();
 			for (int i = 0; i < count; i++) {
+				if(strcmp(table_definition()->key_name(), stmt->updates->at(i)->column) == 0)
+					return -13;
+
 				int rtype = build_field_type_r(
 					stmt->updates->at(i)->value->type,
 					stmt->updates->at(i)->column);
