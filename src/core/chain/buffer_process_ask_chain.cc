@@ -1986,6 +1986,11 @@ BufferResult BufferProcessAskChain::reply_connector_answer(DTCJobOperation &job)
 			buffer_purge_data(job);
 			return DTC_CODE_BUFFER_SUCCESS;
 		}
+		if (job.requestInfo.limit_count() > 0) {
+			log4cplus_debug("trigger purge from update.");
+			buffer_purge_data(job);
+			return DTC_CODE_BUFFER_SUCCESS;
+		}
 		return buffer_sync_update(job);
 	case DRequest::Delete:
 		if (job.flag_black_hole())

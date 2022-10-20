@@ -58,8 +58,8 @@ int do_parse_rule(std::string rules)
     sql += rules;
     sql += ";";
     log4cplus_debug("rule sql: %s", sql.c_str());
-    hsql::SQLParser::parse(sql, &rule_ast);
-    if (rule_ast.isValid() && rule_ast.size() > 0)
+    bool r = hsql::SQLParser::parse(sql, &rule_ast);
+    if (r && rule_ast.isValid() && rule_ast.size() > 0)
     {
         return 0; 
     }
