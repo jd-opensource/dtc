@@ -6,6 +6,7 @@
 #include "Expr.h"
 
 namespace hsql {
+
 enum StatementType {
   kStmtError,  // unused
   kStmtSelect,
