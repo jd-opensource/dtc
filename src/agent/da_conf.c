@@ -668,6 +668,146 @@ static int conf_parse_core(struct conf *cf) {
 	return 0;
 }
 
+char* arg_module[] = {"shardingsphere", "999", "0000", "127.0.0.1:12999", "500", "900", "true", "1", "chash", "3000", "true", 
+						"LF", "false", "false", "true", "false", "127.0.0.1", "20020"};
+char* cachesharding_module[] = {"false", "ss"};
+char* instance_module[] = {"", "LF", "master", "true"};
+
+static int conf_add_ss(struct conf *cf) {
+
+	int status, i;
+	void *void_cp;
+	void *void_cs;
+	void *void_ci;
+	void *void_cl;
+
+	// get a conf_pool
+	void_cp = array_push(&cf->pool);
+	if (void_cp == NULL) {
+		return -1;
+	}
+	
+	//转存一下localip到conf_pool中，后续server_pool需要使用
+	struct conf_pool *tmpCP = (struct conf_pool *)void_cp;
+	strncpy(tmpCP->localip, cf->localip, sizeof(tmpCP->localip));
+	
+	// MODULE
+	int sz = sizeof(svrpool_elem) / sizeof(svrpool_elem[0]);
+	for (i = 0; i < sz; i++) {
+		char *argment = arg_module[i];
+		if (argment == NULL) {
+			log_error("get %s from conf '%s' error", svrpool_elem[i],
+					cf->fname);
+			return -1;
+		}
+		status = string_copy(&cf->arg, (uint8_t *) argment,
+				da_strlen(argment));
+		if (status < 0) {
+			return status;
+		}
+		status = conf_handler(svrpool_elem[i], cf, void_cp);
+		if (status < 0) {
+			return status;
+		}
+		string_deinit(&cf->arg);
+	}
+
+	// CACHESHARDING
+	struct conf_pool *cp = (struct conf_pool*) void_cp;
+	void_cs = array_push(&cp->server);
+	if (void_cs == NULL)
+	{
+		return -1;
+	}
+	status = conf_server_init(void_cs);
+	if (status != 0)
+	{
+		array_pop(&cp->server);
+		return -1;
+	}
+	sz = sizeof(server_elem) / sizeof(server_elem[0]);
+	for (i = 0; i < sz; i++) {
+		char *argment = cachesharding_module[i];
+		if (argment == NULL) {					
+			log_error("get %s from conf '%s' error", server_elem[i],
+					cf->fname);
+			array_pop(&cp->server);
+			conf_server_deinit(void_cs);
+			
+			return -1;
+		}
+		status = string_copy(&cf->arg, (uint8_t *) argment,
+				da_strlen(argment));
+		if (status < 0) {
+			array_pop(&cp->server);
+			conf_server_deinit(void_cs);
+			return status;
+		}
+		status = conf_handler(server_elem[i], cf, void_cs);
+		if (status < 0) {					
+			array_pop(&cp->server);
+			conf_server_deinit(void_cs);
+			return status;
+		}
+		
+		string_deinit(&cf->arg);
+	}
+	
+	// INSTANCE
+	struct conf_server *cs = (struct conf_server *)void_cs;
+	char ssaddr[250] = {0};
+	string_copy(&cs->idc, cp->idc.data, cp->idc.len);
+	void_ci = array_push(&cs->instance);
+	if (void_ci == NULL) {
+		return -1;
+	}
+	conf_instance_init(void_ci);
+	sz = sizeof(instance_elem) / sizeof(instance_elem[0]);
+	for (i = 0; i < sz; i++) {
+		char *argment = NULL;
+		if(i == 0)
+		{
+			mxml_node_t* ssnode = mxmlFindElement(cf->tree, cf->tree, "SS_MODULE", NULL, NULL, MXML_DESCEND);
+			char *ssport = (char *)mxmlElementGetAttr(ssnode, "port");
+			if(NULL == ssport)
+			{
+				log_error("get ssport from conf SS_MODULE error");
+				continue;
+			}
+
+			sprintf(ssaddr, "127.0.0.1:%s", ssport);
+			argment = ssaddr;
+		}
+		else
+		{
+			argment = (char *)instance_module[i];
+		}
+		if (argment == NULL) {
+			array_pop(&cs->instance);
+			conf_instance_deinit(void_ci);
+			log_error("get %s from conf '%s' error", server_elem[i],
+				cf->fname);
+			return -1;
+		}
+		status = string_copy(&cf->arg, (uint8_t *)argment,
+			da_strlen(argment));
+		if (status < 0) {
+			array_pop(&cs->instance);
+			conf_instance_deinit(void_ci);
+			return status;
+		}
+		status = conf_handler(instance_elem[i], cf, void_ci);
+		if (status < 0) {
+			array_pop(&cs->instance);
+			conf_instance_deinit(void_ci);
+			return status;
+		}
+		string_deinit(&cf->arg);
+	}
+
+	return 0;
+}
+
 static int conf_end_parse(struct conf *cf) {
 	mxmlDelete(cf->tree);
 	return 0;

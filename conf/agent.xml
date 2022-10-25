@@ -11,6 +11,6 @@
       </CACHESHARDING>
     </MODULE>
   </BUSINESS_MODULE>
-  <SS_MODULE port=3307 />
+  <SS_MODULE port="3307" />
   <LOG_MODULE LogSwitch="0" RemoteLogSwitch="1" RemoteLogIP="127.0.0.1" RemoteLogPort="9997" />
 </ALL>
