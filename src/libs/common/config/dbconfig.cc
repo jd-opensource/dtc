@@ -126,7 +126,8 @@ bool FieldConfig::is_same(FieldConfig *field)
 
 int DbConfig::load_key_hash(DTCConfig *raw)
 {
-    log4cplus_debug("tryto load key-hash plugin");
+    log4cplus_debug("try to load key-hash plugin");
+    bool hashopen = false;
 
     /* init. */
     keyHashConfig.keyHashEnable = 0;
@@ -135,27 +136,26 @@ int DbConfig::load_key_hash(DTCConfig *raw)
     keyHashConfig.keyHashRightBegin = 0;
 
     /* not enable key-hash */
-    std::string hashopen = raw->get_config_node()["props"]["hash.custom"].as<std::string>();
-    if (str2int(hashopen.c_str(), 0) == 0) {
+    if(raw->get_config_node()["primary"]["hot"])
+    {
+        if(raw->get_config_node()["primary"]["hot"]["sharding"] && 
+            (raw->get_config_node()["primary"]["cache"]["field"][0]["type"].as<std::string>() == "string" || 
+            raw->get_config_node()["primary"]["cache"]["field"][0]["type"].as<std::string>() == "binary"))
+            {
+                hashopen = true;
+            }
+    }
+
+    if (!hashopen) {
         log4cplus_debug("key-hash plugin disable");
         return 0;
     }
 
     /* read key_hash_module */
-    std::string so = raw->get_config_node()["props"]["hash.custom.module"].as<std::string>();
-    if (so.length() == 0) {
-        log4cplus_info(
-            "not set key-hash plugin name, use default value");
-        so = DEFAULT_KEY_HASH_SO_NAME;
-    }
+    std::string so = DEFAULT_KEY_HASH_SO_NAME;
 
     /* read key_hash_function */
-    std::string var =
-        raw->get_config_node()["props"]["hash.custom.functon"].as<std::string>();
-    if (var.length() == 0) {
-        log4cplus_error("not set key-hash plugin function name");
-        var = DEFAULT_KEY_HASH_FUNCTION;
-    }
+    std::string var = DEFAULT_KEY_HASH_FUNCTION;
 
     char *fun = 0;
     int isfunalloc = 0;
@@ -432,10 +432,9 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
     dstype = 0;
     checkTable = 0;
 
-    //TODO: string key supporting.
     // key-hash dll
-    //if (load_key_hash(raw) != 0)
-    //    return -1;
+    if (load_key_hash(raw) != 0)
+        return -1;
 
     if(dtc_config["primary"][layer])
     {

@@ -242,17 +242,11 @@ int yaml_dump_sharding_rule(FILE *fp, std::vector<YAML::Node> vec)
             sprintf(szname, "%s_tb_inline", tbname.c_str());
             fprintf(fp, "          shardingAlgorithmName: %s\n", szname);
             char sztemp[1024] = {0};
-            sprintf(sztemp, "%s${((%s/%d).longValue()%%%d)}", 
-                get_merge_string(node["sharding"]["table"]["prefix"]).c_str(),
-                key.c_str(),
-                dbcount,
+            sprintf(sztemp, "        sharding-count: %d\n        sharding-divide: %d\n", 
                 node["sharding"]["table"]["last"].as<int>() -
-                node["sharding"]["table"]["start"].as<int>() + 1);
+                node["sharding"]["table"]["start"].as<int>() + 1,
+                dbcount);
             algorithm[szname] = sztemp;
-
-            fprintf(fp, "      keyGenerateStrategy:\n");
-            fprintf(fp, "        column: %s\n", key.c_str());
-            fprintf(fp, "        keyGeneratorName: snowflake\n");
         }
     }
 
@@ -263,9 +257,9 @@ int yaml_dump_sharding_rule(FILE *fp, std::vector<YAML::Node> vec)
         for (it = algorithm.begin(); it != algorithm.end(); it++) 
         {
             fprintf(fp, "    %s:\n", (*it).first.c_str());
-            fprintf(fp, "      type: INLINE\n");
+            fprintf(fp, "      type: HASH_MOD\n");
             fprintf(fp, "      props:\n");
-            fprintf(fp, "        algorithm-expression: %s\n", (*it).second.c_str());
+            fprintf(fp, "%s\n", (*it).second.c_str());
         }
     }
 
