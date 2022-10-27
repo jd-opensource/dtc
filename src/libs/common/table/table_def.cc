@@ -236,7 +236,6 @@ int DTCTableDefinition::add_field(int id, const char *name, uint8_t type,
 		usedFields++;
 	if (id != 0) {
 		rawFields[id] = id;
-		log4cplus_info("rawFields[id]:%d" , rawFields[id]);
 	}
 	return 0;
 }

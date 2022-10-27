@@ -36,31 +36,36 @@
 
 static int ParseDbLine(const char *buf, uint16_t *dbIdx)
 {
-    char *p = (char *)buf; // discard const
+    char *p = (char *)buf;	// discard const
+	if(*p++ != '[')
+		return -1;
 
-    int n = 0;
-    while (*p) {
-        if (!isdigit(p[0]))
-            break;
-        int begin, end;
-        begin = strtol(p, &p, 0);
-        if (*p != '-')
-            end = begin;
-        else {
-            p++;
-            if (!isdigit(p[0]))
-                break;
-            end = strtol(p, &p, 0);
-        }
-        while (begin <= end)
-            dbIdx[n++] = begin++;
+	int n = 0;
+	while(*p)
+	{
+		if(!isdigit(p[0]))
+			break;
+		int begin, end;
+		begin = strtol(p, &p, 0);
+		if(*p!='-' )
+			end = begin;
+		else {
+			p++;
+			if(!isdigit(p[0]))
+				break;
+			end = strtol(p, &p, 0);
+		}
+		while(begin <= end)
+			dbIdx[n++] = begin++;
 
-        if (p[0] != ',')
-            break;
-        else
-            p++;
-    }
-    return n;
+		if(p[0]!=',')
+			break;
+		else
+		    p++;
+	}
+	if(p[0] != ']')
+		return -1;
+	return n;	
 }
 
 /* 前置空格已经过滤了 */
@@ -323,11 +328,6 @@ int DbConfig::convert_case_sensitivity(
     return i;
 }
 
-int get_db_machine_count()
-{
-    return 1;
-}
-
 std::string get_merge_string(YAML::Node node)
 {
     std::string str = "";
@@ -371,7 +371,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
     //DB section
     if(dtc_config["primary"][layer])    //cache.datasource mode
     {
-        machineCnt = get_db_machine_count();
+        machineCnt = dtc_config["primary"][layer]["real"].size();
         if (machineCnt <= 0) {
             log4cplus_error("%s", "invalid server_count");
             return -1;
@@ -385,7 +385,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
     if(dtc_config["primary"][layer]) //cache.datasource mode
     {
         YAML::Node node = dtc_config["primary"][layer]["real"];
-        if(node.size() == 1) //single db
+        if(node.size() == 1 && dtc_config["primary"][layer]["real"][0]["db"].IsScalar()) //single db
         {
             if(dtc_config["primary"][layer]["sharding"] && 
                 dtc_config["primary"][layer]["sharding"]["table"]["last"].as<int>() - dtc_config["primary"][layer]["sharding"]["table"]["start"].as<int>() + 1 > 1)
@@ -393,7 +393,7 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             else
                 depoly = SINGLE;
         }
-        else if(node.size() > 1) //multi db
+        else if(node.size() >= 1) //multi db
         {
             if(dtc_config["primary"][layer]["sharding"] && 
             dtc_config["primary"][layer]["sharding"]["table"]["last"].as<int>() - dtc_config["primary"][layer]["sharding"]["table"]["start"].as<int>() + 1 > 1)
@@ -468,7 +468,15 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             }
         }
 
-        database_max_count = dtc_config["primary"][layer]["real"].size();
+        if(dtc_config["primary"][layer]["real"][0]["db"].IsScalar())
+        {
+            database_max_count = 1;
+        }
+        else
+        {
+            database_max_count = dtc_config["primary"][layer]["real"][0]["db"]["last"].as<int>() - dtc_config["primary"][layer]["real"][0]["db"]["start"].as<int>() + 1;
+        }
+        
         if (database_max_count < 0 || database_max_count > 10000) {
             log4cplus_error("%s", "invalid [DATABASE_CONF].DbMax");
             return -1;
@@ -611,8 +619,13 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
         if(dtc_config["primary"][layer]["real"][i]["db"].IsScalar())
             m->dbCnt = 1;
         else
-            m->dbCnt = dtc_config["primary"][layer]["real"][i]["db"]["last"].as<int>() - 
-                        dtc_config["primary"][layer]["real"][i]["db"]["start"].as<int>() + 1;
+        {
+            char szIdx[64] = {0};
+            sprintf(szIdx, "[%d-%d]", dtc_config["primary"][layer]["real"][i]["db"]["start"].as<int>(), 
+                    dtc_config["primary"][layer]["real"][i]["db"]["last"].as<int>());
+            m->dbCnt = ParseDbLine (szIdx, m->dbIdx);
+        }
+
         for (int j = 0; j < m->dbCnt; j++) {
             if (m->dbIdx[j] >= database_max_count) {
                 log4cplus_error(
