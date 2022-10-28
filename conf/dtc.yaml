@@ -6,9 +6,6 @@ props:
   listener.port.dtc: 20015
   listener.port.extension: 2002
   shm.mem.size: 100 #MB
-  #hash.custom: yes/no/enable/disable
-  #hash.custom.module: ../lib/key-hash.so
-  #hash.custom.functon: StringHash(1.128)
 
 data_lifecycle:
   single.query.count: 10
