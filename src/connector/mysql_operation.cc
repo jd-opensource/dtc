@@ -733,6 +733,9 @@ void ConnectorProcess::init_table_name(const DTCValue *Key, int field_type)
     }
     snprintf(DBName, sizeof(DBName), dbConfig->dbFormat, dbid);
     snprintf(table_name, sizeof(table_name), dbConfig->tblFormat, tableid);
+    log4cplus_debug("dbConfig->keyHashConfig.keyHashEnable:%d, left:%d, right:%d", dbConfig->keyHashConfig.keyHashEnable, 
+    dbConfig->keyHashConfig.keyHashLeftBegin, dbConfig->keyHashConfig.keyHashRightBegin);
+    log4cplus_debug("key hash:%lld, %d, %d, %d, %d", n, dbConfig->dbDiv, dbConfig->dbMod, dbConfig->tblDiv, dbConfig->tblMod);
     log4cplus_info("DBName:%s , table_name:%s" ,DBName , table_name);
 }
 
