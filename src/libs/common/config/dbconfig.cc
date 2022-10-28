@@ -450,8 +450,8 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             dbFormat = dbName;
         } else {
             dbDiv = 1;
-            dbMod = dtc_config["primary"][layer]["real"].size();
-
+            dbMod = dtc_config["primary"][layer]["real"][dtc_config["primary"][layer]["real"].size()-1]["db"]["last"].as<int>() - 
+                    dtc_config["primary"][layer]["real"][0]["db"]["start"].as<int>() + 1;
             if (dbMod > 100) {
                 log4cplus_error(
                     "invalid [DATABASE_CONF].DbMod = %d, mod value too large",
@@ -515,7 +515,8 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             tblMod = 1;
             tblFormat = tblName;
         } else {
-            tblDiv = dtc_config["primary"][layer]["real"].size();
+            tblDiv = dtc_config["primary"][layer]["real"][dtc_config["primary"][layer]["real"].size()-1]["db"]["last"].as<int>() - 
+                    dtc_config["primary"][layer]["real"][0]["db"]["start"].as<int>() + 1;
             tblMod = dtc_config["primary"][layer]["sharding"]["table"]["last"].as<int>() - dtc_config["primary"][layer]["sharding"]["table"]["start"].as<int>() + 1;
 
             if(tblDiv == 0 || tblMod == 0) {
