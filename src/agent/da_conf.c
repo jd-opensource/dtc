@@ -775,7 +775,7 @@ static int conf_add_ss(struct conf *cf) {
 				continue;
 			}
 
-			sprintf(ssaddr, "127.0.0.1:%s", ssport);
+			sprintf(ssaddr, "127.0.0.1:%s:1", ssport);
 			argment = ssaddr;
 		}
 		else
@@ -826,6 +826,12 @@ static int conf_parse(struct conf *cf) {
 	if (status != 0) {
 		return status;
 	}
+
+	status = conf_add_ss(cf);
+	if (status != 0) {
+		return status;
+	}
+
 	status = conf_end_parse(cf);
 	{
 		if (status != 0) {
