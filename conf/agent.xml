@@ -10,13 +10,7 @@
         <INSTANCE idc="LF" Role="master" Enable="true" Addr="dtc:20015:1"/>
       </CACHESHARDING>
     </MODULE>
-    <MODULE Mid="999" Name="test1" AccessToken="000013192869b7fcc3f362a97f72c0908a92cb6d" ListenOn="0.0.0.0:12999" Backlog="500" Client_Connections="900"
-        Preconnect="true" Server_Connections="1" Hash="chash" Timeout="3000" ReplicaEnable="true" ModuleIDC="LF" MainReport="false" InstanceReport="false" AutoRemoveReplica="true" TopPercentileEnable="false" TopPercentileDomain="127.0.0.1" TopPercentilePort="20020">
-      <CACHESHARDING  Sid="999" ShardingReplicaEnable="false" ShardingName="complex">
-        <INSTANCE idc="LF" Role="master" Enable="true" Addr="127.0.0.1:3307:1"/>
-      </CACHESHARDING>
-    </MODULE>    
   </BUSINESS_MODULE>
-<VERSION value="2" />
-    <LOG_MODULE LogSwitch="0" RemoteLogSwitch="1" RemoteLogIP="127.0.0.1" RemoteLogPort="9997" />
+  <SS_MODULE port="3307" />
+  <LOG_MODULE LogSwitch="0" RemoteLogSwitch="1" RemoteLogIP="127.0.0.1" RemoteLogPort="9997" />
 </ALL>
