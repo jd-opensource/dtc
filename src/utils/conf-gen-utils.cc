@@ -228,10 +228,8 @@ int yaml_dump_sharding_rule(FILE *fp, std::vector<YAML::Node> vec)
                 fprintf(fp, "          shardingAlgorithmName: %s\n", szname);
 
                 char sztemp[1024] = {0};
-                sprintf(sztemp, "$%s{(%s%%%d)}", 
-                    get_merge_string(node["real"][0]["db"]["prefix"]).c_str(),
-                    key.c_str(),
-                    dbcount);
+                sprintf(sztemp, "        sharding-count: %d\n        sharding-divide: %d\n", 
+                    dbcount, 1);
                 algorithm[szname] = sztemp;
             }
             
