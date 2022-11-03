@@ -110,7 +110,7 @@ static uint32_t server_pool_hash(struct server_pool *pool, uint8_t *key,
 uint32_t server_pool_idx(struct server_pool *pool, uint8_t *key,
 		uint32_t keylen) {
 	ASSERT(array_n(&pool->server) != 0);
-	//ASSERT(key != NULL && keylen != 0);
+	ASSERT(key != NULL && keylen != 0);
 	uint32_t hash, idx;
 	
 	hash = server_pool_hash(pool, key, keylen);

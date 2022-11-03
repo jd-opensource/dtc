@@ -496,35 +496,8 @@ static void req_forward(struct context *ctx, struct conn *c_conn,
 	}
 	else
 	{
-		for(i = 0 ; i < array_n(&(ctx->pool)) ; i ++){
-			temp_pool = (struct server_pool *)array_get(&(ctx->pool), i);
-			if(msg->mid == 0)
-				break;
-			if(msg->mid == temp_pool->mid)
-				break;
-			else
-				temp_pool = NULL;
-		}
-		if(temp_pool == NULL){
-			log_debug("s_conn null");
-			//client connection is still exist,no swallow
-			msg->done = 1;
-			msg->error = 1;
-			msg->err = MSG_REQ_FORWARD_ERR;
-			if (msg->frag_owner != NULL) {
-				msg->frag_owner->nfrag_done++;
-			}
-			if (req_done(c_conn, msg)) {
-				rsp_forward(ctx, c_conn, msg);
-			}
-			stats_pool_incr(ctx, pool, forward_error);
-			log_error("msg :%" PRIu64 " from c %d ,get s_conn fail!",
-				msg->id, c_conn->fd);
-			return;
-		}
-
 		s_conn =
-			server_pool_conn(ctx, temp_pool, msg);
+			server_pool_conn(ctx, (struct server_pool *) c_conn->owner, msg);
 	}
 
 	if (s_conn == NULL) {

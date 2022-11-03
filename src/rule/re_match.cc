@@ -374,6 +374,7 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
 
 bool do_match_expr(hsql::Expr* input, hsql::Expr* rule)
 {
+    log4cplus_debug("do_match_expr, input type %d, rule type: %d", input->opType, rule->opType);
     if(!input->isType(kExprOperator) || !rule->isType(kExprOperator))
         return false;
 
