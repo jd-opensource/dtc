@@ -207,9 +207,8 @@ def test_insert_with_double_quotes():
     db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
     cursor = db.cursor()
     sql = "insert into opensource(uid, name) values(33, \"hello\") where uid = 1"
-    cursor.execute(sql)
+    rowsaffected = cursor.execute(sql)
     db.commit()
-    rowsaffected = cursor.rowcount
     cursor.close()
     db.close()    
     assert rowsaffected == 1
@@ -217,10 +216,27 @@ def test_insert_with_double_quotes():
 def test_insert_with_grave():
     db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
     cursor = db.cursor()
+
     sql = "insert into `opensource`(uid, name) values(33, \'hello\') where uid = 1"
-    cursor.execute(sql)
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1
+
+    sql = "insert into opensource(`uid`, name) values(33, \'hello\') where uid = 1"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1
+
+    sql = "insert into opensource(`uid`, `name`) values(33, \'hello\') where uid = 1"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1
+
+    sql = "insert into `opensource`(`uid`, `name`) values(33, \'hello\') where uid = 1"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1    
+
+    sql = "insert into opensource(uid, name) values(33, `hello`) where uid = 1"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 0
+
     db.commit()
-    rowsaffected = cursor.rowcount
     cursor.close()
     db.close()    
-    assert rowsaffected == 1
