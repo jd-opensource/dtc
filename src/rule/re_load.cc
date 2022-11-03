@@ -8,8 +8,6 @@
 
 using namespace hsql;
 
-vector<vector<hsql::Expr*> > expr_rules;
-
 std::map<std::string, std::string> g_map_dtc_yaml;
 
 // load rule from dtc.yaml
@@ -81,26 +79,26 @@ int traverse_sub_ast(hsql::Expr* where, vector<hsql::Expr*>* v_expr)
     }
 }
 
-int traverse_ast(hsql::Expr* where)
+int traverse_ast(hsql::Expr* where, vector<vector<hsql::Expr*> >* expr_rules)
 {
     if(where->isType(kExprOperator) &&  where->opType == kOpOr)
     {
-        traverse_ast(where->expr);
-        traverse_ast(where->expr2);
+        traverse_ast(where->expr, expr_rules);
+        traverse_ast(where->expr2, expr_rules);
     }
     else
     {
         vector<hsql::Expr*> v_expr;
         traverse_sub_ast(where, &v_expr);
 
-        expr_rules.push_back(v_expr);
+        expr_rules->push_back(v_expr);
     }
 
     return 0;
 }
 
 //legitimacy check.
-int do_check_rule(hsql::SQLParserResult* rule_ast)
+int do_check_rule(hsql::SQLParserResult* rule_ast, vector<vector<hsql::Expr*> >* expr_rules)
 {
     hsql::Expr *where = NULL;
     if(rule_ast->size() != 1)
@@ -115,7 +113,7 @@ int do_check_rule(hsql::SQLParserResult* rule_ast)
     if(!where)
         return -3;
 
-    traverse_ast(where);
+    traverse_ast(where, expr_rules);
 
     return 0;
 }
@@ -165,7 +163,7 @@ std::string load_dtc_yaml_buffer(int mid)
     return res;
 }
 
-int re_load_rule(std::string buf, hsql::SQLParserResult* rule_ast)
+int re_load_rule(std::string buf, hsql::SQLParserResult* rule_ast, vector<vector<hsql::Expr*> >* expr_rules)
 {
     log4cplus_debug("load rule start...");
 
@@ -183,7 +181,7 @@ int re_load_rule(std::string buf, hsql::SQLParserResult* rule_ast)
         return -2;
     }
 
-    ret = do_check_rule(rule_ast);
+    ret = do_check_rule(rule_ast, expr_rules);
     if(ret != 0)
     {
         log4cplus_error("match rules check failed, %d", ret);

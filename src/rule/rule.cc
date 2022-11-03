@@ -21,7 +21,6 @@
 using namespace std;
 using namespace hsql;
 
-extern vector<vector<hsql::Expr*> > expr_rules;
 extern std::map<std::string, std::string> g_map_dtc_yaml;
 
 std::string get_key_info(std::string buf)
@@ -475,7 +474,7 @@ extern "C" int re_load_all_rules()
     return 0;
 }
 
-extern "C" int rule_sql_match(const char* szsql, const char* dbsession, char* out_dtckey, int* out_keytype)
+extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* dbsession, char* out_dtckey, int* out_keytype)
 {
     if(!szsql)
         return -1;
@@ -484,6 +483,8 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbsession, char* ou
     std::string sql = szsql;
 
     init_log4cplus();
+
+    log4cplus_debug("input sql: %s", osql);
 
     if(sql.find("WITHOUT@@") != sql.npos)
     {
@@ -560,9 +561,10 @@ extern "C" int rule_sql_match(const char* szsql, const char* dbsession, char* ou
         return 2;
     }
 
+    vector<vector<hsql::Expr*> > expr_rules;
     expr_rules.clear();
     hsql::SQLParserResult rule_ast;
-    int ret = re_load_rule(g_map_dtc_yaml[db_dot_name], &rule_ast);
+    int ret = re_load_rule(g_map_dtc_yaml[db_dot_name], &rule_ast, &expr_rules);
     if(ret != 0)
     {
         log4cplus_error("load rule error:%d", ret);
