@@ -10,22 +10,24 @@
 #include "log.h"
 #include "mxml.h"
 #include "yaml-cpp/yaml.h"
+#include "mxml.h"
 
 #define SPECIFIC_L1_SCHEMA "L1"
 #define SPECIFIC_L2_SCHEMA "L2"
 #define SPECIFIC_L3_SCHEMA "L3"
 
+#define AGENT_XML_FILE "../conf/agent.xml"
+
 using namespace std;
 using namespace hsql;
 
-extern vector<vector<hsql::Expr*> > expr_rules;
-extern std::string conf_file;
+extern std::map<std::string, std::string> g_map_dtc_yaml;
 
-std::string get_key_info(std::string conf)
+std::string get_key_info(std::string buf)
 {
     YAML::Node config;
     try {
-        config = YAML::LoadFile(conf);
+        config = YAML::Load(buf);
 	} catch (const YAML::Exception &e) {
 		log4cplus_error("config file error:%s\n", e.what());
 		return "";
@@ -169,13 +171,12 @@ extern "C" int get_statement_value(char* str, int len, const char* strkey, int* 
         return -1;
 }
 
-extern "C" int get_table_with_db(const char* sessiondb, const char* sql, char* result)
+std::string get_table_with_db(const char* sessiondb, const char* sql)
 {
-	if(result == NULL)
-		return -1;
+	char result[300];
     hsql::SQLParserResult sql_ast;
     if(re_parse_sql(sql, &sql_ast) != 0)
-        return -2;
+        return "";
 	memset(result, 0, 300);
 
     // Get db name
@@ -191,7 +192,7 @@ extern "C" int get_table_with_db(const char* sessiondb, const char* sql, char* r
     else
     {
         log4cplus_error("no database selected.");
-        return -3;
+        return "";
     }
 
     //Append symbol.
@@ -205,25 +206,24 @@ extern "C" int get_table_with_db(const char* sessiondb, const char* sql, char* r
     }
     else
     {
-        return -4;
+        return "";
     }
 
-    return 0;
+    std::string strres = result;
+    transform(strres.begin(),strres.end(),strres.begin(),::toupper);
+    return strres;
 }
 
-extern "C" int rule_get_key_type(const char* conf)
+int rule_get_key_type(std::string buf)
 {
     YAML::Node config;
-    if(conf == NULL)
-        return -1;
-    
-    if(strlen(conf) <= 0)
+    if(buf.length() == 0)
         return -1;
 
     try {
-        config = YAML::LoadFile(conf);
+        config = YAML::Load(buf);
 	} catch (const YAML::Exception &e) {
-		log4cplus_error("config file(%s) error:%s\n", conf, e.what());
+		log4cplus_error("config buf load error:%s\n", e.what());
 		return -1;
 	}
 
@@ -409,28 +409,82 @@ bool exist_sql_db(hsql::SQLParserResult* ast)
     return false;
 }
 
-extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* dbname, const char* conf)
+bool is_dtc_instance(std::string key)
+{
+    if(key.length() > 0)
+        return true;
+    else
+        return false;
+}
+
+extern "C" int re_load_all_rules()
+{
+    init_log4cplus();
+    FILE *fp = fopen(AGENT_XML_FILE, "r");
+    mxml_node_t *poolnode = NULL;
+
+    if (fp == NULL) {
+        log4cplus_error("conf: failed to open configuration '%s': %s", AGENT_XML_FILE, strerror(errno));
+        return false;
+    }
+    mxml_node_t* tree = mxmlLoadFile(NULL, fp, MXML_TEXT_CALLBACK);
+    if (tree == NULL) {
+        log4cplus_error("mxmlLoadFile error, file: %s", AGENT_XML_FILE);
+        return false;
+    }
+    fclose(fp);
+
+    for (poolnode = mxmlFindElement(tree, tree, "MODULE", NULL, NULL, MXML_DESCEND); 
+        poolnode != NULL;
+		poolnode = mxmlFindElement(poolnode, tree, "MODULE", NULL, NULL, MXML_DESCEND)) 
+    {
+        char* Mid = (char *) mxmlElementGetAttr(poolnode, "Mid");
+        if (Mid == NULL) {
+            log4cplus_error("get Mid from conf '%s' error", AGENT_XML_FILE);
+            mxmlDelete(tree);
+            return false;
+        }
+        int imid = atoi(Mid);
+
+        char* Name = (char *) mxmlElementGetAttr(poolnode, "Name");
+        if (Name == NULL) {
+            log4cplus_error("get Name from conf '%s' error", AGENT_XML_FILE);
+            mxmlDelete(tree);
+            return false;
+        }
+
+        std::string buf = load_dtc_yaml_buffer(imid);
+        if(buf.length() > 0)
+        {
+            log4cplus_debug("push %s into map.", Name);
+            std::string strname = Name;
+            transform(strname.begin(),strname.end(),strname.begin(),::toupper);
+            g_map_dtc_yaml[strname] = buf;
+        }
+        else
+        {
+            log4cplus_error("get dtc: %d yaml buffer error.", imid);
+            return -2;
+        }
+
+    }
+
+    mxmlDelete(tree);
+
+    return 0;
+}
+
+extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* dbsession, char* out_dtckey, int* out_keytype)
 {
     if(!szsql)
         return -1;
         
-    std::string key = "";
+    std::string dtc_key = "";
     std::string sql = szsql;
-    bool flag = false;
 
     init_log4cplus();
 
-    if(conf)
-    {
-        conf_file = std::string(conf);
-        flag = true;
-        log4cplus_debug("flag is true, conf: %s", conf);
-        key = get_key_info(conf_file);
-        if(key.length() == 0)
-            return -1;
-    }
-
-    log4cplus_debug("key len: %d, key: %s, sql len: %d, sql: %s, dbname len: %d, dbname: %s", key.length(), key.c_str(), key.length(), osql, strlen(dbname), std::string(dbname).c_str());
+    log4cplus_debug("input sql: %s", osql);
 
     if(sql.find("WITHOUT@@") != sql.npos)
     {
@@ -449,7 +503,7 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
     if(is_show_db_with_ast(&sql_ast))
     {
         log4cplus_debug("layered: L3, SHOW statment.");
-        return 3;
+        return 2;
     }
 
     if(is_set_with_ast(&sql_ast))
@@ -460,7 +514,7 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
 
     if(is_show_table_with_ast(&sql_ast))
     {
-        if(exist_session_db(dbname))
+        if(exist_session_db(dbsession))
         {
             log4cplus_debug("layered: L2, session db.");
             return 2;
@@ -474,18 +528,43 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
 
     if(is_show_create_table_with_ast(&sql_ast))
     {
-        log4cplus_debug("layered: L2, show create table.");
-        return 2;
+        if(exist_session_db(dbsession))
+        {
+            log4cplus_debug("layered: L2, show create table.");
+            return 2;
+        }
+        else
+        {
+            log4cplus_debug("layered: error, no session db.");
+            return -6;
+        }
     }
 
-    log4cplus_debug("flag: %d %d %d", flag, exist_session_db(dbname), exist_sql_db(&sql_ast));
-    if((exist_session_db(dbname) || (exist_sql_db(&sql_ast))) && flag == false)
+    std::string db_dot_name = get_table_with_db(dbsession, szsql);
+    if(db_dot_name.length() > 0 && g_map_dtc_yaml.count(db_dot_name) > 0)
+    {
+        dtc_key = get_key_info(g_map_dtc_yaml[db_dot_name]);
+        if(dtc_key.length() == 0)
+        {
+            log4cplus_error("get dtc_key from yaml:%s failed.", db_dot_name.c_str());
+            return -1;
+        }
+        strcpy(out_dtckey, dtc_key.c_str());
+        *out_keytype = rule_get_key_type(g_map_dtc_yaml[db_dot_name]);
+    }
+        log4cplus_debug("dtc key len: %d, key: %s, dbname len: %d, dbname: %s", dtc_key.length(), dtc_key.c_str(), strlen(dbsession), std::string(dbsession).c_str());
+
+    log4cplus_debug("Is dtc instance: %d %d %d", is_dtc_instance(dtc_key), exist_session_db(dbsession), exist_sql_db(&sql_ast));
+    if((exist_session_db(dbsession) || (exist_sql_db(&sql_ast))) && !is_dtc_instance(dtc_key))
     {
         log4cplus_debug("layered: L2, db session & single table");
         return 2;
     }
 
-    int ret = re_load_rule();
+    vector<vector<hsql::Expr*> > expr_rules;
+    expr_rules.clear();
+    hsql::SQLParserResult rule_ast;
+    int ret = re_load_rule(g_map_dtc_yaml[db_dot_name], &rule_ast, &expr_rules);
     if(ret != 0)
     {
         log4cplus_error("load rule error:%d", ret);
@@ -542,37 +621,15 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
         log4cplus_debug("temsql: %s", tempsql.c_str());
         ast = &ast2;
     }
-
-    int ext = is_ext_table(&sql_ast, dbname);
-    if(ext == -1)
-    {
-        log4cplus_debug("layered: L2, ext table.");
-        return 2;
-    }
-    else if(ext == -2)
-    {
-        log4cplus_debug("layered: error.");
-        return -2;
-    }
-        
+       
     ret = re_match_sql(&sql_ast, expr_rules, ast);  //rule match
     if(ret == 0 || is_update_delete_type(&sql_ast))
     {
-        if(re_is_cache_sql(&sql_ast, key))  //if exist dtc key.
+        if(re_is_cache_sql(&sql_ast, dtc_key))  //if exist dtc key.
         {
             //L1: DTC cache.
-            std::string tab_name = get_table_name(&sql_ast);
-            std::string conf_tab_name = re_load_table_name();
-            if(tab_name == conf_tab_name)
-            {
-                log4cplus_debug("layered: L1.");
-                return 1;
-            }
-            else
-            {
-                log4cplus_error("layered: L3, table name dismatch: %s, %s", tab_name.c_str(), conf_tab_name.c_str());
-                return 3;
-            }
+            log4cplus_debug("layered: L1.");
+            return 1;
         }
         else
         {

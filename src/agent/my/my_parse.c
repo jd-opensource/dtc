@@ -632,76 +632,16 @@ bool check_cmd_insert(struct string *str)
 		return false;
 }
 
-int get_mid_by_dbname(const char* sessiondb, const char* sql, struct msg* r)
-{
-	int mid = 0;
-	struct context* ctx = NULL;
-	struct conn *c_conn = NULL;
-	int sql_len = 0;
-	int ret = 0;
-	char cmp_string[300] = {0};
-	struct string req_string; 
-	c_conn = r->owner;
-	ctx = conn_to_ctx(c_conn);
-
-	ret = get_table_with_db(sessiondb, sql, &cmp_string);
-	if(ret >= 0)
-	{
-		struct array *pool = &(ctx->pool);
-		int i;
-
-		string_copy(&req_string, cmp_string, strlen(cmp_string));
-		string_upper(&req_string);
-
-		for (i = 0; i < array_n(pool); i++) {
-			struct server_pool *p = (struct server_pool *)array_get(pool, i);
-			struct string xmlname; 
-			if(string_empty(&p->name))
-				continue;
-
-			string_duplicate(&xmlname, &(p->name));
-			string_upper(&xmlname);
-
-			log_info("xml name: %s, cmp string: %s", xmlname.data, req_string.data);
-			if(da_strncmp(xmlname.data, req_string.data, req_string.len) == 0)
-			{
-				mid = p->mid;
-			}
-
-			string_deinit(&xmlname);
-		}
-
-		string_deinit(&req_string);
-	}
-
-	log_info("mid result: %d", mid);
-	return mid;
-}
-
-void get_tablename(struct msg* r, uint8_t* sql, int sql_len)
-{
-	char tablename[260] = {0};
-	if(sql == NULL || sql_len <= 0)
-		return ;
-
-	int ret = sql_parse_table(sql, &tablename);
-	if(ret > 0)
-	{
-		string_copy(&r->table_name, tablename, strlen(tablename));
-	}
-	log_debug("tablename: %s", tablename);
-}
-
 int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
-		     int *end_offset, const char* dbname, struct msg* r)
+		     int *end_offset, const char* dbsession, struct msg* r)
 {
 	int i = 0;
 	struct string str, ostr;
 	int ret = 0;
 	int layer = 0;
 	string_init(&str);
-	string_copy(&str, sql, sql_len);
 	string_init(&ostr);
+	string_copy(&str, sql, sql_len);
 	string_copy(&ostr, sql, sql_len);
 
 	if (string_empty(&str))
@@ -711,44 +651,16 @@ int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
 		return -9;
 
 	log_debug("sql: %s", str.data);
-	if(dbname && strlen(dbname))
+	if(dbsession && strlen(dbsession))
 	{
-		log_debug("dbname len:%d, dbname: %s", strlen(dbname), dbname);
+		log_debug("dbsession len:%d, dbsession: %s", strlen(dbsession), dbsession);
 	}
 
-	int mid = get_mid_by_dbname(dbname, str.data, r);
-	char conf_path[260] = {0};
-	memset(conf_path, 0, 260);
-	if(mid != 0)
-	{
-		sprintf(conf_path, "../conf/dtc-conf-%d.yaml", mid);
-		r->mid = mid;
-	}
-
-	get_tablename(r, str.data, str.len);
-	if(r->table_name.len > 0)
-		log_debug("table name: %s", r->table_name.data);
-
-	char strkey[260] = {0};
-	memset(strkey, 0, 260);
-	if(strlen(conf_path) > 0)
-	{
-		if(rule_get_key(conf_path, strkey) <= 0)
-		{
-			ret = -5;
-			goto done;
-		}
-		else
-		{
-			log_debug("strkey: %s", strkey);
-		}
-	}
-
-	r->keytype = rule_get_key_type(conf_path);
-	log_debug("strkey type: %d", r->keytype);
+	char strkey[1024] = {0};
+	memset(strkey, 0, 1024);
 
 	//agent sql route, rule engine
-	layer = rule_sql_match(str.data, ostr.data, dbname, strlen(conf_path) > 0 ? conf_path : NULL);
+	layer = rule_sql_match(str.data, ostr.data, dbsession, &strkey, &r->keytype);
 	log_debug("rule layer: %d", layer);
 
 	if(layer != 1)
