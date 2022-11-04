@@ -4,7 +4,7 @@ import pymysql
 def test_insert_with_single_quotes():
     db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
     cursor = db.cursor()
-    sql = "insert into opensource(uid, name) values(1, 'hello') where uid = 1"
+    sql = "insert into opensource(uid, name) values(1, 'hello')"
     cursor.execute(sql)
     db.commit()
     rowsaffected = cursor.rowcount
@@ -12,17 +12,6 @@ def test_insert_with_single_quotes():
     cursor.close()
     db.close()
     assert rowsaffected == 1
-
-'''
-def test_insert_with_double_quotes():
-    db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
-    cursor = db.cursor()
-    sql = "insert into opensource(uid, name) values(1, \"hello\") where uid = 1"
-    cursor.execute(sql)
-    db.commit()
-    cursor.close()
-    db.close()
-'''    
 
 def test_select():
     db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
@@ -55,12 +44,48 @@ def test_update():
     cursor.close()
 
     cursor = db.cursor()
+
     sql = "update opensource set name = 'Lee' where uid = 1"
-    cursor.execute(sql)
-    db.commit()
-    rowsaffected = cursor.rowcount
-    print("affected rows: %s" % (rowsaffected))
+    rowsaffected = cursor.execute(sql)
     assert rowsaffected == 1
+
+    #sql = "update opensource set name = \"Lee3\" where uid = 1"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1
+
+    #sql = "update opensource set name = `Lee` where uid = 1"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 0
+
+    #sql = "update opensource set name = \"Lee4\" where uid = '1'"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1    
+
+    #sql = "update opensource set name = \"Lee\" where uid = \"1\""
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1        
+
+    #sql = "update opensource set name = 'Lee2' where `uid` = 1"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1
+
+    #sql = "update opensource set name = \"Lee\" where `uid` = 1"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1    
+
+    #sql = "update opensource set `name` = \"Lee2\" where `uid` = 1"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1        
+
+    #sql = "update opensource set `name` = \"Lee\" where `uid` = gh"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 0
+
+    #sql = "update opensource set `name` = Lee2 where `uid` = 1"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 0
+
+    db.commit()
     cursor.close()
 
     cursor = db.cursor()
@@ -199,6 +224,120 @@ def test_insert_automated_conversion():
     insert = cursor.execute(sql)
     assert insert == 0
 
+    sql = "insert into opensource(uid,name,city,sex,age) values(1, 'jack', Shanghai, 1, '18a')"
+    insert = cursor.execute(sql)
+    assert insert == 0
+
     db.commit()
 
     db.close()
+
+def test_insert_with_double_quotes():
+    db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
+    cursor = db.cursor()
+    sql = "insert into opensource(uid, name) values(33, \"hello\")"
+    cursor.execute(sql)
+    db.commit()
+    rowsaffected = cursor.rowcount
+    cursor.close()
+    db.close()    
+    assert rowsaffected == 1
+
+def test_insert_with_double_quotes():
+    db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
+    cursor = db.cursor()
+    sql = "insert into opensource(uid, name) values(33, \"hello\")"
+    rowsaffected = cursor.execute(sql)
+    db.commit()
+    cursor.close()
+    db.close()    
+    assert rowsaffected == 1
+
+def test_insert_with_grave():
+    db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
+    cursor = db.cursor()
+
+    sql = "insert into `opensource`(uid, name) values(33, 'hello')"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1
+
+    #sql = "insert into opensource(`uid`, name) values(33, 'hello')"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1
+
+    #sql = "insert into opensource(`uid`, `name`) values(33, 'hello')"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1
+
+    #sql = "insert into `opensource`(`uid`, `name`) values(33, 'hello')"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1    
+
+    sql = "insert into opensource(uid, name) values(33, `hello`)"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 0
+
+    sql = "insert into opensource(uid, name) values(33, `123`)"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 0    
+
+    #sql = "insert into \"opensource\"(uid, name) values(33, 'hello')"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1
+
+    #sql = "insert into 'opensource'(uid, name) values(33, 'hello')"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1    
+
+    db.commit()
+    cursor.close()
+    db.close()    
+
+def test_insert_with_set_keyword():
+    db = pymysql.connect(host='127.0.0.1', port=20015, user='test', password='test', database='test')
+    cursor = db.cursor()
+    
+    sql = "insert into opensource set uid = 33, name = 'hello'"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1   
+
+    #sql = "insert into opensource set `uid` = 33, `name` = 'hello'"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1   
+
+    #sql = "insert into opensource set `uid` = 33, `name` = '12312'"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1       
+
+    #sql = "insert into opensource set `uid` = 33, `name` = \"12312\""
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1           
+
+    sql = "insert into opensource set uid = 33, name = 'hello'"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1   
+
+    sql = "insert into opensource set uid = 33, name = '12312'"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1       
+
+    sql = "insert into opensource set uid = 33, name = \"12312waefoioiwa\""
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1       
+
+    sql = "insert into opensource set uid = 33, name = \"waefoioiwawaefwa\""
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1       
+
+    sql = "insert into opensource set uid = 33, name = 123waefoioiwawaefwa"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 0
+
+    sql = "insert into opensource set uid = 33, name = \"12312\""
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1           
+
+    db.commit()
+    cursor.close()
+    db.close()    
+ 
