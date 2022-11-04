@@ -477,14 +477,6 @@ static int da_pre_run(struct instance *dai) {
 
 	log_info("DTC AGENT init.");
 
-#if 0
-	if(re_load_table_key(dtckey) < 0)
-	{
-		log_error("load dtc define error.");
-		return -1;
-	}
-#endif
-
 	if (daemonize) {
 		status = da_daemonize(1);
 		if (status != 0) {
@@ -534,6 +526,9 @@ static int da_pre_run(struct instance *dai) {
 	}
 
 	da_print_run(dai);
+
+	re_load_all_rules();
+	
 	return 0;
 }
 

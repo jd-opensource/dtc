@@ -35,6 +35,6 @@ int my_do_command(struct context *ctx, struct conn *c_conn, struct msg *msg);
 int my_fragment(struct msg *r, uint32_t ncontinuum, struct msg_tqh *frag_msgq);
 
 int my_get_route_key(uint8_t *sql, int sql_len, int *start_offset,
-		     int *end_offset, const char* dbname, struct msg* r);
+		     int *end_offset, const char* dbsession, struct msg* r);
 
 #endif /* _MY_PARSE_H_ */
