@@ -53,9 +53,9 @@ def test_update():
     rowsaffected = cursor.execute(sql)
     assert rowsaffected == 1
 
-    sql = "update opensource set name = `Lee` where uid = 1"
-    rowsaffected = cursor.execute(sql)
-    assert rowsaffected == 0
+    #sql = "update opensource set name = `Lee` where uid = 1"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 0
 
     sql = "update opensource set name = \"Lee3\" where uid = '1'"
     rowsaffected = cursor.execute(sql)
@@ -224,6 +224,10 @@ def test_insert_automated_conversion():
     insert = cursor.execute(sql)
     assert insert == 0
 
+    sql = "insert into opensource(uid,name,city,sex,age) values(1, 'jack', Shanghai, 1, '18a')"
+    insert = cursor.execute(sql)
+    assert insert == 0
+
     db.commit()
 
     db.close()
@@ -257,17 +261,17 @@ def test_insert_with_grave():
     rowsaffected = cursor.execute(sql)
     assert rowsaffected == 1
 
-    sql = "insert into opensource(`uid`, name) values(33, 'hello')"
-    rowsaffected = cursor.execute(sql)
-    assert rowsaffected == 1
+    #sql = "insert into opensource(`uid`, name) values(33, 'hello')"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1
 
-    sql = "insert into opensource(`uid`, `name`) values(33, 'hello')"
-    rowsaffected = cursor.execute(sql)
-    assert rowsaffected == 1
+    #sql = "insert into opensource(`uid`, `name`) values(33, 'hello')"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1
 
-    sql = "insert into `opensource`(`uid`, `name`) values(33, 'hello')"
-    rowsaffected = cursor.execute(sql)
-    assert rowsaffected == 1    
+    #sql = "insert into `opensource`(`uid`, `name`) values(33, 'hello')"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1    
 
     sql = "insert into opensource(uid, name) values(33, `hello`)"
     rowsaffected = cursor.execute(sql)
@@ -277,13 +281,13 @@ def test_insert_with_grave():
     rowsaffected = cursor.execute(sql)
     assert rowsaffected == 0    
 
-    sql = "insert into \"opensource\"(uid, name) values(33, 'hello')"
-    rowsaffected = cursor.execute(sql)
-    assert rowsaffected == 1
+    #sql = "insert into \"opensource\"(uid, name) values(33, 'hello')"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1
 
-    sql = "insert into 'opensource'(uid, name) values(33, 'hello')"
-    rowsaffected = cursor.execute(sql)
-    assert rowsaffected == 1    
+    #sql = "insert into 'opensource'(uid, name) values(33, 'hello')"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1    
 
     db.commit()
     cursor.close()
@@ -297,15 +301,39 @@ def test_insert_with_set_keyword():
     rowsaffected = cursor.execute(sql)
     assert rowsaffected == 1   
 
-    sql = "insert into opensource set `uid` = 33, `name` = 'hello'"
+    #sql = "insert into opensource set `uid` = 33, `name` = 'hello'"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1   
+
+    #sql = "insert into opensource set `uid` = 33, `name` = '12312'"
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1       
+
+    #sql = "insert into opensource set `uid` = 33, `name` = \"12312\""
+    #rowsaffected = cursor.execute(sql)
+    #assert rowsaffected == 1           
+
+    sql = "insert into opensource set uid = 33, name = 'hello'"
     rowsaffected = cursor.execute(sql)
     assert rowsaffected == 1   
 
-    sql = "insert into opensource set `uid` = 33, `name` = '12312'"
+    sql = "insert into opensource set uid = 33, name = '12312'"
     rowsaffected = cursor.execute(sql)
     assert rowsaffected == 1       
 
-    sql = "insert into opensource set `uid` = 33, `name` = \"12312\""
+    sql = "insert into opensource set uid = 33, name = \"12312waefoioiwa\""
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1       
+
+    sql = "insert into opensource set uid = 33, name = \"waefoioiwawaefwa\""
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1       
+
+    sql = "insert into opensource set uid = 33, name = 123waefoioiwawaefwa"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 0
+
+    sql = "insert into opensource set uid = 33, name = \"12312\""
     rowsaffected = cursor.execute(sql)
     assert rowsaffected == 1           
 
