@@ -224,10 +224,6 @@ def test_insert_automated_conversion():
     insert = cursor.execute(sql)
     assert insert == 0
 
-    sql = "insert into opensource(uid,name,city,sex,age) values(1, 'jack', Shanghai, 1, 18)"
-    insert = cursor.execute(sql)
-    assert insert == 0
-
     db.commit()
 
     db.close()
