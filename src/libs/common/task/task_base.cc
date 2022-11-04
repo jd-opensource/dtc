@@ -523,7 +523,7 @@ std::string hsql_convert_value_string(hsql::Expr* input)
     {
         return to_string(input->ival);
     }
-    else if(input->isType(kExprLiteralString) || input->isType(kExprColumnRef))
+    else if(input->isType(kExprLiteralString))
     {
         return input->name;
     }
