@@ -53,9 +53,9 @@ def test_update():
     #rowsaffected = cursor.execute(sql)
     #assert rowsaffected == 1
 
-    #sql = "update opensource set name = `Lee` where uid = 1"
-    #rowsaffected = cursor.execute(sql)
-    #assert rowsaffected == 0
+    sql = "update opensource set name = `Lee` where uid = 1"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 0
 
     #sql = "update opensource set name = \"Lee4\" where uid = '1'"
     #rowsaffected = cursor.execute(sql)
@@ -221,10 +221,6 @@ def test_insert_automated_conversion():
 
     #name string to num, error
     sql = "insert into opensource(uid,name,city,sex,age) values(1, 'jack', 'Shanghai', 1, '18a')"
-    insert = cursor.execute(sql)
-    assert insert == 0
-
-    sql = "insert into opensource(uid,name,city,sex,age) values(1, 'jack', Shanghai, 1, '18a')"
     insert = cursor.execute(sql)
     assert insert == 0
 
