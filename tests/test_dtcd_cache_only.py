@@ -49,13 +49,13 @@ def test_update():
     rowsaffected = cursor.execute(sql)
     assert rowsaffected == 1
 
-    #sql = "update opensource set name = \"Lee3\" where uid = 1"
-    #rowsaffected = cursor.execute(sql)
-    #assert rowsaffected == 1
+    sql = "update opensource set name = \"Lee3\" where uid = 1"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 1
 
-    #sql = "update opensource set name = `Lee` where uid = 1"
-    #rowsaffected = cursor.execute(sql)
-    #assert rowsaffected == 0
+    sql = "update opensource set name = `Lee` where uid = 1"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 0
 
     #sql = "update opensource set name = \"Lee4\" where uid = '1'"
     #rowsaffected = cursor.execute(sql)
@@ -98,7 +98,7 @@ def test_update():
         name = row[1]
         print("uid=%s, name=%s" % (uid, name))
         assert uid == 1
-        assert name == "Lee"
+        assert name == "Lee3"
     cursor.close()
 
     db.close()
