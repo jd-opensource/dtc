@@ -98,7 +98,7 @@ def test_update():
         name = row[1]
         print("uid=%s, name=%s" % (uid, name))
         assert uid == 1
-        assert name == "Lee"
+        assert name == "Lee3"
     cursor.close()
 
     db.close()
