@@ -260,9 +260,9 @@ def test_insert_with_grave():
     rowsaffected = cursor.execute(sql)
     assert rowsaffected == 0    
 
-    # sql = "insert into \"opensource\"(uid, name) values(33, 'hello')"
-    # rowsaffected = cursor.execute(sql)
-    # assert rowsaffected == 0
+    sql = "insert into \"opensource\"(uid, name) values(33, 'hello')"
+    rowsaffected = cursor.execute(sql)
+    assert rowsaffected == 0
 
     sql = "insert into 'opensource'(uid, name) values(33, 'hello')"
     rowsaffected = cursor.execute(sql)
