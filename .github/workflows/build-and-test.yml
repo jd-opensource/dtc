@@ -98,7 +98,7 @@ jobs:
     runs-on: ubuntu-20.04
     services:
       dtc:
-        image: docker.io/format('docker.io/{0}/devel:all', ${{ secrets.DOCKER_USERNAME }})/devel:all
+        image: docker.io/kfysck/devel:all
         ports:
           - 20015:20015
         volumes:
@@ -147,7 +147,7 @@ jobs:
     runs-on: ubuntu-20.04
     services:
       dtc:
-        image: docker.io/format('docker.io/{0}/devel:all', ${{ secrets.DOCKER_USERNAME }})/devel:all
+        image: docker.io/kfysck/devel:all
         ports:
           - 20015:20015
         volumes:
@@ -157,7 +157,7 @@ jobs:
           DTC_BIN: agent-watchdog
           DTC_ARGV: -c        
       agent:
-        image: docker.io/format('docker.io/{0}/devel:all', ${{ secrets.DOCKER_USERNAME }})/devel:all
+        image: docker.io/kfysck/devel:all
         ports:
           - 12001:12001
         volumes:
@@ -217,7 +217,7 @@ jobs:
         env: 
           MYSQL_ROOT_PASSWORD: 123456
       agent:
-        image: docker.io/format('docker.io/{0}/devel:all', ${{ secrets.DOCKER_USERNAME }})/devel:all
+        image: docker.io/kfysck/devel:all
         ports:
           - 12001:12001
         volumes:
@@ -291,7 +291,7 @@ jobs:
         env: 
           MYSQL_ROOT_PASSWORD: 123456
       dtc:
-        image: docker.io/format('docker.io/{0}/devel:all', ${{ secrets.DOCKER_USERNAME }})/devel:all
+        image: docker.io/kfysck/devel:all
         ports:
           - 20015:20015
         volumes:
@@ -354,7 +354,7 @@ jobs:
         env: 
           MYSQL_ROOT_PASSWORD: 123456
       agent:
-        image: docker.io/format('docker.io/{0}/devel:all', ${{ secrets.DOCKER_USERNAME }})/devel:all
+        image: docker.io/kfysck/devel:all
         ports:
           - 12001:12001
         volumes:
@@ -363,7 +363,7 @@ jobs:
         env:
           DTC_BIN: dtcagent       
       dtc:
-        image: docker.io/format('docker.io/{0}/devel:all', ${{ secrets.DOCKER_USERNAME }})/devel:all
+        image: docker.io/kfysck/devel:all
         ports:
           - 20015:20015
         volumes:
@@ -427,7 +427,7 @@ jobs:
         env: 
           MYSQL_ROOT_PASSWORD: 123456
       dtc:
-        image: docker.io/format('docker.io/{0}/devel:all', ${{ secrets.DOCKER_USERNAME }})/devel:all
+        image: docker.io/kfysck/devel:all
         ports:
           - 20015:20015
         volumes:
