@@ -1,6 +1,7 @@
 #include "re_match.h"
 #include "re_comm.h"
 #include "log.h"
+#include "re_function.h"
 #include "re_cache.h"
 
 using namespace hsql;
@@ -108,11 +109,101 @@ bool hsql_convert_value_float(hsql::Expr* input, double* out)
     return false;
 }
 
+unsigned int hsql_convert_functionref_int(hsql::Expr* rule)
+{
+    if(strcasecmp(rule->name, "unix_timestamp") == 0)
+    {
+        std::vector<Expr*>* elist = rule->exprList;
+        if(elist->size() != 1)
+        {
+            log4cplus_error("elist size(%d) error", elist->size());
+            return 0;
+        }
+
+        Expr* expr = (*elist)[0];
+        std::string rv;
+        if(expr->type == kExprFunctionRef)
+        {
+            ExprType rule_run_converted_type = convert_rule_function_type(expr);
+            if(rule_run_converted_type == kExprLiteralString)
+            {
+                rv = hsql_convert_functionref_string(expr);
+            }
+        }
+        else if(expr->type == kExprLiteralString)
+        {
+            rv = expr->name;
+        }
+
+        tm tminfo = {0};
+        strptime(rv.c_str(), "%Y-%m-%d %H:%M:%S", &tminfo);
+
+        time_t t = mktime(&tminfo);
+        log4cplus_debug("timestamp: %ld, %d-%d-%d %d:%d:%d", t, tminfo.tm_year, tminfo.tm_mon, tminfo.tm_mday, tminfo.tm_hour, tminfo.tm_min, tminfo.tm_sec);
+        return t;
+    }
+
+    return 0;
+}
+
+std::string hsql_convert_functionref_string(hsql::Expr* rule)
+{
+    if(strcasecmp(rule->name, "date_sub") == 0)
+    {
+        std::vector<Expr*>* elist = rule->exprList;
+        if(elist->size() != 2)
+        {
+            log4cplus_error("elist size(%d) error", elist->size());
+            return "";
+        }
+        std::string r = fun_date_sub(elist);
+        log4cplus_debug("new date:%s", r.c_str());
+        return r;
+    }
+    else if(strcasecmp(rule->name, "date_add") == 0)
+    {
+        std::vector<Expr*>* elist = rule->exprList;
+        if(elist->size() != 2)
+        {
+            log4cplus_error("elist size(%d) error", elist->size());
+            return "";
+        }
+        std::string r = fun_date_add(elist);
+        log4cplus_debug("new date:%s", r.c_str());
+        return r;
+    }
+    else
+    {
+        log4cplus_error("function: %s unsupported right now.", rule->name);
+        return "";
+    }
+
+    return "";
+}
+
+ExprType convert_rule_function_type(hsql::Expr* rule)
+{
+    if(strcasecmp(rule->name, "date_sub") == 0)
+    {
+        return kExprLiteralString;
+    }
+    else if(strcasecmp(rule->name, "date_add") == 0)
+    {
+        return kExprLiteralString;
+    }
+    else if(strcasecmp(rule->name, "unix_timestamp") == 0)
+    {
+        return kExprLiteralInt;
+    }
+
+    return kExprFunctionRef;
+}
+
 bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type, OperatorType rule_type)
 {
     if(input->type != rule->type)
     {
-        if(input->type > kExprLiteralInt || rule->type > kExprLiteralInt)
+        if(input->type > kExprLiteralInt || (rule->type > kExprLiteralInt && rule->type != kExprFunctionRef))
             return false;
     }
 
@@ -151,6 +242,29 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
             else
                 return false;
         }
+        else if(rule->isType(kExprFunctionRef))     
+        {
+            ExprType rule_run_converted_type = convert_rule_function_type(rule);
+            if(rule_run_converted_type == kExprLiteralString)
+            {
+                std::string rv = hsql_convert_functionref_string(rule);
+                std::string v = hsql_convert_value_string(input);
+                if(rv == v)
+                    return true;
+                else
+                    return false;
+            }
+            else if(rule_run_converted_type == kExprLiteralInt)
+            {
+                unsigned int rv = hsql_convert_functionref_int(rule);
+                int v = 0;
+                bool valid = hsql_convert_value_int(input, &v);
+                if(rv == v)
+                    return true;
+                else
+                    return false;
+            }            
+        }   
     }
     else if(input_type == kOpNotEquals && rule_type == kOpNotEquals)
     {
@@ -184,6 +298,29 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
             else
                 return true;
         }
+        else if(rule->isType(kExprFunctionRef))     
+        {
+            ExprType rule_run_converted_type = convert_rule_function_type(rule);
+            if(rule_run_converted_type == kExprLiteralString)
+            {
+                std::string rv = hsql_convert_functionref_string(rule);
+                std::string v = hsql_convert_value_string(input);
+                if(rv == v)
+                    return false;
+                else
+                    return true;
+            }
+            else if(rule_run_converted_type == kExprLiteralInt)
+            {
+                unsigned int rv = hsql_convert_functionref_int(rule);
+                int v = 0;
+                bool valid = hsql_convert_value_int(input, &v);          
+                if(rv == v)
+                    return false;
+                else
+                    return true;                      
+            }
+        }   
     }
     else if(rule_type == kOpLess)
     {
@@ -244,6 +381,63 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
                     return false;
             }            
         }
+        else if(rule->isType(kExprFunctionRef))     
+        {
+            ExprType rule_run_converted_type = convert_rule_function_type(rule);
+            if(rule_run_converted_type == kExprLiteralString)
+            {
+                std::string rv = hsql_convert_functionref_string(rule);
+                std::string v = hsql_convert_value_string(input);
+                if(input_type == kOpLess)
+                {
+                    if(v <= rv)
+                        return true;
+                    else
+                        return false;
+                }
+                else if(input_type == kOpLessEq)
+                {
+                    if(v < rv)
+                        return true;
+                    else
+                        return false;
+                }
+                else if(input_type == kOpEquals)
+                {
+                    if(v < rv)
+                        return true;
+                    else
+                        return false;
+                }            
+            }
+            else if(rule_run_converted_type == kExprLiteralInt)
+            {
+                unsigned int rv = hsql_convert_functionref_int(rule);
+                int v = 0;
+                bool valid = hsql_convert_value_int(input, &v);
+                if(input_type == kOpLess)
+                {
+                    if(v <= rv)
+                        return true;
+                    else
+                        return false;
+                }
+                else if(input_type == kOpLessEq)
+                {
+                    if(v < rv)
+                        return true;
+                    else
+                        return false;
+                }
+                else if(input_type == kOpEquals)
+                {
+                    if(v < rv)
+                        return true;
+                    else
+                        return false;
+                }                            
+            }
+        }   
     }
     else if(rule_type == kOpLessEq)
     {
@@ -275,6 +469,35 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
                     return false;
             }
         }
+        else if(rule->isType(kExprFunctionRef))     
+        {
+            ExprType rule_run_converted_type = convert_rule_function_type(rule);
+            if(rule_run_converted_type == kExprLiteralString)
+            {
+                std::string rv = hsql_convert_functionref_string(rule);
+                std::string v = hsql_convert_value_string(input);
+                if(input_type == kOpLess || input_type == kOpLessEq || input_type == kOpEquals)
+                {
+                    if(v <= rv)
+                        return true;
+                    else
+                        return false;
+                }
+            }
+            else if(rule_run_converted_type == kExprLiteralInt)
+            {
+                unsigned int rv = hsql_convert_functionref_int(rule);
+                int v = 0;
+                bool valid = hsql_convert_value_int(input, &v);
+                if(input_type == kOpLess || input_type == kOpLessEq || input_type == kOpEquals)
+                {
+                    if(v <= rv)
+                        return true;
+                    else
+                        return false;
+                }
+            }
+        }           
     }
     else if(rule_type == kOpGreater)
     {
@@ -335,6 +558,65 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
                     return false;
             }
         }
+        else if(rule->isType(kExprFunctionRef))    
+        {
+            ExprType rule_run_converted_type = convert_rule_function_type(rule);
+            if(rule_run_converted_type == kExprLiteralString)
+            {
+                std::string rv = hsql_convert_functionref_string(rule);
+                std::string v = hsql_convert_value_string(input);
+
+                if(input_type == kOpGreater)
+                {
+                    if(v >= rv)
+                        return true;
+                    else
+                        return false;
+                }
+                else if(input_type == kOpGreaterEq)
+                {
+                    if(v > rv)
+                        return true;
+                    else
+                        return false;
+                }
+                else if(input_type == kOpEquals)
+                {
+                    if(v > rv)
+                        return true;
+                    else
+                        return false;
+                }
+            }            
+            else if(rule_run_converted_type == kExprLiteralInt)
+            {
+                unsigned int rv = hsql_convert_functionref_int(rule);
+                int v = 0;
+                bool valid = hsql_convert_value_int(input, &v);
+
+                if(input_type == kOpGreater)
+                {
+                    if(v >= rv)
+                        return true;
+                    else
+                        return false;
+                }
+                else if(input_type == kOpGreaterEq)
+                {
+                    if(v > rv)
+                        return true;
+                    else
+                        return false;
+                }
+                else if(input_type == kOpEquals)
+                {
+                    if(v > rv)
+                        return true;
+                    else
+                        return false;
+                }
+            }
+        }
     }
     else if(rule_type == kOpGreaterEq)
     {
@@ -364,6 +646,36 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
                     return true;
                 else
                     return false;
+            }
+        }
+        else if(rule->isType(kExprFunctionRef))    
+        {
+            ExprType rule_run_converted_type = convert_rule_function_type(rule);
+            if(rule_run_converted_type == kExprLiteralString)
+            {
+                std::string rv = hsql_convert_functionref_string(rule);
+                std::string v = hsql_convert_value_string(input);
+
+                if(input_type == kOpGreater || input_type == kOpGreaterEq || input_type == kOpEquals)
+                {
+                    if(v >= rv)
+                        return true;
+                    else
+                        return false;
+                }
+            }            
+            else if(rule_run_converted_type == kExprLiteralInt)
+            {
+                unsigned int rv = hsql_convert_functionref_int(rule);
+                int v = 0;
+                bool valid = hsql_convert_value_int(input, &v);
+                if(input_type == kOpGreater || input_type == kOpGreaterEq || input_type == kOpEquals)
+                {
+                    if(v >= rv)
+                        return true;
+                    else
+                        return false;
+                }
             }
         }
     }
