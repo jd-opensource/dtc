@@ -327,6 +327,26 @@ int DTCFieldValue::Compare(const RowValue &r, int iCmpFirstNRows)
 				break;
 			else
 				return 0;
+		case TC(String, String, GT):
+			if (string_greater(v1, v2))
+				break;
+			else
+				return 0;
+		case TC(String, String, GE):
+			if (string_greater_equal(v1, v2))
+				break;
+			else
+				return 0;					
+		case TC(String, String, LT):
+			if (string_less(v1, v2))
+				break;
+			else
+				return 0;
+		case TC(String, String, LE):
+			if (string_less_equal(v1, v2))
+				break;
+			else
+				return 0;								
 
 		/* case sensitive for binary comparison */
 		case TC(Binary, Binary, EQ):

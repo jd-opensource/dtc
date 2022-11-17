@@ -207,9 +207,6 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
             return false;
     }
 
-    if(input_type >= kOpLess && input_type <= kOpGreaterEq && input->isType(kExprLiteralString))
-        return false;
-
     if(input_type == kOpEquals && rule_type == kOpEquals)
     {
         if(rule->isType(kExprLiteralFloat))
@@ -390,21 +387,21 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
                 std::string v = hsql_convert_value_string(input);
                 if(input_type == kOpLess)
                 {
-                    if(v <= rv)
+                    if(v.length() == rv.length() && v <= rv)
                         return true;
                     else
                         return false;
                 }
                 else if(input_type == kOpLessEq)
                 {
-                    if(v < rv)
+                    if(v.length() == rv.length() && v < rv)
                         return true;
                     else
                         return false;
                 }
                 else if(input_type == kOpEquals)
                 {
-                    if(v < rv)
+                    if(v.length() == rv.length() && v < rv)
                         return true;
                     else
                         return false;
@@ -478,7 +475,7 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
                 std::string v = hsql_convert_value_string(input);
                 if(input_type == kOpLess || input_type == kOpLessEq || input_type == kOpEquals)
                 {
-                    if(v <= rv)
+                    if(v.length() == rv.length() && v <= rv)
                         return true;
                     else
                         return false;
@@ -565,24 +562,23 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
             {
                 std::string rv = hsql_convert_functionref_string(rule);
                 std::string v = hsql_convert_value_string(input);
-
                 if(input_type == kOpGreater)
                 {
-                    if(v >= rv)
+                    if(v.length() == rv.length() && v >= rv)
                         return true;
                     else
                         return false;
                 }
                 else if(input_type == kOpGreaterEq)
                 {
-                    if(v > rv)
+                    if(v.length() == rv.length() && v > rv)
                         return true;
                     else
                         return false;
                 }
                 else if(input_type == kOpEquals)
                 {
-                    if(v > rv)
+                    if(v.length() == rv.length() && v > rv)
                         return true;
                     else
                         return false;
@@ -658,7 +654,7 @@ bool cmp_expr_value(hsql::Expr* input, hsql::Expr* rule, OperatorType input_type
 
                 if(input_type == kOpGreater || input_type == kOpGreaterEq || input_type == kOpEquals)
                 {
-                    if(v >= rv)
+                    if(v.length() == rv.length() && v >= rv)
                         return true;
                     else
                         return false;
@@ -696,7 +692,9 @@ bool do_match_expr(hsql::Expr* input, hsql::Expr* rule)
     if(strcasecmp(input->expr->getName(), rule->expr->getName()) != 0)
         return false;
 
-    return cmp_expr_value(input->expr2, rule->expr2, input->opType, rule->opType);
+    bool result = cmp_expr_value(input->expr2, rule->expr2, input->opType, rule->opType);
+    log4cplus_debug("match result: %d, name: %s", result, input->expr->getName());
+    return result;
 }
 
 bool is_write_type(SQLParserResult* sql_ast)

@@ -158,6 +158,6 @@ const uint8_t DtcJob::validcomps[DField::TotalType][DField::TotalComparison] = {
 	{ 1, 1, 1, 1, 1, 1 }, /* d */
 	{ 1, 1, 1, 1, 1, 1 }, /* u */
 	{ 0, 0, 0, 0, 0, 0 }, /* f */
-	{ 1, 1, 0, 0, 0, 0 }, /* s */
+	{ 1, 1, 1, 1, 1, 1 }, /* s */
 	{ 1, 1, 0, 0, 0, 0 }, /* b */
 };
