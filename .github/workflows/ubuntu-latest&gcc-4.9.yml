@@ -1,6 +1,6 @@
 name: ubuntu-latest&gcc-4.9
 
-on: pull_request
+on: []
     
 env:
   CC: gcc-4.9
