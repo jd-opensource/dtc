@@ -195,7 +195,7 @@ void DataManager::SetTimeRule(const std::string& time_rule){
 int DataManager::GetLastId(uint64_t& last_delete_id, std::string& last_invisible_time){
     std::stringstream ss_sql;
     ss_sql << "select id,ip,last_id,last_update_time from " << life_cycle_table_name_
-            << " where table_name='" << table_name_
+            << " where uniq_table_name ='" << table_name_
             << "' order by id desc limit 1";
     log4cplus_debug("query sql: %s", ss_sql.str().c_str());
     int ret = full_db_conn_->do_query(cold_db_name_.c_str(), ss_sql.str().c_str());
@@ -372,11 +372,10 @@ int DataManager::CreateTable(){
     ss_sql << "CREATE TABLE if not exists " << life_cycle_table_name_ << "("
         << "`id` int(11) unsigned NOT NULL AUTO_INCREMENT,"
         << "`ip` varchar(20) NOT NULL DEFAULT '0' COMMENT '执行清理操作的机器ip',"
-        << "`table_name` varchar(40) DEFAULT NULL,"
+        << "`uniq_table_name` varchar(40) DEFAULT NULL UNIQUE ,"
         << "`last_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '上次删除的记录对应的id',"
         << "`last_update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '上次删除的记录对应的更新时间',"
-        << "PRIMARY KEY (`id`),"
-        << "UNIQUE (`table_name`)"
+        << "PRIMARY KEY (`id`)"
         << ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
     int ret = full_db_conn_->do_query(cold_db_name_.c_str(), ss_sql.str().c_str());
     if(0 != ret){
