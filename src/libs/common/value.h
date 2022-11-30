@@ -507,6 +507,27 @@ static inline int string_equal(const DTCBinary &a, const DTCBinary &b)
 {
 	return a.len == b.len && !mystrcmp(a.ptr, b.ptr, a.len);
 }
+
+static inline int string_greater(const DTCBinary &a, const DTCBinary &b)
+{
+	return a.len == b.len && mystrcmp(a.ptr, b.ptr, a.len) > 0;
+}
+
+static inline int string_greater_equal(const DTCBinary &a, const DTCBinary &b)
+{
+	return a.len == b.len && mystrcmp(a.ptr, b.ptr, a.len) >= 0 ;
+}
+
+static inline int string_less(const DTCBinary &a, const DTCBinary &b)
+{
+	return a.len == b.len && mystrcmp(a.ptr, b.ptr, a.len) < 0;
+}
+
+static inline int string_less_equal(const DTCBinary &a, const DTCBinary &b)
+{
+	return a.len == b.len && mystrcmp(a.ptr, b.ptr, a.len) <= 0;
+}
+
 static inline int string_equal(const DTCValue &a, const DTCBinary &b)
 {
 	return string_equal(a.str, b);
@@ -518,6 +539,26 @@ static inline int string_equal(const DTCBinary &a, const DTCValue &b)
 static inline int string_equal(const DTCValue &a, const DTCValue &b)
 {
 	return string_equal(a.str, b.str);
+}
+
+static inline int string_greater(const DTCValue &a, const DTCValue &b)
+{
+	return string_greater(a.str, b.str);
+}
+
+static inline int string_greater_equal(const DTCValue &a, const DTCValue &b)
+{
+	return string_greater_equal(a.str, b.str);
+}
+
+static inline int string_less(const DTCValue &a, const DTCValue &b)
+{
+	return string_less(a.str, b.str);
+}
+
+static inline int string_less_equal(const DTCValue &a, const DTCValue &b)
+{
+	return string_less_equal(a.str, b.str);
 }
 
 static inline int binary_equal(const DTCValue &a, const DTCValue &b)
