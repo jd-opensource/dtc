@@ -111,6 +111,7 @@ std::string fun_date_sub(std::vector<Expr*>* elist)
         }
     }
 
+    log4cplus_debug("timestring: %s, type: %d", timestring, (*elist)[1]->datetimeField);
     return timestring;
 }
 

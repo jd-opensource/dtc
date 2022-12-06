@@ -58,7 +58,6 @@ void thread_func(const std::string& config_path){
     }
     if(0 != p_data_manager->CreateTable()){
         log4cplus_error("CreateTable error.");
-        return;
     }
     p_data_manager->DoProcess();
     if(NULL != p_data_manager){

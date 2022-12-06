@@ -173,12 +173,12 @@ int DataManager::DoTaskOnce(){
             // 如果执行失败，更新last_id，并退出循环
             std::string sql_set = ConstructDeleteSql(iter->field_info);
             ret = DoDelete(sql_set);
-            printf("DoDelete ret: %d\n", ret);
+            log4cplus_debug("DoDelete ret: %d\n", ret);
             last_delete_id_ = iter->id;
             last_invisible_time_ = iter->invisible_time;
             if(0 != ret){
                 //UpdateLastDeleteId();
-                printf("DoDelete error, ret: %d\n", ret);
+                log4cplus_debug("DoDelete error, ret: %d\n", ret);
                 return DTC_CODE_MYSQL_DEL_ERR;
             }
         }
@@ -240,7 +240,7 @@ std::string DataManager::ConstructQuerySql(uint64_t last_delete_id, std::string 
 
 int DataManager::DoQuery(const std::string& query_sql, std::vector<QueryInfo>& query_info_vec){
     printf("begin DoQuery\n");
-    ShowVariables();
+
     int ret = full_db_conn_->do_query(cold_db_name_.c_str(), query_sql.c_str());
     if(0 != ret){
         printf("query error, ret: %d, err msg: %s\n", ret, full_db_conn_->get_err_msg());
@@ -327,6 +327,8 @@ int DataManager::DoDelete(const std::string& delete_sql){
         log4cplus_debug("DoDelete error, ret: %d, err msg: %s, delete_sql: %s", ret, db_conn_->get_err_msg(), delete_sql.c_str());
         return ret;
     }
+    int affected = db_conn_->affected_rows();
+    log4cplus_debug("affected row: %d", affected);
     return 0;
 }
 

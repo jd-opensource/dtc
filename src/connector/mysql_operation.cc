@@ -798,7 +798,7 @@ std::string ConnectorProcess::value_to_str(const DTCValue *v, int fieldType)
         db_conn.escape_string(esc.c_str(), v->str.ptr,
                       v->str.len); // 先对字符串进行escape
         ret = '\'';
-        ret += esc.c_str();
+        ret += v->str.ptr;
         ret += "\'";
         return ret;
     default:
@@ -846,7 +846,7 @@ inline int ConnectorProcess::format_sql_value(const DTCValue *Value,
                 db_conn.escape_string(
                     esc.c_str(), Value->str.ptr,
                     Value->str.len); // 先对字符串进行escape
-                if (sql.append(esc.c_str()) < 0)
+                if (sql.append(Value->str.ptr) < 0)
                     error_no = -1;
             }
             if (sql.append('\'') < 0)
@@ -1513,6 +1513,7 @@ int ConnectorProcess::process_delete(DtcJob *Task)
 
     Task->resultInfo.set_affected_rows(db_conn.affected_rows());
     log4cplus_debug("db: %s, sql: %s", DBName, sql.c_str());
+    log4cplus_debug("affected row: %d", db_conn.affected_rows());
 
     return (0);
 }

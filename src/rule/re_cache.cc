@@ -218,7 +218,8 @@ int check_dtc_key(hsql::Expr* rule, std::string key)
     }
     else if(rule->isType(kExprOperator) && rule->opType == kOpEquals)
     {
-        if(rule->expr->getName() == key)
+        log4cplus_debug("key string: %s %s", std::string(rule->expr->getName()).c_str(), key.c_str());
+        if(strcasecmp(std::string(rule->expr->getName()).c_str(), key.c_str()) == 0)
             return 1;
     }
 
@@ -277,7 +278,7 @@ bool re_is_cache_sql(SQLParserResult* sql_ast, std::string key)
 
         for(int i = 0; i < stmt->columns->size(); i++)
         {
-            if(std::string(stmt->columns->at(i)) == key)
+            if(strcasecmp(std::string(stmt->columns->at(i)).c_str(), key.c_str()) == 0)
                 return true;
         }
     }
