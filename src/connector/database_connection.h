@@ -34,6 +34,8 @@ struct DBHost {
 	char User[64];
 	char Password[128];
 	unsigned int ConnTimeout;
+	unsigned int ReadTimeout;
+	unsigned int WriteTimeout;
 	char OptionFile[256];
 };
 

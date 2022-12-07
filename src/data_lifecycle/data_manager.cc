@@ -19,6 +19,8 @@ DataManager::DataManager(){
     db_host->Port = 3306;
     strcpy(db_host->User, "");
     strcpy(db_host->Password, "");
+    db_host->ReadTimeout = 1000;
+    db_host->WriteTimeout = 1000;
     db_conn_ = new CDBConn(db_host);
     if(NULL != db_host){
         delete db_host;
@@ -43,6 +45,8 @@ field_flag_vec_(config_param.field_flag_vec_){
     db_host->Port = config_param.port_;
     strcpy(db_host->User, "root");
     strcpy(db_host->Password, "root");
+    db_host->ReadTimeout = 1000;
+    db_host->WriteTimeout = 1000;
     db_conn_ = new CDBConn(db_host);
     if(NULL != db_host){
         delete db_host;
@@ -310,7 +314,10 @@ std::string DataManager::ConstructDeleteSql(const std::vector<std::string>& key_
     ss_sql << "delete from " << table_name_ << " where ";
     for(int i = 0; i < field_vec_.size(); i++){
         if(field_flag_vec_[i] == 1){
-            ss_sql << field_vec_[i] << " = '" << key_vec[i] << "'";
+            char* esc = new char[key_vec[i].length()*2];
+            db_conn_->escape_string(esc, key_vec[i].c_str());
+            ss_sql << field_vec_[i] << " = '" << esc << "'";
+            delete []esc;
         } else {
             ss_sql << field_vec_[i] << " = " << key_vec[i];
         }
