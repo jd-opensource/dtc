@@ -19,8 +19,8 @@ DataManager::DataManager(){
     db_host->Port = 3306;
     strcpy(db_host->User, "");
     strcpy(db_host->Password, "");
-    db_host->ReadTimeout = 1000;
-    db_host->WriteTimeout = 1000;
+    db_host->ReadTimeout = 1;
+    db_host->WriteTimeout = 1;
     db_conn_ = new CDBConn(db_host);
     if(NULL != db_host){
         delete db_host;
@@ -45,8 +45,8 @@ field_flag_vec_(config_param.field_flag_vec_){
     db_host->Port = config_param.port_;
     strcpy(db_host->User, "root");
     strcpy(db_host->Password, "root");
-    db_host->ReadTimeout = 1000;
-    db_host->WriteTimeout = 1000;
+    db_host->ReadTimeout = 1;
+    db_host->WriteTimeout = 1;
     db_conn_ = new CDBConn(db_host);
     if(NULL != db_host){
         delete db_host;

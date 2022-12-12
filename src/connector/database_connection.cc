@@ -154,7 +154,7 @@ int CDBConn::Connect(const char *DBName)
 			mysql_options(&Mysql, MYSQL_OPT_READ_TIMEOUT, (const char *)&(DBConfig.ReadTimeout));
 		}
         if(DBConfig.WriteTimeout != 0){
-			mysql_options(&Mysql, MYSQL_OPT_WRITE_TIMEOUT, (const char *)&(DBConfig.ReadTimeout));
+			mysql_options(&Mysql, MYSQL_OPT_WRITE_TIMEOUT, (const char *)&(DBConfig.WriteTimeout));
 		}        
         int isunix = DBConfig.Host[0] == '/';
         if (DBConfig.OptionFile[0] != '\0' &&
