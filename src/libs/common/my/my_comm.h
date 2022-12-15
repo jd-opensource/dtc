@@ -86,4 +86,16 @@ static inline void int4store_big_endian(uchar *T, uint32 A)
 	*(T + 3) = (uchar)(A >> 24);
 }
 
+static inline void int8store_big_endian(uchar *T, ulonglong A) {
+  uint def_temp = (uint)A, def_temp2 = (uint)(A >> 32);
+  int4store_big_endian(T, def_temp);
+  int4store_big_endian(T + 4, def_temp2);
+}
+
+static inline void int3store(uchar *T, uint A) {
+  *(T) = (uchar)(A);
+  *(T + 1) = (uchar)(A >> 8);
+  *(T + 2) = (uchar)(A >> 16);
+}
+
 #endif /* _MY_COMM_H */

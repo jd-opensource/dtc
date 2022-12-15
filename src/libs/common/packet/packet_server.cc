@@ -933,6 +933,51 @@ BufferChain *encode_eof(BufferChain *bc, uint8_t &pkt_nr)
 	return nbc;
 }
 
+char* net_store_length(char *pkg, ulonglong length)
+{
+	uchar *packet=(uchar*) pkg;
+	if (length < (ulonglong) (251))
+	{
+		*packet=(uchar) length;
+		return (char*) packet+1;
+	}
+	/* 251 is reserved for NULL */
+	if (length < (ulonglong) (65536))
+	{ 
+		*packet++=252;
+		int2store_big_endian(packet,(uint) length);
+		return (char*) packet+2;
+	}
+	if (length < (ulonglong) (16777216))
+	{
+		*packet++=253;
+		int3store(packet,(ulong) length);
+		return (char*) packet+3;
+	}
+	*packet++=254;
+	int8store_big_endian(packet,length);
+	return (char*) packet+8;
+}
+
+int net_store_offset_num(ulonglong length)
+{
+	if (length < 251)
+	{
+		return 1;
+	}
+	/* 251 is reserved for NULL */
+	if (length < 65536)
+	{ 
+		return 3;
+	}
+	if (length < 16777216)
+	{
+		return 4;
+	}
+
+	return 9;
+}
+
 BufferChain *encode_row_data(DtcJob *job, BufferChain *bc, uint8_t &pkt_nr)
 {
 	ResultSet *pstResultSet = job->result;
@@ -986,7 +1031,7 @@ BufferChain *encode_row_data(DtcJob *job, BufferChain *bc, uint8_t &pkt_nr)
 			}
 			case DField::String:
 			case DField::Binary: {
-				row_len++;
+				row_len += net_store_offset_num(v->str.len);
 				row_len += v->str.len;
 				break;
 			}
@@ -1053,16 +1098,16 @@ BufferChain *encode_row_data(DtcJob *job, BufferChain *bc, uint8_t &pkt_nr)
 				break;
 			}
 			case DField::String: {
-				*(r + offset) = (uint8_t)v->str.len;
-				offset++;
-				memcpy(r + offset, v->str.ptr, v->str.len);
+				char* pos = net_store_length(r + offset, v->str.len);
+				offset += net_store_offset_num(v->str.len);
+				memcpy(pos, v->str.ptr, v->str.len);
 				offset += v->str.len;
 				break;
 			}
 			case DField::Binary: {
-				*(r + offset) = (uint8_t)v->bin.len;
-				offset++;
-				memcpy(r + offset, v->bin.ptr, v->bin.len);
+				char* pos = net_store_length(r + offset, v->bin.len);
+				offset += net_store_offset_num(v->bin.len);
+				memcpy(pos, v->bin.ptr, v->bin.len);
 				offset += v->bin.len;
 				break;
 			}
