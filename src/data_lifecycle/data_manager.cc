@@ -19,6 +19,8 @@ DataManager::DataManager(){
     db_host->Port = 3306;
     strcpy(db_host->User, "");
     strcpy(db_host->Password, "");
+    db_host->ReadTimeout = 1;
+    db_host->WriteTimeout = 1;
     db_conn_ = new CDBConn(db_host);
     if(NULL != db_host){
         delete db_host;
@@ -43,6 +45,8 @@ field_flag_vec_(config_param.field_flag_vec_){
     db_host->Port = config_param.port_;
     strcpy(db_host->User, "root");
     strcpy(db_host->Password, "root");
+    db_host->ReadTimeout = 1;
+    db_host->WriteTimeout = 1;
     db_conn_ = new CDBConn(db_host);
     if(NULL != db_host){
         delete db_host;
@@ -173,12 +177,12 @@ int DataManager::DoTaskOnce(){
             // 如果执行失败，更新last_id，并退出循环
             std::string sql_set = ConstructDeleteSql(iter->field_info);
             ret = DoDelete(sql_set);
-            printf("DoDelete ret: %d\n", ret);
+            log4cplus_debug("DoDelete ret: %d\n", ret);
             last_delete_id_ = iter->id;
             last_invisible_time_ = iter->invisible_time;
             if(0 != ret){
                 //UpdateLastDeleteId();
-                printf("DoDelete error, ret: %d\n", ret);
+                log4cplus_debug("DoDelete error, ret: %d\n", ret);
                 return DTC_CODE_MYSQL_DEL_ERR;
             }
         }
@@ -240,7 +244,7 @@ std::string DataManager::ConstructQuerySql(uint64_t last_delete_id, std::string 
 
 int DataManager::DoQuery(const std::string& query_sql, std::vector<QueryInfo>& query_info_vec){
     printf("begin DoQuery\n");
-    ShowVariables();
+
     int ret = full_db_conn_->do_query(cold_db_name_.c_str(), query_sql.c_str());
     if(0 != ret){
         printf("query error, ret: %d, err msg: %s\n", ret, full_db_conn_->get_err_msg());
@@ -310,7 +314,10 @@ std::string DataManager::ConstructDeleteSql(const std::vector<std::string>& key_
     ss_sql << "delete from " << table_name_ << " where ";
     for(int i = 0; i < field_vec_.size(); i++){
         if(field_flag_vec_[i] == 1){
-            ss_sql << field_vec_[i] << " = '" << key_vec[i] << "'";
+            char* esc = new char[key_vec[i].length()*2];
+            db_conn_->escape_string(esc, key_vec[i].c_str());
+            ss_sql << field_vec_[i] << " = '" << esc << "'";
+            delete []esc;
         } else {
             ss_sql << field_vec_[i] << " = " << key_vec[i];
         }
@@ -327,6 +334,8 @@ int DataManager::DoDelete(const std::string& delete_sql){
         log4cplus_debug("DoDelete error, ret: %d, err msg: %s, delete_sql: %s", ret, db_conn_->get_err_msg(), delete_sql.c_str());
         return ret;
     }
+    int affected = db_conn_->affected_rows();
+    log4cplus_debug("affected row: %d", affected);
     return 0;
 }
 

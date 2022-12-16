@@ -486,6 +486,20 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
 
     log4cplus_debug("input sql: %s", osql);
 
+    std::string db_dot_name = get_table_with_db(dbsession, szsql);
+    if(db_dot_name.length() > 0 && g_map_dtc_yaml.count(db_dot_name) > 0)
+    {
+        dtc_key = get_key_info(g_map_dtc_yaml[db_dot_name]);
+        if(dtc_key.length() == 0)
+        {
+            log4cplus_error("get dtc_key from yaml:%s failed.", db_dot_name.c_str());
+            return -1;
+        }
+        strcpy(out_dtckey, dtc_key.c_str());
+        *out_keytype = rule_get_key_type(g_map_dtc_yaml[db_dot_name]);
+    }
+    log4cplus_debug("dtc key len: %d, key: %s, dbname len: %d, dbname: %s", dtc_key.length(), dtc_key.c_str(), strlen(dbsession), std::string(dbsession).c_str());
+
     if(sql.find("WITHOUT@@") != sql.npos)
     {
         //L1: DTC cache.
@@ -494,7 +508,7 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
     }
 
     hsql::SQLParserResult sql_ast;
-    if(re_parse_sql(sql, &sql_ast) != 0)
+    if(re_parse_sql(osql, &sql_ast) != 0)
     {
         log4cplus_debug("layered: error, parse sql failed.");
         return -1;
@@ -540,20 +554,6 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
         }
     }
 
-    std::string db_dot_name = get_table_with_db(dbsession, szsql);
-    if(db_dot_name.length() > 0 && g_map_dtc_yaml.count(db_dot_name) > 0)
-    {
-        dtc_key = get_key_info(g_map_dtc_yaml[db_dot_name]);
-        if(dtc_key.length() == 0)
-        {
-            log4cplus_error("get dtc_key from yaml:%s failed.", db_dot_name.c_str());
-            return -1;
-        }
-        strcpy(out_dtckey, dtc_key.c_str());
-        *out_keytype = rule_get_key_type(g_map_dtc_yaml[db_dot_name]);
-    }
-        log4cplus_debug("dtc key len: %d, key: %s, dbname len: %d, dbname: %s", dtc_key.length(), dtc_key.c_str(), strlen(dbsession), std::string(dbsession).c_str());
-
     log4cplus_debug("Is dtc instance: %d %d %d", is_dtc_instance(dtc_key), exist_session_db(dbsession), exist_sql_db(&sql_ast));
     if((exist_session_db(dbsession) || (exist_sql_db(&sql_ast))) && !is_dtc_instance(dtc_key))
     {
@@ -597,7 +597,7 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
             log4cplus_debug("name: %s, type: %d", stmt->columns->at(i), stmt->values->at(i)->type);
             if(stmt->values->at(i)->type == hsql::ExprType::kExprLiteralInt)
             {
-                sprintf(sztmp, "%d", stmt->values->at(i)->ival);
+                sprintf(sztmp, "%lld", stmt->values->at(i)->ival);
                 tempsql += sztmp;
             }
             else if(stmt->values->at(i)->type == hsql::ExprType::kExprLiteralFloat)
@@ -625,6 +625,7 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
     ret = re_match_sql(&sql_ast, expr_rules, ast);  //rule match
     if(ret == 0 || is_update_delete_type(&sql_ast))
     {
+        log4cplus_debug("dtc key: %s", dtc_key.c_str());
         if(re_is_cache_sql(&sql_ast, dtc_key))  //if exist dtc key.
         {
             //L1: DTC cache.

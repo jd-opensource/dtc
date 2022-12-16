@@ -71,6 +71,7 @@ CDBConn::CDBConn(const DBHost *Host)
     STRCPY(DBConfig.User, Host->User);
     STRCPY(DBConfig.Password, Host->Password);
     DBConfig.ConnTimeout = Host->ConnTimeout;
+    DBConfig.ReadTimeout = Host->ReadTimeout;
     STRCPY(DBConfig.OptionFile, Host->OptionFile);
 
     if (mysql_init(&Mysql) == NULL) {
@@ -149,6 +150,12 @@ int CDBConn::Connect(const char *DBName)
             mysql_options(&Mysql, MYSQL_OPT_CONNECT_TIMEOUT,
                       (const char *)&(DBConfig.ConnTimeout));
         }
+        if(DBConfig.ReadTimeout != 0){
+			mysql_options(&Mysql, MYSQL_OPT_READ_TIMEOUT, (const char *)&(DBConfig.ReadTimeout));
+		}
+        if(DBConfig.WriteTimeout != 0){
+			mysql_options(&Mysql, MYSQL_OPT_WRITE_TIMEOUT, (const char *)&(DBConfig.WriteTimeout));
+		}        
         int isunix = DBConfig.Host[0] == '/';
         if (DBConfig.OptionFile[0] != '\0' &&
             mysql_options(&Mysql, MYSQL_READ_DEFAULT_FILE,

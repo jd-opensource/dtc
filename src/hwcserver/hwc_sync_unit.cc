@@ -91,7 +91,6 @@ int HwcSync::Run()
     p_master_->Close();
     int i_sec = get_current_time() + 1;
     while (true) {
-        usleep(1000000); // 1s
         if (get_current_time() >= i_sec) {
             if (CComm::registor.CheckMemoryCreateTime()) {
                 log4cplus_error("detect share memory changed");
