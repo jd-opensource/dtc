@@ -14,7 +14,6 @@ RUN mkdir -p $confpath
 COPY dtcd $binpath/dtcd
 COPY dtcagent $binpath/dtcagent
 COPY agent-watchdog $binpath/agent-watchdog
-COPY async-conn $binpath/async-conn
 COPY connector $binpath/connector
 COPY data-lifecycle-manager $binpath/data-lifecycle-manager
 COPY hwcserver $binpath/hwcserver
@@ -41,7 +40,6 @@ RUN chmod +x $binpath/dtcagent
 RUN chmod +x $binpath/connector
 RUN chmod +x $basepath/run.sh
 RUN chmod +x $binpath/conf-gen-utils
-RUN chmod +x $binpath/async-conn
 RUN chmod +x $binpath/hwcserver
 
 ENV LD_LIBRARY_PATH=:/usr/local/lib
