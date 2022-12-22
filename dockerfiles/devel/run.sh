@@ -10,7 +10,6 @@ do
         cp /usr/local/dtc/conf/log4cplus-hwc.conf /usr/local/dtc/conf/
         cp /usr/local/dtc/conf/log4cplus-wd.conf /usr/local/dtc/conf/
         cp /usr/local/dtc/conf/log4cplus-agent.conf /usr/local/dtc/conf/
-        cp /usr/local/dtc/conf/log4cplus-async.conf /usr/local/dtc/conf/
         cp /usr/local/dtc/conf/log4cplus-life.conf /usr/local/dtc/conf/
         cp /usr/local/dtc/conf/my.conf /usr/local/dtc/conf/
         echo "Start running process: "$DTC_BIN","$DTC_ARGV

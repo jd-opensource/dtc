@@ -4,7 +4,6 @@
 
 #include "log.h"
 #include "sharding_entry.h"
-#include "async_conn_entry.h"
 #include "main_entry.h"
 #include "cold_wipe_entry.h"
 #include "core_entry.h"
@@ -47,7 +46,6 @@ static struct option long_options[] = {
 		{ "version", no_argument, NULL, 'v' },
 		{ "data-lifecycle", no_argument, NULL,'l' },
 		{ "agent", no_argument, NULL,'a' },
-		{ "async-conn", no_argument, NULL,'y' },
 		{ "sharding", no_argument, NULL,'s' },
 		{ "recovery", no_argument, NULL,'r' },
 		{ "core", no_argument, NULL,'c' },
@@ -112,28 +110,9 @@ static void show_usage(void) {
 	printf("  -a, --agent        			: load agent module\n");
 	printf("  -c, --core        			: load dtc core module\n");
 	printf("  -l, --data-lifecycle			: load data-lifecycle module\n");
-	printf("  -y, --async-conn			: load async-conn module\n");
 	printf("  -s, --sharding      			: load sharding module\n");
 	printf("  -r, --recovery mode  			: auto restart when crashed\n");
 
-}
-
-int start_async_connector(WatchDog* wdog, int delay)
-{
-	// start full-data connector
-	AsyncConnEntry *async_connector = new AsyncConnEntry(wdog, delay);
-	if (async_connector == NULL) {
-		log4cplus_error(
-			"create Async-Connector object failed, msg: %m");
-		return -1;
-	}
-
-	if (async_connector->new_proc_fork() < 0)
-	{
-		return -1;
-	}
-
-	return 0;
 }
 
 int start_sharding(WatchDog* wdog, int delay)
@@ -456,11 +435,6 @@ int main(int argc, char* argv[])
 		if(start_sharding(wdog, delay) < 0)
 			log4cplus_error("start sharding failed.");
 	}
-
-	/*if (load_asyncconn || load_all) {
-		if(start_async_connector(wdog, delay) < 0)
-			log4cplus_error("start full-data failed.");
-	}*/
 
 	if (load_core) {
 		if(start_core(wdog, delay) < 0)

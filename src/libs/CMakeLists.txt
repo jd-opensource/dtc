@@ -1,3 +1,2 @@
 ADD_SUBDIRECTORY (./common)	
 ADD_SUBDIRECTORY (./stat)
-ADD_SUBDIRECTORY (./net)
