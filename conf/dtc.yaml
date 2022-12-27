@@ -8,6 +8,7 @@ props:
   hash.custom: Yes
   hash.custom.module: ../lib/key-hash.so
   hash.custom.functon: "StringHash(1,128)"  
+  connector.procs: 10
 
 data_lifecycle:
   single.query.count: 10
