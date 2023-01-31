@@ -7,6 +7,7 @@ props:
   log.level: debug
   listener.port.dtc: 20015
   shm.mem.size: 100 #MB
+  connector.procs: 1
 
 connection: &connection
   addr: mysql:3306
