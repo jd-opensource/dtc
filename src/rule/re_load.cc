@@ -8,14 +8,19 @@
 
 using namespace hsql;
 
-std::map<std::string, std::string> g_map_dtc_yaml;
+std::vector<std::string> dtc_node;
+
+std::map<std::string, std::map<std::string, std::string>> g_map_dtc_yaml;
 
 // load rule from dtc.yaml
-std::string do_get_rule(std::string buf)
+std::string do_get_rule(std::map<std::string, std::string>* buffer)
 {
+    if(buffer->find(YAML_DTC_RULES) != buffer->end())
+        return (*buffer)[YAML_DTC_RULES];
+
     YAML::Node config;
     try {
-        config = YAML::Load(buf);
+        config = YAML::Load((*buffer)[YAML_DTC_BUFFER]);
 	} catch (const YAML::Exception &e) {
 		log4cplus_error("config file error:%s\n", e.what());
 		return "";
@@ -24,7 +29,8 @@ std::string do_get_rule(std::string buf)
     YAML::Node node = config["primary"]["layered.rule"];
     if(node)
     {
-        std::string rules = node.as<string>();
+        (*buffer)[YAML_DTC_RULES] = node.as<string>();
+        std::string rules = (*buffer)[YAML_DTC_RULES];
         return rules;
     }
 
@@ -163,14 +169,14 @@ std::string load_dtc_yaml_buffer(int mid)
     return res;
 }
 
-int re_load_rule(std::string buf, hsql::SQLParserResult* rule_ast, vector<vector<hsql::Expr*> >* expr_rules)
+int re_load_rule(std::map<std::string, std::string>* node, hsql::SQLParserResult* rule_ast, vector<vector<hsql::Expr*> >* expr_rules)
 {
     log4cplus_debug("load rule start...");
 
     if(rule_ast->isValid() && rule_ast->size() > 0)
         return 0;
 
-    std::string rules = do_get_rule(buf);
+    std::string rules = do_get_rule(node);
     if(rules.length() <= 0)
         return -1;
 

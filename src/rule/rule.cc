@@ -21,13 +21,16 @@
 using namespace std;
 using namespace hsql;
 
-extern std::map<std::string, std::string> g_map_dtc_yaml;
+extern std::map<std::string, std::map<std::string, std::string>> g_map_dtc_yaml;
 
-std::string get_key_info(std::string buf)
+std::string get_key_info(std::map<std::string, std::string>* buf)
 {
+    if(buf->find(YAML_DTC_KEY_STRING) != buf->end())
+        return (*buf)[YAML_DTC_KEY_STRING];
+
     YAML::Node config;
     try {
-        config = YAML::Load(buf);
+        config = YAML::Load((*buf)[YAML_DTC_BUFFER]);
 	} catch (const YAML::Exception &e) {
 		log4cplus_error("config file error:%s\n", e.what());
 		return "";
@@ -38,24 +41,11 @@ std::string get_key_info(std::string buf)
     {
         std::string keystr = node.as<string>();
         transform(keystr.begin(),keystr.end(),keystr.begin(),::toupper);
+        (*buf)[YAML_DTC_KEY_STRING] = keystr;
         return keystr;
     }
     
     return "";
-}
-
-extern "C" int rule_get_key(const char* conf, char* out)
-{
-    std::string strkey = get_key_info(conf);
-    printf("conf file: %s\n", conf);
-    printf("key len: %d, key: %s\n", strkey.length(), strkey.c_str());
-    if(strkey.length() > 0)
-    {
-        strcpy(out, strkey.c_str());
-        return strkey.length();
-    }
-
-    return 0;
 }
 
 extern "C" int get_statement_value(char* str, int len, const char* strkey, int* start_offset, int* end_offset)
@@ -214,36 +204,47 @@ std::string get_table_with_db(const char* sessiondb, const char* sql)
     return strres;
 }
 
-int rule_get_key_type(std::string buf)
+int rule_get_key_type(std::map<std::string, std::string>* buf)
 {
     YAML::Node config;
-    if(buf.length() == 0)
+    std::string str = "";
+
+    if(buf->find(YAML_DTC_KEY_TYPE) != buf->end())
+        str = (*buf)[YAML_DTC_KEY_TYPE];
+
+    if(str.length() == 0)
+    {
+        if((*buf)[YAML_DTC_BUFFER].length() == 0)
+            return -1;
+
+        try {
+            config = YAML::Load((*buf)[YAML_DTC_BUFFER]);
+        } catch (const YAML::Exception &e) {
+            log4cplus_error("config buf load error:%s\n", e.what());
+            return -1;
+        }
+
+        YAML::Node node = config["primary"]["cache"]["field"][0]["type"];
+        if(node)
+        {
+            str = node.as<string>();
+            (*buf)[YAML_DTC_KEY_TYPE] = str;
+        }
+    }
+
+    if(str == "signed")
+        return 1;
+    else if(str == "unsigned")
+        return 2;
+    else if(str == "float")
+        return 3;
+    else if(str == "string")
+        return 4;
+    else if(str == "binary")
+        return 5;
+    else   
         return -1;
 
-    try {
-        config = YAML::Load(buf);
-	} catch (const YAML::Exception &e) {
-		log4cplus_error("config buf load error:%s\n", e.what());
-		return -1;
-	}
-
-    YAML::Node node = config["primary"]["cache"]["field"][0]["type"];
-    if(node)
-    {
-        std::string str = node.as<string>();
-        if(str == "signed")
-            return 1;
-        else if(str == "unsigned")
-            return 2;
-        else if(str == "float")
-            return 3;
-        else if(str == "string")
-            return 4;
-        else if(str == "binary")
-            return 5;
-        else   
-            return -1;
-    }
     return -1;
 }
 
@@ -459,7 +460,8 @@ extern "C" int re_load_all_rules()
             log4cplus_debug("push %s into map.", Name);
             std::string strname = Name;
             transform(strname.begin(),strname.end(),strname.begin(),::toupper);
-            g_map_dtc_yaml[strname] = buf;
+            (g_map_dtc_yaml[strname])[YAML_DTC_BUFFER] = buf;
+            log4cplus_debug("name: %s, buf len: %d", strname.c_str(), (g_map_dtc_yaml[strname])[YAML_DTC_BUFFER].length());
         }
         else
         {
@@ -482,21 +484,21 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
     std::string dtc_key = "";
     std::string sql = szsql;
 
-    init_log4cplus();
+    //init_log4cplus();
 
     log4cplus_debug("input sql: %s", osql);
 
     std::string db_dot_name = get_table_with_db(dbsession, szsql);
     if(db_dot_name.length() > 0 && g_map_dtc_yaml.count(db_dot_name) > 0)
     {
-        dtc_key = get_key_info(g_map_dtc_yaml[db_dot_name]);
+        dtc_key = get_key_info(&(g_map_dtc_yaml[db_dot_name]));
         if(dtc_key.length() == 0)
         {
             log4cplus_error("get dtc_key from yaml:%s failed.", db_dot_name.c_str());
             return -1;
         }
         strcpy(out_dtckey, dtc_key.c_str());
-        *out_keytype = rule_get_key_type(g_map_dtc_yaml[db_dot_name]);
+        *out_keytype = rule_get_key_type(&(g_map_dtc_yaml[db_dot_name]));
     }
     log4cplus_debug("dtc key len: %d, key: %s, dbname len: %d, dbname: %s", dtc_key.length(), dtc_key.c_str(), strlen(dbsession), std::string(dbsession).c_str());
 
@@ -564,7 +566,7 @@ extern "C" int rule_sql_match(const char* szsql, const char* osql, const char* d
     vector<vector<hsql::Expr*> > expr_rules;
     expr_rules.clear();
     hsql::SQLParserResult rule_ast;
-    int ret = re_load_rule(g_map_dtc_yaml[db_dot_name], &rule_ast, &expr_rules);
+    int ret = re_load_rule(&(g_map_dtc_yaml[db_dot_name]), &rule_ast, &expr_rules);
     if(ret != 0)
     {
         log4cplus_error("load rule error:%d", ret);
