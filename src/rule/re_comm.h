@@ -9,4 +9,9 @@ typedef struct _expr_properity{
     int condition_num;
 }expr_properity;
 
+#define YAML_DTC_BUFFER "YAML_DTC_BUFFER"
+#define YAML_DTC_RULES "YAML_DTC_RULES"
+#define YAML_DTC_KEY_TYPE "YAML_DTC_KEY_TYPE"
+#define YAML_DTC_KEY_STRING "YAML_DTC_KEY_STRING"
+
 #endif

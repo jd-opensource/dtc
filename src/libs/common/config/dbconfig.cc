@@ -652,13 +652,13 @@ int DbConfig::get_dtc_config(YAML::Node dtc_config, DTCConfig* raw, int i_server
             }
         }
         /* Helper number alter */
-        m->gprocs[0] = raw->get_int_val(NULL, "Procs", 1);
+        m->gprocs[0] = dtc_config["props"]["connector.procs"].as<int>();
         if (m->gprocs[0] < 1)
             m->gprocs[0] = 0;
-        m->gprocs[1] = raw->get_int_val(NULL, "WriteProcs", 1);
+        m->gprocs[1] = dtc_config["props"]["connector.procs"].as<int>();
         if (m->gprocs[1] < 1)
             m->gprocs[1] = 0;
-        m->gprocs[2] = raw->get_int_val(NULL, "CommitProcs", 1);
+        m->gprocs[2] = dtc_config["props"]["connector.procs"].as<int>();
         if (m->gprocs[2] < 1)
             m->gprocs[2] = 0;
         /* Helper Queue Size */
