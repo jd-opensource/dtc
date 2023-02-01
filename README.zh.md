@@ -1,6 +1,6 @@
 ![DTC](http://storage.360buyimg.com/bq-install/release/dtc_logo.png)
 # DTC - Distributed Table Cache 分布式表缓存
-[![ubuntu&gcc-4.9](https://github.com/DTC8/DTC/actions/workflows/ubuntu-latest&gcc-4.9.yml/badge.svg)](https://github.com/DTC8/DTC/actions/workflows/ubuntu-latest&gcc-4.9.yml)
+[![ubuntu&gcc-4.9](https://github.com/DTC8/DTC/actions/workflows/ubuntu-20.04&gcc-4.9.yml/badge.svg)](https://github.com/DTC8/DTC/actions/workflows/ubuntu-20.04&gcc-4.9.yml)
 
 ## 概述
 DTC是一个分布式表级缓存系统，可为数据库提供热点数据缓存支持，减少数据库的访问压力。
