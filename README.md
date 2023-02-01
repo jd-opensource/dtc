@@ -31,6 +31,7 @@ The DTC system consists of the following components:
 ## Performance
 * DTC can process 90,000 QPS of query requests at single-core cpu & single dtc instance.
 * DTC can provide above 3,000,000 QPS query capability with above 99.9% hit rate and less than 200 μs response time in actual distributed scenarios.
+* Layered Storage is able to provide about 1,000 QPS write capability with above 99.9% per single instance.
 ## How to Build
 DTC provides docker images for quick start:
 * Start server docker:<br/>
