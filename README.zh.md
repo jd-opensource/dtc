@@ -138,7 +138,7 @@ select * from opensource where uid = 2;
 ```
 ![输入图片说明](https://foruda.gitee.com/images/1675242078426717447/a666b07e_2156244.png "屏幕截图")
 
- ##### 4.2 Python SDK
+ #### 4.2 Python SDK
     支持python常用的pymysql库，测试用例详见tests/test_dtcd_cache_only.py
  ##### 4.2.1 写缓存
 ```
