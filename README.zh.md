@@ -113,6 +113,8 @@ primary:
     mysql -h和-P是mysql客户端的标准参数，分别制定ip地址和服务的port端口，如连接成功将如下图所示
 ![输入图片说明](https://foruda.gitee.com/images/1675239723356670339/c77e087b_2156244.png "屏幕截图")
 
+ <br/>关于兼容支持的SQL语法，详见[操作手册](https://gitee.com/jd-platform-opensource/dtc/wikis/%E6%94%AF%E6%8C%81%E7%9A%84SQL%E8%AF%AD%E6%B3%95)
+
  ### 4、操作DTC
  #### 4.1 mysql命令行
  ##### 4.1.1 写缓存
