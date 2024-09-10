@@ -44,5 +44,5 @@ For more compile information, click [Building](docs/building.md).<br/>
 Trying a demo, visit [QuickStart](docs/quickstart.md).
 
 ## License
-JD.com © Copyright 2023 [JD.com](https://ir.jd.com/), Inc.<br/>
+JD.com © Copyright 2022-2024 [JD.com](https://ir.jd.com/), Inc.<br/>
 [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0). Visit [LICENSE](./LICENSE) for more details.
