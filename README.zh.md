@@ -204,7 +204,7 @@ db.close()
 
 ## 许可证
 
-京东集团 版权所有 © Copyright 2021-2023 [JD.com](https://www.jd.com), Inc.
+京东集团 版权所有 © Copyright 2021-2024 [JD.com](https://www.jd.com), Inc.
 
 
 许可证遵循 [Apache 2.0 协议](http://www.apache.org/licenses/LICENSE-2.0). 更多细节请访问 [LICENSE](./LICENSE).
