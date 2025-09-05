@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -102,7 +102,7 @@ void BarrierAskAnswerChain::job_ask_procedure(DTCJobOperation *job_operation)
 	if (job_operation->request_code() == DRequest::TYPE_SYSTEM_COMMAND &&
 	    job_operation->requestInfo.admin_code() !=
 		    DRequest::SystemCommand::Migrate) {
-		//Migrate命令在PrepareRequest的时候已经计算了PackedKey和hash，需要跟普通的task一起排队
+		//Migrate command has already calculated PackedKey and hash during PrepareRequest, needs to queue with normal tasks
 		chain_request(job_operation);
 		return;
 	}

@@ -23,7 +23,7 @@ void FaultState::Exit()
 
 void FaultState::HandleEvent()
 {
-    // 简单处理，程序结束
+    // Simple handling, program exit
     log4cplus_info("GoodBye hwc_service.");
     exit(0);
 }

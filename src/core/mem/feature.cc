@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ Feature::Feature() : _baseInfo(NULL)
 Feature::~Feature()
 {
 }
-/* feature id -> feature.  拷贝输入feature 到 找到feature
+/* feature id -> feature. Copy input feature to found feature
  */
 int Feature::modify_feature(FEATURE_INFO_T *fi)
 {
@@ -57,7 +57,7 @@ int Feature::modify_feature(FEATURE_INFO_T *fi)
 	*p = *fi;
 	return 0;
 }
-/* feature id -> feature. 清空这个feature 
+/* feature id -> feature. Clear this feature 
  */
 int Feature::delete_feature(FEATURE_INFO_T *fi)
 {
@@ -78,7 +78,7 @@ int Feature::delete_feature(FEATURE_INFO_T *fi)
 
 	return 0;
 }
-/* 找一个空闲feature, 赋值 
+/* Find a free feature, assign value 
  */
 int Feature::add_feature(const uint32_t id, const MEM_HANDLE_T v,
 			 const uint32_t attr)
@@ -103,8 +103,8 @@ int Feature::add_feature(const uint32_t id, const MEM_HANDLE_T v,
 	return 0;
 }
 /* feature id -> feature. 
- * 1. feature id == 0: 则表示找一个空闲feature.
- * 2. 否则根据feature id 找对应的feature
+ * 1. feature id == 0: means find a free feature.
+ * 2. Otherwise find corresponding feature based on feature id
  */
 FEATURE_INFO_T *Feature::get_feature_by_id(const uint32_t fd)
 {
@@ -121,8 +121,8 @@ FEATURE_INFO_T *Feature::get_feature_by_id(const uint32_t fd)
 EXIT:
 	return (FEATURE_INFO_T *)(0);
 }
-/* 1. 创建num个空feature
- * 2. 初始化头信息(baseInfo)
+/* 1. Create num empty features
+ * 2. Initialize header information (baseInfo)
  */
 int Feature::do_init(const uint32_t num)
 {
@@ -142,7 +142,7 @@ int Feature::do_init(const uint32_t num)
 
 	return 0;
 }
-/* feature已经存在，第一个feature的内存句柄。直接初始化头信息指向 
+/* Feature already exists, memory handle of first feature. Directly initialize header information pointer 
  */
 int Feature::do_attach(MEM_HANDLE_T handle)
 {

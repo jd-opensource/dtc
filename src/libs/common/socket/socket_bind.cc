@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ int socket_bind(const SocketAddress *addr, int backlog, int rbufsz, int wbufsz,
 		setsockopt(netfd, SOL_TCP, TCP_NODELAY, &optval,
 			   sizeof(optval));
 
-	/* 避免没有请求的空连接唤醒epoll浪费cpu资源 */
+	/* Avoid empty connections without requests waking up epoll and wasting CPU resources */
 	if (defer_accept) {
 		optval = 60;
 		setsockopt(netfd, SOL_TCP, TCP_DEFER_ACCEPT, &optval,

@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 #include "stat_dtc_def.h"
 
 DTCStatDefinition g_stat_definition[] = {
-	// 相同的统计项目
+	// same statistical items
 	{ S_VERSION, "server version", SA_CONST, SU_VERSION },
 	{ C_TIME, "compile time", SA_CONST, SU_DATETIME },
 
@@ -219,7 +219,7 @@ DTCStatDefinition g_stat_definition[] = {
 	  { 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536,
 	    131072, 262144 } },
 
-	/* try_purge_size 每次purge的节点个数 */
+	/* try_purge_size number of nodes to purge each time */
 	{ TRY_PURGE_COUNT,
 	  "try purge - count distribution",
 	  SA_SAMPLE,

@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ class RawDataProcess : public DataProcess {
 
 	unsigned int nodeSizeLimit; // -DEBUG-
 
-	/*对历史节点数据的采样统计，放在高端内存操作管理的地方，便于收敛统计点 , modify by tomchen 2014.08.27*/
+	/*Sampling statistics for historical node data, placed in high-end memory operation management for easier convergence of statistical points, modify by tomchen 2014.08.27*/
 	StatSample history_datasize;
 	StatSample history_rowsize;
 

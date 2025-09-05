@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -253,7 +253,7 @@ int TreeData::do_attach(MEM_HANDLE_T hHandle)
 int TreeData::encode_tree_row(const RowValue &stRow, unsigned char uchOp)
 {
 	SET_TREE_VALUE(uchOp, unsigned char);
-	for (int j = 1; j <= stRow.num_fields(); j++) //¿½±´Ò»ÐÐÊý¾Ý
+	for (int j = 1; j <= stRow.num_fields(); j++) 
 	{
 		if (stRow.table_definition()->is_discard(j))
 			continue;
@@ -431,7 +431,7 @@ int TreeData::insert_row_flag(const RowValue &stRow, KeyComparator pfComp,
 		}
 	}
 
-	/*每次insert数据之后，更新头部信息*/
+	/*update header information after each data insert*/
 	rowCnt = *(uint32_t *)(p_content_ + sizeof(unsigned char) +
 			       sizeof(uint32_t));
 	*(uint32_t *)(p_content_ + sizeof(unsigned char)) = offset_;
@@ -543,7 +543,7 @@ int TreeData::copy_tree_all(RawData *new_data)
 
 		iRet = insert_row(stOldRow, KeyCompare, false);
 		if (iRet == EC_NO_MEM) {
-			/*这里为了下次完全重新建立T树，把未建立完的树全部删除*/
+			/*here delete all incompletely built trees to completely rebuild T-tree next time*/
 			need_new_bufer_size =
 				new_data->data_size() - new_data->data_start();
 			destroy_sub_tree();
@@ -678,7 +678,7 @@ int TreeData::compare_tree_data(RowValue *stpNodeRow)
 
 		RowValue stOldRow(p_table_);
 		for (uint32_t i = 0; i < resCookie.has_got_node_count;
-		     i++) { //逐行拷贝数据
+		     i++) { //copy data row by row
 			p_content_ = Pointer<char>(pCookie[i]);
 			uint32_t rows = *(uint32_t *)(p_content_ +
 						      sizeof(unsigned char) +
@@ -746,7 +746,7 @@ int TreeData::replace_tree_data(DTCJobOperation &job_op, Node *p_node,
 		char *NewIndex = reinterpret_cast<char *>(&new_value);
 		CmpCookie cookie(p_table_, TTREE_INDEX_POS);
 		if (KeyCompare(NewIndex, &cookie, *mallocator_, p_record_) !=
-		    0) //Index字段变更
+		    0) //Index field changed
 		{
 			char *tmp_pchContent = p_content_;
 			uint32_t tmp_size = size_;
@@ -775,12 +775,12 @@ int TreeData::replace_tree_data(DTCJobOperation &job_op, Node *p_node,
 
 				if (uiTotalRows > 0 && uiTotalRows == iDelete &&
 				    get_row_count() ==
-					    0) //RowFormat上的内容已删光
+					    0) //content on RowFormat has been deleted
 				{
-					//删除tree node
+					//delete tree node
 					bool isFreeNode = false;
 					DTCValue value = (stOldRow)
-						[TTREE_INDEX_POS]; //for轮询的最后一行数据
+						[TTREE_INDEX_POS]; //last row data for polling
 					char *indexKey =
 						reinterpret_cast<char *>(
 							&value);
@@ -805,11 +805,11 @@ int TreeData::replace_tree_data(DTCJobOperation &job_op, Node *p_node,
 					p_tree_root_->node_count_--;
 					p_tree_root_->root_handle_ =
 						t_tree_.Root();
-					//释放handle
+					//release handle
 					mallocator_->Free(p_record_);
 				}
 			}
-		} else //Index字段不变
+		} else //Index field unchanged
 		{
 			MEM_HANDLE_T *pRawHandle = NULL;
 			int iRet = do_find(TTREE_INDEX_POS, *stpNodeRow,
@@ -818,12 +818,12 @@ int TreeData::replace_tree_data(DTCJobOperation &job_op, Node *p_node,
 				return iRet;
 
 			iRet = replace_cur_row(*stpNodeRow, m_async,
-					       pRawHandle); // 加进cache
+					       pRawHandle); // add to cache
 			if (iRet == EC_NO_MEM) {
 				return iRet;
 			}
 			if (iRet != 0) {
-				/*标记加入黑名单*/
+				/*mark as added to blacklist*/
 				job_op.push_black_list_size(need_size());
 				return (-6);
 			}
@@ -869,7 +869,7 @@ int TreeData::replace_sub_raw_data(DTCJobOperation &job_op,
 
 		stpCurRow->Copy(stpNodeRow);
 
-		//如果不符合查询条件
+		//if it doesn't meet query conditions
 		if (job_op.compare_row(*stpTaskRow) == 0)
 			continue;
 
@@ -879,7 +879,7 @@ int TreeData::replace_sub_raw_data(DTCJobOperation &job_op,
 		if (iRet == -100 || iRet == 0)
 			return iRet;
 
-		job_op.update_row(*stpTaskRow); //修改数据
+		job_op.update_row(*stpTaskRow); //modify data
 
 		if (stpNodeTab != stpTaskTab)
 			stpNodeRow->Copy(stpTaskRow);
@@ -891,7 +891,7 @@ int TreeData::replace_sub_raw_data(DTCJobOperation &job_op,
 			CmpCookie cookie(p_table_, TTREE_INDEX_POS);
 
 			if (KeyCompare(NewIndex, &cookie, *mallocator_,
-				       hRecord) != 0) //update Index字段
+				       hRecord) != 0) //update Index field
 			{
 				char *tmp_pchContent = p_content_;
 				uint32_t tmp_size = size_;
@@ -913,12 +913,12 @@ int TreeData::replace_sub_raw_data(DTCJobOperation &job_op,
 				}
 			} else {
 				iRet = replace_cur_row(*stpNodeRow, m_async,
-						       pRawHandle); // 加进cache
+						       pRawHandle); // add to cache
 				if (iRet == EC_NO_MEM) {
 					return iRet;
 				}
 				if (iRet != 0) {
-					/*标记加入黑名单*/
+					/*mark as added to blacklist*/
 					job_op.push_black_list_size(
 						need_size());
 					return (-6);
@@ -935,12 +935,12 @@ int TreeData::replace_sub_raw_data(DTCJobOperation &job_op,
 	}
 
 	if (uiTotalRows > 0 &&
-	    uiTotalRows - iDelete == 0) //RowFormat上的内容已删光
+	    uiTotalRows - iDelete == 0) //content on RowFormat has been deleted
 	{
-		//删除tree node
+		//delete tree node
 		bool isFreeNode = false;
 		DTCValue value =
-			(*stpCurRow)[TTREE_INDEX_POS]; //for轮询的最后一行数据
+			(*stpCurRow)[TTREE_INDEX_POS]; //for polling the last row of data
 		char *indexKey = reinterpret_cast<char *>(&value);
 		CmpCookie cookie(p_table_, TTREE_INDEX_POS);
 		int iret = t_tree_.Delete(indexKey, &cookie, KeyCompare,
@@ -955,7 +955,7 @@ int TreeData::replace_sub_raw_data(DTCJobOperation &job_op,
 		p_tree_root_->tree_size_ -= size_;
 		p_tree_root_->node_count_--;
 		p_tree_root_->root_handle_ = t_tree_.Root();
-		//释放handle
+		//release handle
 		mallocator_->Free(hRecord);
 	}
 
@@ -963,7 +963,7 @@ int TreeData::replace_sub_raw_data(DTCJobOperation &job_op,
 }
 
 /*
- * encode到私有内存，防止replace，update引起重新rellocate导致value引用了过期指针
+ * encode to private memory, prevent replace and update from causing reallocation that would make value reference expired pointers
  */
 int TreeData::encode_to_private_area(RawData &raw, RowValue &value,
 				     unsigned char value_flag)
@@ -1030,7 +1030,7 @@ int TreeData::update_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord)
 
 		stpCurRow->Copy(stpNodeRow);
 
-		//如果不符合查询条件
+		//if it doesn't meet query conditions
 		if (job_op.compare_row(*stpTaskRow) == 0)
 			continue;
 
@@ -1040,7 +1040,7 @@ int TreeData::update_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord)
 		if (iRet == -100 || iRet == 0)
 			return iRet;
 
-		job_op.update_row(*stpTaskRow); //修改数据
+		job_op.update_row(*stpTaskRow); //modify data
 
 		if (stpNodeTab != stpTaskTab)
 			stpNodeRow->Copy(stpTaskRow);
@@ -1051,7 +1051,7 @@ int TreeData::update_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord)
 		CmpCookie cookie(p_table_, TTREE_INDEX_POS);
 
 		if (KeyCompare(NewIndex, &cookie, *mallocator_, hRecord) !=
-		    0) //update Index字段
+		    0) //update Index field
 		{
 			char *tmp_pchContent = p_content_;
 			uint32_t tmp_size = size_;
@@ -1071,7 +1071,7 @@ int TreeData::update_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord)
 					iDelete++;
 			}
 		} else {
-			// 在私有区间decode
+			// decode in private area
 			RawData stTmpRows(&g_stSysMalloc, 1);
 			if (encode_to_private_area(stTmpRows, *stpNodeRow,
 						   uchRowFlags)) {
@@ -1081,12 +1081,12 @@ int TreeData::update_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord)
 			}
 
 			iRet = replace_cur_row(*stpNodeRow, m_async,
-					       pRawHandle); // 加进cache
+					       pRawHandle); // add to cache
 			if (iRet == EC_NO_MEM) {
 				return iRet;
 			}
 			if (iRet != 0) {
-				/*标记加入黑名单*/
+				/*mark as added to blacklist*/
 				job_op.push_black_list_size(need_size());
 				return (-6);
 			}
@@ -1100,12 +1100,12 @@ int TreeData::update_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord)
 	}
 
 	if (uiTotalRows > 0 &&
-	    uiTotalRows - iDelete == 0) //RowFormat上的内容已删光
+	    uiTotalRows - iDelete == 0) //content on RowFormat has been deleted
 	{
-		//删除tree node
+		//delete tree node
 		bool isFreeNode = false;
 		DTCValue value =
-			(*stpCurRow)[TTREE_INDEX_POS]; //for轮询的最后一行数据
+			(*stpCurRow)[TTREE_INDEX_POS]; //for polling the last row of data
 		char *indexKey = reinterpret_cast<char *>(&value);
 		CmpCookie cookie(p_table_, TTREE_INDEX_POS);
 		int iret = t_tree_.Delete(indexKey, &cookie, KeyCompare,
@@ -1120,7 +1120,7 @@ int TreeData::update_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord)
 		p_tree_root_->tree_size_ -= size_;
 		p_tree_root_->node_count_--;
 		p_tree_root_->root_handle_ = t_tree_.Root();
-		//释放handle
+		//release handle
 		mallocator_->Free(hRecord);
 	}
 
@@ -1168,7 +1168,7 @@ int TreeData::delete_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord)
 		if (stpNodeTab != stpTaskTab) {
 			stpTaskRow->Copy(stpNodeRow);
 		}
-		if (job_op.compare_row(*stpTaskRow) != 0) { //符合del条件
+		if (job_op.compare_row(*stpTaskRow) != 0) { //meets deletion condition
 			iRet = delete_cur_row(*stpNodeRow);
 			if (iRet != 0) {
 				log4cplus_error(
@@ -1185,12 +1185,12 @@ int TreeData::delete_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord)
 	if (iAffectRows > uiTotalRows)
 		return (-3);
 	else if (iAffectRows == uiTotalRows &&
-		 uiTotalRows > 0) //RowFormat上的内容已删光
+		 uiTotalRows > 0) //content on RowFormat has been completely deleted
 	{
-		//删除tree node
+		//delete tree node
 		bool isFreeNode = false;
 		DTCValue value =
-			(*stpNodeRow)[TTREE_INDEX_POS]; //for轮询的最后一行数据
+			(*stpNodeRow)[TTREE_INDEX_POS]; //for polling the last row of data
 		char *indexKey = reinterpret_cast<char *>(&value);
 		CmpCookie cookie(p_table_, TTREE_INDEX_POS);
 		int iret = t_tree_.Delete(indexKey, &cookie, KeyCompare,
@@ -1206,7 +1206,7 @@ int TreeData::delete_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord)
 		p_tree_root_->tree_size_ -= size_;
 		p_tree_root_->node_count_--;
 		p_tree_root_->root_handle_ = t_tree_.Root();
-		//释放handle
+		//release handle
 		mallocator_->Free(hRecord);
 	}
 
@@ -1231,7 +1231,7 @@ int TreeData::skip_row(const RowValue &stRow)
 	SKIP_TREE_SIZE(sizeof(unsigned char)); // flag
 
 	for (int j = key_index_ + 1; j <= stRow.num_fields();
-	     j++) //拷贝一行数据
+	     j++) //copy one row of data
 	{
 		//id: bug fix skip discard
 		if (stRow.table_definition()->is_discard(j))
@@ -1249,15 +1249,15 @@ int TreeData::skip_row(const RowValue &stRow)
 			;
 			break;
 
-		case DField::Float: //浮点数
+		case DField::Float: //floating point number
 			if (stRow.field_size(j) > (int)sizeof(float))
 				SKIP_TREE_SIZE(sizeof(double));
 			else
 				SKIP_TREE_SIZE(sizeof(float));
 			break;
 
-		case DField::String: //字符串
-		case DField::Binary: //二进制数据
+		case DField::String: //string
+		case DField::Binary: //binary data
 		default: {
 			int iLen;
 			GET_TREE_VALUE(iLen, int);
@@ -1448,12 +1448,12 @@ int TreeData::get_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord)
 		if (stpNodeTab != stpTaskTab) {
 			stpTaskRow->Copy(stpNodeRow);
 		}
-		if (job_op.compare_row(*stpTaskRow) == 0) //如果不符合查询条件
+		if (job_op.compare_row(*stpTaskRow) == 0) //if it doesn't meet query conditions
 			continue;
 
 		if (stpTaskTab->expire_time_field_id() > 0)
 			stpTaskRow->update_expire_time();
-		//当前行添加到task中
+		//add current row to task
 		log4cplus_debug("append_row flag");
 		job_op.append_row(stpTaskRow);
 
@@ -1483,14 +1483,14 @@ int TreeData::get_sub_raw(DTCJobOperation &job_op, unsigned int nodeCnt,
 
 	t_tree_.traverse_forward(Visit, &resCookie);
 
-	if (isAsc) //升序
+	if (isAsc) //ascending order
 	{
 		for (int i = 0; i < (int)resCookie.has_got_node_count; i++) {
 			int iRet = (this->*subRowProc)(job_op, pCookie[i]);
 			if (iRet != 0)
 				return iRet;
 		}
-	} else //降序
+	} else //descending order
 	{
 		for (int i = (int)resCookie.has_got_node_count - 1; i >= 0;
 		     i--) {
@@ -1508,15 +1508,15 @@ int TreeData::match_index_condition(DTCJobOperation &job_op,
 				    SubRowProcess subRowProc)
 {
 	const DTCFieldValue *condition = job_op.request_condition();
-	int numfields = 0; //条件字段个数
+	int numfields = 0; //number of condition fields
 	bool isAsc = !(p_table_->is_desc_order(TTREE_INDEX_POS));
 
 	if (condition)
 		numfields = condition->num_fields();
 
-	int indexIdArr[numfields]; //开辟空间比实际使用的大
-	int indexCount = 0; //条件索引个数
-	int firstEQIndex = -1; //第一个EQ在indexIdArr中的位置
+	int indexIdArr[numfields]; //allocate space larger than actually used
+	int indexCount = 0; //number of condition indexes
+	int firstEQIndex = -1; //position of first EQ in indexIdArr
 
 	for (int i = 0; i < numfields; i++) {
 		if (condition->field_id(i) == TTREE_INDEX_POS) {
@@ -1529,11 +1529,11 @@ int TreeData::match_index_condition(DTCJobOperation &job_op,
 
 	if (indexCount == 0 ||
 	    (indexCount == 1 && condition->field_operation(indexIdArr[0]) ==
-					DField::NE)) { //平板类型
+					DField::NE)) { //flat table type
 		int iret = get_sub_raw(job_op, NodeCnt, isAsc, subRowProc);
 		if (iret != 0)
 			return iret;
-	} else if (firstEQIndex != -1) //有至少一个EQ条件
+	} else if (firstEQIndex != -1) //has at least one EQ condition
 	{
 		MEM_HANDLE_T *pRecord = NULL;
 
@@ -1741,7 +1741,7 @@ int TreeData::flush_tree_data(DTCFlushRequest *flush_req, Node *p_node,
 	affected_count = 0;
 	DTCValue astKey[p_table_->key_fields()];
 	TaskPackedKey::unpack_key(p_table_, key(), astKey);
-	RowValue stRow(p_table_); //一行数据
+	RowValue stRow(p_table_); //one row of data
 	for (int i = 0; i < p_table_->key_fields(); i++)
 		stRow[i] = astKey[i];
 
@@ -1794,7 +1794,7 @@ int TreeData::get_tree_data(DTCJobOperation &job_op)
 		return 0;
 	}
 
-	job_op.prepare_result(); //准备返回结果对象
+	job_op.prepare_result(); //prepare result object for return
 	if (job_op.all_rows() &&
 	    (job_op.count_only() || !job_op.in_range((int)rowCnt, 0))) {
 		if (job_op.is_batch_request()) {
@@ -1840,7 +1840,7 @@ int TreeData::delete_tree_data(DTCJobOperation &job_op)
 	rows_count_ = 0;
 	dirty_rows_count_ = 0;
 
-	job_op.prepare_result(); //准备返回结果对象
+	job_op.prepare_result(); //prepare result object for return
 	if (job_op.all_rows() &&
 	    (job_op.count_only() || !job_op.in_range((int)rowCnt, 0))) {
 		if (job_op.is_batch_request()) {
@@ -1940,7 +1940,7 @@ ALLOC_SIZE_T TreeData::calc_tree_row_size(const RowValue &stRow, int keyIdx)
 	if (keyIdx == -1)
 		log4cplus_error("TreeData may not init yet...");
 	ALLOC_SIZE_T tSize = 1; // flag
-	for (int j = keyIdx + 1; j <= stRow.num_fields(); j++) //¿½±´Ò»ÐÐÊý¾Ý
+	for (int j = keyIdx + 1; j <= stRow.num_fields(); j++) 
 	{
 		if (stRow.table_definition()->is_discard(j))
 			continue;
@@ -1953,15 +1953,15 @@ ALLOC_SIZE_T TreeData::calc_tree_row_size(const RowValue &stRow, int keyIdx)
 					 sizeof(int32_t);
 			break;
 
-		case DField::Float: //¸¡µãÊý
+		case DField::Float: 
 			tSize += likely(stRow.field_size(j) >
 					(int)sizeof(float)) ?
 					 sizeof(double) :
 					 sizeof(float);
 			break;
 
-		case DField::String: //×Ö·û´®
-		case DField::Binary: //¶þ½øÖÆÊý¾Ý
+		case DField::String: 
+		case DField::Binary: 
 		default: {
 			tSize += sizeof(int);
 			tSize += stRow.field_value(j)->bin.len;

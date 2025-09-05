@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -200,8 +200,8 @@ void MultiRequest::complete_task(DTCJobOperation *req, int index)
 	set_key_completed(index);
 	subReq--;
 
-	// 注意，如果将CTaskMultiplexer放到cache线程执行，则会导致每split一个task，都是直接到cache_process执行完到这里；然后再split出第二个task。这会导致这一个判断逻辑有问题。
-	// 目前CTaskMultiplexer是跟incoming线程绑在一起的，因此没有问题
+	// Note: If CTaskMultiplexer is placed in cache thread execution, it will cause each split task to go directly to cache_process and execute here; then split the second task. This will cause problems with this judgment logic.
+	// Currently CTaskMultiplexer is bound to the incoming thread, so there's no problem
 	if (firstPass == 0 && subReq == 0) {
 		complete_waiter();
 		delete this;

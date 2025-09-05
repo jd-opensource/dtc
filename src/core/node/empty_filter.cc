@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ void EmptyNodeFilter::SET(uint32_t key)
 	uint32_t tableid = get_index(key);
 
 	if (_enf->enf_tables[tableid].t_size < bitoff / CHAR_BIT + 1) {
-		/* 按step的整数倍来increase table*/
+		/* Increase table by integer multiples of step*/
 		int incbyte = bitoff / CHAR_BIT + 1 -
 			      _enf->enf_tables[tableid].t_size;
 		int how = (incbyte + _enf->enf_step - 1) / _enf->enf_step;
@@ -58,7 +58,7 @@ void EmptyNodeFilter::SET(uint32_t key)
 		_enf->enf_tables[tableid].t_handle =
 			M_REALLOC(_enf->enf_tables[tableid].t_handle, size);
 		if (_enf->enf_tables[tableid].t_handle == INVALID_HANDLE) {
-			/* realloc 失败后，不会重试*/
+			/* After realloc fails, will not retry*/
 			return;
 		}
 
@@ -75,7 +75,7 @@ void EmptyNodeFilter::CLR(uint32_t key)
 	uint32_t tableid = get_index(key);
 
 	if (_enf->enf_tables[tableid].t_size < bitoff / CHAR_BIT + 1)
-		/* 超出表范围，return*/
+		/* Beyond table range, return*/
 		return;
 
 	return CLR_B(bitoff,

@@ -87,7 +87,7 @@ int HwcSync::get_current_time()
 
 int HwcSync::Run()
 {
-    /* 先关闭连接，防止fd重路 */
+    /* Close connection first to prevent fd redirection */
     p_master_->Close();
     int i_sec = get_current_time() + 1;
     while (true) {
@@ -117,20 +117,20 @@ int HwcSync::Run()
             log4cplus_error("master report journalID is not match");
         }
 
-        // 重试
+        // Retry
         if (0 != ret) {
             log4cplus_warning("fetch key-list from master, limit[%d], ret=%d, err=%s",
             i_limit_, ret, result_m.ErrorMessage());
             usleep(100);
             continue;
         }
-        // 写请求 插入 冷数据库
+        // Write request insert into cold database
         for (int i = 0; i < result_m.NumRows(); ++i) {
             ret = result_m.FetchRow();
             if (ret < 0) {
                 log4cplus_error("fetch key-list from master failed, limit[%d], ret=%d, err=%s",
                       i_limit_, ret, result_m.ErrorMessage());
-                // dtc可以运行失败
+                // dtc can run with failure
                 return E_HWC_SYNC_DTC_ERROR;
             }
 
@@ -198,7 +198,7 @@ int HwcSync::Run()
                     const RowValue* p_hot_raw = p_hot_result.fetch_row();
                     
                     bool b_check = false;
-                    // 冷数据库为base,只要冷数据库中没有热的，就插入
+                    // Cold database as base, insert if cold database doesn't have hot data
                     for (int j = 0; j < p_cold_res->total_rows(); j++) {
                         const RowValue* p_cold_raw = p_cold_res->fetch_row();
                         if(p_hot_raw->Compare(*p_cold_raw ,
@@ -211,7 +211,7 @@ int HwcSync::Run()
                     }
 
                     if (!b_check) {
-                        // 对账失败，执行sql语句 ，容错逻辑
+                        // Account verification failed, execute sql statement, error tolerance logic
                         log4cplus_info("check: need insert in cold table");
                         sql_statement_query(astKey, s_sql);
                         break;
@@ -224,7 +224,7 @@ int HwcSync::Run()
                 continue;
             }
         }
-        // 成功，则更新控制文件中的journalID
+        // Success, update journalID in control file
         o_journal_id_ = (uint64_t)result_m.HotBackupID();
         log4cplus_info("end serial:%d , offset:%d" , o_journal_id_.serial , o_journal_id_.offset);
         CComm::registor.JournalId() = o_journal_id_;
@@ -233,7 +233,7 @@ int HwcSync::Run()
     return E_HWC_SYNC_NORMAL_EXIT;
 }
 
-//***************************分割线***************************
+//***************************Separator***************************
 HwcSyncUnit::HwcSyncUnit()
     : p_hwc_sync_(NULL)
 { } 

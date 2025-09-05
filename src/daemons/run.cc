@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 #include "log/log.h"
 #include "daemon/daemon.h"
 #include "../core/global.h"
-/* 打开看门狗 */
+/* Start watchdog */
 int start_dtc(int (*entry)(void *), void *args)
 {
     int delay = 5;

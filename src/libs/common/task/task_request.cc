@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -380,7 +380,7 @@ int DTCJobOperation::prepare_process(void)
 		}
 	} else if (request_code() == DRequest::TYPE_SYSTEM_COMMAND) {
 		// admin requests
-		// Migrate命令需要在barrier里排队，所以需要校验是否有key以及计算hash
+		// Migrate commands need to queue in barrier, so need to validate key existence and calculate hash
 		if (DRequest::SystemCommand::Migrate ==
 		    requestInfo.admin_code()) {
 			const DTCFieldValue *condition = request_condition();

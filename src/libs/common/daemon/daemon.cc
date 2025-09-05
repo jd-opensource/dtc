@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -51,12 +51,12 @@ char d_table_file[256] = TABLE_CONF_NAME;
 pthread_t mainthreadid;
 
 bool flatMode;
-//打印版本信息
+//Print version information
 void show_version_detail()
 {
 	printf("%s version: %s\n", stat_project_name, version_detail);
 }
-//打印编译信息
+//Print compilation information
 void show_comp_date()
 {
 	printf("%s compile date: %s %s\n", stat_project_name, compdatestr,
@@ -71,7 +71,7 @@ void show_usage()
 	       stat_usage_argv);
 }
 
-//获取初始信息（输入参数、编译信息等）
+//Get initial information (input parameters, compilation info, etc.)
 int load_entry_parameter(int argc, char **argv)
 {
 	int c;
@@ -140,7 +140,7 @@ static void sigterm_handler(int signo)
 {
 	stop = 1;
 }
-//信号量初始化，设置后台运行进程
+//Signal initialization, set background running process
 int init_daemon()
 {
 	struct sigaction sa;
@@ -156,9 +156,9 @@ int init_daemon()
 	signal(SIGPIPE, SIG_IGN);
 	signal(SIGCHLD, SIG_IGN);
 	/********************************
- * sigemptyset:清空信号集
- * sigaddset：将信号加入信号集
- * sigprocmask：查询或设置信号屏蔽字
+ * sigemptyset: clear signal set
+ * sigaddset: add signal to signal set
+ * sigprocmask: query or set signal mask
  *********************************/
 	sigemptyset(&sset);
 	sigaddset(&sset, SIGTERM);
@@ -227,7 +227,7 @@ int daemon_set_fd_limit(int maxfd)
 	return 0;
 }
 
-//core(coredump)文件初始化
+//core(coredump) file initialization
 int init_core_dump(void)
 {
 	struct rlimit rlim;
@@ -235,9 +235,9 @@ int init_core_dump(void)
 	/* allow core dump  100M */
 	rlim.rlim_cur = 100UL << 30;
 	rlim.rlim_max = 100UL << 30;
-	//设置core文件的最大字节数
+	//Set maximum bytes for core file
 	if (setrlimit(RLIMIT_CORE, &rlim) == -1) {
-		//如果设置失败，将软限制设置为硬限制，并重新设置
+		//If setting fails, set soft limit to hard limit and reset
 		if (getrlimit(RLIMIT_CORE, &rlim) == 0) {
 			rlim.rlim_cur = rlim.rlim_max;
 			setrlimit(RLIMIT_CORE, &rlim);

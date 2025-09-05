@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 #include "log/log.h"
 
 StatThread g_stat_mgr;
-//初始化内存映射
+//Initialize memory mapping
 int init_statistics(void)
 {
 	int ret;

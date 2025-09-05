@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -305,15 +305,15 @@ int DTCTableDefinition::set_key_fields(int n)
 		fieldList[i].offset = maxSize;
 		switch (field_type(i)) {
 		case DField::Signed:
-		case DField::Unsigned: //整数
-		case DField::Float: //浮点数
+		case DField::Unsigned: //integer
+		case DField::Float: //float
 			maxSize += field_size(i);
 			break;
-		case DField::String: //以null结尾的字符串
-		case DField::Binary: //二进制数据
+		case DField::String: //null-terminated string
+		case DField::Binary: //binary data
 		default:
 			nvar++;
-			maxSize = 1 + field_size(i); // 1字节用于存储 字符串长度
+			maxSize = 1 + field_size(i); // 1 byte used to store string length
 			break;
 		}
 		if (keysAsUniqField) {
@@ -329,7 +329,7 @@ int DTCTableDefinition::set_key_fields(int n)
 	if (nvar == 0) { // not string , binary
 		if (maxKeySize >= 256) 
 			return -1;
-		keyFormat = maxSize; // key 总大小
+		keyFormat = maxSize; // total key size
 		maxKeySize = maxSize;
 	} else {  // key has string , binary type field
 		if (maxKeySize >= 256 + 1) 

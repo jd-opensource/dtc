@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -565,9 +565,9 @@ static void da_run(struct instance *dai) {
 	_set_log_switch_(dai->ctx->cf->stCL.log_switch);
 
 	/*
-	  own_addr 取本地IP
-	  own_port, bid 只取server_pool的第一个
-	  _set_remote_log_config_放在此处初始化会导致在此之前的log不会被远程发送
+	  own_addr gets local IP
+	  own_port, bid only gets the first server_pool
+	  _set_remote_log_config_ initialized here will cause logs before this point not to be sent remotely
 	*/
 	if(array_n(&(dai->ctx->pool)) > 0)
 	{

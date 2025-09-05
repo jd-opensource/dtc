@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -204,7 +204,7 @@ class DTCJobOperation : public DtcJob,
 	 * expire_time
 	 *
 	 * */
-	/* 加入黑名单的大小 */
+	/* Size when added to blacklist */
 	unsigned blacklist_size;
 	uint32_t timestamp;
 

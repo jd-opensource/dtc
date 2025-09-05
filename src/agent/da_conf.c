@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -531,7 +531,7 @@ static int conf_parse_core(struct conf *cf) {
 			return -1;
 		}
 		
-		//转存一下localip到conf_pool中，后续server_pool需要使用
+		//store localip to conf_pool for later use by server_pool
 		struct conf_pool *tmpCP = (struct conf_pool *)void_cp;
 		strncpy(tmpCP->localip, cf->localip, sizeof(tmpCP->localip));
 		
@@ -687,7 +687,7 @@ static int conf_add_ss(struct conf *cf) {
 		return -1;
 	}
 	
-	//转存一下localip到conf_pool中，后续server_pool需要使用
+	//store localip to conf_pool for later use by server_pool
 	struct conf_pool *tmpCP = (struct conf_pool *)void_cp;
 	strncpy(tmpCP->localip, cf->localip, sizeof(tmpCP->localip));
 	
@@ -1165,7 +1165,7 @@ struct conf *conf_create(char *filename) {
 		return NULL;
 	}
 
-	//后续需要用到本地IP，所以放在前面获取
+	//need to use local IP later, so get it first
 	get_local_ip(cf->localip, sizeof(cf->localip));
 	
 	status = conf_parse(cf);

@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -542,7 +542,7 @@ void dtc_parse_req(struct msg *r) {
 						r->keys[0].end = p + r->cur_parse_lenth;
 
 						if (r->keytype == String || r->keytype == Binary) {
-							r->keys[0].end -= 1;  //去除字符串末尾的\0
+							r->keys[0].end -= 1;  //Remove the trailing \0 from string
 						}
 
 						log_debug(
@@ -1699,7 +1699,7 @@ static int dtc_encode_agentid(struct msg *r) {
 }
 
 /*
- * get分包函数,暂时不考虑联合组件的情况
+ * get fragmentation function, temporarily not considering union components
  */
 static int dtc_fragment_get(struct msg *r, uint32_t ncontinuum,
 		struct msg_tqh *frag_msgq) {
@@ -1712,7 +1712,7 @@ static int dtc_fragment_get(struct msg *r, uint32_t ncontinuum,
 	CValue val;
 	uint32_t idx = 0;
 	int version_len = 0, requestinfo_len = 0;
-	//用于放置分组所有的key
+	//Used to store all keys for grouping
 	struct keypos keys[ncontinuum][r->keyCount];
 	int keynum[ncontinuum];
 
@@ -1725,7 +1725,7 @@ static int dtc_fragment_get(struct msg *r, uint32_t ncontinuum,
 		struct keypos *kpos = &r->keys[i];
 		if(r->keytype == Unsigned || r->keytype == Signed) {
 			if(sizeof(uint64_t) == kpos->end - kpos->start) {
-				//此处没有考虑大端小端问题源于SDK编码
+				//Endianness is not considered here due to SDK encoding
 				val.u64 = *(uint64_t*)kpos->start;
 				idx = msg_backend_idx(r, (uint8_t *)&val.u64, sizeof(uint64_t));
 				log_debug("key is %lu, idx is %u, len is %ld",
@@ -1735,7 +1735,7 @@ static int dtc_fragment_get(struct msg *r, uint32_t ncontinuum,
 				return -1;
 		}
 		else {
-			//多Key时每个key被附加4Byte Key长度
+			//When multiple keys, each key is appended with 4-byte key length
 			int len = kpos->end - kpos->start - sizeof(uint32_t);
 			if(len > 0) {
 				char temp[len + 2];
@@ -1966,7 +1966,7 @@ int dtc_fragment(struct msg *r, uint32_t ncontinuum, struct msg_tqh *frag_msgq) 
 					break;
 				}
 			}
-			//级联灰度版本特别的地方
+			//Special place for cascade grayscale version
 			status = dtc_encode_agentid(r);
 			return status;
 		}
@@ -2085,7 +2085,7 @@ static int dtc_coalesce_get(struct msg *r) {
 			}
 		}
 	}
-	if (errortag == 1) { //有分包查找出错,one of the search result is in error
+	if (errortag == 1) { //There is a fragmented search error, one of the search result is in error
 		cmsg->peer = NULL;
 		cmsg->peerid = 0;
 		peermsg->peer = NULL;
@@ -2095,7 +2095,7 @@ static int dtc_coalesce_get(struct msg *r) {
 		peermsg->peer = r;
 		peermsg->id = r->id;
 		goto coalesce_succ_err;
-	} else if (validmsgcount == 0 || validmsgcount == 1) { //结果集统统处于一个包中，only a package contain search resule
+	} else if (validmsgcount == 0 || validmsgcount == 1) { //All results are in one package, only a package contain search resule
 		peermsg = singleresmsg->peer;
 		singleresmsg->peer = NULL;
 		singleresmsg->peerid = 0;

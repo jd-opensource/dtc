@@ -29,7 +29,7 @@ void InitState::Enter()
         return;
     }
 
-    // 锁住hwc的日志目录
+    // Lock HWC log directory
     if (CComm::uniq_lock()) {
         log4cplus_error("another process already running, exit");
         p_hwc_state_manager_->ChangeState(E_HWC_STATE_FAULT);
@@ -44,7 +44,7 @@ void InitState::Exit()
 
 void InitState::HandleEvent()
 {
-    // 解析yaml配置文件
+    // Parse YAML configuration file
     log4cplus_debug("dtc conf file:%s " , CComm::dtc_conf);
 	DTCConfig* p_dtc_config = new DTCConfig();
 	if (p_dtc_config->load_yaml_file(CComm::dtc_conf,  false) == -1)
@@ -56,13 +56,13 @@ void InitState::HandleEvent()
     DTCTableDefinition* p_dtc_tab_def = p_db_Config->build_table_definition();
 
     TableDefinitionManager::instance()->set_cur_table_def(p_dtc_tab_def , 0);
-    // 初始化mysql process
-    // 暂时不按key选择机器，冷数据库对外为一台访问配置
+    // Initialize MySQL process
+    // Temporarily not selecting machines by key, cold database configured as single access point
     CComm::mysql_process_.do_init(0 , p_db_Config, p_dtc_tab_def, 0);
 
-    // 绑定yaml文件解析器至StateManager
+    // Bind YAML file parser to StateManager
     p_hwc_state_manager_->BindDBConfigParser(p_db_Config);
 
-    // 跳转至下一个状态
+    // Jump to next state
     p_hwc_state_manager_->ChangeState(E_HWC_STATE_REGISTER);
 }

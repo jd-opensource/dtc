@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -53,9 +53,9 @@ int DTCCompress::set_buffer_len(unsigned long len)
 	return 0;
 }
 
-//source 被压缩的缓冲区 sourcelen 被压缩缓冲区的原始长度
-//dest   压缩后的缓冲区 destlen   被压缩后的缓冲区长度
-//注意调用该函数时， destlen 首先要设置为dest缓冲区最大可以容纳的长度
+//source: buffer to be compressed, sourcelen: original length of buffer to be compressed
+//dest: compressed buffer, destlen: length of compressed buffer
+//Note: when calling this function, destlen must first be set to the maximum capacity of dest buffer
 int DTCCompress::compress(const char *source, unsigned long sourceLen)
 {
 	if (_buf == NULL || source == NULL) {
@@ -65,9 +65,9 @@ int DTCCompress::compress(const char *source, unsigned long sourceLen)
 	return compress2(_buf, &_len, (Bytef *)source, sourceLen, _level);
 }
 
-//source 待解压的缓冲区 sourcelen 待解压缓冲区的原始长度
-//dest   解压后的缓冲区 destlen   解缩后的缓冲区长度
-//注意调用该函数时， destlen 首先要设置为dest缓冲区最大可以容纳的长度
+//source: buffer to be decompressed, sourcelen: original length of buffer to be decompressed
+//dest: decompressed buffer, destlen: length of decompressed buffer
+//Note: when calling this function, destlen must first be set to the maximum capacity of dest buffer
 int DTCCompress::UnCompress(char **buf, int *lenp, const char *source,
 			    unsigned long sourceLen)
 {

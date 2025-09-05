@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -174,7 +174,7 @@ void PtMalloc::destroy()
 {
 	Singleton<PtMalloc>::destory();
 }
-/*初始化header中的signature域*/
+/*Initialize signature field in header*/
 void PtMalloc::init_sign()
 {
 	static const unsigned int V4Sign[14] = {
@@ -191,8 +191,8 @@ void PtMalloc::init_sign()
 #else
 #define UINT64FMT_T "%llu"
 #endif
-/*初始化cache头信息*/
-/*传入参数，cache的起始地址，cache的总大小*/
+/*Initialize cache header information*/
+/*Input parameters: cache start address, total cache size*/
 int PtMalloc::do_init(void *pAddr, INTER_SIZE_T tSize)
 {
 	int i;
@@ -258,7 +258,7 @@ int PtMalloc::do_init(void *pAddr, INTER_SIZE_T tSize)
 
 	return (0);
 }
-/*校验cache的版本是否正确*/
+/*Verify if cache version is correct*/
 int PtMalloc::detect_version()
 {
 	if (m_pstHead->m_auiSign[0] != DTC_SIGN_0 ||
@@ -275,7 +275,7 @@ int PtMalloc::detect_version()
 		 "unknown version signature %u", m_pstHead->m_ushVer);
 	return (0);
 }
-/*查看cache是否一致：在启动dtc，加载cache的时候，只要是需要写cache，就会设置不一致，防止dtc在运行时crash，重启后不经检查使用乱掉的内存*/
+/*Check if cache is consistent: when starting DTC and loading cache, if cache needs to be written, it will be set as inconsistent to prevent DTC from using corrupted memory after crash and restart without verification*/
 int PtMalloc::share_memory_integrity()
 {
 	return (int)m_pstHead->m_shmIntegrity;
@@ -288,7 +288,7 @@ void PtMalloc::set_share_memory_integrity(const int flags)
 	else
 		m_pstHead->m_shmIntegrity = 0;
 }
-/*对于已经存在的IPC shared memory，dtc在启动后会将这个块内存作为cache，在这里检查这块cache的头信息，是否正确*/
+/*For existing IPC shared memory, DTC will use this memory block as cache after startup, here check if the header information of this cache block is correct*/
 int PtMalloc::do_attach(void *pAddr, INTER_SIZE_T tSize)
 {
 	if (tSize < sizeof(MemHead) + sizeof(CBin) * (NBINS + NFASTBINS + 1) +
@@ -332,8 +332,8 @@ ALLOC_HANDLE_T PtMalloc::get_reserve_zone()
 {
 	return m_pstHead->m_hReserveZone;
 }
-/*输入参数是chunk的用户handle*/
-/*返回这块chunk的用户使用空间的大小*/
+/*Input parameter is user handle of chunk*/
+/*Return the size of user space for this chunk*/
 ALLOC_SIZE_T PtMalloc::chunk_size(ALLOC_HANDLE_T hHandle)
 {
 	MallocChunk *pstChunk;
@@ -354,7 +354,7 @@ ALLOC_SIZE_T PtMalloc::chunk_size(ALLOC_HANDLE_T hHandle)
 
 	return chunksize2memsize(CHUNK_SIZE(pstChunk));
 }
-/*设置输入bin上的头chunk为使用状态，并将这个chunk从bin上拖链*/
+/*Set the head chunk on input bin to used state and unlink this chunk from bin*/
 void *PtMalloc::bin_malloc(CBin &ptBin)
 {
 	MallocChunk *pstChunk;
@@ -370,8 +370,8 @@ void *PtMalloc::bin_malloc(CBin &ptBin)
 
 	return p;
 }
-/*对所有的bin检查：small&large bins, fast bins, unsorted bins*/
-/*校验方法：每个bin组成一个双向的循环链表*/
+/*Check all bins: small&large bins, fast bins, unsorted bins*/
+/*Verification method: each bin forms a bidirectional circular linked list*/
 int PtMalloc::check_bin()
 {
 	int i;
@@ -435,8 +435,8 @@ int PtMalloc::check_bin()
 
 	return (0);
 }
-/*校验存放在bin中的chunk的一致性*/
-/*检验方法：从分配的top线开始向bottom方向，一个chunk一个chunk的检查，检查这个chunk的大小是不是和它的后一个chunk的presize一致*/
+/*Verify consistency of chunks stored in bins*/
+/*Verification method: starting from allocated top line towards bottom direction, check chunk by chunk to verify if this chunk's size matches the presize of its next chunk*/
 #if BIN_MEM_CHECK
 int PtMalloc::check_mem()
 {
@@ -475,13 +475,13 @@ int PtMalloc::check_mem()
 	return (0);
 }
 #endif
-/*从fastbins的一个bin下取一个空闲chunk,满足tsize大小。*/
-/*bin的索引查找方法是：按照在smallbins中查找bin的方法进行*/
+/*Take a free chunk from a bin in fastbins, satisfying tsize.*/
+/*Bin index lookup method: proceed according to the method for finding bins in smallbins*/
 void *PtMalloc::fast_malloc(ALLOC_SIZE_T tSize)
 {
 	return bin_malloc(m_ptFastBin[smallbin_index(tSize)]);
 }
-/*从smallbins的一个bin下取一个空闲chunk满足tsize大小*/
+/*Take a free chunk from a bin in smallbins satisfying tsize*/
 void *PtMalloc::small_bin_malloc(ALLOC_SIZE_T tSize)
 {
 	void *p;
@@ -494,8 +494,8 @@ void *PtMalloc::small_bin_malloc(ALLOC_SIZE_T tSize)
 
 	return (p);
 }
-/*释放fastbins的每个bin下的空闲chunk*/
-/*对于每个chunk试探是否可以和内存里的前后chunk合并，合并如果可以，并设置新chunk为使用状态，并从bin上拖链，最后将拖链的chunk存放在unsortedbin下*/
+/*Release free chunks in each bin of fastbins*/
+/*For each chunk, test if it can be merged with preceding and following chunks in memory, if merging is possible, set new chunk to used state, unlink from bin, and finally store the unlinked chunk in unsortedbin*/
 int PtMalloc::free_fast()
 {
 	if (!(m_pstHead->m_uiFlags & MALLOC_FLAG_FAST)) // no fast chunk
@@ -591,7 +591,7 @@ int PtMalloc::free_fast()
 
 	return (0);
 }
-/*从top线上面分配一个chunk满足tsize*/
+/*Allocate a chunk from top line satisfying tsize*/
 void *PtMalloc::top_alloc(ALLOC_SIZE_T tSize)
 {
 	if (m_pstHead->m_hTop + tSize + MINSIZE >= m_pstHead->m_tSize) {
@@ -614,7 +614,7 @@ void *PtMalloc::top_alloc(ALLOC_SIZE_T tSize)
 
 	return chunk2mem(p);
 }
-/*从输入的bin上将handle指定的chunk拖链*/
+/*Unlink the chunk specified by handle from the input bin*/
 int PtMalloc::unlink_bin(CBin &stBin, INTER_HANDLE_T hHandle)
 {
 	MallocChunk *pstChunk;
@@ -647,7 +647,7 @@ int PtMalloc::unlink_bin(CBin &stBin, INTER_HANDLE_T hHandle)
 
 	return (0);
 }
-/*将handle指定的chunk插入到bin上*/
+/*Insert the chunk specified by handle into the bin*/
 int PtMalloc::link_bin(CBin &stBin, INTER_HANDLE_T hHandle)
 {
 	MallocChunk *pstChunk;
@@ -679,8 +679,8 @@ int PtMalloc::link_bin(CBin &stBin, INTER_HANDLE_T hHandle)
 
 	return (0);
 }
-/*在bin中查找一个合适的位置，将hanlde指定的chunk插入进去*/
-/*寻找位置的方法：从bin的尾部开始，找到第一个位置，它的大小介于前后chunk的大小之间*/
+/*Find a suitable position in the bin to insert the chunk specified by handle*/
+/*Method to find position: starting from the tail of the bin, find the first position where its size is between the sizes of the previous and next chunks*/
 int PtMalloc::link_sorted_bin(CBin &stBin, INTER_HANDLE_T hHandle,
 			      ALLOC_SIZE_T tSize)
 {
@@ -738,7 +738,7 @@ int PtMalloc::link_sorted_bin(CBin &stBin, INTER_HANDLE_T hHandle,
 
 	return (0);
 }
-/*分配chunk满足tsize的主体逻辑*/
+/*Main logic for allocating chunk satisfying tsize*/
 ALLOC_HANDLE_T PtMalloc::inter_malloc(ALLOC_SIZE_T tSize)
 {
 	void *p;
@@ -768,7 +768,7 @@ ALLOC_HANDLE_T PtMalloc::inter_malloc(ALLOC_SIZE_T tSize)
 			INTER_HANDLE_T v = m_ptBin[uiBinIdx].m_hNextChunk;
 			unsigned int try_search_count = 0;
 
-			/* 每个bin最多只搜索100次，如果失败则跳至下一个bin */
+			/* Each bin searches at most 100 times, if failed then jump to next bin */
 			while (v != INVALID_HANDLE &&
 			       ++try_search_count < 100) {
 				pstChunk = (MallocChunk *)handle_to_ptr(v);
@@ -883,7 +883,7 @@ ALLOC_HANDLE_T PtMalloc::inter_malloc(ALLOC_SIZE_T tSize)
 MALLOC_BOTTOM:
 	return ptr_to_handle(top_alloc(tSize));
 }
-/*对intermalloc的包装，对返回结果进行了简单检查*/
+/*Wrapper for intermalloc, performs simple check on return result*/
 ALLOC_HANDLE_T PtMalloc::Malloc(ALLOC_SIZE_T tSize)
 {
 	MallocChunk *pstChunk;
@@ -901,7 +901,7 @@ ALLOC_HANDLE_T PtMalloc::Malloc(ALLOC_SIZE_T tSize)
 	}
 	return (hHandle);
 }
-/*对intermalloc的包装，对返回结果进行了简单检查,并将返回的chunk的用户部分清空*/
+/*Wrapper for intermalloc, performs simple check on return result and clears the user portion of returned chunk*/
 ALLOC_HANDLE_T PtMalloc::Calloc(ALLOC_SIZE_T tSize)
 {
 	ALLOC_HANDLE_T hHandle = Malloc(tSize);
@@ -913,7 +913,7 @@ ALLOC_HANDLE_T PtMalloc::Calloc(ALLOC_SIZE_T tSize)
 	return hHandle;
 }
 
-/*当输入的chunk在使用中时候返回0*/
+/*Return 0 when input chunk is in use*/
 int PtMalloc::check_inuse_chunk(MallocChunk *pstChunk)
 {
 	if (!inuse_bit_at_offset(pstChunk, CHUNK_SIZE(pstChunk))) {
@@ -945,7 +945,7 @@ int PtMalloc::check_inuse_chunk(MallocChunk *pstChunk)
 
 	return (0);
 }
-/*realloc的主体逻辑*/
+/*Main logic for realloc*/
 ALLOC_HANDLE_T PtMalloc::inter_re_alloc(ALLOC_HANDLE_T hHandle,
 					ALLOC_SIZE_T tSize,
 					ALLOC_SIZE_T &tOldMemSize)
@@ -1165,7 +1165,7 @@ ALLOC_HANDLE_T PtMalloc::inter_re_alloc(ALLOC_HANDLE_T hHandle,
 
 	return ptr_to_handle(chunk2mem(pstNewChunk));
 }
-/*对intserrealloc的包装，对返回结果进行了简单的检查*/
+/*Wrapper for intserrealloc, performs simple check on return result*/
 ALLOC_HANDLE_T PtMalloc::ReAlloc(ALLOC_HANDLE_T hHandle, ALLOC_SIZE_T tSize)
 {
 	ALLOC_HANDLE_T hNewHandle;
@@ -1193,7 +1193,7 @@ ALLOC_HANDLE_T PtMalloc::ReAlloc(ALLOC_HANDLE_T hHandle, ALLOC_SIZE_T tSize)
 
 	return (hNewHandle);
 }
-/*free接口的主体逻辑*/
+/*Main logic for free interface*/
 int PtMalloc::inter_free(ALLOC_HANDLE_T hHandle, ALLOC_SIZE_T &tMemSize)
 {
 	tMemSize = 0;
@@ -1339,7 +1339,7 @@ int PtMalloc::inter_free(ALLOC_HANDLE_T hHandle, ALLOC_SIZE_T &tMemSize)
 
 	return (0);
 }
-/*对interfree的包装，对返回结果进行了简单检查*/
+/*Wrapper for interfree, performs simple check on return result*/
 int PtMalloc::Free(ALLOC_HANDLE_T hHandle)
 {
 	int iRet;
@@ -1356,8 +1356,8 @@ int PtMalloc::Free(ALLOC_HANDLE_T hHandle)
 
 	return (iRet);
 }
-/*返回如果free掉handle指定chunk能够给cache共享多少空闲内存*/
-/*前后合并chunk可能导致释放比指定handle的大小更大的空间*/
+/*Return how much free memory can be shared to cache if handle specified chunk is freed*/
+/*Forward and backward chunk merging may lead to releasing more space than the specified handle size*/
 unsigned PtMalloc::ask_for_destroy_size(ALLOC_HANDLE_T hHandle)
 {
 	//	ALLOC_SIZE_T logic_size = 0;
@@ -1418,7 +1418,7 @@ unsigned PtMalloc::ask_for_destroy_size(ALLOC_HANDLE_T hHandle)
 		}
 	}
 
-	/* 释放到top边界，合并成一大块内存 */
+	/* Release to top boundary, merge into one large memory block */
 	if (physic_handle + physic_size == m_pstHead->m_hTop) {
 		ALLOC_SIZE_T physic_free = m_pstHead->m_tSize -
 					   m_pstHead->m_hTop - MINSIZE +
@@ -1447,8 +1447,8 @@ ALLOC_SIZE_T PtMalloc::last_free_size()
  * dump all bins and chunks
  *************************************************************************/
 
-/*对所有的bin检查：small&large bins, fast bins, unsorted bins*/
-/*校验方法：每个bin组成一个双向的循环链表*/
+/*Check all bins: small&large bins, fast bins, unsorted bins*/
+/*Verification method: each bin forms a bidirectional circular linked list*/
 int PtMalloc::dump_bins()
 {
 	int i;

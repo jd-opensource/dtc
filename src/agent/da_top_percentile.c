@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ int8_t get_host_name_info(const char *addr, char *result)
 	if(ret != 0)
 		return -1;
 
-	//正常情况应该是只有一个IP，所以只取第一个
+	//Normally there should be only one IP, so only take the first one
 	for(curr = answer; curr != NULL; curr = curr->ai_next)
 	{
 		sk_addr = (struct sockaddr_in *)(curr->ai_addr);
@@ -63,7 +63,7 @@ int8_t set_remote_config(const char *addr, uint16_t port, struct sockaddr_in *re
 	if(NULL == remote_addr)
 		return -1;
 	int8_t ret = 0;
-	//因为不使用域名，addr 直接为IP，所以不再进行get_host_name_info转换
+	//Since domain names are not used and addr is directly an IP, no get_host_name_info conversion is needed
 	/*
 	char szIP[ADDR_LEN];
 	memset(szIP, 0, ADDR_LEN);

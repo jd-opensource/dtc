@@ -27,7 +27,7 @@ void CMapBase::unmount()
 void CMapBase::Unlink()
 {
 	/*
-	 * 读完后，truncate文件为0并删除，防止启动磁盘flush
+	 * After reading, truncate file to 0 and delete to prevent disk flush on startup
 	 */
 	if (_rw == O_RDONLY) {
 		//int unused;
@@ -171,7 +171,7 @@ int CAsyncFileWriter::Open()
 	}
 
 	/*
-	 * 加入writer的map文件列表
+	 * Add to writer's map file list
 	 */
 	AddToList(p);
 
@@ -185,12 +185,12 @@ int CAsyncFileWriter::Write(buffer & buf)
 			 "__BUG__, writer maps is zero");
 		return CHBGlobal::ERR_ASYNC_WRITER_LOGIC;
 	}
-	//从缓冲中取一个文件来写
+	// Take a file from buffer to write
 	int ret = _asyncfiles.front()->Input(buf);
 	switch (ret) {
 	case CHBGlobal::ASYNC_PROCESS_OK:
 		{
-			//成功写入 更新控制文件写指针
+			// Successfully written, update control file write pointer
 			_controller.WriterPos() =
 			    _asyncfiles.front()->CurrentPos();
 			break;
@@ -198,7 +198,7 @@ int CAsyncFileWriter::Write(buffer & buf)
 
 	case CHBGlobal::ASYNC_NEED_SWTICH_FILE:
 		{
-			//已经写满，需要切换， 先准备下一个文件，再切换。
+			// Already full, need to switch, prepare next file first, then switch
 			CAsyncFilePos pos = _controller.WriterPos();
 			pos.Shift();
 
@@ -211,13 +211,13 @@ int CAsyncFileWriter::Write(buffer & buf)
 				DELETE(p);
 				return CHBGlobal::ERR_ASYNC_SWTICH_FILE_ERR;
 			}
-			//加入缓冲
+			// Add to buffer
 			AddToList(p);
 
-			//更新控制文件
+			// Update control file
 			_controller.SwitchWriterPos();
 
-			//继续写
+			// Continue writing
 			return Write(buf);
 			break;
 		}
@@ -264,18 +264,18 @@ int CAsyncFileReader::Read(buffer & buff)
 
 	Commit();
 
-	/* 判断是否出现切文件暂态，如果出现则sespend读者 */
+	/* Check if file switching transient state occurs, if so suspend reader */
 	if(_controller.ReaderPos().IsTransient(_controller.WriterPos())){
 		return CHBGlobal::ASYNC_READER_WAIT_DATA;
 	}
 
-	/* 暂时没有更多数据 */
+	/* Temporarily no more data */
 	if (_controller.ReaderPos().EQ(_controller.WriterPos()))
 		return CHBGlobal::ASYNC_READER_WAIT_DATA;
 
 	/* ERROR */
 	if( _controller.ReaderPos().GT(_controller.WriterPos())) {
-		/* 害怕再次遇到切换暂态 */
+		/* Afraid of encountering switching transient state again */
 		usleep(1000);
 		if( _controller.ReaderPos().GT(_controller.WriterPos())) {
 			snprintf(_errmsg, sizeof(_errmsg), "reader pos is overflow");
@@ -291,7 +291,7 @@ int CAsyncFileReader::Read(buffer & buff)
 			// mark as processing, delay commit
 			_processing = 1;
 			
-			//更新控制文件读指针
+			// Update control file read pointer
 			//_controller.ReaderPos() = _asyncfile->CurrentPos();
 			break;
 		}
@@ -337,13 +337,13 @@ int CAsyncFileChecker::Check()
 		return CHBGlobal::ERR_FULL_SYNC_NOT_COMPLETE;
 	}
 
-	/* 检查reader是否比write快 */
+	/* Check if reader is faster than writer */
 	if (_controller.ReaderPos().GT(_controller.WriterPos())) {
 		snprintf(_errmsg, sizeof(_errmsg), "reader pos is overflow");
 		return CHBGlobal::ERR_ASYNC_READER_OVERFLOW;
 	}
 
-	/*检查reader的有效性 */
+	/* Check reader validity */
 	if (!_controller.ReaderPos().Zero()) {
 		_asyncfile = new CAsyncFileImpl;
 		if (_asyncfile->OpenForReader(_controller.ReaderPos())) {
@@ -362,7 +362,7 @@ int CAsyncFileChecker::Check()
 
 	DELETE(_asyncfile);
 
-	/*检查writer有效性 */
+	/* Check writer validity */
 	if (!_controller.WriterPos().Zero()) {
 		_asyncfile = new CAsyncFileImpl;
 		if (_asyncfile->OpenForWriter(_controller.WriterPos())) {
@@ -384,7 +384,7 @@ int CAsyncFileChecker::Check()
 }
 
 /*
- * 测试代码
+ * Test code
  */
 #ifdef __UNIT_TEST__
 
@@ -451,7 +451,7 @@ int main()
 		nice(5);
 		W();
 	} else {
-		//先让writer跑起来, 否则没有文件，reader会出错
+		// Let writer run first, otherwise there's no file and reader will error
 		sleep(3);
 		R();
 	}

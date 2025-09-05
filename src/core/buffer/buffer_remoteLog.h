@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -369,7 +369,7 @@ class CacheRemoteLog {
 	DTCTableDefinition *m_TableDef;
 	EUpdateMode m_UpdateMode;
 	EUpdateMode m_InsertMode;
-	int m_RemotePort; /*如果端口没有设置正确，写日志函数就啥都不用做了*/
+	int m_RemotePort; /*if the port is not set correctly, the log writing function doesn't need to do anything*/
 	bool m_OpLog;
 };
 

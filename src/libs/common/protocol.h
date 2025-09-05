@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ class DRequest {
 	       // OBSOLETED
 	       Invalidate = 14,
 	       Monitor = 15,
-	       // work helper 重新载入配置文件
+	       // work helper reload configuration file
 	       ReloadConfig = 16,
 	       // master-slave backup
 	       Replicate = 17,

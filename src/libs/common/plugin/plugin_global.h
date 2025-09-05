@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -60,17 +60,17 @@ enum { PLUGIN_RECV_ONLY = 1,
 
 typedef struct skinfo_struct {
 	int sockfd; //fd
-	int type; //类型
-	int64_t recvtm; //接收时间
-	int64_t sendtm; //发送时间
+	int type; //type
+	int64_t recvtm; //receive time
+	int64_t sendtm; //send time
 
-	time_t tasktm; //任务开始时间
+	time_t tasktm; //task start time
 
-	u_int local_ip; //本地ip
-	u_short local_port; //本地port
-	u_int remote_ip; //对端ip
-	u_short remote_port; //对端port
-	uint64_t flags; //预留标志位，以bit操作，0x01:不发送回包，0x00:需要发送回包
+	u_int local_ip; //local ip
+	u_short local_port; //local port
+	u_int remote_ip; //remote ip
+	u_short remote_port; //remote port
+	uint64_t flags; //reserved flag bits, bit operations, 0x01:no response packet, 0x00:need response packet
 } skinfo_t;
 
 typedef int (*handle_init_t)(int, char **, int);

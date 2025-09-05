@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ static int ParseDbLine(const char *buf, uint16_t *dbIdx)
 	return n;	
 }
 
-/* 前置空格已经过滤了 */
+/* Leading spaces have been filtered out */
 static char *skip_blank(char *p)
 {
     char *iter = p;
@@ -167,7 +167,7 @@ int DbConfig::load_key_hash(DTCConfig *raw)
     const char *iter = strchr(var.c_str(), '(');
     if (NULL == iter) {
         /* 
-         * 按照整个buffer来处理
+         * Process according to entire buffer
          */
         keyHashConfig.keyHashLeftBegin = 1;
         keyHashConfig.keyHashRightBegin = -1;
@@ -190,7 +190,7 @@ int DbConfig::load_key_hash(DTCConfig *raw)
             keyHashConfig.keyHashRightBegin = -1;
     }
 
-    /* 过滤fun中的空格*/
+    /* Filter spaces in function */
     fun = skip_blank(fun);
 
     void *dll = dlopen(so.c_str(), RTLD_NOW | RTLD_GLOBAL);

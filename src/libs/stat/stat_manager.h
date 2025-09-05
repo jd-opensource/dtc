@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -679,7 +679,7 @@ class StatManager : protected StatLock {
 	const unsigned int get_map_size(void) const
 	{
 		return sizeof(map_) / sizeof(*map_);
-	} //=======================常量===============
+	} //=======================Constants===============
 	int64_t &at(unsigned int cat, unsigned offset, unsigned int n = 0)
 	{
 		return ((int64_t *)(map_[cat] + offset))[n];

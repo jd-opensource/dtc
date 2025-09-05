@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -98,9 +98,9 @@ int DtcJob::Copy(const DtcJob &rq, const DTCValue *newkey)
 	stage = DecodeStageDone;
 	role = TaskRoleServer;
 	versionInfo.Copy(rq.versionInfo);
-	//如果是批量请求，拷贝批量task的versioninfo之后记得强制set一下keytype
-	//因为有些老的api发过来的请求没有设置全局的keytype
-	//这样批量的时候可能会在heper端出现-2024错误
+	//If it's a batch request, remember to force set keytype after copying batch task's versioninfo
+	//Because some old API requests don't set the global keytype
+	//This may cause -2024 errors at helper side during batch processing
 	if (((DTCJobOperation *)&rq)->is_batch_request()) {
 		if (table_definition())
 			versionInfo.set_key_type(

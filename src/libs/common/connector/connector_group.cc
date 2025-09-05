@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ ConnectorGroup::ConnectorGroup(const char *s, const char *name_, int hc, int qs,
                    int statIndex , int i_has_hwc)
     : JobAskInterface<DTCJobOperation>(NULL), queueSize(qs), helperCount(0),
       helperMax(hc), readyHelperCnt(0), fallback(NULL),
-      average_delay(0),/*默认时延为0*/
+      average_delay(0), /* Default delay is 0 */
       hblogoutput_(owner),
       writeBinlogReply(),
       i_has_hwc_(i_has_hwc)
@@ -263,7 +263,7 @@ void ConnectorGroup::record_process_time(int cmd, unsigned int usec)
     if (t)
         statTime[t].push(usec);
 
-    /* 计算新的平均时延 */
+    /* Calculate new average delay */
     record_response_delay(usec);
 }
 
@@ -404,7 +404,7 @@ int ConnectorGroup::accept_new_request_fail(DTCJobOperation *job)
     unsigned work_client = helperMax;
     unsigned queue_size = queue.Count();
 
-    /* queue至少排队work_client个任务 */
+    /* Queue should have at least work_client tasks */
     if (queue_size <= work_client)
         return 0;
 
@@ -455,7 +455,7 @@ void ConnectorGroup::job_ask_procedure(DTCJobOperation *job)
         if (fallback && fallback->has_free_helper()) {
             fallback->process_task(job);
         } else if (accept_new_request_fail(job)) {
-            /* helper 响应变慢，主动踢掉task */
+            /* Helper response slowing down, actively drop task */
             log4cplus_debug(
                 "ConnectorGroup response is slow, give up current job");
             IncHelperExpireCount();
@@ -491,7 +491,7 @@ void ConnectorGroup::dump_state(void)
 
 void ConnectorGroup::group_notify_helper_reload_config(DTCJobOperation *job)
 {
-    //进入到这一步，helper应该是全部处于空闲状态的
+    // At this step, helper should all be in idle state
     if (!freeHelper.ListEmpty())
         process_task(job);
     else if (fallback && fallback->has_free_helper())

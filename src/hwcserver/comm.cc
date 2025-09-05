@@ -176,7 +176,7 @@ int CComm::check_hb_status()
 
 int CComm::fixed_hb_env()
 {
-    /* FIXME: 简单删除，后续再考虑如何恢复 */
+    /* FIXME: Simple deletion, consider how to restore later */
     if (system("cd ../bin/ && ./hb_fixed_env.sh hbp")) {
         log4cplus_error("invoke hb_fixed_env.sh hbp failed, %m");
         return -1;
@@ -199,7 +199,7 @@ int CComm::fixed_slave_env()
     return 0;
 }
 
-/* 确保hbp唯一, 锁住hbp的控制文件目录 */
+/* Ensure hbp uniqueness, lock hbp's control file directory */
 int CComm::uniq_lock(const char *p)
 {
     if (access(p, F_OK | X_OK))

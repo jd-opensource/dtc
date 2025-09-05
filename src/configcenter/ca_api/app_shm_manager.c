@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ char *get_shm(uint32_t key, uint32_t len, int flag, int *shm_id, bool create,
 	//	printf("Key:0x%x, Len:%d, Flag:%o\n", key, len, flag);
 	void *shm_ptr = NULL; //(void*) -1;
 
-	//获取共享内存
+	//Get shared memory
 	(*shm_id) = shmget(key, len, flag);
 	if ((*shm_id) < 0) {
 		if (ENOENT != errno) {
@@ -39,7 +39,7 @@ char *get_shm(uint32_t key, uint32_t len, int flag, int *shm_id, bool create,
 		}
 		*exist = 0;
 	}
-	//不存在则创建
+	//Create if doesn't exist
 	if (!(*exist)) {
 		if (!create) {
 			return NULL;
@@ -51,7 +51,7 @@ char *get_shm(uint32_t key, uint32_t len, int flag, int *shm_id, bool create,
 			return NULL;
 		}
 	}
-	//绑定到共享内存
+	//Bind to shared memory
 	int access_flag = 0;
 	if ((shm_ptr = shmat((*shm_id), NULL, access_flag)) == (void *)-1) {
 		printf("shmat failed, ShmId:%d, errno:%d, strerror:%s\n",

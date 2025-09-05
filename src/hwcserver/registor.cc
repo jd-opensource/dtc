@@ -6,7 +6,7 @@ int CRegistor::Regist() {
     DTC::SvrAdminRequest rq(_master);
     rq.SetAdminCode(DTC::RegisterHB);
 
-    // 发送自己的JournalID
+    // Send own JournalID
     JournalID self = _controller.JournalId();
     log4cplus_info("registed to master, master[serial=%u, offset=%u]",
                 self.serial , self.offset);

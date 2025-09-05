@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ bool parse_cluster_config(std::string &strSelfName,
 			  int len)
 {
 	log4cplus_debug("%.*s", len, buf);
-	//配置中不允许有相同servername的节点出现，本set用于检查重复servername
+	// Configuration does not allow nodes with same servername to appear, this set is used to check duplicate servername
 
 	std::set<std::string> filter;
 
@@ -98,7 +98,7 @@ bool parse_cluster_config(std::string &strSelfName,
 	return true;
 }
 
-//读取配置文件
+// Read configuration file
 bool parse_cluster_config(std::vector<ClusterNode> *result)
 {
 	bool bResult = false;
@@ -180,7 +180,7 @@ bool parse_cluster_config(std::string &strSelfName,
 	return true;
 }
 
-//保存vector到配置文件
+// Save vector to configuration file
 bool save_cluster_config(std::vector<ClusterNode> *result,
 			 std::string &strSelfName)
 {
@@ -199,14 +199,14 @@ bool save_cluster_config(std::vector<ClusterNode> *result,
 	return xml.Save(CLUSTER_CONFIG_FILE);
 }
 
-//检查是否有配置文件，如果没有则生成配置文件
+// Check if configuration file exists, if not then generate configuration file
 bool check_and_create(const char *filename)
 {
 	if (filename == NULL)
 		filename = CLUSTER_CONFIG_FILE;
 
 	if (access(filename, F_OK)) {
-		//配置文件不存在,创建配置文件
+		// Configuration file does not exist, create configuration file
 		if (errno == ENOENT) {
 			log4cplus_info("%s didn't exist,create it.", filename);
 			MarkupSTL xml;

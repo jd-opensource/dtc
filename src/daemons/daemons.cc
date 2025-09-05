@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ static void sighdlr(int signo)
 
 WatchDog::WatchDog()
 {
-	/* 立马注册进程退出处理函数，解决启动时创建太多进程导致部分进程退出没有收到信号linjinming 2014-06-14*/
+	/* Immediately register process exit handler to resolve the issue where too many processes created during startup cause some processes to exit without receiving signals linjinming 2014-06-14*/
 	notifier = new WatchDogPipe;
 	signal(SIGCHLD, sighdlr);
 }

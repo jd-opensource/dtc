@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -311,7 +311,7 @@ bool KeyRouteAskChain::is_same_cluster_config(
 }
 void KeyRouteAskChain::process_reload(DTCJobOperation *t)
 {
-	//在迁移未完成前不允许切换表
+	//Table switching is not allowed before migration is completed
 	if (migration_inprogress()) {
 		RowValue row(t->table_definition());
 		t->update_row(row);
@@ -772,7 +772,7 @@ void KeyRouteAskChain::process_cascade(DTCJobOperation *t)
 			"switch cascade state CS_CASCADING to CS_NOT_STARTED, addr [%s]",
 			strAddr.c_str());
 		m_iCSState = newState;
-		//切换为未开始状态时，将对端地址置空
+		//When switching to unstarted state, set the remote address to empty
 		m_strCSAddr = "";
 		break;
 	}

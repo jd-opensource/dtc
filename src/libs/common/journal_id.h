@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ struct JournalID {
 	}
 
 	/*
-         * 对外接口全部打包为uint64_t, 方便操作。
+         * All external interfaces are packaged as uint64_t for convenience.
          */
 	JournalID &operator=(const uint64_t v)
 	{

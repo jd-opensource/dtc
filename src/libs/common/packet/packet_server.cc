@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -487,7 +487,7 @@ int Packet::encode_forward_request(DTCJobOperation &job)
 int Packet::encode_result(DtcJob &job, int mtu, uint32_t ts)
 {
 	const DTCTableDefinition *tdef = job.table_definition();
-	// rp指向返回数据集
+	// rp points to return dataset
 	ResultPacket *rp =
 		job.result_code() >= 0 ? job.get_result_packet() : NULL;
 	BufferChain *rb = NULL;
@@ -499,7 +499,7 @@ int Packet::encode_result(DtcJob &job, int mtu, uint32_t ts)
 
 	/* rp may exist but no result */
 	if (rp && (rp->numRows || rp->totalRows)) {
-		//rb指向数据结果集缓冲区起始位置
+		//rb points to data result set buffer start position
 		rb = rp->bc;
 		if (rb)
 			rb->Count(nrp, lrp);
@@ -516,7 +516,7 @@ int Packet::encode_result(DtcJob &job, int mtu, uint32_t ts)
 		if (job.result_code() == 0) {
 			job.set_error(0, NULL, NULL);
 		}
-		//任务出现错误的时候，可能结果集里面还有值，此时需要将结果集的buffer释放掉
+		//When task encounters error, result set may still have values, need to release result set buffer
 		else if (job.result_code() < 0) {
 			ResultPacket *resultPacket = job.get_result_packet();
 			if (resultPacket) {
@@ -616,7 +616,7 @@ int Packet::encode_result(DtcJob &job, int mtu, uint32_t ts)
 		buf->totalBytes = total_len - sizeof(BufferChain);
 	}
 
-	//发送实际数据集
+	//Send actual dataset
 	buf->nextBuffer = nrp ? rb : NULL;
 	v = (struct iovec *)buf->data;
 	char *p = buf->data + sizeof(struct iovec) * (nrp + 1);
@@ -1445,7 +1445,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 		break;
 	}
 
-	// rp指向返回数据集
+	// rp points to return dataset
 	ResultPacket *rp =
 		job.result_code() >= 0 ? job.get_result_packet() : NULL;
 	log4cplus_info("result code:%d" , job.result_code());
@@ -1458,7 +1458,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 
 	/* rp may exist but no result */
 	if (rp && (rp->numRows || rp->totalRows)) {
-		//rb指向数据结果集缓冲区起始位置
+		//rb points to data result set buffer start position
 		log4cplus_info("result set, line:%d" ,__LINE__);
 		b_result_set = true;
 		rb = rp->bc;
@@ -1480,7 +1480,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 		if (job.result_code() == 0) {
 			job.set_error(0, NULL, NULL);
 		}
-		//任务出现错误的时候，可能结果集里面还有值，此时需要将结果集的buffer释放掉
+		//When task encounters error, result set may still have values, need to release result set buffer
 		else if (job.result_code() < 0) {
 			ResultPacket *resultPacket = job.get_result_packet();
 			if (resultPacket) {
@@ -1499,7 +1499,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	if (job.result_key() == NULL && job.request_key() != NULL)
 		job.set_result_key(*job.request_key());
 
-	//转换内容包
+	//Convert content packet
 	int err = job.decode_result_set(rb->data + off, lrp);
 	if (err) {
 		log4cplus_debug("decode result null: %d", err);
@@ -1544,7 +1544,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 		buf->totalBytes = first_packet_len - sizeof(BufferChain);
 		buf->nextBuffer = NULL;
 	}
-	//设置要发送的第一个包
+	//Set the first packet to send
 	char *p = buf->data + sizeof(struct iovec) * (nrp + 1);
 	v = (struct iovec *)buf->data;
 	v->iov_base = p;
@@ -1552,7 +1552,7 @@ int Packet::encode_result_v2(DtcJob &job, int mtu, uint32_t ts)
 	nv = nrp + 1;
 	buf->usedBytes = sizeof(struct iovec) * (nrp + 1) + sizeof(dtc_header);
 
-	//修改第一个包的内容
+	//Modify the content of the first packet
 	memcpy(p, &dtc_header, sizeof(dtc_header));
 	p += sizeof(dtc_header);
 	if (p - (char *)v->iov_base != sizeof(dtc_header))
@@ -1592,7 +1592,7 @@ int Packet::encode_result_mysql(DtcJob &job, int mtu, uint32_t ts)
 	log4cplus_debug("encode_result_mysql entry.");
 	const DTCTableDefinition *tdef = job.table_definition();
 
-	// rp指向返回数据集
+	// rp points to return dataset
 	ResultPacket *rp =
 		job.result_code() >= 0 ? job.get_result_packet() : NULL;
 	log4cplus_info("result code:%d" , job.result_code());
@@ -1606,7 +1606,7 @@ int Packet::encode_result_mysql(DtcJob &job, int mtu, uint32_t ts)
 
 	/* rp may exist but no result */
 	if (rp && (rp->numRows || rp->totalRows)) {
-		//rb指向数据结果集缓冲区起始位置
+		//rb points to data result set buffer start position
 		log4cplus_info("result set, line:%d" ,__LINE__);
 		b_result_set = true;
 		rb = rp->bc;
@@ -1628,7 +1628,7 @@ int Packet::encode_result_mysql(DtcJob &job, int mtu, uint32_t ts)
 		if (job.result_code() == 0) {
 			job.set_error(0, NULL, NULL);
 		}
-		//任务出现错误的时候，可能结果集里面还有值，此时需要将结果集的buffer释放掉
+		//When task encounters error, result set may still have values, need to release result set buffer
 		else if (job.result_code() < 0) {
 			ResultPacket *resultPacket = job.get_result_packet();
 			if (resultPacket) {
@@ -1648,7 +1648,7 @@ int Packet::encode_result_mysql(DtcJob &job, int mtu, uint32_t ts)
 	if (job.result_key() == NULL && job.request_key() != NULL)
 		job.set_result_key(*job.request_key());
 
-	//转换内容包
+	//Convert content packet
 	int err = job.decode_result_set(rb->data + off, lrp);
 	if (err) {
 		log4cplus_debug("decode result null: %d", err);
@@ -1685,7 +1685,7 @@ int Packet::encode_result_mysql(DtcJob &job, int mtu, uint32_t ts)
 		buf->totalBytes = first_packet_len - sizeof(BufferChain);
 		buf->nextBuffer = NULL;
 	}
-	//设置要发送的第一个包
+	//Set the first packet to send
 	v = (struct iovec *)buf->data;
 	nv = nrp ;
 	buf->usedBytes = sizeof(struct iovec) * (nrp);

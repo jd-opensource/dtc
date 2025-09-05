@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ class Ttree {
 	ALLOC_HANDLE_T first_node();
 
 	/*************************************************
-	  Description:	attach一块已经格式化好的内存
+	  Description:	attach a block of pre-formatted memory
 	  Input:		
 	  Output:		
 	  Return:		
@@ -62,25 +62,25 @@ class Ttree {
 	}
 
 	/*************************************************
-	  Description:	将key insert到树里，hRecord为key对应的数据（包含key）
-	  Input:		pchKey		插入的key
-				pCmpCookie	调用用户自定义的pfComp函数跟树里的节点比较时作为输入参数
-				pfComp		用户自定义的key比较函数
-				hRecord		保存着要插入的key以及其他数据的句柄
+	  Description:	Insert key into the tree, hRecord is the data corresponding to the key (including key)
+	  Input:		pchKey		Key to insert
+				pCmpCookie	Input parameter when calling user-defined pfComp function to compare with tree nodes
+				pfComp		User-defined key comparison function
+				hRecord		Handle storing the key to insert and other data
 	  Output:		
-	  Return:		0为成功，EC_NO_MEM为内存不足，EC_KEY_EXIST为key已经存在，其他值为错误
+	  Return:		0 for success, EC_NO_MEM for insufficient memory, EC_KEY_EXIST for key already exists, other values for error
 	*************************************************/
 	int do_insert(const char *pchKey, void *pCmpCookie,
 		      KeyComparator pfComp, ALLOC_HANDLE_T hRecord,
 		      bool &isAllocNode);
 
 	/*************************************************
-	  Description:	删除key以及对应的数据(但不会自动释放key对应的内存)
-	  Input:		pchKey		插入的key
-				pCmpCookie	调用用户自定义的pfComp函数跟树里的节点比较时作为输入参数
-				pfComp		用户自定义的key比较函数
+	  Description:	Delete key and corresponding data (but will not automatically release memory for the key)
+	  Input:		pchKey		Key to delete
+				pCmpCookie	Input parameter when calling user-defined pfComp function to compare with tree nodes
+				pfComp		User-defined key comparison function
 	  Output:		
-	  Return:		0为成功，其他值为错误
+	  Return:		0 for success, other values for error
 	*************************************************/
 	int Delete(const char *pchKey, void *pCmpCookie, KeyComparator pfComp,
 		   bool &isFreeNode);
@@ -88,180 +88,180 @@ class Ttree {
 	int find_handle(ALLOC_HANDLE_T hRecord);
 
 	/*************************************************
-	  Description:	查找key对应的数据
-	  Input:		pchKey		插入的key
-				pCmpCookie	调用用户自定义的pfComp函数跟树里的节点比较时作为输入参数
-				pfComp		用户自定义的key比较函数
-	  Output:		hRecord		保存查找到的key以及其他数据的句柄
-	  Return:		0为查找不到，1为找到数据
+	  Description:	Find data corresponding to the key
+	  Input:		pchKey		Key to search for
+				pCmpCookie	Input parameter when calling user-defined pfComp function to compare with tree nodes
+				pfComp		User-defined key comparison function
+	  Output:		hRecord		Handle storing the found key and other data
+	  Return:		0 if not found, 1 if data found
 	*************************************************/
 	int do_find(const char *pchKey, void *pCmpCookie, KeyComparator pfComp,
 		    ALLOC_HANDLE_T &hRecord);
 
 	/*************************************************
-	  Description:	查找key对应的数据
-	  Input:		pchKey		插入的key
-				pCmpCookie	调用用户自定义的pfComp函数跟树里的节点比较时作为输入参数
-				pfComp		用户自定义的key比较函数
-	  Output:		phRecord		指向树节点的item指针
-	  Return:		0为查找不到，1为找到数据
+	  Description:	Find data corresponding to the key
+	  Input:		pchKey		Key to search for
+				pCmpCookie	Input parameter when calling user-defined pfComp function to compare with tree nodes
+				pfComp		User-defined key comparison function
+	  Output:		phRecord		Pointer to tree node item
+	  Return:		0 if not found, 1 if data found
 	*************************************************/
 	int do_find(const char *pchKey, void *pCmpCookie, KeyComparator pfComp,
 		    ALLOC_HANDLE_T *&phRecord);
 
 	/*************************************************
-	  Description:	销毁整棵树，并释放相应的内存
+	  Description:	Destroy the entire tree and release corresponding memory
 	  Input:		
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int destory();
 
 	/*************************************************
-	  Description: 查询销毁整棵树可以释放多少空闲内存	
+	  Description: Query how much free memory can be released by destroying the entire tree	
 	  Input:		
 	  Output:		
-	  Return:	 >0 成功， 0 失败
+	  Return:	 >0 success, 0 failure
 	*************************************************/
 	unsigned ask_for_destroy_size(void);
 
 	/*************************************************
-	  Description:	从小到大遍历整棵树
-	  Input:		pfVisit	访问数据记录的用户自定义函数
-				pCookie	自定义函数的cookie参数
+	  Description:	Traverse the entire tree from small to large
+	  Input:		pfVisit	User-defined function to visit data records
+				pCookie	Cookie parameter for custom function
 	  Output:		
-	  Return:		0为成功，其他值为错误
+	  Return:		0 for success, other values for error
 	*************************************************/
 	int traverse_forward(ItemVisit pfVisit, void *pCookie);
 
 	/*************************************************
-	  Description:	从大到小遍历整棵树
-	  Input:		pfVisit	访问数据记录的用户自定义函数
-				pCookie	自定义函数的cookie参数
+	  Description:	Traverse the entire tree from large to small
+	  Input:		pfVisit	User-defined function to visit data records
+				pCookie	Cookie parameter for custom function
 	  Output:		
-	  Return:		0为成功，其他值为错误
+	  Return:		0 for success, other values for error
 	*************************************************/
 	int traverse_backward(ItemVisit pfVisit, void *pCookie);
 
 	/*************************************************
-	  Description:	后序遍历整棵树
-	  Input:		pfVisit	访问数据记录的用户自定义函数
-				pCookie	自定义函数的cookie参数
+	  Description:	Post-order traverse the entire tree
+	  Input:		pfVisit	User-defined function to visit data records
+				pCookie	Cookie parameter for custom function
 	  Output:		
-	  Return:		0为成功，其他值为错误
+	  Return:		0 for success, other values for error
 	*************************************************/
 	int post_order_traverse(ItemVisit pfVisit, void *pCookie);
 
 	/*************************************************
-	  Description:	从指定的key开始，从小到大遍历树，遍历的范围为[key, key+iInclusion]
-	  Input:		pchKey		开始的key
-				pCmpCookie	调用用户自定义的pfComp函数跟树里的节点比较时作为输入参数
-				pfComp		用户自定义的key比较函数
-				iInclusion		key的范围
-				pfVisit		访问数据记录的用户自定义函数
-				pCookie		自定义函数的cookie参数
+	  Description:	Traverse tree from small to large starting from specified key, range [key, key+iInclusion]
+	  Input:		pchKey		Starting key
+				pCmpCookie	Input parameter when calling user-defined pfComp function to compare with tree nodes
+				pfComp		User-defined key comparison function
+				iInclusion		Key range
+				pfVisit		User-defined function to visit data records
+				pCookie		Cookie parameter for custom function
 	  Output:		
-	  Return:		0为成功，其他值为错误
+	  Return:		0 for success, other values for error
 	*************************************************/
 	int traverse_forward(const char *pchKey, void *pCmpCookie,
 			     KeyComparator pfComp, int64_t iInclusion,
 			     ItemVisit pfVisit, void *pCookie);
 
 	/*************************************************
-	  Description:	从指定的key开始，从小到大遍历树, 遍历的范围为[key, key1]
-	  Input:		pchKey		开始的key
-				pchKey1		结束的key
-				pCmpCookie	调用用户自定义的pfComp函数跟树里的节点比较时作为输入参数
-				pfComp		用户自定义的key比较函数
-				pfVisit		访问数据记录的用户自定义函数
-				pCookie		自定义函数的cookie参数
+	  Description:	Traverse tree from small to large starting from specified key, range [key, key1]
+	  Input:		pchKey		Starting key
+				pchKey1		Ending key
+				pCmpCookie	Input parameter when calling user-defined pfComp function to compare with tree nodes
+				pfComp		User-defined key comparison function
+				pfVisit		User-defined function to visit data records
+				pCookie		Cookie parameter for custom function
 	  Output:		
-	  Return:		0为成功，其他值为错误
+	  Return:		0 for success, other values for error
 	*************************************************/
 	int traverse_forward(const char *pchKey, const char *pchKey1,
 			     void *pCmpCookie, KeyComparator pfComp,
 			     ItemVisit pfVisit, void *pCookie);
 
 	/*************************************************
-	  Description:	从指定的key开始，从小到大遍历树(遍历大于等于key的所有记录)
-	  Input:		pchKey		开始的key
-				pCmpCookie	调用用户自定义的pfComp函数跟树里的节点比较时作为输入参数
-				pfComp		用户自定义的key比较函数
-				pfVisit		访问数据记录的用户自定义函数
-				pCookie		自定义函数的cookie参数
+	  Description:	Traverse tree from small to large starting from specified key (traverse all records >= key)
+	  Input:		pchKey		Starting key
+				pCmpCookie	Input parameter when calling user-defined pfComp function to compare with tree nodes
+				pfComp		User-defined key comparison function
+				pfVisit		User-defined function to visit data records
+				pCookie		Cookie parameter for custom function
 	  Output:		
-	  Return:		0为成功，其他值为错误
+	  Return:		0 for success, other values for error
 	*************************************************/
 	int traverse_forward(const char *pchKey, void *pCmpCookie,
 			     KeyComparator pfComp, ItemVisit pfVisit,
 			     void *pCookie);
 
 	/*************************************************
-	  Description:	从指定的key开始，从大到小遍历树(遍历小于等于key的所有记录)
-	  Input:		pchKey		开始的key
-				pCmpCookie	调用用户自定义的pfComp函数跟树里的节点比较时作为输入参数
-				pfComp		用户自定义的key比较函数
-				pfVisit		访问数据记录的用户自定义函数
-				pCookie		自定义函数的cookie参数
+	  Description:	Traverse tree from large to small starting from specified key (traverse all records <= key)
+	  Input:		pchKey		Starting key
+				pCmpCookie	Input parameter when calling user-defined pfComp function to compare with tree nodes
+				pfComp		User-defined key comparison function
+				pfVisit		User-defined function to visit data records
+				pCookie		Cookie parameter for custom function
 	  Output:		
-	  Return:		0为成功，其他值为错误
+	  Return:		0 for success, other values for error
 	*************************************************/
 	int traverse_backward(const char *pchKey, void *pCmpCookie,
 			      KeyComparator pfComp, ItemVisit pfVisit,
 			      void *pCookie);
 
 	/*************************************************
-	  Description:	从指定的key开始，从大到小遍历树，遍历的范围为[key, key1]
-	  Input:		pchKey		开始的key
-				pCmpCookie	调用用户自定义的pfComp函数跟树里的节点比较时作为输入参数
-				pfComp		用户自定义的key比较函数
-				pfVisit		访问数据记录的用户自定义函数
-				pCookie		自定义函数的cookie参数
+	  Description:	Traverse tree from large to small starting from specified key, range [key, key1]
+	  Input:		pchKey		Starting key
+				pCmpCookie	Input parameter when calling user-defined pfComp function to compare with tree nodes
+				pfComp		User-defined key comparison function
+				pfVisit		User-defined function to visit data records
+				pCookie		Cookie parameter for custom function
 	  Output:		
-	  Return:		0为成功，其他值为错误
+	  Return:		0 for success, other values for error
 	*************************************************/
 	int traverse_backward(const char *pchKey, const char *pchKey1,
 			      void *pCmpCookie, KeyComparator pfComp,
 			      ItemVisit pfVisit, void *pCookie);
 
 	/*************************************************
-	  Description:	从指定的key开始，先左右树，后根结点, 遍历的范围为[key, key1]
-	  Input:		pchKey		开始的key
-				pchKey1		结束的key
-				pCmpCookie	调用用户自定义的pfComp函数跟树里的节点比较时作为输入参数
-				pfComp		用户自定义的key比较函数
-				pfVisit		访问数据记录的用户自定义函数
-				pCookie		自定义函数的cookie参数
+	  Description:	Starting from specified key, left and right subtree first, then root node, range [key, key1]
+	  Input:		pchKey		Starting key
+				pchKey1		Ending key
+				pCmpCookie	Input parameter when calling user-defined pfComp function to compare with tree nodes
+				pfComp		User-defined key comparison function
+				pfVisit		User-defined function to visit data records
+				pCookie		Cookie parameter for custom function
 	  Output:		
-	  Return:		0为成功，其他值为错误
+	  Return:		0 for success, other values for error
 	*************************************************/
 	int post_order_traverse(const char *pchKey, const char *pchKey1,
 				void *pCmpCookie, KeyComparator pfComp,
 				ItemVisit pfVisit, void *pCookie);
 
 	/*************************************************
-	  Description:	从指定的key开始，后序遍历树(遍历大于等于key的所有记录)
-	  Input:		pchKey		开始的key
-				pCmpCookie	调用用户自定义的pfComp函数跟树里的节点比较时作为输入参数
-				pfComp		用户自定义的key比较函数
-				pfVisit		访问数据记录的用户自定义函数
-				pCookie		自定义函数的cookie参数
+	  Description:	Post-order traverse tree starting from specified key (traverse all records >= key)
+	  Input:		pchKey		Starting key
+				pCmpCookie	Input parameter when calling user-defined pfComp function to compare with tree nodes
+				pfComp		User-defined key comparison function
+				pfVisit		User-defined function to visit data records
+				pCookie		Cookie parameter for custom function
 	  Output:		
-	  Return:		0为成功，其他值为错误
+	  Return:		0 for success, other values for error
 	*************************************************/
 	int post_order_traverse_ge(const char *pchKey, void *pCmpCookie,
 				   KeyComparator pfComp, ItemVisit pfVisit,
 				   void *pCookie);
 
 	/*************************************************
-	  Description:	从指定的key开始，后序遍历树(遍历小于等于key的所有记录)
-	  Input:		pchKey		开始的key
-				pCmpCookie	调用用户自定义的pfComp函数跟树里的节点比较时作为输入参数
-				pfComp		用户自定义的key比较函数
-				pfVisit		访问数据记录的用户自定义函数
-				pCookie		自定义函数的cookie参数
+	  Description:	Post-order traverse tree starting from specified key (traverse all records <= key)
+	  Input:		pchKey		Starting key
+				pCmpCookie	Input parameter when calling user-defined pfComp function to compare with tree nodes
+				pfComp		User-defined key comparison function
+				pfVisit		User-defined function to visit data records
+				pCookie		Cookie parameter for custom function
 	  Output:		
-	  Return:		0为成功，其他值为错误
+	  Return:		0 for success, other values for error
 	*************************************************/
 	int post_order_traverse_le(const char *pchKey, void *pCmpCookie,
 				   KeyComparator pfComp, ItemVisit pfVisit,
@@ -269,11 +269,11 @@ class Ttree {
 };
 
 /************************************************************
-  Description:    封装了T-tree node的各种操作，仅供t-tree内部使用   
+  Description:    Encapsulates various operations of T-tree node, for internal use by t-tree only   
   Version:         DTC 3.0
 ***********************************************************/
 struct _TtreeNode {
-	enum { PAGE_SIZE = 20, // 每个节点保存多少条记录
+	enum { PAGE_SIZE = 20, // How many records each node stores
 	       MIN_ITEMS =
 		       PAGE_SIZE - 2 // minimal number of items in internal node
 	};
@@ -302,13 +302,13 @@ struct _TtreeNode {
 	static unsigned ask_for_destroy_size(MallocBase &,
 					     ALLOC_HANDLE_T hNode);
 
-	// 查找指定的key。找到返回1，否则返回0
+	// Find specified key. Return 1 if found, otherwise return 0
 	int do_find(MallocBase &stMalloc, const char *pchKey, void *pCmpCookie,
 		    KeyComparator pfComp, ALLOC_HANDLE_T &hRecord);
 	int do_find(MallocBase &stMalloc, const char *pchKey, void *pCmpCookie,
 		    KeyComparator pfComp, ALLOC_HANDLE_T *&phRecord);
 	int find_handle(MallocBase &stMalloc, ALLOC_HANDLE_T hRecord);
-	// 假设node包含key-k1~kn，查找这样的node节点：k1<= key <=kn
+	// Assume node contains keys k1~kn, find such node: k1 <= key <= kn
 	int find_node(MallocBase &stMalloc, const char *pchKey,
 		      void *pCmpCookie, KeyComparator pfComp,
 		      ALLOC_HANDLE_T &hNode);

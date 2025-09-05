@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -215,7 +215,7 @@ void rsp_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
 		return;
 	}
 
-	//Get请求信息放在此处进行统计
+	//Get request information is counted here
 	if(req->cmd == MSG_REQ_GET)
 	{
 		stats_pool_incr(ctx, c_conn->owner, pool_requests_get);

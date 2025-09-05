@@ -40,7 +40,7 @@ enum E_REPORT_TYPE
 	RT_MAX
 };
 
-/* tp99 统计区间，单位us */
+/* tp99 statistical interval, unit us */
 static const uint32_t kpi_sample_count[] =
 {
 	200, 500, 1000,
@@ -131,13 +131,13 @@ private:
 	uint64_t agent_time_;
 
 	/* add by neolv to QOS */
-	/* 原有的不变增加三个参数用于做QOS */
+	/* Keep original unchanged, add three parameters for QOS */
 	uint64_t error_count_;
-	/* 用于统计请求总数， 请求总数只对一个周期有效 */
+	/* Used to count total requests, total requests are only valid for one cycle */
 	uint64_t total_count_;
-	/* 用于统计请求总耗时， 请求总数只对一个周期有效 */
+	/* Used to count total request time, total count is only valid for one cycle */
 	uint64_t total_elaps_;
-	/* 被摘次数 */
+	/* Number of times removed */
 	int remove_count_;
 public:	
 	NCServer();
@@ -451,15 +451,15 @@ public:
 };
 
 
-/* 模调上报 */
+/* Module reporting */
 class DataConnector
 {
 private:
 	struct businessStatistics
 	{
-		/* 10s内请求总耗时 */
+		/* Total request time within 10s */
 		uint64_t TotalTime;		
-		/* 10s内请求总次数 */
+		/* Total request count within 10s */
 		uint32_t TotalRequests;		
 	public:
 		businessStatistics(){ TotalTime = 0; TotalRequests = 0; }
@@ -480,17 +480,17 @@ private:
 		uint32_t uiBid;
 		uint32_t uiAgentIP;
 		uint16_t uiAgentPort;
-		/* 10s内请求总次数 */
+		/* Total request count within 10s */
 		uint32_t uiTotalRequests;	
-		/* 10s内请求总耗时 */
+		/* Total request time within 10s */
 		uint64_t uiTotalTime;		
-		/* 10s内错误次数 */
+		/* Error count within 10s */
 		uint32_t uiFailCount;	
-		/* 10s内的最大执行时间 */	
+		/* Maximum execution time within 10s */	
 		uint64_t uiMaxTime;	
-		/* 10s内的最小执行时间 */	
+		/* Minimum execution time within 10s */	
 		uint64_t uiMinTime;	
-		/* 统计值 */		
+		/* Statistical values */		
 		uint32_t statArr[sizeof(kpi_sample_count) / sizeof(kpi_sample_count[0])];	
 		
 		public:
@@ -536,10 +536,10 @@ private:
 
 private:
 	std::map<bidCurve, businessStatistics> mapBi;
-	/* 读写  TotalTime、TotalRequests时，加锁，防止脏数据 */
+	/* Lock when reading/writing TotalTime and TotalRequests to prevent dirty data */
 	Mutex lock_;			
 	std::map<uint64_t, top_percentile_statistics> map_tp_stat_;
-	/* 读写 tp99 数据时，加锁，防止脏数据 */
+	/* Lock when reading/writing tp99 data to prevent dirty data */
 	Mutex m_tp_lock;	
 	static DataConnector *pDataConnector;
 	pthread_t thread_id_;
@@ -572,15 +572,15 @@ private:
 class CTopPercentileSection
 {
 private:
-	/* 执行时间小于1000us的 */
+	/* Execution time less than 1000us */
 	static int16_t get_little_thousand(uint64_t elapse); 
-	/* 执行时间大于等于1000us 小于 10000us的 */
+	/* Execution time greater than or equal to 1000us and less than 10000us */
 	static int16_t get_between_thousand_and_tenthousand(uint64_t elapse);
-	/* 执行时间大于等于10000us 小于 100000us的 */
+	/* Execution time greater than or equal to 10000us and less than 100000us */
 	static int16_t get_between_tenthousand_and_hundredthousand(uint64_t elapse);
-	/* 执行时间大于等于100000us 小于 1000000us的 */
+	/* Execution time greater than or equal to 100000us and less than 1000000us */
 	static int16_t get_between_hundredthousand_and_million(uint64_t elapse);
-	/* 执行时间大于等于1000000us的 */
+	/* Execution time greater than or equal to 1000000us */
 	static int16_t get_exceed_million(uint64_t elapse);
 	
 public:

@@ -1,5 +1,5 @@
 /*
- * Copyright [2021] JD.com, Inc.
+ * Copyright JD.com, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,11 +94,11 @@ struct conf_pool {
 	int instance_report;
 	int auto_remove_replica;
 
-	int top_percentile_enable; /*tp99 性能指标开启状态*/
-	struct string top_percentile_domain; /*tp99 性能指标上报服务器地址*/
-	int top_percentile_port; /*tp99 性能指标上报服务器端口*/
+	int top_percentile_enable; /* tp99 performance metrics enable status */
+	struct string top_percentile_domain; /* tp99 performance metrics reporting server address */
+	int top_percentile_port; /* tp99 performance metrics reporting server port */
 
-	char localip[16]; /*本地IP，放在此位置*/
+	char localip[16]; /* Local IP, placed at this position */
 	unsigned valid : 1; /* valid? */
 };
 

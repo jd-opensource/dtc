@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ struct mbuf *mbuf_get() {
 }
 
 /*
- * 将mbuf归还内存池
+ * Return mbuf to memory pool
  */
 void mbuf_put(struct mbuf *mbuf) {
 	uint8_t *buf;
@@ -99,7 +99,7 @@ void mbuf_put(struct mbuf *mbuf) {
 }
 
 /*
- * 重置mbuf
+ * Reset mbuf
  */
 void mbuf_rewind(struct mbuf *mbuf) {
 	mbuf->pos = mbuf->start;
@@ -107,7 +107,7 @@ void mbuf_rewind(struct mbuf *mbuf) {
 }
 
 /*
- * 返回mbuf中现有的数据
+ * Return existing data in mbuf
  */
 uint32_t mbuf_length(struct mbuf *mbuf) {
 	ASSERT(mbuf->last >= mbuf->pos);

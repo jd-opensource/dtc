@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -578,7 +578,7 @@ int init_data_connector_ask_chain(PollerBase *thread)
 
 	return DTC_CODE_SUCCESS;
 }
-//获取、配置基础信息
+// Get and configure basic information
 int init_config_info()
 {
 	g_hash_changing = g_dtc_config->get_int_val("cache", "HashChanging", 0);

@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -26,10 +26,10 @@
 #include "da_stats.h"
 #include "da_time.h"
 
-static int keep_alive = 1;   // 开启keepalive属性. 缺省值: 0(关闭)  
-static int keep_idle = 5;   // 如果在60秒内没有任何数据交互,则进行探测. 缺省值:7200(s)  
-static int keep_interval = 5;   // 探测时发探测包的时间间隔为5秒. 缺省值:75(s)  
-static int keep_count = 1;   // 探测重试的次数. 全部超时则认定连接失效..缺省值:9(次)  
+static int keep_alive = 1;   // Enable keepalive attribute. Default: 0(disabled)  
+static int keep_idle = 5;   // If there is no data interaction within 60 seconds, probe. Default: 7200(s)  
+static int keep_interval = 5;   // Time interval for sending probe packets during probing is 5 seconds. Default: 75(s)  
+static int keep_count = 1;   // Number of probe retries. Connection is considered failed if all timeout. Default: 9(times)  
 
 
 void instance_ref(struct conn *conn, void *owner) {
@@ -803,7 +803,7 @@ int server_pool_run(struct server_pool *pool) {
 }
 
 /*
- * 对于每个server pool 构建后台的服务器结构，构建hash环
+ * For each server pool, build backend server structure and construct hash ring
  */
 static int server_pool_each_run(void *elem, void *data) {
 	return server_pool_run(elem);
@@ -812,7 +812,7 @@ static int server_pool_each_run(void *elem, void *data) {
 
 
 /*
- * 初始化server pool
+ * Initialize server pool
  */
 int server_pool_init(struct array *server_pool, struct array *conf_pool,
 		struct context *ctx) {
@@ -829,7 +829,7 @@ int server_pool_init(struct array *server_pool, struct array *conf_pool,
 	}
 
 	/* transform conf pool to server pool */
-	// 对于conf_pool中的每个对象调用conf_pool_each_transform函数
+	// Call conf_pool_each_transform function for each object in conf_pool
 	status = array_each(conf_pool, conf_pool_each_transform, server_pool);
 	if (status != 0) {
 		server_pool_deinit(server_pool);

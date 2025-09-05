@@ -67,7 +67,7 @@ int DaemonBase::DaemonStart(int back)
 int DaemonBase::DaemonWait()
 {
 	int status;
-	//任何一个子进程退出，整个程序退出
+	//Any child process exits, entire program exits
 	while (wait(&status) == -1 && !DaemonBase::_stop) ;
 	return 0;
 }

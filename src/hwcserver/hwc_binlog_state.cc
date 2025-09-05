@@ -27,7 +27,7 @@ void BinlogState::Exit()
 
 void BinlogState::HandleEvent()
 {
-        // 获取本机dtc 写请求
+        // Get local dtc write requests
         switch (CComm::registor.Regist())
         {
             case -DTC::EC_FULL_SYNC_STAGE:

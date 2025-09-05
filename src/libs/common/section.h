@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -177,7 +177,7 @@ class SimpleSection {
 	}
 	void set_tag(uint8_t id, uint32_t val)
 	{
-		//fix Unsigned to Signed
+		// Fix Unsigned to Signed
 		if (tag_type(id) == DField::Signed)
 			set_tag(id, DTCValue::Make((int64_t)val));
 		else if (tag_type(id) == DField::Unsigned)
@@ -271,7 +271,7 @@ class DTCVersionInfo : public SimpleSection {
 	{
 		int major = 3; //, minor=0, micro=0;
 
-		/* 3.x系列的批量拆包之后没有version信息 */
+		/* 3.x series batch unpacking has no version information */
 		if (NULL == CTLibVer().ptr) {
 			log4cplus_debug("multi job have no version info");
 			return major;
@@ -381,12 +381,12 @@ class DTCRequestInfo : public SimpleSection {
 
 	uint64_t get_expire_time(int version) const
 	{
-		/* server内部全部按照ms单位来处理超时 */
+		/* Server processes all timeouts in ms units internally */
 		if (version >= 3)
-			/* 3.x 系列客户端发送的超时时间单位：us */
+			/* 3.x series client sends timeout in us units */
 			return tagValue[1].u64 >> 10;
 		else
-			/* 2.x 系列客户端发送的超时时间单位: ms */
+			/* 2.x series client sends timeout in ms units */
 			return tagValue[1].u64;
 	}
 	void set_timeout(uint32_t n)
@@ -585,8 +585,8 @@ class DTCResultInfo : public SimpleSection {
 		return tagValue[9].s64;
 	};
 
-	/*一个请求有多个key的时候，要统计这个请求不同key对应的业务命中率和计数命中率*/
-	/*命中率字段中，前16位放业务命中率，后16位放技术命中率*/
+	/* When a request has multiple keys, statistics are needed for business hit rate and counting hit rate for different keys in this request */
+	/* In the hit rate field, the first 16 bits store business hit rate, the last 16 bits store technical hit rate */
 	uint32_t get_tech_hit_num()
 	{
 		uint32_t uHitFlag = (uint32_t)hit_flag();

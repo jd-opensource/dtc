@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 	__sync_bool_compare_and_swap(a_ptr, a_oldVal, a_newVal)
 
 /*
- * 提供给业务类继承
+ * Provided for business class inheritance
  */
 class BaseTask {
     private:

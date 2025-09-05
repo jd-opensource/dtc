@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -41,27 +41,27 @@ DTC_BEGIN_NAMESPACE
 //time-marker node in dirty lru list
 #define TIME_MARKER_NEXT_NODE_ID (INVALID_NODE_ID - 1)
 
-//cache基本信息
+//cache basic information
 typedef struct _BlockProperties {
-	// 共享内存key
+	// shared memory key
 	int ipc_mem_key;
-	// 共享内存大小
+	// shared memory size
 	uint64_t ipc_mem_size;
-	// key大小
+	// key size
 	unsigned short key_size;
-	// 内存版本号
+	// memory version number
 	unsigned char version;
-	// 同异步模式
+	// synchronous/asynchronous mode
 	unsigned char sync_update : 1;
-	// 只读模式打开
+	// open in read-only mode
 	unsigned char read_only : 1;
-	// 供mem_tool使用
+	// for mem_tool usage
 	unsigned char create_only : 1;
-	// 是否启用空节点过滤功能
+	// whether to enable empty node filtering function
 	unsigned char empty_filter : 1;
-	// 是否需要在检出到内存不完整时自动删除并重建共享内存
+	// whether to automatically delete and rebuild shared memory when incomplete memory is detected
 	unsigned char auto_delete_dirty_shm : 1;
-	// 是否需要强制使用table.conf更新共享内存中的配置
+	// whether to force update shared memory configuration using table.conf
 	unsigned char force_update_table_conf : 1;
 
 	inline void init(int key_format, unsigned long cache_size,
@@ -78,24 +78,24 @@ typedef struct _BlockProperties {
 class BufferPond : private TimerObject {
     protected:
 	PurgeNodeProcessor *_purge_processor;
-	//共享内存管理器
+	//shared memory manager
 	SharedMemory _shm;
-	//cache基本信息
+	//cache basic information
 	BlockProperties _cache_info;
-	//hash桶
+	//hash bucket
 	DTCHash *_hash;
-	//node管理
+	//node management
 	NGInfo *_ng_info;
-	//特性抽象
+	//feature abstraction
 	Feature *_feature;
-	//NodeID转换
+	//NodeID conversion
 	NodeIndex *_node_index;
-	//列扩展
+	//column expansion
 	DTCColExpand *_col_expand;
 
 	char _err_msg[512];
 	int _need_set_integrity;
-	//待淘汰节点数目
+	//number of nodes to be eliminated
 	unsigned _need_purge_node_count;
 
 	TimerList *_delay_purge_timerlist;
@@ -104,11 +104,11 @@ class BufferPond : private TimerObject {
 	int empty_limit;
 	//for purge alert
 	int _disable_try_purge;
-	//如果自动淘汰的数据最后更新时间比当前时间减DataExpireAlertTime小则报警
+	//alert if the last update time of automatically eliminated data is less than current time minus DataExpireAlertTime
 	int date_expire_alert_time;
 
     protected:
-	//统计
+	//statistics
 	StatCounter stat_cache_size;
 	StatCounter stat_cache_key;
 	StatCounter stat_cache_version;
@@ -120,9 +120,9 @@ class BufferPond : private TimerObject {
 	StatCounter stat_dirty_age;
 	StatSample stat_try_purge_count;
 	StatCounter stat_try_purge_nodes;
-	//最后被淘汰的节点的lastcmod的最大值(如果多行)
+	//maximum value of lastcmod of the last eliminated node (if multiple rows)
 	StatCounter stat_last_purge_node_mod_time;
-	//当前时间减去statLastPurgeNodeModTime
+	//current time minus statLastPurgeNodeModTime
 	StatCounter stat_data_exist_time;
 	StatSample survival_hour;
 	StatSample stat_purge_for_create_update_count;
@@ -207,7 +207,7 @@ class BufferPond : private TimerObject {
 		return _ng_info->total_used_row();
 	}
 
-	//定期调度delay purge任务
+	//schedule delay purge task periodically
 	virtual void job_timer_procedure(void);
 
     public:
@@ -247,7 +247,7 @@ class BufferPond : private TimerObject {
 		date_expire_alert_time = time < 0 ? 0 : time;
 	};
 
-	//淘汰固定个节点
+	//eliminate a fixed number of nodes
 	void delay_purge_notify(const unsigned count = 50);
 	int pre_purge_nodes(int purge_cnt, Node reserve);
 	int purge_by_time(unsigned int oldest_time);

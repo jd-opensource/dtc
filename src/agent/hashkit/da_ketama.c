@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 #include "../da_log.h"
 
 /*
- * 一致性hash节点数
+ * Consistent hash node count
  */
 #define KETAMA_CONTINUUM_ADDITION   10  /* # extra slots to build into continuum */
 #define KETAMA_POINTS_PER_SERVER    160 /* 40 points per hash */
@@ -83,7 +83,7 @@ int ketama_update(struct server_pool *pool) {
 		if (continuum == NULL) {
 			return -1;
 		}
-		//设置pool的一致性hash环
+		//Set the consistent hash ring for the pool
 		pool->continuum = continuum;
 		pool->nserver_continuum = nserver_continuum;
 		/* pool->ncontinuum is initialized later as it could be <= ncontinuum */
@@ -117,7 +117,7 @@ int ketama_update(struct server_pool *pool) {
 		pointer_counter += points_per_server;
 	}
 	pool->ncontinuum = pointer_counter;
-	//对continum进行排序
+	//Sort the continuum
 	qsort(pool->continuum, pool->ncontinuum, sizeof(*pool->continuum),
 			ketama_item_cmp);
 	for (pointer_index = 0;
@@ -178,7 +178,7 @@ int ketama_update(struct server_pool *pool) {
 		if (continuum == NULL) {
 			return -1;
 		}
-		//设置pool的一致性hash环
+		//Set the consistent hash ring for the pool
 		pool->continuum = continuum;
 		pool->nserver_continuum = nserver_continuum;
 		/* pool->ncontinuum is initialized later as it could be <= ncontinuum */
@@ -196,7 +196,7 @@ int ketama_update(struct server_pool *pool) {
 
 		server = array_get(&pool->server, server_index);
 
-		pct = (float) server->weight / (float) total_weight; //权重计算
+		pct = (float) server->weight / (float) total_weight; //Weight calculation
 		pointer_per_server = (uint32_t) ((floorf(
 				(float) (pct * KETAMA_POINTS_PER_SERVER / 4 * (float) nserver
 						+ 0.0000000001))) * 4);
@@ -223,7 +223,7 @@ int ketama_update(struct server_pool *pool) {
 	}
 
 	pool->ncontinuum = pointer_counter;
-	//对continum进行排序
+	//Sort the continuum
 	qsort(pool->continuum, pool->ncontinuum, sizeof(*pool->continuum),
 			ketama_item_cmp);
 

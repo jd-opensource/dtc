@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ int socket_bind(const char *addr, uint16_t port, int backlog)
 	setsockopt(netfd, SOL_TCP, TCP_NODELAY, &reuse_addr,
 		   sizeof(reuse_addr));
 	reuse_addr = 60;
-	/* 避免没有请求的空连接唤醒epoll浪费cpu资源 */
+	/* Avoid empty connections without requests waking up epoll and wasting CPU resources */
 	setsockopt(netfd, SOL_TCP, TCP_DEFER_ACCEPT, &reuse_addr,
 		   sizeof(reuse_addr));
 

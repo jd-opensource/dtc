@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -404,14 +404,14 @@ int BufferProcessAskChain::set_buffer_size_and_version(
 
 /*
  * Function		: cache_open
- * Description	: 打开cache
- * Input			: key_name		共享内存ipc key
- *				  ulNodeTotal_	数据节点总数
- * ulBucketTotal	hash桶总数
- * ulChunkTotal	chunk节点总数
- * ulChunkSize	chunk节点大小(单位:byte)
+ * Description	: Open cache
+ * Input			: key_name		shared memory ipc key
+ *				  ulNodeTotal_	total number of data nodes
+ * ulBucketTotal	total number of hash buckets
+ * ulChunkTotal	total number of chunk nodes
+ * ulChunkSize	chunk node size (unit: byte)
  * Output		: 
- * Return		: 成功返回0,失败返回-1
+ * Return		: return 0 on success, -1 on failure
  */
 int BufferProcessAskChain::open_init_buffer(int key_name,
 					    int enable_empty_filter,
@@ -483,7 +483,7 @@ int BufferProcessAskChain::open_init_buffer(int key_name,
 			       update_mode_ == MODE_ASYNC ?
 			       "ASYNC" :
 			       update_mode_ == MODE_FLUSH ? "FLUSH" : "<BAD>");
-	// 空结点过滤
+	// Empty node filtering
 	const FEATURE_INFO_T *pstFeature;
 	pstFeature = cache_.query_feature_by_id(EMPTY_FILTER);
 	if (pstFeature != NULL) {
@@ -526,7 +526,7 @@ int BufferProcessAskChain::open_init_buffer(int key_name,
 	if (update_mode_ == MODE_SYNC) {
 		async_log_ = 1;
 	}
-	// 热备特性
+	// Hot backup feature
 	pstFeature = cache_.query_feature_by_id(HOT_BACKUP);
 	if (pstFeature != NULL) {
 		NEW(HBFeature, hotbackup_lru_feature_);
@@ -542,7 +542,7 @@ int BufferProcessAskChain::open_init_buffer(int key_name,
 		}
 
 		if (hotbackup_lru_feature_->master_uptime() != 0) {
-			// 开启变更key日志
+			// Enable key change logging
 			log_hotbackup_key_switch_ = true;
 		}
 	}
@@ -630,7 +630,7 @@ BufferResult BufferProcessAskChain::insert_default_row(DTCJobOperation &job)
 	int iRet;
 	log4cplus_debug("%s", "insert default start!");
 	if (!cache_transaction_node) {
-		// 发现空节点
+		// Found empty node
 		if (insert_empty_node() == false) {
 			log4cplus_warning("alloc cache node error");
 			job.set_error(-EIO, CACHE_SVC,
@@ -665,7 +665,7 @@ BufferResult BufferProcessAskChain::insert_default_row(DTCJobOperation &job)
 		log4cplus_debug("replace data error: %d, %s", iRet,
 				stDataRows.get_err_msg());
 		job.set_error(-ENOMEM, CACHE_SVC, "replace data error");
-		// 标记加入黑名单
+		// Mark to add to blacklist
 		job.push_black_list_size(stDataRows.data_size());
 		cache_.purge_node_and_data(key, cache_transaction_node);
 		return DTC_CODE_BUFFER_ERROR;
@@ -682,10 +682,10 @@ BufferResult BufferProcessAskChain::insert_default_row(DTCJobOperation &job)
 
 /*
  * Function		: buffer_get_data
- * Description	: 处理get请求
- * Input			: job			请求信息
- * Output		: job			返回信息
- * Return		: 成功返回0,失败返回-1
+ * Description	: Handle get request
+ * Input			: job			request information
+ * Output		: job			return information
+ * Return		: return 0 on success, -1 on failure
  */
 BufferResult BufferProcessAskChain::buffer_get_data(DTCJobOperation &job)
 {
@@ -704,7 +704,7 @@ BufferResult BufferProcessAskChain::buffer_get_data(DTCJobOperation &job)
 			// FullCache Mode: treat as empty & fallthrough
 	case DTC_CODE_NODE_EMPTY:
 		++stat_get_hits_;
-		//发现空节点，直接构建result
+		//Found empty node, directly build result
 		log4cplus_debug("found Empty-Node[%u], response directed",
 				job.int_key());
 		job.prepare_result();
@@ -734,7 +734,7 @@ BufferResult BufferProcessAskChain::buffer_get_data(DTCJobOperation &job)
 	// Hot Backup
 	if (lru_update_level_ < LRU_READ &&
 	    write_lru_hotbackup_log(job.packed_key())) {
-		// 为避免错误扩大， 给客户端成功响应
+		// To avoid error amplification, give client success response
 		log4cplus_error("hb: log lru key failed");
 	}
 	// Hot Bakcup
@@ -744,10 +744,10 @@ BufferResult BufferProcessAskChain::buffer_get_data(DTCJobOperation &job)
 
 /*
  * Function		: buffer_batch_get_data
- * Description	: 处理get请求
- * Input			: job			请求信息
- * Output		: job			返回信息
- * Return		: 成功返回0,失败返回-1
+ * Description	: Handle get request
+ * Input			: job			request information
+ * Output		: job			return information
+ * Return		: return 0 on success, -1 on failure
  */
 BufferResult BufferProcessAskChain::buffer_batch_get_data(DTCJobOperation &job)
 {
@@ -790,7 +790,7 @@ BufferResult BufferProcessAskChain::buffer_batch_get_data(DTCJobOperation &job)
 			// Hot Backup
 			if (lru_update_level_ < LRU_BATCH &&
 			    write_lru_hotbackup_log(job.packed_key())) {
-				//为避免错误扩大， 给客户端成功响应
+				//To avoid error amplification, give client success response
 				log4cplus_error("hb: log lru key failed");
 			}
 			break;
@@ -803,10 +803,10 @@ BufferResult BufferProcessAskChain::buffer_batch_get_data(DTCJobOperation &job)
 
 /*
  * Function		: buffer_get_rb
- * Description	: 处理Helper的get回读task
- * Input			: job			请求信息
- * Output		: job			返回信息
- * Return		: 成功返回0,失败返回-1
+ * Description	: Handle Helper's get readback task
+ * Input			: job			request information
+ * Output		: job			return information
+ * Return		: return 0 on success, -1 on failure
  */
 BufferResult BufferProcessAskChain::buffer_get_rb(DTCJobOperation &job)
 {
@@ -823,7 +823,7 @@ BufferResult BufferProcessAskChain::buffer_get_rb(DTCJobOperation &job)
 	return DTC_CODE_BUFFER_SUCCESS;
 }
 
-// helper执行GET回来后，更新内存数据
+// After helper executes GET and returns, update memory data
 BufferResult BufferProcessAskChain::buffer_replace_result(DTCJobOperation &job)
 {
 	int iRet;
@@ -831,9 +831,9 @@ BufferResult BufferProcessAskChain::buffer_replace_result(DTCJobOperation &job)
 	log4cplus_debug("cache replace all start!");
 	transaction_find_node(job);
 
-	// 数据库回来的记录如果是0行则
-	// 1. 设置bits
-	// 2. 直接构造0行的result响应包
+	// If database returns 0 rows then
+	// 1. Set bits
+	// 2. Directly construct 0-row result response packet
 	if (empty_node_filter_ != NULL) {
 		if ((job.result == NULL || job.result->total_rows() == 0)) {
 			log4cplus_debug("SET Empty-Node[%u]", job.int_key());
@@ -875,7 +875,7 @@ BufferResult BufferProcessAskChain::buffer_replace_result(DTCJobOperation &job)
 		// Hot Backup
 		if (lru_update_level_ < LRU_READ &&
 		    write_lru_hotbackup_log(job.packed_key())) {
-			// 为避免错误扩大， 给客户端成功响应
+			// To avoid error amplification, give client success response
 			log4cplus_error("hb: log lru key failed");
 		}
 		// Hot Bakcup
@@ -888,10 +888,10 @@ BufferResult BufferProcessAskChain::buffer_replace_result(DTCJobOperation &job)
 
 /*
  * Function		: buffer_flush_data
- * Description	: 处理flush请求
- * Input			: job			请求信息
- * Output		: job			返回信息
- * Return		: 成功返回0,失败返回-1
+ * Description	: Handle flush request
+ * Input			: job			request information
+ * Output		: job			return information
+ * Return		: return 0 on success, -1 on failure
  */
 BufferResult
 BufferProcessAskChain::buffer_flush_data_before_delete(DTCJobOperation &job)
@@ -944,10 +944,10 @@ BufferProcessAskChain::buffer_flush_data_before_delete(DTCJobOperation &job)
 
 /*
  * Function		: buffer_flush_data
- * Description	: 处理flush请求
- * Input			: job			请求信息
- * Output		: job			返回信息
- * Return		: 成功返回0,失败返回-1
+ * Description	: Handle flush request
+ * Input			: job			request information
+ * Output		: job			return information
+ * Return		: return 0 on success, -1 on failure
  */
 BufferResult BufferProcessAskChain::buffer_flush_data(DTCJobOperation &job)
 {
@@ -1022,10 +1022,10 @@ __out:
 }
 /*
  * Function		: buffer_flush_data
- * Description	: 处理flush请求
- * Input			: job			请求信息
- * Output		: job			返回信息
- * Return		: 成功返回0,失败返回-1
+ * Description	: Handle flush request
+ * Input			: job			request information
+ * Output		: job			return information
+ * Return		: return 0 on success, -1 on failure
  * 
  */
 BufferResult
@@ -1077,10 +1077,10 @@ BufferProcessAskChain::buffer_flush_data(Node &node, DTCJobOperation *pstTask,
 
 /*
  * Function		: buffer_purge_data
- * Description	: 处理purge请求
- * Input			: job			请求信息
- * Output		: job			返回信息
- * Return		: 成功返回0,失败返回-1
+ * Description	: Handle purge request
+ * Input			: job			request information
+ * Output		: job			return information
+ * Return		: return 0 on success, -1 on failure
  * 
  */
 BufferResult BufferProcessAskChain::buffer_purge_data(DTCJobOperation &job)
@@ -1122,10 +1122,10 @@ BufferResult BufferProcessAskChain::buffer_purge_data(DTCJobOperation &job)
 
 /*
  * Function		: buffer_update_rows
- * Description	: 处理Helper的update job
- * Input		: job			请求信息
- * Output		: job			返回信息
- * Return		: 成功返回0,失败返回-1
+ * Description	: Handle Helper's update job
+ * Input		: job			request information
+ * Output		: job			return information
+ * Return		: return 0 on success, -1 on failure
  * 
  */
 BufferResult BufferProcessAskChain::buffer_update_rows(DTCJobOperation &job,
@@ -1173,7 +1173,7 @@ BufferResult BufferProcessAskChain::buffer_update_rows(DTCJobOperation &job,
 		// or cache miss and m_bReplaceEmpty is set (equiv insert(default)+update)
 		if (write_hotbackup_log(job, cache_transaction_node,
 					DTCHotBackup::SYNC_UPDATE)) {
-			// 为避免错误扩大， 给客户端成功响应
+			// To avoid error amplification, give client success response
 			log4cplus_error("hb: log update key failed");
 		}
 	}
@@ -1198,7 +1198,7 @@ BufferResult BufferProcessAskChain::buffer_replace_rows(DTCJobOperation &job,
 			cache_.purge_node_and_data(key, cache_transaction_node);
 			cache_.inc_total_row(0LL - rows);
 		}
-		// 如果是同步replace命令，返回成功
+		// If it's synchronous replace command, return success
 		if (async == false && !job.flag_black_hole())
 			return DTC_CODE_BUFFER_SUCCESS;
 		log4cplus_error("cache replace rows error: %d,%s", iRet,
@@ -1213,7 +1213,7 @@ BufferResult BufferProcessAskChain::buffer_replace_rows(DTCJobOperation &job,
 	// Hot Backup
 	if (write_hotbackup_log(job, cache_transaction_node,
 				DTCHotBackup::SYNC_UPDATE)) {
-		// 为避免错误扩大， 给客户端成功响应
+		// To avoid error amplification, give client success response
 		log4cplus_error("hb: log update key failed");
 	}
 	// Hot Bakcup
@@ -1230,10 +1230,10 @@ BufferResult BufferProcessAskChain::buffer_replace_rows(DTCJobOperation &job,
 
 /*
  * Function	: buffer_insert_row
- * Description	: 处理Helper的insert job
- * Input		: job			请求信息
- * Output	: job			返回信息
- * Return	: 成功返回0,失败返回-1
+ * Description	: Handle Helper's insert job
+ * Input		: job			request information
+ * Output	: job			return information
+ * Return	: Returns 0 on success, -1 on failure
  * 
  */
 BufferResult BufferProcessAskChain::buffer_insert_row(DTCJobOperation &job,
@@ -1303,7 +1303,7 @@ BufferResult BufferProcessAskChain::buffer_insert_row(DTCJobOperation &job,
 	// Hot Backup
 	if (write_hotbackup_log(job, cache_transaction_node,
 				DTCHotBackup::SYNC_INSERT)) {
-		// 为避免错误扩大， 给客户端成功响应
+		// To avoid error amplification, give client success response
 		log4cplus_error("hb: log update key failed");
 	}
 	// Hot Bakcup
@@ -1313,10 +1313,10 @@ BufferResult BufferProcessAskChain::buffer_insert_row(DTCJobOperation &job,
 
 /*
  * Function		: buffer_delete_rows
- * Description	: 处理del请求
- * Input			: job			请求信息
- * Output		: job			返回信息
- * Return		: 成功返回0,失败返回-1
+ * Description	: Handle del request
+ * Input			: job			request information
+ * Output		: job			return information
+ * Return		: Returns 0 on success, -1 on failure
  * 
  */
 BufferResult BufferProcessAskChain::buffer_delete_rows(DTCJobOperation &job)
@@ -1325,7 +1325,7 @@ BufferResult BufferProcessAskChain::buffer_delete_rows(DTCJobOperation &job)
 	log4cplus_debug("buffer_delete_rows start! ");
 	uint32_t oldRows = cache_.node_rows_count(cache_transaction_node);
 	int all_row_delete = job.all_rows();
-	// 如果没有del条件则删除整个节点
+	// If no del condition, delete entire node
 	if (job.all_rows() != 0) {
 	empty:
 		if (lossy_mode_ || job.flag_black_hole()) {
@@ -1356,7 +1356,7 @@ BufferResult BufferProcessAskChain::buffer_delete_rows(DTCJobOperation &job)
 					DTCHotBackup::SYNC_PURGE))
 		//		if(hbLog.write_update_key(job.packed_key(), DTCHotBackup::SYNC_UPDATE))
 		{
-			// 为避免错误扩大， 给客户端成功响应
+			// To avoid error amplification, give client success response
 			log4cplus_error("hb: log update key failed");
 		}
 		// Hot Bakcup
@@ -1391,7 +1391,7 @@ BufferResult BufferProcessAskChain::buffer_delete_rows(DTCJobOperation &job)
 	// Hot Backup
 	if (write_hotbackup_log(job, cache_transaction_node,
 				DTCHotBackup::SYNC_DELETE)) {
-		// 为避免错误扩大， 给客户端成功响应
+		// To avoid error amplification, give client success response
 		log4cplus_error("hb: log update key failed");
 	}
 	// Hot Bakcup
@@ -1421,7 +1421,7 @@ BufferResult
 BufferProcessAskChain::buffer_sync_insert_precheck(DTCJobOperation &job)
 {
 	log4cplus_debug("%s", "buffer_sync_insert begin");
-	// 这种模式下，不支持insert操作
+	// In this mode, insert operation is not supported
 	if (m_bReplaceEmpty == true) {
 		job.set_error(
 			-EC_BAD_COMMAND, CACHE_SVC,
@@ -1445,7 +1445,7 @@ BufferProcessAskChain::buffer_sync_insert_precheck(DTCJobOperation &job)
 BufferResult BufferProcessAskChain::buffer_sync_insert(DTCJobOperation &job)
 {
 	log4cplus_debug("%s", "buffer_sync_insert begin");
-	// 这种模式下，不支持insert操作
+	// In this mode, insert operation is not supported
 	if (m_bReplaceEmpty == true) {
 		job.set_error(
 			-EC_BAD_COMMAND, CACHE_SVC,
@@ -1454,7 +1454,7 @@ BufferResult BufferProcessAskChain::buffer_sync_insert(DTCJobOperation &job)
 			"insert cmd from client, not support under replace mode");
 		return DTC_CODE_BUFFER_ERROR;
 	}
-	// 如果自增量字段是key，则会更新key
+	// If auto-increment field is key, then key will be updated
 	if (job.resultInfo.insert_id() > 0)
 		job.update_packed_key(job.resultInfo.insert_id());
 
@@ -1482,7 +1482,7 @@ BufferResult BufferProcessAskChain::buffer_sync_update(DTCJobOperation &job)
 	// NOOP sync update
 	if (job.request_operation() == NULL) {
 		// no field need to update
-		// 如果helper更新的纪录数为0则直接返回
+		// If helper updated record count is 0, return directly
 		return DTC_CODE_BUFFER_SUCCESS;
 	} else if (setrows == false && job.resultInfo.affected_rows() == 0) {
 		if (job.request_operation()->has_type_commit() == 0) {
@@ -1494,7 +1494,7 @@ BufferResult BufferProcessAskChain::buffer_sync_update(DTCJobOperation &job)
 			setrows = true;
 		} else {
 			log4cplus_debug("%s", "helper's affected rows is zero");
-			// 如果helper更新的纪录数为0则直接返回
+			// If helper updated record count is 0, return directly
 			return DTC_CODE_BUFFER_SUCCESS;
 		}
 	}
@@ -1528,7 +1528,7 @@ BufferResult BufferProcessAskChain::buffer_sync_replace(DTCJobOperation &job)
 	// NOOP sync update
 	if (lossy_mode_ == false && job.resultInfo.affected_rows() == 0) {
 		log4cplus_debug("%s", "helper's affected rows is zero");
-		// 如果helper更新的纪录数为0则直接返回
+		// If helper updated record count is 0, return directly
 		return DTC_CODE_BUFFER_SUCCESS;
 	}
 	transaction_find_node(job);
@@ -1578,7 +1578,7 @@ BufferResult BufferProcessAskChain::buffer_nodb_insert(DTCJobOperation &job)
 {
 	BufferResult iRet;
 	log4cplus_debug("%s", "buffer_asyn_prepare_insert begin");
-	// 这种模式下，不支持insert操作
+	// In this mode, insert operation is not supported
 	if (m_bReplaceEmpty == true) {
 		job.set_error(
 			-EC_BAD_COMMAND, CACHE_SVC,
@@ -1686,7 +1686,7 @@ BufferResult BufferProcessAskChain::buffer_nodb_delete(DTCJobOperation &job)
 BufferResult BufferProcessAskChain::buffer_async_insert(DTCJobOperation &job)
 {
 	log4cplus_debug("%s", "buffer_async_insert begin");
-	// 这种模式下，不支持insert操作
+	// In this mode, insert operation is not supported
 	if (m_bReplaceEmpty == true) {
 		job.set_error(
 			-EC_BAD_COMMAND, CACHE_SVC,
@@ -1716,7 +1716,7 @@ BufferResult BufferProcessAskChain::buffer_async_insert(DTCJobOperation &job)
 		break;
 	}
 	log4cplus_debug("%s", "buffer_async_insert data begin");
-	// 对insert 操作命中数据进行采样
+	// Sample data for insert operations
 	++stat_insert_hits_;
 
 	return buffer_insert_row(job, true /* async */, true /* setrows */);
@@ -1746,7 +1746,7 @@ BufferResult BufferProcessAskChain::buffer_async_update(DTCJobOperation &job)
 	}
 
 	log4cplus_debug("%s", "buffer_async_update update data begin");
-	// 对update 操作命中数据进行采样
+	// Sample data for update operations
 	++stat_update_hits_;
 	return buffer_update_rows(job, true /*Async*/, true /*setrows*/);
 }
@@ -1779,11 +1779,11 @@ BufferResult BufferProcessAskChain::buffer_async_replace(DTCJobOperation &job)
 
 /*
  * Function		: deal_single_database_addition_ask
- * Description	: 处理incoming job
- * Input			: job			请求信息
- * Output		: job			返回信息
- * Return		: 0 			成功
- *				: -1			失败
+ * Description	: Handle incoming job
+ * Input			: job			request information
+ * Output		: job			return information
+ * Return		: 0 			success
+ *				: -1			failure
  */
 BufferResult
 BufferProcessAskChain::deal_single_database_addition_ask(DTCJobOperation &job)
@@ -1791,7 +1791,7 @@ BufferProcessAskChain::deal_single_database_addition_ask(DTCJobOperation &job)
 	job.renew_timestamp();
 	error_message_[0] = 0;
 	job.field_type(0);
-	// 取命令字
+	// Get command
 	int iCmd = job.request_code();
 	log4cplus_debug(
 		"BufferProcessAskChain::deal_single_database_addition_ask cmd is %d ",
@@ -1807,11 +1807,11 @@ BufferProcessAskChain::deal_single_database_addition_ask(DTCJobOperation &job)
 				"There's nothing to limit because no fields required");
 			return DTC_CODE_BUFFER_ERROR;
 		}
-		// 如果命中黑名单，则purge掉当前节点，走PassThru模式
+		// If hitting blacklist, purge current node and go to PassThru mode
 		if (black_list_->in_blacklist(job.packed_key())) {
 			/* 
-				 * 理论上是在黑名单的节点是不可能在cache中的
-				 * 为了防止异常，预purge。
+				 * Theoretically, blacklisted nodes cannot be in cache
+				 * To prevent anomalies, pre-purge.
 				 */
 			log4cplus_debug(
 				"blacklist hit, passthough to datasource");
@@ -1826,16 +1826,16 @@ BufferProcessAskChain::deal_single_database_addition_ask(DTCJobOperation &job)
 		++stat_insert_count_;
 		if (update_mode_ == MODE_ASYNC && insert_mode_ != MODE_SYNC)
 			return buffer_async_insert(job);
-		// 标示task将提交给helper
+		// Mark task will be submitted to helper
 		return buffer_sync_insert_precheck(job);
 	case DRequest::Update:
 		++stat_update_count_;
 		if (update_mode_)
 			return buffer_async_update(job);
-		// 标示task将提交给helper
+		// Mark task will be submitted to helper
 		return DTC_CODE_BUFFER_GOTO_NEXT_CHAIN;
-		// 如果clinet 上送Delete 操作，删除Cache中数据，同时提交Helper
-		// 现阶段异步Cache暂时不支持Delete操作
+		// If client sends Delete operation, delete data in Cache and submit to Helper
+		// Async Cache currently does not support Delete operations
 	case DRequest::Delete:
 		if (update_mode_ != MODE_SYNC) {
 			if (job.request_condition() &&
@@ -1845,30 +1845,30 @@ BufferProcessAskChain::deal_single_database_addition_ask(DTCJobOperation &job)
 					"Delete base non ReadOnly fields");
 				return DTC_CODE_BUFFER_ERROR;
 			}
-			// 异步delete前先flush
+			// Flush before async delete
 			BufferResult iRet = DTC_CODE_BUFFER_SUCCESS;
 			iRet = buffer_flush_data_before_delete(job);
 			if (iRet == DTC_CODE_BUFFER_ERROR)
 				return iRet;
 		}
-		// 对于delete操作，直接提交DB，不改变原有逻辑
+		// For delete operations, submit directly to DB without changing original logic
 		++stat_delete_count_;
-		// 标示task将提交给helper
+		// Mark task will be submitted to helper
 		return DTC_CODE_BUFFER_GOTO_NEXT_CHAIN;
 	case DRequest::Purge:
-		// 删除指定key在cache中的数据
+		// Delete data for specified key in cache
 		++stat_purge_count_;
 		return buffer_purge_data(job);
 	case DRequest::Flush:
 		if (update_mode_)
-			// flush指定key在cache中的数据
+			// Flush data for specified key in cache
 			return buffer_flush_data(job);
 		else
 			return DTC_CODE_BUFFER_SUCCESS;
 	case DRequest::Replace:
-		// 如果是淘汰的数据，不作处理
+		// If it's evicted data, do not process
 		++stat_update_count_;
-		// 限制key字段作为唯一字段才能使用replace命令
+		// Restrict key fields as unique fields to use replace command
 		if (!(job.table_definition()->key_part_of_uniq_field()) ||
 		    job.table_definition()->has_auto_increment()) {
 			job.set_error(
@@ -1878,7 +1878,7 @@ BufferProcessAskChain::deal_single_database_addition_ask(DTCJobOperation &job)
 		}
 		if (update_mode_)
 			return buffer_async_replace(job);
-		// 标示task将提交给helper
+		// Mark task will be submitted to helper
 		return DTC_CODE_BUFFER_GOTO_NEXT_CHAIN;
 	case DRequest::TYPE_SYSTEM_COMMAND:
 		return buffer_process_admin(job);
@@ -1893,11 +1893,11 @@ BufferProcessAskChain::deal_single_database_addition_ask(DTCJobOperation &job)
 
 /*
  * Function		: deal_batch_database_addition_ask
- * Description	: 处理incoming batch job
- * Input			: job			请求信息
- * Output		: job			返回信息
- * Return		: 0 			成功
- *				: -1			失败
+ * Description	: Handle incoming batch job
+ * Input			: job			request information
+ * Output		: job			return information
+ * Return		: 0 			success
+ *				: -1			failure
  */
 BufferResult
 BufferProcessAskChain::deal_batch_database_addition_ask(DTCJobOperation &job)
@@ -1905,7 +1905,7 @@ BufferProcessAskChain::deal_batch_database_addition_ask(DTCJobOperation &job)
 	job.renew_timestamp();
 	error_message_[0] = 0;
 
-	// 取命令字
+	// Get command
 	int iCmd = job.request_code();
 	if (node_empty_limit_) {
 		int bsize = job.get_batch_size();
@@ -1928,11 +1928,11 @@ BufferProcessAskChain::deal_batch_database_addition_ask(DTCJobOperation &job)
 
 /*
  * Function		: reply_connector_answer
- * Description	: 处理task from helper reply
- * Input			: job			请求信息
- * Output		: job			返回信息
- * Return		: 0 			成功
- *				: -1			失败
+ * Description	: Handle task from helper reply
+ * Input			: job			request information
+ * Output		: job			return information
+ * Return		: 0 			success
+ *				: -1			failure
  */
 
 BufferResult BufferProcessAskChain::reply_connector_answer(DTCJobOperation &job)
@@ -1943,7 +1943,7 @@ BufferResult BufferProcessAskChain::reply_connector_answer(DTCJobOperation &job)
 
 	int iCmd = job.request_code();
 	switch (iCmd) {
-	// 一定是cache miss,全部replace入cache
+	// Must be cache miss, replace all into cache
 	case DRequest::Get:
 		if (job.flag_pass_thru()) {
 			if (job.result)
@@ -1968,7 +1968,7 @@ BufferResult BufferProcessAskChain::reply_connector_answer(DTCJobOperation &job)
 			buffer_replace_result(job);
 
 		return buffer_get_rb(job);
-		// 没有回读则必定是multirow,新数据附在原有数据后面
+		// Without read-back, it must be multirow, new data appended after existing data
 	case DRequest::Insert:
 		if (job.flag_black_hole())
 			return buffer_nodb_insert(job);
@@ -2028,7 +2028,7 @@ BufferResult BufferProcessAskChain::reply_connector_answer(DTCJobOperation &job)
 				      "invalid cmd from helper");
 		}
 	case DRequest::Replicate:
-		// 处理主从同步
+		// Handle master-slave synchronization
 		return buffer_process_replicate(job);
 	default:
 		job.set_error(-EC_BAD_COMMAND, CACHE_SVC,
@@ -2045,7 +2045,7 @@ BufferProcessAskChain::deal_single_cache_only_ask(DTCJobOperation &job)
 	job.mark_as_black_hole();
 	job.renew_timestamp();
 	error_message_[0] = 0;
-	// 取命令字
+	// Get command
 	int iCmd = job.request_code();
 	switch (iCmd) {
 	case DRequest::Get:
@@ -2069,15 +2069,15 @@ BufferProcessAskChain::deal_single_cache_only_ask(DTCJobOperation &job)
 		++stat_delete_count_;
 		return buffer_nodb_delete(job);
 	case DRequest::Purge:
-		//删除指定key在cache中的数据
+		//Delete data for specified key in cache
 		++stat_purge_count_;
 		return buffer_purge_data(job);
 	case DRequest::Flush:
 		return DTC_CODE_BUFFER_SUCCESS;
-		// 如果是淘汰的数据，不作处理
+		// If it's evicted data, do not process
 	case DRequest::Replace:
 		++stat_update_count_;
-		// 限制key字段作为唯一字段才能使用replace命令
+		// Restrict key fields as unique fields to use replace command
 		if (!(job.table_definition()->key_part_of_uniq_field()) ||
 		    job.table_definition()->has_auto_increment()) {
 			job.set_error(
@@ -2098,9 +2098,9 @@ BufferProcessAskChain::deal_single_cache_only_ask(DTCJobOperation &job)
 }
 
 /*
- * 当DTC后端使用诸如Rocksdb之类的单机内嵌式持久引擎时，主从同步需要从存储侧拉取全量
- * 数据，这里处理从存储引擎侧的返回值并返回给hotback主从同步端，注意：不对当前cache
- * 做任何更改
+ * When DTC backend uses embedded persistent engines like Rocksdb, master-slave synchronization needs to pull full
+ * data from storage side. This handles return values from storage engine side and returns to hotback master-slave
+ * synchronization end. Note: no changes are made to current cache
  * 
  */
 BufferResult
@@ -2110,7 +2110,7 @@ BufferProcessAskChain::buffer_process_replicate(DTCJobOperation &job)
 	log4cplus_info("do cache process replicate start!");
 	// switch back the tabledef
 	job.set_request_code(DRequest::TYPE_SYSTEM_COMMAND);
-	// 数据库回来的记录如果是0行，则表示全量同步结束
+	// If the records returned from database are 0 rows, it indicates full synchronization is finished
 	if ((job.result == NULL || job.result->total_rows() == 0)) {
 		log4cplus_info("full replicate stage finished! key:[%u]",
 			       job.int_key());
@@ -2120,7 +2120,7 @@ BufferProcessAskChain::buffer_process_replicate(DTCJobOperation &job)
 			      "full sync finished!");
 		return DTC_CODE_BUFFER_ERROR;
 	}
-	// 处理返回值
+	// Process return values
 	RowValue row(job.get_replicate_table());
 	RawData rawdata(&g_stSysMalloc, 1);
 	job.prepare_result_no_limit();
@@ -2137,7 +2137,7 @@ BufferProcessAskChain::buffer_process_replicate(DTCJobOperation &job)
 					"replicate: get data from storage failed!");
 				continue;
 			}
-			// 设置key
+			// Set key
 			job.set_request_key(pstRow->field_value(0));
 			job.build_packed_key();
 			row[2] = (*pstRow)[0];
@@ -2157,7 +2157,7 @@ BufferResult BufferProcessAskChain::reply_flush_answer(DTCJobOperation &job)
 	error_message_[0] = '\0';
 	int iCmd = job.request_code();
 	switch (iCmd) {
-	// 如果是淘汰的数据，不作处理
+	// If it's evicted data, do not process
 	case DRequest::Replace:
 		return DTC_CODE_BUFFER_SUCCESS;
 	default:
@@ -2756,7 +2756,7 @@ BufferResult BufferProcessAskChain::buffer_process_admin(DTCJobOperation &Job)
 	    Job.requestInfo.admin_code() == DRequest::SystemCommand::LogoutHB ||
 	    Job.requestInfo.admin_code() ==
 		    DRequest::SystemCommand::GetUpdateKey) {
-		if (hotbackup_lru_feature_ == NULL) { // 热备功能尚未启动
+		if (hotbackup_lru_feature_ == NULL) { // Hot backup feature not yet started
 			Job.set_error(-EBADRQC, CACHE_SVC,
 				      "hot-backup not active yet");
 			return DTC_CODE_BUFFER_ERROR;
@@ -3039,7 +3039,7 @@ BufferProcessAskChain::buffer_column_expand_done(DTCJobOperation &Job)
 		}
 	}
 
-	//若是有源的，则重新载入配置文件到helper
+	// If it has source, reload configuration file to helper
 	if (dtc_mode_ == DTC_MODE_DATABASE_ADDITION) {
 		char *buf = stRow[3].bin.ptr;
 		char *bufLocal = (char *)MALLOC(strlen(buf) + 1);
@@ -3078,7 +3078,7 @@ BufferProcessAskChain::buffer_column_expand_done(DTCJobOperation &Job)
 				    DTCHotBackup::SYNC_COLEXPAND_CMD);
 	log4cplus_debug("buffer_column_expand_done ok");
 
-	//若是有源的，则需要通知work helper重新载入配置文件
+	// If it has source, need to notify work helper to reload configuration file
 	if (dtc_mode_ == DTC_MODE_DATABASE_ADDITION) {
 		DTCJobOperation *pJob = new DTCJobOperation(
 			TableDefinitionManager::instance()->get_cur_table_def());
@@ -3153,7 +3153,7 @@ BufferProcessAskChain::buffer_column_expand_key(DTCJobOperation &Job)
 
 BufferResult BufferProcessAskChain::buffer_register_hb(DTCJobOperation &Job)
 {
-	if (hotbackup_lru_feature_ == NULL) { // 共享内存还没有激活热备特性
+	if (hotbackup_lru_feature_ == NULL) { // Shared memory has not yet activated hot backup feature
 		NEW(HBFeature, hotbackup_lru_feature_);
 		if (hotbackup_lru_feature_ == NULL) {
 			log4cplus_error("new hot-backup feature error: %m");
@@ -3187,7 +3187,7 @@ BufferResult BufferProcessAskChain::buffer_register_hb(DTCJobOperation &Job)
 	if (hotbackup_lru_feature_->master_uptime() == 0)
 		hotbackup_lru_feature_->master_uptime() = time(NULL);
 
-	//开启变更key日志
+	// Enable key change logging
 	log_hotbackup_key_switch_ = true;
 
 	int64_t hb_timestamp = hotbackup_lru_feature_->master_uptime();
@@ -3206,7 +3206,7 @@ BufferResult BufferProcessAskChain::buffer_logout_hb(DTCJobOperation &Job)
 }
 
 /*
- * 遍历cache中所有的Node节点
+ * Traverse all Node nodes in cache
  */
 BufferResult BufferProcessAskChain::buffer_get_key_list(DTCJobOperation &Job)
 {
@@ -3236,7 +3236,7 @@ BufferResult BufferProcessAskChain::buffer_get_key_list(DTCJobOperation &Job)
 		return DTC_CODE_BUFFER_GOTO_NEXT_CHAIN;
 	}
 
-	//遍历完所有的Node节点
+	// Finished traversing all Node nodes
 	if (lst > cache_.max_node_id()) {
 		Job.set_error(-EC_FULL_SYNC_COMPLETE, "buffer_get_key_list",
 			      "node id is overflow");
@@ -3254,7 +3254,7 @@ BufferResult BufferProcessAskChain::buffer_get_key_list(DTCJobOperation &Job)
 		if (i > cache_.max_node_id())
 			break;
 
-		//查找对应的Node节点
+		// Find corresponding Node node
 		Node node = I_SEARCH(i);
 		if (!node)
 			continue;
@@ -3263,15 +3263,15 @@ BufferResult BufferProcessAskChain::buffer_get_key_list(DTCJobOperation &Job)
 		if (cache_.is_time_marker(node))
 			continue;
 
-		// 解码Key
+		// Decode Key
 		DataChunk *keyptr = M_POINTER(DataChunk, node.vd_handle());
 
-		//发送packedkey
+		// Send packedkey
 		r[2] = TableDefinitionManager::instance()
 			       ->get_cur_table_def()
 			       ->packed_key(keyptr->key());
 
-		//解码Value
+		// Decode Value
 		if (data_process_->get_node_all_rows_count(&node, &rawdata)) {
 			rawdata.destory();
 			continue;
@@ -3290,9 +3290,9 @@ BufferResult BufferProcessAskChain::buffer_get_key_list(DTCJobOperation &Job)
 }
 
 /*
- * hot backup拉取更新key或者lru变更，如果没有则挂起请求,直到
- * 1. 超时
- * 2. 有更新key, 或者LRU变更
+ * Hot backup pulls updated keys or lru changes, if none then suspend request until
+ * 1. Timeout
+ * 2. There are updated keys or LRU changes
  */
 BufferResult BufferProcessAskChain::buffer_get_update_key(DTCJobOperation &Job)
 {
@@ -3311,18 +3311,18 @@ BufferResult BufferProcessAskChain::buffer_get_raw_data(DTCJobOperation &Job)
 
 	log4cplus_debug("buffer_get_raw_data start ");
 
-	RowValue stRow(Job.table_definition()); //一行数据
+	RowValue stRow(Job.table_definition()); // One row of data
 	RawData stNodeData(&g_stSysMalloc, 1);
 
 	Job.prepare_result_no_limit();
 
 	for (int i = 0; i < condition->num_fields(); i++) {
 		key = condition->field_value(i);
-		stRow[1].u64 = DTCHotBackup::HAS_VALUE; //表示附加value字段
+		stRow[1].u64 = DTCHotBackup::HAS_VALUE; // Indicates additional value field
 		stRow[2].Set(key->bin.ptr, key->bin.len);
 
 		Node stNode = cache_.cache_find_auto_chose_hash(key->bin.ptr);
-		if (!stNode) { //master没有该key的数据
+		if (!stNode) { // Master does not have data for this key
 			stRow[1].u64 = DTCHotBackup::KEY_NOEXIST;
 			stRow[3].Set(0);
 			log4cplus_debug("append_row flag");
@@ -3342,7 +3342,7 @@ BufferResult BufferProcessAskChain::buffer_get_raw_data(DTCJobOperation &Job)
 		}
 
 		log4cplus_debug("append_row flag");
-		Job.append_row(&stRow); //当前行添加到task中
+		Job.append_row(&stRow); // Add current row to task
 		stNodeData.destory();
 	}
 
@@ -3359,7 +3359,7 @@ BufferProcessAskChain::buffer_replace_raw_data(DTCJobOperation &Job)
 	const DTCFieldValue *condition = Job.request_condition();
 	const DTCValue *key;
 
-	RowValue stRow(Job.table_definition()); //一行数据
+	RowValue stRow(Job.table_definition()); // One row of data
 	RawData stNodeData(&g_stSysMalloc, 1);
 	if (condition->num_fields() < 1) {
 		log4cplus_debug("%s", "replace raw data need key");
@@ -3370,16 +3370,16 @@ BufferProcessAskChain::buffer_replace_raw_data(DTCJobOperation &Job)
 
 	key = condition->field_value(0);
 	stRow[2].Set(key->bin.ptr, key->bin.len);
-	Job.update_row(stRow); //获取数据
+	Job.update_row(stRow); // Get data
 
 	log4cplus_debug("value[len: %d]", stRow[3].bin.len);
 
-	//调整备机的空节点过滤
+	// Adjust slave empty node filtering
 	if (stRow[1].u64 & DTCHotBackup::EMPTY_NODE && empty_node_filter_) {
 		empty_node_filter_->SET(*(unsigned int *)(key->bin.ptr));
 	}
 
-	//key在master不存在, 或者是空节点，purge cache.
+	// Key does not exist in master, or is empty node, purge cache.
 	if (stRow[1].u64 & DTCHotBackup::KEY_NOEXIST ||
 	    stRow[1].u64 & DTCHotBackup::EMPTY_NODE) {
 		log4cplus_debug("purge slave data");
@@ -3391,7 +3391,7 @@ BufferProcessAskChain::buffer_replace_raw_data(DTCJobOperation &Job)
 		return DTC_CODE_BUFFER_SUCCESS;
 	}
 
-	// 解析成raw data
+	// Parse into raw data
 	ALLOC_HANDLE_T hData = g_stSysMalloc.Malloc(stRow[3].bin.len);
 	if (hData == INVALID_HANDLE) {
 		log4cplus_error("malloc error: %m");
@@ -3410,7 +3410,7 @@ BufferProcessAskChain::buffer_replace_raw_data(DTCJobOperation &Job)
 		return DTC_CODE_BUFFER_ERROR;
 	}
 
-	// 检查packed key是否匹配
+	// Check if packed key matches
 	DTCValue packed_key = TableDefinitionManager::instance()
 				      ->get_cur_table_def()
 				      ->packed_key(stNodeData.key());
@@ -3426,7 +3426,7 @@ BufferProcessAskChain::buffer_replace_raw_data(DTCJobOperation &Job)
 		return DTC_CODE_BUFFER_ERROR;
 	}
 
-	// 查找分配node节点
+	// Find allocated node
 	unsigned int uiNodeID;
 	Node stNode = cache_.cache_find_auto_chose_hash(key->bin.ptr);
 
@@ -3452,7 +3452,7 @@ BufferProcessAskChain::buffer_replace_raw_data(DTCJobOperation &Job)
 
 	uiNodeID = stNode.node_id();
 
-	// 替换数据
+	// Replace data
 	iRet = data_process_->do_replace_all(&stNode, &stNodeData);
 	if (iRet != 0) {
 		if (dtc_mode_ == DTC_MODE_CACHE_ONLY) {
@@ -3485,7 +3485,7 @@ BufferResult BufferProcessAskChain::buffer_adjust_lru(DTCJobOperation &Job)
 
 	log4cplus_debug("buffer_adjust_lru start ");
 
-	RowValue stRow(Job.table_definition()); //一行数据
+	RowValue stRow(Job.table_definition()); // One row of data
 
 	for (int i = 0; i < condition->num_fields(); i++) {
 		key = condition->field_value(i);
@@ -3532,7 +3532,7 @@ BufferResult BufferProcessAskChain::buffer_verify_hbt(DTCJobOperation &Job)
 {
 	log4cplus_debug("buffer_verify_hbt start ");
 
-	if (hotbackup_lru_feature_ == NULL) { // 共享内存还没有激活热备特性
+	if (hotbackup_lru_feature_ == NULL) { // Shared memory has not yet activated hot backup feature
 		NEW(HBFeature, hotbackup_lru_feature_);
 		if (hotbackup_lru_feature_ == NULL) {
 			log4cplus_error("new hot-backup feature error: %m");
@@ -3584,7 +3584,7 @@ BufferResult BufferProcessAskChain::buffer_get_hbt(DTCJobOperation &Job)
 {
 	log4cplus_debug("buffer_get_hbt start ");
 
-	if (hotbackup_lru_feature_ == NULL) { // 共享内存还没有激活热备特性
+	if (hotbackup_lru_feature_ == NULL) { // Shared memory has not yet activated hot backup feature
 		Job.versionInfo.set_master_hb_timestamp(0);
 		Job.versionInfo.set_slave_hb_timestamp(0);
 	} else {
@@ -3737,26 +3737,26 @@ BufferResult BufferProcessAskChain::buffer_migrate(DTCJobOperation &Job)
 
 	log4cplus_debug("cache_cache_migrate start ");
 
-	RowValue stRow(Job.table_definition()); //一行数据
+	RowValue stRow(Job.table_definition()); // One row of data
 	RawData stNodeData(&g_stSysMalloc, 1);
 
 	Node stNode = cache_.cache_find_auto_chose_hash(key.bin.ptr);
 
-	//如果有updateInfo则说明请求从DTC过来
+	// If there is updateInfo, it indicates the request comes from DTC
 	int flag = 0;
 	if (ui && ui->field_value(0)) {
 		flag = ui->field_value(0)->s64;
 	}
 	if ((flag & 0xFF) == DTCMigrate::FROM_SERVER) {
 		log4cplus_debug("this migrate cmd is from DTC");
-		RowValue stRow(Job.table_definition()); //一行数据
+		RowValue stRow(Job.table_definition()); // One row of data
 		RawData stNodeData(&g_stSysMalloc, 1);
 		stRow[2].Set(key.bin.ptr, key.bin.len);
-		Job.update_row(stRow); //获取数据
+		Job.update_row(stRow); // Get data
 
 		log4cplus_debug("value[len: %d]", stRow[3].bin.len);
 
-		//key在master不存在, 或者是空节点，purge cache.
+		// Key does not exist in master, or is empty node, purge cache.
 		if (stRow[1].u64 & DTCHotBackup::KEY_NOEXIST ||
 		    stRow[1].u64 & DTCHotBackup::EMPTY_NODE) {
 			log4cplus_debug("purge slave data");
@@ -3764,7 +3764,7 @@ BufferResult BufferProcessAskChain::buffer_migrate(DTCJobOperation &Job)
 			return DTC_CODE_BUFFER_SUCCESS;
 		}
 
-		// 解析成raw data
+		// Parse into raw data
 		ALLOC_HANDLE_T hData = g_stSysMalloc.Malloc(stRow[3].bin.len);
 		if (hData == INVALID_HANDLE) {
 			log4cplus_error("malloc error: %m");
@@ -3785,7 +3785,7 @@ BufferResult BufferProcessAskChain::buffer_migrate(DTCJobOperation &Job)
 			return DTC_CODE_BUFFER_ERROR;
 		}
 
-		// 检查packed key是否匹配
+		// Check if packed key matches
 		DTCValue packed_key = TableDefinitionManager::instance()
 					      ->get_cur_table_def()
 					      ->packed_key(stNodeData.key());
@@ -3800,7 +3800,7 @@ BufferResult BufferProcessAskChain::buffer_migrate(DTCJobOperation &Job)
 			return DTC_CODE_BUFFER_ERROR;
 		}
 
-		// 查找分配node节点
+		// Find allocated node
 		unsigned int uiNodeID;
 
 		if (!stNode) {
@@ -3822,7 +3822,7 @@ BufferResult BufferProcessAskChain::buffer_migrate(DTCJobOperation &Job)
 			cache_.remove_from_lru(stNode);
 			cache_.insert_to_clean_lru(stNode);
 		}
-		if ((flag >> 8) & 0xFF) //如果为脏节点
+		if ((flag >> 8) & 0xFF) // If it's a dirty node
 		{
 			cache_.remove_from_lru(stNode);
 			cache_.insert_to_dirty_lru(stNode);
@@ -3830,7 +3830,7 @@ BufferResult BufferProcessAskChain::buffer_migrate(DTCJobOperation &Job)
 
 		uiNodeID = stNode.node_id();
 
-		// 替换数据
+		// Replace data
 		iRet = data_process_->do_replace_all(&stNode, &stNodeData);
 		if (iRet != 0) {
 			if (dtc_mode_ == DTC_MODE_CACHE_ONLY) {
@@ -3863,14 +3863,14 @@ BufferResult BufferProcessAskChain::buffer_migrate(DTCJobOperation &Job)
 	}
 
 	log4cplus_debug("this migrate cmd is from api");
-	//请求从工具过来，我们需要构造请求发给其他dtc
+	// Request comes from tool, we need to construct request and send to other DTC
 
 	if (!stNode) {
 		Job.set_error(-EC_KEY_NOTEXIST, "buffer_migrate",
 			      "this key not found in cache");
 		return DTC_CODE_BUFFER_ERROR;
 	}
-	//获取该节点的raw-data，构建replace请求给后端helper
+	// Get raw-data of this node, construct replace request for backend helper
 	iRet = data_process_->get_node_all_rows_count(&stNode, &stNodeData);
 	if (iRet != 0) {
 		log4cplus_error("get raw-data failed");
@@ -3886,8 +3886,8 @@ BufferResult BufferProcessAskChain::buffer_migrate(DTCJobOperation &Job)
 		return DTC_CODE_BUFFER_ERROR;
 	}
 	//id0 {"type", DField::Unsigned, 4, DTCValue::Make(0), 0}
-	//type的最后一个字节用来表示请求来着其他dtc还是api
-	//倒数第二个字节表示节点是否为脏
+	// The last byte of type is used to indicate whether the request comes from other DTC or API
+	// The second to last byte indicates whether the node is dirty
 	uitmp->add_value(0, DField::Set, DField::Unsigned,
 			 DTCValue::Make(DTCMigrate::FROM_SERVER |
 					(stNode.is_dirty() << 8)));

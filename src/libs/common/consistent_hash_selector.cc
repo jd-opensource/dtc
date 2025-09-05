@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ void ConsistentHashSelector::add_node(const char *name)
 		uint32_t value = Hash(buf, strlen(buf));
 		std::map<uint32_t, int>::iterator iter = m_nodes.find(value);
 		if (iter != m_nodes.end()) {
-			//hash值冲突，选取字符串中较小者
+			// Hash value conflict, select the smaller string
 			if (m_nodeNames[iter->second] < name)
 				continue;
 		}

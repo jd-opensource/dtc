@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -22,15 +22,15 @@
 #include "algorithm/singleton.h"
 
 typedef struct AlarmCfg {
-	// 统计项对应的统计项id
+	// Statistical item corresponding to statistical item id
 	uint64_t ddw_stat_item_id;
-	// 统计项对应的告警阈值
+	// Alarm threshold corresponding to statistical item
 	uint64_t ddw_threshold_value;
-	// 统计项告警时依据的数据，分别为cur，10s、10m、all，默认为10s
+	// Data basis for statistical item alarm, respectively cur, 10s, 10m, all, default is 10s
 	unsigned char cat;
-	// 告警项在统计文件中的位置
+	// Position of alarm item in statistical file
 	StatClient::Iterator_ info;
-	// 告警内容字符串
+	// Alarm content string
 	std::string str_alarm_content;
 } AlarmConf;
 typedef std::vector<AlarmConf> AlarmCfgInfo;
@@ -48,16 +48,16 @@ class StatAlarmReporter {
 	~StatAlarmReporter()
 	{
 	}
-	// 统计进程上报告警接口，通过配置文件的阈值和告警内容上报
+	// Statistical process alarm reporting interface, report through threshold and alarm content in configuration file
 	void report_alarm();
-	// 其他进程上报告警的接口，直接上报告警内容
+	// Interface for other processes to report alarms, directly report alarm content
 	void report_alarm(const std::string &str_alarm_content);
 	bool set_stat_client(StatClient *stat_client);
 	void set_time_out(int time_out);
 	/*
-	 *  初始化配置的时候需要考虑两种场景：
-	 *	1、dtcserver，只需要url和cellphonenum，对于dtcserver来说是直接触发告警的
-	 *	2、stattool，即需要url和cellphonenum，又需要各个统计项的阈值 告警内容等	
+	 *  When initializing configuration, two scenarios need to be considered:
+	 *	1. dtcserver, only needs url and cellphonenum, for dtcserver it directly triggers alarms
+	 *	2. stattool, needs both url and cellphonenum, and also needs thresholds and alarm content of various statistical items	
 	 *	
 	*/
 	bool init_alarm_cfg(const std::string &str_alarm_conf_file_path,
@@ -77,7 +77,7 @@ class StatAlarmReporter {
     private:
 	std::string str_report_url_;
 	AlarmCfgInfo alarm_Cfg_;
-	uint64_t ddw_module_id_; /*本业务对应的ModuleId*/
+	uint64_t ddw_module_id_; /*ModuleId corresponding to this service*/
 	StatClient *stat_client_;
 	std::string cell_phone_list_;
 	std::string dtc_ip_;

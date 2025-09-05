@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -129,7 +129,7 @@ void _set_log_level_(int l) {
 
 void _set_log_switch_(int iSwitch)
 {
-	//0 不开启本地日志
+	//0 means do not enable local logging
 	__log_switch__ = iSwitch;
 }
 

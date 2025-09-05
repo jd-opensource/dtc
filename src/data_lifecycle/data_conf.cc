@@ -104,7 +104,7 @@ int DataConf::ParseConfig(const std::string& config_path, ConfigParam& config_pa
     node = config["data_lifecycle"]["rule.cron"];
     config_param.operate_time_rule_ = node? node.as<string>(): "00 01 * * * ?";
 
-    // 规则对应的操作operate_type  delete或update
+    // Operation type corresponding to the rule: delete or update
     node = config["data_lifecycle"]["type.operate"];
     config_param.operate_type_ = node? node.as<string>(): "delete";
 

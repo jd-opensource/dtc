@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@
 
 #define E_OK 0 //success
 #define E_FAIL -1 //fail
-#define KEY_LEN_LEN sizeof(char) //"key长"字段长度
-#define MAX_KEY_LEN 256 //key最大长度,由"key长"字段长度所能表示的最大数字决定
+#define KEY_LEN_LEN sizeof(char) //"key length" field length
+#define MAX_KEY_LEN 256 //maximum key length, determined by the maximum number that can be represented by the "key length" field length
 #define ERR_MSG_LEN 1024
-#define MAX_PURGE_NUM 1000 //每次purge的节点数上限
-#define CACHE_SVC "dtc" //cache服务名
-//#define VERSION			"1.0.3"			//版本信息
+#define MAX_PURGE_NUM 1000 //upper limit of nodes to purge each time
+#define CACHE_SVC "dtc" //cache service name
+//#define VERSION			"1.0.3"			//version information
 
 #define STRNCPY(dest, src, len)                                                \
 	{                                                                      \

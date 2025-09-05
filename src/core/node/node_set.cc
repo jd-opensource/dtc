@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 
 DTC_USING_NAMESPACE
 
-//定义每种属性的内存大小, 至少有以下四种，可以再增加
+//Define memory size for each attribute type, at least the following four types, can add more
 const uint32_t NODE_SET::NG_ATTR_SIZE[] = {
 	NODE_GROUP_INCLUDE_NODES * sizeof(NODE_ID_T), //NEXT_NODE
 	NODE_GROUP_INCLUDE_NODES * sizeof(NODE_ID_T) * 2, //TIME_LIST
@@ -38,14 +38,14 @@ int NODE_SET::do_init(NODE_ID_T id)
 	ng_free = 0;
 	ng_nid = id;
 
-	//属性
+	//Attributes
 	ng_attr.count = attr_count();
 	ng_attr.offset[0] = base_header_size();
 	for (unsigned int i = 1; i < ng_attr.count; i++) {
 		ng_attr.offset[i] = ng_attr.offset[i - 1] + NG_ATTR_SIZE[i - 1];
 	}
 
-	/* 初始化每个Node */
+	/* Initialize each Node */
 	for (unsigned i = 0; i < NODE_GROUP_INCLUDE_NODES; ++i) {
 		next_node_id(i) = INVALID_NODE_ID;
 		NODE_ID_T *lru = node_lru(i);
@@ -127,7 +127,7 @@ Node NODE_SET::allocate_node(void)
 		return Node(NULL, 0);
 	}
 
-	//优先分配release掉的Node空间
+	//Prioritize allocating released Node space
 	if (ng_dele.count > 0) {
 		Node N(this, ng_dele.top);
 		N.Reset();
@@ -137,7 +137,7 @@ Node NODE_SET::allocate_node(void)
 
 		return N;
 	}
-	//在空闲Node中分配
+	//Allocate from free Nodes
 	else {
 		Node N(this, ng_free);
 		N.Reset();
@@ -149,7 +149,7 @@ Node NODE_SET::allocate_node(void)
 
 int NODE_SET::release_node(Node N)
 {
-	//复用node的handle attribute空间来把释放掉的node组织为单链表
+	//Reuse node's handle attribute space to organize released nodes as single linked list
 	N.vd_handle() = ng_dele.top;
 	ng_dele.top = N.get_index();
 	ng_dele.count++;

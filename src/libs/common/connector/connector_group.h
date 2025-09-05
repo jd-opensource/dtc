@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -141,19 +141,19 @@ private:
 
     public:
     void record_process_time(int type, unsigned int msec);
-    /* queue当前长度 */
+    /* Current queue length */
     int queue_count(void) const
     {
         return queue.Count();
     }
-    /* queue最大长度*/
+    /* Maximum queue length */
     int queue_max_count(void) const
     {
         return queueSize;
     }
 
     private:
-    /* 平均请求时延 */
+    /* Average request delay */
     double average_delay;
 
     StatSample statTime[6];

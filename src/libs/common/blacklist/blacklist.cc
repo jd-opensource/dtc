@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -133,7 +133,7 @@ int BlackList::try_expired_blacklist(void)
 	return 0;
 }
 
-/* TODO: 统计top10 */
+/* TODO: Count top10 */
 void BlackList::stat_everything(const struct blslot *slot, const int add)
 {
 	/* add */

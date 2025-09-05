@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ const uint16_t DtcJob::cmd2type[] = {
 	TaskTypeWrite, // REPLACE
 	TaskTypeWrite, // Flush
 	TaskTypeWrite, // Invalidate
-	TaskTypeAdmin, // Monitor,此条是为了占位
+	TaskTypeAdmin, // Monitor, this entry is for placeholder
 	TaskTypeHelperReloadConfig, //Reload
 };
 

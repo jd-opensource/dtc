@@ -90,12 +90,12 @@ enum ESyncStatus
  * Async Controller file struct
  */
 
-/* FIXME:  必须8 bytes对齐 */
+/* FIXME: Must be 8 bytes aligned */
 struct CControl {
 	JournalID jid;
 	CReaderPos rpos;
 	CWriterPos wpos;
-	uint64_t flag;		/* dirty flag: 全量同步是否完成 */
+	uint64_t flag;		/* dirty flag: whether full sync is completed */
 };
 
 /*
@@ -152,7 +152,7 @@ public:
 
 private:
 	/*
-	 * 当前仅用来表示full-sync是否完成
+	 * Currently only used to indicate whether full-sync is completed
 	 */
 	inline uint64_t & DirtyFlag() {
 		CControl *p = (CControl *) _map;
@@ -192,7 +192,7 @@ private:
 
 	inline int IsWriterEnd(int len) {
 		/*
-		 *  四字节长度 + 四字节的结束标志
+		 * 4-byte length + 4-byte end flag
 		 */
 		if (_pos.offset + len + 4 + 4 >= (unsigned)Size())
 			return 1;
@@ -218,7 +218,7 @@ private:
 };
 
 /*
- * 写者
+ * Writer
  */
 class CAsyncFileWriter {
 public:
@@ -251,7 +251,7 @@ public:
 private:
 
 	inline void AddToList(CAsyncFileImpl * p) {
-		//控制map文件在一定数量，否则可能会导致磁盘flush
+		// Control map files to a certain number, otherwise may cause disk flush
 		if (_asyncfiles.size() >= (unsigned)_max)
 			DropLastOne();
 
@@ -259,7 +259,7 @@ private:
 	}
 
 	/*
-	 * unmap writer持有的最老的一个文件
+	 * Unmap the oldest file held by writer
 	 */
 	inline void DropLastOne() {
 		CAsyncFileImpl *p = _asyncfiles.back();
@@ -276,7 +276,7 @@ private:
 };
 
 /*
- * 读者
+ * Reader
  */
 class CAsyncFileReader {
 public:
@@ -300,7 +300,7 @@ private:
 };
 
 /*
- * 检查日志合法性
+ * Check log validity
  */
 class CAsyncFileChecker {
 public:

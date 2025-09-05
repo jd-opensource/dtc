@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -64,14 +64,14 @@ BufferPond::~BufferPond()
 	_feature->destroy();
 	_node_index->destroy();
 
-	/* 运行到这里，说明程序是正常stop的，设置共享内存完整性标记 */
+	/* If we reach here, the program stopped normally, set shared memory integrity flag */
 	if (_need_set_integrity) {
 		log4cplus_info("Share Memory Integrity... ok");
 		PtMalloc::instance()->set_share_memory_integrity(1);
 	}
 }
 
-/* 检查lru链表是否cross-link了，一旦发生这种情况，没法处理了 :( */
+/* Check if LRU list is cross-linked, once this happens, there's no way to handle it :( */
 static inline int check_cross_linked_lru(Node node)
 {
 	Node v = node.Prev();
@@ -83,7 +83,7 @@ static inline int check_cross_linked_lru(Node node)
 	return 0;
 }
 
-/* 验证cacheInfo合法性, 避免出现意外 */
+/* Verify cache info validity to avoid unexpected issues */
 int BufferPond::verify_cache_info(BlockProperties *info)
 {
 	if (INVALID_HANDLE != 0UL) {
@@ -105,9 +105,9 @@ int BufferPond::verify_cache_info(BlockProperties *info)
 		return -1;
 	}
 
-	/* 系统可工作的最小内存 */
+	/* Minimum memory required for system operation */
 	/* 1. empty_filter = 0  Min=64M */
-	/* 2. empty_filter = 1  Min=256M, 初步按照1.5G用户来计算 */
+	/* 2. empty_filter = 1  Min=256M, initially calculated based on 1.5G users */
 
 	if (info->empty_filter) {
 		if (info->ipc_mem_size < (256UL << 20)) {
@@ -211,7 +211,7 @@ TRY_CACHE_INIT_AGAIN:
 		_cache_info.ipc_mem_key = info->ipc_mem_key;
 	}
 
-	//初始化统计对象
+	//Initialize statistics objects
 	stat_cache_size = g_stat_mgr.get_stat_int_counter(DTC_CACHE_SIZE);
 	stat_cache_key = g_stat_mgr.get_stat_int_counter(DTC_CACHE_KEY);
 	stat_cache_version = g_stat_mgr.get_stat_iterm(DTC_CACHE_VERSION);
@@ -229,9 +229,9 @@ TRY_CACHE_INIT_AGAIN:
 		g_stat_mgr.get_stat_int_counter(LAST_PURGE_NODE_MOD_TIME);
 	stat_data_exist_time = g_stat_mgr.get_stat_int_counter(DATA_EXIST_TIME);
 
-	//打开共享内存
+	//Open shared memory
 	if (_shm.mem_open(_cache_info.ipc_mem_key) > 0) {
-		//共享内存已存在
+		//Shared memory already exists
 
 		if (_cache_info.create_only) {
 			snprintf(_err_msg, sizeof(_err_msg),
@@ -251,7 +251,7 @@ TRY_CACHE_INIT_AGAIN:
 			return -1;
 		}
 
-		//底层分配器
+		//Underlying allocator
 		if (PtMalloc::instance()->do_attach(_shm.mem_ptr(),
 						    _shm.mem_size()) != 0) {
 			snprintf(_err_msg, sizeof(_err_msg),
@@ -259,7 +259,7 @@ TRY_CACHE_INIT_AGAIN:
 			return -1;
 		}
 
-		//内存版本检测, 目前因为底层分配器的缘故，只支持version >= 4的版本
+		//Memory version detection, currently due to the underlying allocator, only supports version >= 4
 		_cache_info.version = PtMalloc::instance()->detect_version();
 		if (_cache_info.version != 4) {
 			snprintf(_err_msg, sizeof(_err_msg),
@@ -267,13 +267,13 @@ TRY_CACHE_INIT_AGAIN:
 			return -1;
 		}
 
-		/* 检查共享内存完整性，通过*/
+		/* Check shared memory integrity, passed */
 		if (PtMalloc::instance()->share_memory_integrity()) {
 			log4cplus_info("Share Memory Integrity Check.... ok");
 			/* 
-             * 设置共享内存不完整标记
+             * Set shared memory incomplete flag
              *
-             * 这样可以在程序coredump引起内存混乱时，再次重启后dtc能发现内存已经写乱了。
+             * This allows DTC to detect corrupted memory when restarted after a program coredump.
              */
 			if (_cache_info.read_only == 0) {
 				_need_set_integrity = 1;
@@ -281,7 +281,7 @@ TRY_CACHE_INIT_AGAIN:
 					0);
 			}
 		}
-		/* 不通过 */
+		/* Failed */
 		else {
 			log4cplus_warning(
 				"Share Memory Integrity Check... failed");
@@ -293,7 +293,7 @@ TRY_CACHE_INIT_AGAIN:
 					return -1;
 				}
 
-				/* 删除共享内存，重新启动cache初始化流程 */
+				/* Delete shared memory, restart cache initialization process */
 				if (_shm.mem_delete() < 0) {
 					log4cplus_error(
 						"Auto Delete Share Memory failed: %m");
@@ -307,22 +307,22 @@ TRY_CACHE_INIT_AGAIN:
 
 				PtMalloc::destroy();
 
-				/* 重新初始化 */
+				/* Reinitialize */
 				goto TRY_CACHE_INIT_AGAIN;
 			}
 		}
 	}
 
-	//共享内存不存在，需要创建
+	//Shared memory does not exist, need to create
 	else {
-		//只读，失败
+		//Read-only, failed
 		if (_cache_info.read_only) {
 			snprintf(_err_msg, sizeof(_err_msg),
 				 "readonly m_shm non-exists");
 			return -1;
 		}
 
-		//创建
+		//Create
 		if (_shm.mem_create(_cache_info.ipc_mem_key,
 				    _cache_info.ipc_mem_size) <= 0) {
 			if (errno == EACCES || errno == EEXIST)
@@ -346,7 +346,7 @@ TRY_CACHE_INIT_AGAIN:
 			return -1;
 		}
 
-		//底层分配器初始化
+		//Initialize underlying allocator
 		if (PtMalloc::instance()->do_init(_shm.mem_ptr(),
 						  _shm.mem_size()) != 0) {
 			snprintf(_err_msg, sizeof(_err_msg),
@@ -355,7 +355,7 @@ TRY_CACHE_INIT_AGAIN:
 		}
 
 		/* 
-         * 设置共享内存不完整标记
+         * Set shared memory incomplete flag
          */
 		_need_set_integrity = 1;
 		PtMalloc::instance()->set_share_memory_integrity(0);
@@ -1218,7 +1218,7 @@ uint32_t BufferPond::get_cmodtime(Node *node)
 	}
 
 	unsigned int uiTotalRows = _raw_data->total_rows();
-	for (unsigned int i = 0; i < uiTotalRows; i++) //查找
+	for (unsigned int i = 0; i < uiTotalRows; i++) //Search
 	{
 		if ((iRet = _raw_data->get_lastcmod(lastcmod_thisrow)) != 0) {
 			log4cplus_error("raw-data decode row error: %d,%s",
@@ -1385,7 +1385,7 @@ void BufferPond::delay_purge_notify(const unsigned count)
 
 	_need_purge_node_count -= real_purge_count;
 
-	/* 如果没有请求，重新调度delay purge任务 */
+	/* If there are no requests, reschedule delay purge task */
 	if (_need_purge_node_count > 0)
 		attach_timer(_delay_purge_timerlist);
 

@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ void StatAlarmReporter::set_time_out(int time_out)
 	post_time_out_ = time_out;
 }
 
-/* 当前运行路径的第四个位置是accesskey，access的前八个字节代表moduleid */
+/* The fourth position in the current running path is accesskey, the first eight bytes of access represent moduleid */
 uint64_t
 StatAlarmReporter::parse_module_id(const std::string &str_current_work_path)
 {
@@ -66,7 +66,7 @@ void StatAlarmReporter::init_module_id()
 	ddw_module_id_ = parse_module_id(std::string(buf));
 }
 
-/* 优先尝试从/usr/local/dtc/ip读取本机的ip，如果该文件没有ip，则在使用GetLocalIp函数获取本机Ip */
+/* First try to read the local machine's IP from /usr/local/dtc/ip, if the file doesn't have IP, then use GetLocalIp function to get local machine IP */
 void StatAlarmReporter::init_local_id()
 {
 	std::string strIpFilePath("/usr/local/dtc/ip");
@@ -143,8 +143,8 @@ bool StatAlarmReporter::parse_alarm_cfg(uint64_t ddw_stat_id,
 
 /*
  *
- * 看配置文件是否被修改了，如果被修改需要重新加载配置
- * 如果stat文件失败也认为需要重新加载配置
+ * Check whether the configuration file has been modified, if modified need to reload configuration
+ * If stat file fails, also consider needing to reload configuration
  *
  */
 bool StatAlarmReporter::is_alarm_cfg_file_modify(
@@ -160,7 +160,7 @@ bool StatAlarmReporter::is_alarm_cfg_file_modify(
 		return false;
 	}
 
-	/* 配置文件被修改了，更新文件修改时间，同时打error日志（此类操作较少）记录该文件修改事件 */
+	/* Configuration file has been modified, update file modification time, and also log error (such operations are rare) to record this file modification event */
 	log4cplus_error(
 		"alarm cfg file has been modified ,the last modify time is %lu, this modify time is %lu",
 		modify_time_, st.st_mtime);
@@ -170,23 +170,23 @@ bool StatAlarmReporter::is_alarm_cfg_file_modify(
 
 /*
  * 
- * 告警的配置项分为如下三种：
- * 1、上报的url(结束处不加?号)
+ * Alarm configuration items are divided into the following three types:
+ * 1. Reporting url (no ? at the end)
  *    url=http://192.168.214.62/api/dtc_sms_alarm_sender.php
- * 2、短信通知的手机号码,中间以英文分号分开(结束处加分号)
+ * 2. Mobile phone numbers for SMS notification, separated by English semicolons (semicolon at the end)
  *    cellphone=1283930303;1020123123;1212312312;
- * 3、配置的告警项(结束处不加分号)
+ * 3. Configured alarm items (no semicolon at the end)
  *    statItemId=thresholdValue;cat;alarmContent
- *    其中cat分为10s 、job_operation、10m、all，如下以inc0的cpu占用率为例,
+ *    Where cat is divided into 10s, job_operation, 10m, all. For example, using inc0's CPU usage rate:
  *    20000=8000;10s;inc0 thread cpu overload(80%)
- *    这个配置项的含义就是接入线程cpu使用率的统计值（从10s文件中取值）大小超过了80%，发短信通知cpu超载
- *    所有配置的设置都采用小写英文  
+ *    The meaning of this configuration item is that when the statistical value of access thread CPU usage rate (taken from 10s file) exceeds 80%, send SMS notification of CPU overload
+ *    All configuration settings use lowercase English  
  *
  */
 bool StatAlarmReporter::init_alarm_cfg(
 	const std::string &str_alarm_conf_file_path, bool is_dtc_server)
 {
-	/* 如果配置文件没有被修改过，就不再加载配置文件 */
+	/* If the configuration file has not been modified, do not reload the configuration file */
 	if (!is_alarm_cfg_file_modify(str_alarm_conf_file_path)) {
 		return true;
 	}

@@ -118,7 +118,7 @@ int NCKeyValueList::add_value(const char* name, const DTCValue &v, int type)
 
 	int row = fcount[col];
 	if(row >= key_value_max_)
-	    /* key值太多 */
+	    /* Too many key values */
 		return -EC_TOO_MANY_KEY_VALUE; 
 	if(row >= key_count_) {
 		if(REALLOC(val, (key_count_+1)*kn*sizeof(DTCValue)) == NULL)

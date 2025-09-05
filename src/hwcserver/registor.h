@@ -56,11 +56,11 @@ public:
 
 	int GetSyncStaus() { return _controller.GetDirty(); }
 	/*
-	 * 定期检查双方的共享内存，确保二者始终没有变化过。
+	 * Periodically check both parties' shared memory to ensure they have never changed.
 	 *
-	 * 如果slave上记录的内存创建时间和master共享内存
-	 * 创建时间相同，证明二者的内存自创建以来，没有
-	 * 被删除过，返回0， 否则返回1
+	 * If the memory creation time recorded on slave is the same as master's shared memory
+	 * creation time, it proves that neither party's memory has been
+	 * deleted since creation, return 0, otherwise return 1
 	 */
 	int CheckMemoryCreateTime() {
 		int64_t v0;
@@ -90,8 +90,8 @@ public:
 #endif
 
 	/* 
-	 * 设置hbp状态为 "全量同步未完成" 
-	 * 当hbp出现任何不可恢复的错误时，应该invoke这个接口
+	 * Set hbp status to "full sync incomplete" 
+	 * When hbp encounters any unrecoverable error, should invoke this interface
 	 *
 	 */
 	// void SetHBPStatusDirty() {

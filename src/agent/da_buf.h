@@ -1,5 +1,5 @@
 /*
- * Copyright [2021] JD.com, Inc.
+ * Copyright JD.com, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ STAILQ_HEAD(buf_stqh, mbuf);
 
 #define MBUF_MAGIC 0xdeadbeef
 /*
- * 最小的长度应该把msg头接收下来
+ * The minimum length should receive the msg header
  */
 #define MBUF_MIN_SIZE 256
 #define MBUF_MAX_SIZE 16777216

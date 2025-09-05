@@ -1,52 +1,52 @@
 
-## 配置文件
-配置文件目录：conf/<br/>
-- AGENT服务的配置文件是：
-  * agent.xml 指定后端dtc server的主、备服务的地址信息和权重；
-- DTC服务的配置文件是：
-  * dtc.yaml dtc模块的配置文件，包括基础配置和表结构信息。
+## Configuration Files
+Configuration file directory: conf/<br/>
+- AGENT service configuration file:
+  * agent.xml Specifies the address information and weight of primary and backup services of backend DTC servers;
+- DTC service configuration file:
+  * dtc.yaml Configuration file for the DTC module, including basic configuration and table structure information.
 
-下面就各配置文件具体配置选项做介绍：
+The following sections introduce specific configuration options for each configuration file:
 ### agent.xml
-agent配置文件位置为当前项目的conf/agent.xml，主要配置以下字段：
-- ALL.BUSINESS_MODULE.MODULE.ListenOn 监听IP和端口号
-- ALL.BUSINESS_MODULE.MODULE.Preconnect 预连接状态
-  * True 开启预连接状态，当Agent启动时会自动建立对后端所有DTC Server结点的连接通道。
-  * False 关闭预连接状态，Agent启动时并不会针对后端Server建立连接，待第一个请求过来时才会创建连接。
-- ALL.BUSINESS_MODULE.MODULE.Timeout 单位：毫秒。Agent响应超时时间，超过此时间则直接返回。
-- ALL.BUSINESS_MODULE.CACHESHARDING 此节点为Agent的分片配置信息。根据分片服务器的数量，可配置多个CACHESHARDING节点。
-- ALL.BUSINESS_MODULE.CACHESHARDING.INSTANCE 分片节点下的具体服务器实例信息：
-  * Role 实例角色配置：
-    *  master 主服务器角色设置，至少要配置一个。
-    *  replica [可选] 备服务器角色设置，可不配置或配置多个备机。
-  * Enable 角色开关：True为开启，False为关闭。
-  * Addr 服务器监听地址和权重。例如 0.0.0.0:20015:1, 分别代表了监听的IP、监听的端口和权重值。权重值在INSTANCE实例下的所有服务器的请求权重，Agent会根据此值设置的大小，来分发不同的流量到后端DTC Server上。默认值为1。
+The agent configuration file is located at conf/agent.xml in the current project. The main fields to configure are:
+- ALL.BUSINESS_MODULE.MODULE.ListenOn Listen IP address and port number
+- ALL.BUSINESS_MODULE.MODULE.Preconnect Pre-connection status
+  * True Enable pre-connection status. When Agent starts, it will automatically establish connection channels to all backend DTC Server nodes.
+  * False Disable pre-connection status. Agent will not establish connections to backend servers when starting, and will only create connections when the first request arrives.
+- ALL.BUSINESS_MODULE.MODULE.Timeout Unit: milliseconds. Agent response timeout. If this time is exceeded, it will return directly.
+- ALL.BUSINESS_MODULE.CACHESHARDING This node contains Agent's sharding configuration information. Multiple CACHESHARDING nodes can be configured based on the number of sharding servers.
+- ALL.BUSINESS_MODULE.CACHESHARDING.INSTANCE Specific server instance information under the sharding node:
+  * Role Instance role configuration:
+    *  master Primary server role setting, at least one must be configured.
+    *  replica [Optional] Backup server role setting, can be not configured or multiple backup servers can be configured.
+  * Enable Role switch: True to enable, False to disable.
+  * Addr Server listen address and weight. For example, 0.0.0.0:20015:1 represents the listen IP, listen port, and weight value respectively. The weight value is the request weight among all servers under the INSTANCE. Agent will distribute different traffic to backend DTC Servers based on the size of this value. Default value is 1.
 
 
 ### dtc.yaml
-#### primary 主库，提供dtc核心功能
-* table dtc的表名
-* layered.rule 分层存储的命中规则，匹配到此规则就进入到cache层。
+#### primary Primary database, provides DTC core functionality
+* table DTC table name
+* layered.rule Hit rules for layered storage. Requests matching this rule will enter the cache layer.
 * cache/hot/full
-  dtc根据不同的功能需要配置不同的模块，共分为三层：<br />
-  cache层：提供缓存功能，只设置cache，不设置hot则表示CACHE ONLY模式，只缓存数据不存储数据到数据库。<br />
-  hot层：在cache的基础上提供数据存储功能，在datasource模式下需要配置此层来设置具体的数据源信息。在分层存储时，设置此模块能够配置热点数据的数据源<br />
-  full层：在分层存储的功能时，需要配置此层，全量数据将存储在此数据源中。
-* logic/real：
-该字段分别设置逻辑库表和真实库表。逻辑库表用于在dtc中显示和使用库、表。真实库表信息是真实的数据源信息。
+  DTC needs to configure different modules based on different functional requirements, divided into three layers:<br />
+  cache layer: Provides caching functionality. If only cache is set without hot, it represents CACHE ONLY mode, which only caches data without storing data to the database.<br />
+  hot layer: Provides data storage functionality on top of cache. In datasource mode, this layer needs to be configured to set specific data source information. In layered storage, setting this module allows configuration of data sources for hot data<br />
+  full layer: When using layered storage functionality, this layer needs to be configured. Full data will be stored in this data source.
+* logic/real:
+These fields set logical database tables and real database tables respectively. Logical database tables are used for display and usage of databases and tables in DTC. Real database table information is the actual data source information.
 * sharding:
-该字段用户设置分库分表的信息，key字段用于设置依照此字段进行分片。table字段用于设置分表的信息，例如分表名为opensource_0/opensource_1.....opensouce_9，则只需要设置为{prefix: [*table, _], start: 0, last: 9}
+This field is used to set database and table sharding information. The key field is used to set which field to use for sharding. The table field is used to set table sharding information. For example, if table names are opensource_0/opensource_1.....opensource_9, you only need to set it as {prefix: [*table, _], start: 0, last: 9}
 
 #### table
-cache配置文件位置为当前项目的conf/table.yaml，主要配置以下字段：
+Cache configuration file is located at conf/table.yaml in the current project. The main fields to configure are:
 * TABLE_CONF.table_name
 * TABLE_CONF.field_count
-* TABLE_CONF.key_count 指定
-* FIELD*ID* *ID*为当前字段的编号，从1开始使用，可以根据场景需要配置个数。
-  * FIELD*ID*.field_name 字段名
-  * FIELD*ID*.field_type 字段类型：1.整数型 2.无符号整数形 3.浮点型 4.字符串（大小写不明感） 5.字符串（大小写敏感）
-  * FIELD*ID*.field_size 字段长度。定义了该字段的大小。例如int型可配置为4字节，long型可配置为8字节，字符串类型可根据具体使用场景配置长度，但最大长度不得超过64KB。
-  * FIELD*ID*.unique [可选]默认值0，可配置0或1。当为0时表示该字段的值不唯一，1时表示该字段值唯一。
+* TABLE_CONF.key_count Specify
+* FIELD*ID* *ID* is the field number, starting from 1. The number can be configured based on scenario requirements.
+  * FIELD*ID*.field_name Field name
+  * FIELD*ID*.field_type Field type: 1.Integer 2.Unsigned integer 3.Float 4.String (case insensitive) 5.String (case sensitive)
+  * FIELD*ID*.field_size Field length. Defines the size of the field. For example, int type can be configured as 4 bytes, long type can be configured as 8 bytes. String type can be configured with length based on specific usage scenarios, but maximum length cannot exceed 64KB.
+  * FIELD*ID*.unique [Optional] Default value 0, can be configured as 0 or 1. When 0, it means the field value is not unique; when 1, it means the field value is unique.
 
-#### extension 扩展库，提供多租户功能
-在dtc的基础缓存和数据代理功能之外，还提供了扩展库，通过配置此模块能够在数据库中进行复杂查询和分库分表功能。
+#### extension Extension library, provides multi-tenant functionality
+In addition to DTC's basic caching and data proxy functionality, an extension library is also provided. By configuring this module, complex queries and database and table sharding functionality can be performed in the database.

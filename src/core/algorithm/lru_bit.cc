@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -114,14 +114,14 @@ int LruBitObj::Scan(void)
 	for (; _scan_idx_off < IDX_SIZE;) {
 		unsigned found = 0;
 
-		//扫描idx中的1 byte, 最大会有512个node id
+		//scan 1 byte in idx, maximum 512 node ids
 		for (int j = 0; j < 8; ++j) {
-			//读取idx中的第_scan_idx_off个字节的第j位对应的blk中的8 bytes
+			//read 8 bytes in blk corresponding to the j-th bit of the _scan_idx_off-th byte in idx
 			uint64_t v = p->read(_scan_idx_off, j);
 			if (0 == v)
 				continue;
 
-			//扫描blk中的8 bytes
+			//scan 8 bytes in blk
 			for (int i = 0; i < 64; ++i) {
 				if (v & 0x1) {
 					found += 1;
@@ -141,23 +141,23 @@ int LruBitObj::Scan(void)
 		}
 
 		if (found > 0) {
-			//批量写入lru变更
+			//batch write lru changes
 			_lru_writer->Commit();
 
-			//idx清零1byete， blk清零64bytes
+			//clear idx 1 byte, clear blk 64 bytes
 			total_1_bits -= p->clear(_scan_idx_off);
 		}
 
 		_scan_idx_off += 1;
 
 		found_id += found;
-		// 如果超过此水位，终止扫描, 等待下一次被调度
+		// if exceeds this watermark, terminate scanning and wait for next scheduling
 		if (found_id >= _scan_stop_until) {
 			return 0;
 		}
 	}
 
-	//调整为下一个lru_bit(4k)
+	//adjust to next lru_bit(4k)
 	_scan_idx_off = 0;
 	_scan_lru_bit += 1;
 	if (_scan_lru_bit > _max_lru_bit) {
@@ -249,7 +249,7 @@ int LruWriter::Write(unsigned int v)
 	log4cplus_debug("enter LruWriter, lru changes, node id:%u", v);
 
 	Node node = I_SEARCH(v);
-	if (!node) //NODE已经不存在，不处理
+	if (!node) //NODE no longer exists, do not process
 		return 0;
 
 	DataChunk *p = M_POINTER(DataChunk, node.vd_handle());

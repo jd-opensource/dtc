@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ void cache_send_event(struct conn *conn) {
 }
 
 /*
- * 根据可用连接及后端连接数，计算前端连接可用的连接数
+ * Calculate available frontend connections based on available connections and backend connection count
  */
 static int core_calc_connections(struct context *ctx) {
 	int status;

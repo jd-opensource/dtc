@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -274,7 +274,7 @@ int LogReader::read(void *buf, size_t size)
 		return -1;
 	}
 
-	// 如果还有更大的serial，则丢弃buf内容，切换文件。否则,回退文件指针
+	// If there is a larger serial, discard the buf content and switch files. Otherwise, revert the file pointer
 	refresh();
 
 	if (_cur_serial < _max_serial) {
@@ -282,7 +282,7 @@ int LogReader::read(void *buf, size_t size)
 		_cur_offset = 0;
 
 		close_file();
-		//跳过序号不存在的文件
+		// Skip files with non-existent serial numbers
 		while (open_file(_cur_serial, 1) == -1 &&
 		       _cur_serial < _max_serial)
 			_cur_serial += 1;
@@ -293,7 +293,7 @@ int LogReader::read(void *buf, size_t size)
 			return -1;
 	}
 
-	// 回退文件指针
+	// Revert file pointer
 	if (rd > 0) {
 		seek(JournalID(_cur_serial, _cur_offset));
 	}
@@ -312,7 +312,7 @@ int LogReader::seek(const JournalID &v)
 	char file[MAX_PATH_NAME_LEN] = { 0 };
 	file_name(file, MAX_PATH_NAME_LEN, v.serial);
 
-	/* 确保文件存在 */
+	/* Ensure the file exists */
 	if (access(file, F_OK))
 		return -1;
 
@@ -387,11 +387,11 @@ int BinlogWriter::append_body(const void *buf, size_t size)
 
 int BinlogWriter::Commit()
 {
-	//计算总长度
+	// Calculate total length
 	uint32_t total = _codec_buffer.size();
 	total -= struct_sizeof(length);
 
-	//写入总长度
+	// Write total length
 	struct_typeof(length) *length =
 		(struct_typeof(length) *)(_codec_buffer.c_str());
 	*length = total;

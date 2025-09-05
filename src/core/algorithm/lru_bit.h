@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@
 #define BLK_BYTE_SHIFT(v) (v & 0x7)
 
 /*
- *  Node ID 位图储存表
+ *  Node ID bitmap storage table
  *
  *====================================================================================
  *| 11 b      | 12 b         | 3 b           | 3 b                 |     3 b       | 
@@ -64,7 +64,7 @@ typedef struct lru_bit {
 	{
 	}
 
-	/* 如果set命中返回1，否则返回0 */
+	/* returns 1 if set hit, otherwise returns 0 */
 	int set(unsigned int v, int b)
 	{
 		int hit = 0;
@@ -115,9 +115,9 @@ typedef struct lru_bit {
 
 /* 
  *
- * 扫描频率、速度控制 
- * 1. 不能影响正常的update同步
- * 2. 尽量在控制时间内完成一趟扫描
+ * Scan frequency and speed control
+ * 1. Must not affect normal update synchronization
+ * 2. Try to complete one round of scanning within the controlled time
  *
  */
 #define LRU_SCAN_STOP_UNTIL 20 //20
@@ -187,7 +187,7 @@ class LruBitUnit {
 	int check_status()
 	{
 		return _is_start;
-	} // 0：不启动， 1：启动
+	} // 0: not started, 1: started
 	int Set(unsigned int v);
 	int Unset(unsigned int v);
 

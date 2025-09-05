@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -393,7 +393,7 @@ int RawDataProcess::do_delete(DTCJobOperation &job_op, Node *p_node,
 		if (stpNodeTab != stpTaskTab) {
 			stpTaskRow->Copy(stpNodeRow);
 		}
-		if (job_op.compare_row(*stpTaskRow) != 0) { //符合del条件
+		if (job_op.compare_row(*stpTaskRow) != 0) { // matches delete condition
 			if (affected_data != NULL) { // copy row
 				iRet = affected_data->copy_row();
 				if (iRet != 0) {
@@ -462,7 +462,7 @@ int RawDataProcess::do_get(DTCJobOperation &job_op, Node *p_node)
 	}
 
 	unsigned int uiTotalRows = raw_data_.total_rows();
-	job_op.prepare_result(); //准备返回结果对象
+	job_op.prepare_result(); // prepare result object
 	if (job_op.all_rows() &&
 	    (job_op.count_only() || !job_op.in_range((int)uiTotalRows, 0))) {
 		if (job_op.is_batch_request()) {
@@ -484,7 +484,7 @@ int RawDataProcess::do_get(DTCJobOperation &job_op, Node *p_node)
 			stpTaskRow = &stTaskRow;
 		}
 		unsigned char uchRowFlags;
-		for (unsigned int i = 0; i < uiTotalRows; i++) //逐行拷贝数据
+		for (unsigned int i = 0; i < uiTotalRows; i++) // copy data row by row
 		{
 			job_op.update_key(
 				*stpNodeRow); // use stpNodeRow is fine, as just modify key field
@@ -500,12 +500,12 @@ int RawDataProcess::do_get(DTCJobOperation &job_op, Node *p_node)
 				stpTaskRow->Copy(stpNodeRow);
 			}
 			if (job_op.compare_row(*stpTaskRow) ==
-			    0) //如果不符合查询条件
+			    0) // if query condition is not matched
 				continue;
 
 			if (stpTaskTab->expire_time_field_id() > 0)
 				stpTaskRow->update_expire_time();
-			//当前行添加到task中
+			// add current row to task
 			log4cplus_debug("append_row flag");
 			if (job_op.append_row(stpTaskRow) > 0 && laid > 0) {
 				raw_data_.update_lastacc(job_op.Timestamp());
@@ -516,7 +516,7 @@ int RawDataProcess::do_get(DTCJobOperation &job_op, Node *p_node)
 			}
 		}
 	}
-	/*更新访问时间和查找操作计数*/
+	/* update access time and select operation count */
 	raw_data_.update_last_access_time_by_hour();
 	raw_data_.inc_select_count();
 	log4cplus_debug(
@@ -580,11 +580,11 @@ int RawDataProcess::do_append(DTCJobOperation &job_op, Node *p_node,
 				 "duplicate key error");
 			return (-1062);
 		}
-		RowValue stOldRow(stpNodeTab); //一行数据
+		RowValue stOldRow(stpNodeTab); // one row of data
 		if (setrows &&
 		    job_op.table_definition()->key_part_of_uniq_field()) {
 			for (unsigned int i = 0; i < uiTotalRows;
-			     i++) { //逐行拷贝数据
+			     i++) { // copy data row by row
 				unsigned char uchRowFlags;
 				if (raw_data_.decode_row(stOldRow, uchRowFlags,
 							 0) != 0) {
@@ -637,7 +637,7 @@ int RawDataProcess::do_append(DTCJobOperation &job_op, Node *p_node,
 		snprintf(err_message_, sizeof(err_message_),
 			 "raw-data insert row error: %.*s",
 			 (int)available_space, err_msg ? err_msg : "unknown error");
-		/*标记加入黑名单*/
+		/* mark for adding to blacklist */
 		job_op.push_black_list_size(raw_data_.need_size());
 		return (-2);
 	}
@@ -725,7 +725,7 @@ int RawDataProcess::do_replace_all(DTCJobOperation &job_op, Node *p_node)
 		snprintf(err_message_, sizeof(err_message_),
 			 "raw-data init error: %.*s",
 			 (int)available_space, err_msg ? err_msg : "unknown error");
-		/*标记加入黑名单*/
+		/* mark for adding to blacklist */
 		job_op.push_black_list_size(raw_data_.need_size());
 		p_buffer_pond_->purge_node(job_op.packed_key(), *p_node);
 		return (-2);
@@ -759,12 +759,12 @@ int RawDataProcess::do_replace_all(DTCJobOperation &job_op, Node *p_node)
 				stpNodeRow = pstRow;
 			}
 
-			/* 插入当前行 */
+			/* insert current row */
 			iRet = raw_data_.insert_row(*stpNodeRow, false, false);
 
-			/* 如果内存空间不足，尝试扩大最多两次 */
+			/* if memory space is insufficient, try to expand up to two times */
 			if (iRet == EC_NO_MEM) {
-				/* 预测整个Node的数据大小 */
+				/* predict the data size of the entire Node */
 				all_rows_size = raw_data_.need_size() -
 						raw_data_.data_start();
 				all_rows_size *= pstResultSet->total_rows();
@@ -775,7 +775,7 @@ int RawDataProcess::do_replace_all(DTCJobOperation &job_op, Node *p_node)
 					goto ERROR_PROCESS;
 				}
 
-				/* 尝试次数 */
+				/* number of retry attempts */
 				++try_purge_count;
 				if (p_buffer_pond_->try_purge_size(
 					    (size_t)all_rows_size, *p_node) ==
@@ -786,7 +786,7 @@ int RawDataProcess::do_replace_all(DTCJobOperation &job_op, Node *p_node)
 			if (iRet != EC_NO_MEM)
 				p_node->vd_handle() = raw_data_.get_handle();
 
-			/* 当前行操作成功 */
+			/* current row operation successful */
 			if (0 == iRet)
 				continue;
 		ERROR_PROCESS:
@@ -796,7 +796,7 @@ int RawDataProcess::do_replace_all(DTCJobOperation &job_op, Node *p_node)
 				err_message_, sizeof(err_message_),
 				"raw-data insert row error: ret=%d,err=%.*s, cnt=%d",
 				iRet, (int)available_space, err_msg ? err_msg : "unknown error", try_purge_count);
-			/*标记加入黑名单*/
+			/* mark for adding to blacklist */
 			job_op.push_black_list_size(all_rows_size);
 			p_buffer_pond_->purge_node(job_op.packed_key(),
 						   *p_node);
@@ -873,14 +873,14 @@ int RawDataProcess::do_replace(DTCJobOperation &job_op, Node *p_node,
 	stNewRow.default_value();
 	stpTaskRow = &stNewRow;
 	stpNodeRow = &stNewNodeRow;
-	job_op.update_row(*stpTaskRow); //获取Replace的行
+	job_op.update_row(*stpTaskRow); // get the Replace row
 	if (stpNodeTab != stpTaskTab)
 		stpNodeRow->Copy(stpTaskRow);
 	else
 		stpNodeRow = stpTaskRow;
 
-	RowValue stRow(stpNodeTab); //一行数据
-	for (unsigned int i = 0; i < uiTotalRows; i++) { //逐行拷贝数据
+	RowValue stRow(stpNodeTab); // one row of data
+	for (unsigned int i = 0; i < uiTotalRows; i++) { // copy data row by row
 		if (raw_data_.decode_row(stRow, uchRowFlags, 0) != 0) {
 			log4cplus_error("raw-data decode row error: %d,%s",
 					iRet, raw_data_.get_err_msg());
@@ -906,11 +906,11 @@ int RawDataProcess::do_replace(DTCJobOperation &job_op, Node *p_node,
 
 			ullAffectedrows = 2;
 			iRet = raw_data_.replace_cur_row(*stpNodeRow,
-							 async); // 加进cache
+							 async); // add to cache
 		} else {
 			ullAffectedrows++;
 			iRet = raw_data_.delete_cur_row(
-				*stpNodeRow); // 加进cache
+				*stpNodeRow); // add to cache
 		}
 		if (iRet == EC_NO_MEM) {
 			if (p_buffer_pond_->try_purge_size(
@@ -926,7 +926,7 @@ int RawDataProcess::do_replace(DTCJobOperation &job_op, Node *p_node,
 			snprintf(err_message_, sizeof(err_message_),
 				 "raw-data replace row error: %d, %.*s", iRet,
 				 (int)available_space, err_msg ? err_msg : "unknown error");
-			/*标记加入黑名单*/
+			/* mark for adding to blacklist */
 			job_op.push_black_list_size(raw_data_.need_size());
 			return (-3);
 		}
@@ -936,9 +936,9 @@ int RawDataProcess::do_replace(DTCJobOperation &job_op, Node *p_node,
 			dirty_rows_count_++;
 	}
 
-	if (ullAffectedrows == 0) { // 找不到匹配的行，insert一行
+	if (ullAffectedrows == 0) { // no matching rows found, insert one row
 		iRet = raw_data_.insert_row(*stpNodeRow, false,
-					    async); // 加进cache
+					    async); // add to cache
 		if (iRet == EC_NO_MEM) {
 			if (p_buffer_pond_->try_purge_size(
 				    raw_data_.need_size(), *p_node) == 0)
@@ -954,7 +954,7 @@ int RawDataProcess::do_replace(DTCJobOperation &job_op, Node *p_node,
 			snprintf(err_message_, sizeof(err_message_),
 				 "raw-data replace row error: %d, %.*s", iRet,
 				 (int)available_space, err_msg ? err_msg : "unknown error");
-			/*标记加入黑名单*/
+			/* mark for adding to blacklist */
 			job_op.push_black_list_size(raw_data_.need_size());
 			return (-3);
 		}
@@ -967,7 +967,7 @@ int RawDataProcess::do_replace(DTCJobOperation &job_op, Node *p_node,
 	if (async == true || setrows == true) {
 		job_op.resultInfo.set_affected_rows(ullAffectedrows);
 	} else if (ullAffectedrows != job_op.resultInfo.affected_rows()) {
-		//如果cache更新纪录数和helper更新的纪录数不相等
+		// if the number of records updated by cache is not equal to the number updated by helper
 		log4cplus_debug(
 			"unequal affected rows, cache[%lld], helper[%lld]",
 			(long long)ullAffectedrows,
@@ -989,7 +989,7 @@ int RawDataProcess::do_replace(DTCJobOperation &job_op, Node *p_node,
 }
 
 /*
- * encode到私有内存，防止replace，update引起重新rellocate导致value引用了过期指针
+ * encode to private memory to prevent replace/update from causing reallocation that would make value reference an expired pointer
  */
 int RawDataProcess::encode_to_private_area(RawData &raw, RowValue &value,
 					   unsigned char value_flag)
@@ -1046,7 +1046,7 @@ int RawDataProcess::do_update(DTCJobOperation &job_op, Node *p_node,
 	if (affected_data != NULL)
 		affected_data->set_refrence(&raw_data_);
 
-	RowValue stRow(job_op.table_definition()); //一行数据
+	RowValue stRow(job_op.table_definition()); // one row of data
 
 	stpNodeTab = raw_data_.get_node_table_def();
 	stpTaskTab = job_op.table_definition();
@@ -1057,7 +1057,7 @@ int RawDataProcess::do_update(DTCJobOperation &job_op, Node *p_node,
 	if (stpNodeTab == stpTaskTab)
 		stpNodeRow = stpTaskRow;
 
-	for (unsigned int i = 0; i < uiTotalRows; i++) { //逐行拷贝数据
+	for (unsigned int i = 0; i < uiTotalRows; i++) { // copy data row by row
 		if (raw_data_.decode_row(*stpNodeRow, uchRowFlags, 0) != 0) {
 			log4cplus_error("raw-data decode row error: %d,%s",
 					iRet, raw_data_.get_err_msg());
@@ -1067,11 +1067,11 @@ int RawDataProcess::do_update(DTCJobOperation &job_op, Node *p_node,
 		if (stpNodeTab != stpTaskTab)
 			stpTaskRow->Copy(stpNodeRow);
 
-		//如果不符合查询条件
+		// if query condition is not matched
 		if (job_op.compare_row(*stpTaskRow) == 0)
 			continue;
 
-		job_op.update_row(*stpTaskRow); //修改数据
+		job_op.update_row(*stpTaskRow); // modify data
 		ullAffectedrows++;
 
 		if (stpNodeTab != stpTaskTab)
@@ -1084,7 +1084,7 @@ int RawDataProcess::do_update(DTCJobOperation &job_op, Node *p_node,
 			return (-2);
 		}
 
-		// 在私有区间decode
+		// decode in private area
 		RawData stTmpRows(&g_stSysMalloc, 1);
 		if (encode_to_private_area(stTmpRows, *stpNodeRow,
 					   uchRowFlags)) {
@@ -1094,7 +1094,7 @@ int RawDataProcess::do_update(DTCJobOperation &job_op, Node *p_node,
 		}
 
 		iRet = raw_data_.replace_cur_row(*stpNodeRow,
-						 async); // 加进cache
+						 async); // add to cache
 		if (iRet == EC_NO_MEM) {
 			if (p_buffer_pond_->try_purge_size(
 				    raw_data_.need_size(), *p_node) == 0)
@@ -1109,7 +1109,7 @@ int RawDataProcess::do_update(DTCJobOperation &job_op, Node *p_node,
 			snprintf(err_message_, sizeof(err_message_),
 				 "raw-data replace row error: %d, %.*s", iRet,
 				 (int)available_space, err_msg ? err_msg : "unknown error");
-			/*标记加入黑名单*/
+			/* mark for adding to blacklist */
 			job_op.push_black_list_size(raw_data_.need_size());
 			return (-6);
 		}
@@ -1123,7 +1123,7 @@ int RawDataProcess::do_update(DTCJobOperation &job_op, Node *p_node,
 	if (async == true || setrows == true) {
 		job_op.resultInfo.set_affected_rows(ullAffectedrows);
 	} else if (ullAffectedrows != job_op.resultInfo.affected_rows()) {
-		//如果cache更新纪录数和helper更新的纪录数不相等
+		// if the number of records updated by cache is not equal to the number updated by helper
 		log4cplus_debug(
 			"unequal affected rows, cache[%lld], helper[%lld]",
 			(long long)ullAffectedrows,
@@ -1165,12 +1165,12 @@ int RawDataProcess::do_flush(DTCFlushRequest *flush_req, Node *p_node,
 	affected_count = 0;
 	DTCValue astKey[p_table_->key_fields()];
 	TaskPackedKey::unpack_key(p_table_, raw_data_.key(), astKey);
-	RowValue stRow(p_table_); //一行数据
+	RowValue stRow(p_table_); // one row of data
 	for (int i = 0; i < p_table_->key_fields(); i++)
 		stRow[i] = astKey[i];
 
 	for (unsigned int i = 0; p_node->is_dirty() && i < uiTotalRows;
-	     i++) { //逐行拷贝数据
+	     i++) { // copy data row by row
 		if (raw_data_.decode_row(stRow, uchRowFlags, 0) != 0) {
 			log4cplus_error("raw-data decode row error: %d,%s",
 					iRet, raw_data_.get_err_msg());

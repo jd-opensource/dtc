@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -100,7 +100,7 @@ void SystemCommandAskChain::job_ask_procedure(DTCJobOperation *job_operation)
 	log4cplus_debug("Cmd is %d, AdminCmd is %u",
 			job_operation->request_code(),
 			job_operation->requestInfo.admin_code());
-	//处理ServerAdmin命令
+	//Handle ServerAdmin commands
 	if (DRequest::TYPE_SYSTEM_COMMAND == job_operation->request_code()) {
 		switch (job_operation->requestInfo.admin_code()) {
 		case DRequest::SystemCommand::SET_READONLY:
@@ -120,7 +120,7 @@ void SystemCommandAskChain::job_ask_procedure(DTCJobOperation *job_operation)
 		}
 	}
 
-	//当server为readonly，对非查询请求直接返回错误
+	//When server is readonly, directly return error for non-query requests
 	if (0 != atomic8_read(&read_only_)) {
 		if (DRequest::Get != job_operation->request_code()) {
 			log4cplus_info(

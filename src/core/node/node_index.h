@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -29,13 +29,13 @@ DTC_BEGIN_NAMESPACE
 	(((1UL << 16) * sizeof(MEM_HANDLE_T)) +                                \
 	 sizeof(SECOND_INDEX_T)) // second-index size
 
-#define OFFSET1(id) ((id) >> 24) //高8位，一级index
-#define OFFSET2(id) (((id)&0xFFFF00) >> 8) //中间16位，二级index
-#define OFFSET3(id) ((id)&0xFF) //低8位
+#define OFFSET1(id) ((id) >> 24) // High 8 bits, first-level index
+#define OFFSET2(id) (((id)&0xFFFF00) >> 8) // Middle 16 bits, second-level index
+#define OFFSET3(id) ((id)&0xFF) // Low 8 bits
 
 struct first_index {
-	uint32_t fi_used; //一级index使用个数
-	MEM_HANDLE_T fi_h[0]; //存放二级index的handle
+	uint32_t fi_used; // Number of first-level index entries used
+	MEM_HANDLE_T fi_h[0]; // Handles for storing second-level index
 };
 typedef struct first_index FIRST_INDEX_T;
 
@@ -67,7 +67,7 @@ class NodeIndex {
 	{
 		return errmsg_;
 	}
-	///* 内存区块操作函数 */
+	///* Memory block operation functions */
 	int do_init(size_t mem_size);
 	int do_attach(MEM_HANDLE_T handle);
 	int do_detach(void);

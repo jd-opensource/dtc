@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -32,14 +32,14 @@ enum attr_type {
 };
 typedef enum attr_type ATTR_TYPE_T;
 
-//nodeset释放掉的node链表
+// Node list freed by nodeset
 struct ng_delete {
 	uint16_t top;
 	uint16_t count;
 };
 typedef struct ng_delete NG_DELE_T;
 
-//nodeset属性
+// Nodeset attributes
 struct ng_attr {
 	uint32_t count;
 	uint32_t offset[0];
@@ -52,43 +52,43 @@ struct node_set {
 	NG_LIST_T ng_list;
 	NG_DELE_T ng_dele;
 	uint16_t ng_free;
-	uint8_t ng_rsv[2]; //保留空间
+	uint8_t ng_rsv[2]; // Reserved space
 	NODE_ID_T ng_nid;
 	NG_ATTR_T ng_attr;
 
     private:
-	Node allocate_node(void); // 分配一个Node
-	int release_node(Node); // 释放一个Node
-	bool is_full(void); // NodeGroup是否已经分配完
-	int do_init(NODE_ID_T id); // NodeGroup初始化
-	int system_reserved_init(); // 系统保留的NG初始化
+	Node allocate_node(void); // Allocate a Node
+	int release_node(Node); // Release a Node
+	bool is_full(void); // Whether NodeGroup is fully allocated
+	int do_init(NODE_ID_T id); // NodeGroup initialization
+	int system_reserved_init(); // System reserved NG initialization
 	// this routine return:
 	//    0,  passed, empty lru present
 	//    1,  passed, empty lru created
 	//    <0, integrity error
-	int system_reserved_check(); // 系统保留的NG一致性检查
-	static uint32_t Size(void); // 返回nodegroup的总大小
+	int system_reserved_check(); // System reserved NG consistency check
+	static uint32_t Size(void); // Return total size of nodegroup
 
     private:
-	//属性操作接口，供CNode访问
+	// Attribute operation interface for CNode access
 	NODE_ID_T node_id(int idx) const;
-	NODE_ID_T &next_node_id(int idx); // attr1]   -> 下一个Node的NodeID
-	NODE_ID_T *node_lru(int idx); // attr[2]   -> LRU链表
-	MEM_HANDLE_T &vd_handle(int idx); // attr[3]   -> 数据handle
-	bool is_dirty(int idx); // attr[4]   -> 脏位图
+	NODE_ID_T &next_node_id(int idx); // attr1]   -> NodeID of next Node
+	NODE_ID_T *node_lru(int idx); // attr[2]   -> LRU list
+	MEM_HANDLE_T &vd_handle(int idx); // attr[3]   -> Data handle
+	bool is_dirty(int idx); // attr[4]   -> Dirty bitmap
 	void set_dirty(int idx);
 	void clr_dirty(int idx);
 
-	//返回每种属性块的起始地址
+	// Return start address of each attribute block
 	template <class T> T *__CAST__(ATTR_TYPE_T t)
 	{
 		return (T *)((char *)this + ng_attr.offset[t]);
 	}
 
     private:
-	static uint32_t attr_count(void); // 支持的属性个数
-	static uint32_t attr_size(void); // 所有属性的内存大小
-	static uint32_t base_header_size(void); // 除开属性外，Nodegroup的大小
+	static uint32_t attr_count(void); // Number of supported attributes
+	static uint32_t attr_size(void); // Memory size of all attributes
+	static uint32_t base_header_size(void); // Size of Nodegroup excluding attributes
 	static const uint32_t NG_ATTR_SIZE[];
 
 	friend class Node;

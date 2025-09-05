@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -27,10 +27,10 @@
 #include "table/table_def.h"
 
 typedef enum _TreeCheckResult {
-	CHK_CONTINUE, // 继续访问这棵子树
-	CHK_SKIP, // 忽略这棵子树，继续访问其他节点
-	CHK_STOP, // 终止访问循环
-	CHK_DESTROY // 销毁这棵子树
+	CHK_CONTINUE, // Continue visiting this subtree
+	CHK_SKIP, // Skip this subtree, continue visiting other nodes
+	CHK_STOP, // Terminate visit loop
+	CHK_DESTROY // Destroy this subtree
 } TreeCheckResult;
 
 #define TTREE_INDEX_POS 1
@@ -52,15 +52,15 @@ typedef int (TreeData::*SubRowProcess)(DTCJobOperation &job_op,
 class DTCFlushRequest;
 
 /************************************************************
-  Description:    t-tree根节点的数据结构
+  Description:    Data structure of t-tree root node
   Version:         DTC 3.0
 ***********************************************************/
 struct _RootData {
 	unsigned char data_type_;
 	uint32_t tree_size_;
-	uint32_t total_raw_size_; //所有RawData总和，不包含Header
-	uint32_t node_count_; //索引T树中Node总计个数
-	uint32_t row_count_; //索引T树中总计行数
+	uint32_t total_raw_size_; // Sum of all RawData, excluding Header
+	uint32_t node_count_; // Total number of Nodes in index T-tree
+	uint32_t row_count_; // Total number of rows in index T-tree
 	uint8_t get_request_count_;
 	uint16_t latest_request_time_;
 	uint16_t latest_update_time_;
@@ -84,9 +84,9 @@ typedef struct _CmpCookie {
 
 typedef struct _pCookie {
 	MEM_HANDLE_T *p_handle;
-	uint32_t has_got_node_count; //已经遍历到的节点个数
-	uint32_t need_find_node_count; //需要遍历的节点个数，0代表不限
-	uint32_t has_got_row_count; //已经遍历到的数据行数
+	uint32_t has_got_node_count; // Number of nodes traversed
+	uint32_t need_find_node_count; // Number of nodes to traverse, 0 means unlimited
+	uint32_t has_got_row_count; // Number of data rows traversed
 	_pCookie()
 		: p_handle(NULL), has_got_node_count(0),
 		  need_find_node_count(0), has_got_row_count(0)
@@ -95,17 +95,17 @@ typedef struct _pCookie {
 } pResCookie;
 
 typedef enum _CondType {
-	COND_VAL_SET, // 查询特定的值列表
-	COND_RANGE, // 查询value[0] ~ Key-value[0]<=value[1].s64
-	COND_GE, // 查询大于等于value[0]的key
-	COND_LE, // 查询小于等于value[0]的key
-	COND_ALL // 遍历所有key
+	COND_VAL_SET, // Query specific value list
+	COND_RANGE, // Query value[0] ~ Key-value[0]<=value[1].s64
+	COND_GE, // Query keys greater than or equal to value[0]
+	COND_LE, // Query keys less than or equal to value[0]
+	COND_ALL // Traverse all keys
 } CondType;
 
 typedef enum _Order {
-	ORDER_ASC, // 升序
-	ORDER_DEC, // 降序
-	ORDER_POS, // 后序访问
+	ORDER_ASC, // Ascending order
+	ORDER_DEC, // Descending order
+	ORDER_POS, // Post-order access
 } Order;
 
 typedef struct {
@@ -117,14 +117,14 @@ typedef struct {
 
 class TreeData {
     private:
-	RootData *p_tree_root_; // 注意：地址可能会因为realloc而改变
+	RootData *p_tree_root_; // Note: address may change due to realloc
 	Ttree t_tree_;
 	DTCTableDefinition *p_table_;
 	uint8_t index_depth_;
 	int table_index_;
 	char err_message_[4096];
 
-	ALLOC_SIZE_T need_new_bufer_size; // 最近一次分配内存失败需要的大小
+	ALLOC_SIZE_T need_new_bufer_size; // Size needed for the most recent memory allocation failure
 	uint64_t affected_rows_;
 
 	MEM_HANDLE_T handle_;
@@ -151,7 +151,7 @@ class TreeData {
 	MEM_HANDLE_T p_record_;
 
 	/************************************************************
-	  Description:    递归查找数据的cookie参数
+	  Description:    Cookie parameters for recursive data search
 	  Version:         DTC 3.0
 	***********************************************************/
 	typedef struct {
@@ -253,12 +253,12 @@ class TreeData {
 	}
 
 	/*************************************************
-	  Description:	新分配一块内存，并初始化
-	  Input:		 iKeySize	key的格式，0为变长，非0为定长长度
-				pchKey	为格式化后的key，变长key的第0字节为长度
+	  Description:	Allocate new memory block and initialize
+	  Input:		 iKeySize	Key format, 0 for variable length, non-zero for fixed length
+				pchKey	Formatted key, byte 0 of variable length key is the length
 	  Output:		
-	  Return:		0为成功，非0失败
-	*************************************************/
+	  Return:		0 on success, non-zero on failure
+	**************************************************/
 	int do_init(int iKeySize, const char *pchKey);
 	int do_init(uint8_t uchKeyIdx, int iKeySize, const char *pchKey,
 		    int laId = -1, int expireId = -1, int nodeIdx = -1);
@@ -287,103 +287,103 @@ class TreeData {
 	}
 
 	/*************************************************
-	  Description:	最近一次分配内存失败所需要的内存大小
+	  Description:	Memory size needed for the most recent memory allocation failure
 	  Input:		
 	  Output:		
-	  Return:		返回所需要的内存大小
-	*************************************************/
+	  Return:		Returns the required memory size
+	**************************************************/
 	ALLOC_SIZE_T need_size()
 	{
 		return need_new_bufer_size;
 	}
 
 	/*************************************************
-	  Description:	销毁uchLevel以及以下级别的子树
-	  Input:		uchLevel	销毁uchLevel以及以下级别的子树，显然uchLevel应该在1到uchIndexDepth之间
+	  Description:	Destroy subtrees at uchLevel and below
+	  Input:		uchLevel	Destroy subtrees at uchLevel and below, obviously uchLevel should be between 1 and uchIndexDepth
 	  Output:		
-	  Return:		0为成功，非0失败
-	*************************************************/
+	  Return:		0 on success, non-zero on failure
+	**************************************************/
 	//	int destory(uint8_t uchLevel=1);
 	int destory();
 
 	/*************************************************
-	  Description:	插入一行数据
-	  Input:		stRow	包含index字段以及后面字段的值
-				pfComp	用户自定义的key比较函数
-				uchFlag	行标记
+	  Description:	Insert a row of data
+	  Input:		stRow	Values of index fields and subsequent fields
+				pfComp	User-defined key comparison function
+				uchFlag	Row flag
 	  Output:		
-	  Return:		0为成功，非0失败
-	*************************************************/
+	  Return:		0 on success, non-zero on failure
+	**************************************************/
 	int insert_row_flag(const RowValue &stRow, KeyComparator pfComp,
 			    unsigned char uchFlag);
 
 	/*************************************************
-	  Description:	插入一行数据
-	  Input:		stRow	包含index字段以及后面字段的值
-				pfComp	用户自定义的key比较函数
-				isDirty	是否脏数据
+	  Description:	Insert a row of data
+	  Input:		stRow	Values of index fields and subsequent fields
+				pfComp	User-defined key comparison function
+				isDirty	Whether it's dirty data
 	  Output:		
-	  Return:		0为成功，非0失败
-	*************************************************/
+	  Return:		0 on success, non-zero on failure
+	**************************************************/
 	int insert_row(const RowValue &stRow, KeyComparator pfComp,
 		       bool isDirty);
 
 	/*************************************************
-	  Description:	查找一行数据
-	  Input:		stCondition	包含各级index字段的值
-				pfComp	用户自定义的key比较函数
+	  Description:	Find a row of data
+	  Input:		stCondition	Values of index fields at all levels
+				pfComp	User-defined key comparison function
 				
-	  Output:		hRecord	查找到的一个指向CRawData的句柄
-	  Return:		0为找不到，1为找到数据
-	*************************************************/
+	  Output:		hRecord	Handle pointing to found CRawData
+	  Return:		0 if not found, 1 if data is found
+	**************************************************/
 	int do_find(const RowValue &stCondition, KeyComparator pfComp,
 		    ALLOC_HANDLE_T &hRecord);
 
 	/*************************************************
-	  Description:	按索引条件查找
-	  Input:		pstCond	一个数组，而且大小刚好是uchIndexDepth
-				pfComp	用户自定义的key比较函数
-				pfVisit	当查找到记录时，用户自定义的访问数据函数
-				pCookie	访问数据函数使用的cookie参数
+	  Description:	Search by index condition
+	  Input:		pstCond	An array with size exactly equal to uchIndexDepth
+				pfComp	User-defined key comparison function
+				pfVisit	User-defined data access function when record is found
+				pCookie	Cookie parameter used by the data access function
 	  Output:		
-	  Return:		0为成功，其他值为错误
-	*************************************************/
+	  Return:		0 on success, other values indicate error
+	**************************************************/
 	int do_search(const TtreeCondition *pstCond, KeyComparator pfComp,
 		      VisitRawData pfVisit, CheckTreeFunc pfCheck,
 		      void *pCookie);
 
 	/*************************************************
-	  Description:	从小到大遍历所有数据
-	  Input:		pfComp	用户自定义的key比较函数
-				pfVisit	当查找到记录时，用户自定义的访问数据函数
-				pCookie	访问数据函数使用的cookie参数
+	  Description:	Traverse all data from small to large
+	  Input:		pfComp	User-defined key comparison function
+				pfVisit	User-defined data access function when record is found
+				pCookie	Cookie parameter used by the data access function
 	  Output:		
-	  Return:		0为成功，其他值为错误
-	*************************************************/
+	  Return:		0 on success, other values indicate error
+	**************************************************/
 	int traverse_forward(KeyComparator pfComp, VisitRawData pfVisit,
 			     void *pCookie);
 
 	/*************************************************
-	  Description:	根据指定的index值，删除符合条件的所有行（包括子树）
-	  Input:		uchCondIdxCnt	条件index的数量
-				stCondition		包含各级index字段的值
-				pfComp		用户自定义的key比较函数
+	  Description:	Delete all rows matching conditions based on specified index values (including subtrees)
+	  Input:		uchCondIdxCnt	Number of condition indexes
+				stCondition		Values of index fields at all levels
+				pfComp		User-defined key comparison function
 				
 	  Output:		
-	  Return:		0为成功，其他值为错误
-	*************************************************/
+	  Return:		0 on success, other values indicate error
+	**************************************************/
 	int delete_sub_row(uint8_t uchCondIdxCnt, const RowValue &stCondition,
 			   KeyComparator pfComp);
 
 	/*************************************************
-	  Description:	将某个级别的index值修改为另外一个值
-	  Input:		uchCondIdxCnt	条件index的数量
-				stCondition		包含各级index字段的值
-				pfComp		用户自定义的key比较函数
-				pstNewValue	对应最后一个条件字段的新index值
+	  Description:	Modify index value at a certain level to another value
+	  Input:		uchCondIdxCnt	Number of condition indexes
+				stCondition		Values of index fields at all levels
+				pfComp		User-defined key comparison function
+				pstNewValue	New index value for the last condition field
 	  Output:		
-	  Return:		0为成功，其他值为错误
-	*************************************************/
+	  Return:		0 on success, other values indicate error
+	**************************************************/
 	int update_index(uint8_t uchCondIdxCnt, const RowValue &stCondition,
 			 KeyComparator pfComp, const DTCValue *pstNewValue);
 	unsigned ask_for_destroy_size(void);
@@ -457,38 +457,38 @@ class TreeData {
 	int delete_tree_data(DTCJobOperation &job_op);
 
 	/*************************************************
-	  Description:	获得T树中的Raw类型的每一行的数据
+	  Description:	Get data from each row of Raw type in T-tree
 	  Output:		
-	*************************************************/
+	**************************************************/
 	int get_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord);
 
 	/*************************************************
-	  Description:	删除T树中的Raw类型的行的数据
+	  Description:	Delete data from Raw type rows in T-tree
 	  Output:		
-	*************************************************/
+	**************************************************/
 	int delete_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord);
 
 	/*************************************************
-	  Description:	修改T树中的Raw类型的行的数据
+	  Description:	Modify data from Raw type rows in T-tree
 	  Output:		
-	*************************************************/
+	**************************************************/
 	int update_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord);
 
 	/*************************************************
-	  Description:	替换T树中的Raw类型的行的数据，如没有此行则创建
+	  Description:	Replace data from Raw type rows in T-tree, create if row doesn't exist
 	  Output:		
-	*************************************************/
+	**************************************************/
 	int replace_sub_raw_data(DTCJobOperation &job_op, MEM_HANDLE_T hRecord);
 
 	/*************************************************
-	  Description:	处理T树中平板类型业务
+	  Description:	Process flat type operations in T-tree
 	  Output:		
 	*************************************************/
 	int get_sub_raw(DTCJobOperation &job_op, unsigned int nodeCnt,
 			bool isAsc, SubRowProcess subRowProc);
 
 	/*************************************************
-	  Description:	匹配索引
+	  Description:	Match index condition
 	  Output:		
 	*************************************************/
 	int match_index_condition(DTCJobOperation &job_op, unsigned int rowCnt,
@@ -522,27 +522,27 @@ class TreeData {
 	int get_expire_time(DTCTableDefinition *t, uint32_t &expire);
 
 	/*************************************************
-	  Description:	替换当前行
-	  Input:		stRow	仅使用row的字段类型等信息，不需要实际数据
+	  Description:	Replace current row
+	  Input:		stRow	Only uses row field type info, no actual data needed
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 on success, non-zero on failure
 	*************************************************/
 	int replace_cur_row(const RowValue &stRow, bool isDirty,
 			    MEM_HANDLE_T *hRecord);
 
 	/*************************************************
-	  Description:	删除当前行
-	  Input:		stRow	仅使用row的字段类型等信息，不需要实际数据
+	  Description:	Delete current row
+	  Input:		stRow	Only uses row field type info, no actual data needed
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 on success, non-zero on failure
 	*************************************************/
 	int delete_cur_row(const RowValue &stRow);
 
 	/*************************************************
-	  Description:	调到下一行
-	  Input:		stRow	仅使用row的字段类型等信息，不需要实际数据
-	  Output:		m_uiOffset会指向下一行数据的偏移
-	  Return:		0为成功，非0失败
+	  Description:	Skip to next row
+	  Input:		stRow	Only uses row field type info, no actual data needed
+	  Output:		m_uiOffset will point to next row data offset
+	  Return:		0 on success, non-zero on failure
 	*************************************************/
 	int skip_row(const RowValue &stRow);
 
@@ -556,10 +556,10 @@ class TreeData {
 	}
 
 	/*************************************************
-	  Description:	查询本次操作增加的行数（可以为负数）
+	  Description:	Query number of rows added by this operation (can be negative)
 	  Input:		
 	  Output:		
-	  Return:		行数
+	  Return:		Number of rows
 	*************************************************/
 	int64_t get_increase_row_count()
 	{

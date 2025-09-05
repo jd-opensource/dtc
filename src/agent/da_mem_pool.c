@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ struct pool_head *create_pool(char *name, unsigned int size, unsigned int flags)
 	struct pool_head *start;
 	unsigned int align;
 
-	//16字节对齐
+	//16-byte alignment
 	align = 16;
 	size = (size + align - 1) & -align;
 
@@ -117,7 +117,7 @@ void pool_gc() {
 	static int recurse;
 	struct pool_head *entry;
 
-	//预防重复调用
+	//Prevent duplicate calls
 	if (recurse++)
 		goto out;
 

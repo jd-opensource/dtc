@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -69,12 +69,12 @@ static Logger logger = Logger::getRoot();
 #define LOG4CPLUS_CONF_FILE "../conf/log4cplus.conf"
 
 /*********************************************
-**TRACE：调试应用的详细步骤
-**DEBUG：算法关键部分的相关信息
-**INFO： 应用的内部状态信息
-**WARN： 可以避免的内部状态信息
-**ERROR：发生了错误，且应用程序知道如何处理它
-**FATAL：发生了不可逆转的错误，程序无法继续运行
+**TRACE: Detailed steps for debugging applications
+**DEBUG: Information about key parts of algorithms  
+**INFO:  Internal status information of applications
+**WARN:  Avoidable internal status information
+**ERROR: An error occurred and the application knows how to handle it
+**FATAL: An irreversible error occurred, the program cannot continue running
  **********************************************/
 #define log4cplus_trace(fmt, args...)                                          \
 	write_log(logger, 1, __FILE__, __FUNCTION__, __LINE__, fmt, ##args)

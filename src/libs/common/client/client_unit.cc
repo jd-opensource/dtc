@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -101,7 +101,7 @@ int DTCDecoderUnit::process_stream(int newfd, int req, void *peer, int peerSize)
 			return -1;
 		}
 
-		/* accept唤醒后立即recv */
+		/* Immediately recv after accept wakeup */
 		cli->input_notify();
 	} else {
 		ClientAsync *cli =
@@ -120,7 +120,7 @@ int DTCDecoderUnit::process_stream(int newfd, int req, void *peer, int peerSize)
 			return -1;
 		}
 
-		/* accept唤醒后立即recv */
+		/* Immediately recv after accept wakeup */
 		cli->input_notify();
 	}
 	return 0;

@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ TaskPendingList::~TaskPendingList()
 {
 	std::list<slot_t>::iterator it;
 	for (it = _pendlist.begin(); it != _pendlist.end(); ++it) {
-		//把所有请求踢回客户端
+		//Return all requests back to clients
 		it->first->set_error(-ETIMEDOUT, __FUNCTION__,
 				     "object deconstruct");
 		it->first->turn_around_job_answer();
@@ -49,12 +49,12 @@ void TaskPendingList::add2_list(DTCJobOperation *job)
 	return;
 }
 
-// 唤醒队列中所有已经pending的task
+// Wake up all tasks that are already pending in the queue
 void TaskPendingList::Wakeup(void)
 {
 	log4cplus_debug("TaskPendingList Wakeup");
 
-	//唤醒所有task
+	//Wake up all tasks
 	_wakeup = 1;
 
 	attach_ready_timer(_owner->owner);
@@ -79,7 +79,7 @@ void TaskPendingList::job_timer_procedure(void)
 		time_t now = time(NULL);
 
 		for (it = copy.begin(); it != copy.end(); ++it) {
-			//超时处理
+			//Timeout handling
 			if (it->second + _timeout >= now) {
 				_pendlist.push_back(*it);
 			} else {

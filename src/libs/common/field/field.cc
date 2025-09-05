@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -378,16 +378,16 @@ int RowValue::Compare(const RowValue &rv, uint8_t *fieldIDList, uint8_t num) con
 			    rv.field_value(fieldIDList[i])->u64)
 				return -1;
 			break;
-		case DField::Float: //浮点数
-			//浮点数不允许比较
+		case DField::Float: //floating point number
+			//floating point numbers not allowed for comparison
 			return -2;
 			break;
-		case DField::String: //字符串
+		case DField::String: //string
 			if (!string_equal(value[fieldIDList[i]],
 					  *(rv.field_value(fieldIDList[i]))))
 				return -1;
 			break;
-		case DField::Binary: //二进制数据
+		case DField::Binary: //binary data
 			if (!binary_equal(value[fieldIDList[i]],
 					  *(rv.field_value(fieldIDList[i]))))
 				return -1;

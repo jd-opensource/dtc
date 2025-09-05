@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -50,8 +50,8 @@ class LogBase {
 	int _fd;
 
     private:
-	char _path[MAX_PATH_NAME_LEN]; //日志集所在目录
-	char _prefix[MAX_PATH_NAME_LEN]; //日志集的文件前缀
+	char _path[MAX_PATH_NAME_LEN]; //Directory where log set is located
+	char _prefix[MAX_PATH_NAME_LEN]; //File prefix of log set
 };
 
 class LogWriter : public LogBase {
@@ -69,11 +69,11 @@ class LogWriter : public LogBase {
 	int shift_file();
 
     private:
-	off_t _cur_size; //当前日志文件的大小
-	off_t _max_size; //单个日志文件允许的最大大小
-	uint64_t _total_size; //日志集允许的最大大小
-	uint32_t _cur_max_serial; //当前日志文件最大编号
-	uint32_t _cur_min_serial; //当前日志文件最大编号
+	off_t _cur_size; //Current log file size
+	off_t _max_size; //Maximum size allowed for single log file
+	uint64_t _total_size; //Maximum size allowed for log set
+	uint32_t _cur_max_serial; //Current log file maximum serial number
+	uint32_t _cur_min_serial; //Current log file minimum serial number
 };
 
 class LogReader : public LogBase {
@@ -92,10 +92,10 @@ class LogReader : public LogBase {
 	void refresh();
 
     private:
-	uint32_t _min_serial; //日志集的最小文件编号
-	uint32_t _max_serial; //日志集的最大文件编号
-	uint32_t _cur_serial; //当前日志文件编号
-	off_t _cur_offset; //当前日志文件偏移量
+	uint32_t _min_serial; //Minimum file serial number of log set
+	uint32_t _max_serial; //Maximum file serial number of log set
+	uint32_t _cur_serial; //Current log file serial number
+	off_t _cur_offset; //Current log file offset
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -103,13 +103,13 @@ class LogReader : public LogBase {
  * generic binlog header
  */
 typedef struct binlog_header {
-	uint32_t length; //长度
-	uint8_t version; //版本
-	uint8_t type; //类型: bitmap, dtc, other
-	uint8_t operater; //操作: insert,select,upate ...
-	uint8_t reserve[5]; //保留
-	uint32_t timestamp; //时间戳
-	uint32_t recordcount; //子记录个数
+	uint32_t length; //Length
+	uint8_t version; //Version
+	uint8_t type; //Type: bitmap, dtc, other
+	uint8_t operater; //Operation: insert, select, update ...
+	uint8_t reserve[5]; //Reserved
+	uint32_t timestamp; //Timestamp
+	uint32_t recordcount; //Number of sub-records
 	uint8_t endof[0];
 } __attribute__((__aligned__(1))) binlog_header_t;
 
@@ -128,8 +128,8 @@ typedef enum binlog_type {
 /*
  * binlog class 
  */
-#define BINLOG_MAX_SIZE (100 * (1U << 20)) //100M,  默认单个日志文件大小
-#define BINLOG_MAX_TOTAL_SIZE (3ULL << 30) //3G，  默认最大日志文件编号
+#define BINLOG_MAX_SIZE (100 * (1U << 20)) //100M, default single log file size
+#define BINLOG_MAX_TOTAL_SIZE (3ULL << 30) //3G, default maximum log file serial number
 #define BINLOG_DEFAULT_VERSION 0x02
 
 class BinlogWriter {
@@ -152,15 +152,15 @@ class BinlogWriter {
 	BinlogWriter(const BinlogWriter &);
 
     private:
-	LogWriter _log_writer; //写者
-	buffer _codec_buffer; //编码缓冲区
+	LogWriter _log_writer; //Writer
+	buffer _codec_buffer; //Encoding buffer
 };
 
 class BinlogReader {
     public:
 	int init(const char *path, const char *prefix);
 
-	int Read(); //顺序读，每次读出一条binlog记录
+	int Read(); //Sequential read, read one binlog record each time
 	int Seek(const JournalID &);
 	JournalID query_id();
 
@@ -179,8 +179,8 @@ class BinlogReader {
 	BinlogReader(const BinlogReader &);
 
     private:
-	LogReader _log_reader; //读者
-	buffer _codec_buffer; //编码缓冲区
+	LogReader _log_reader; //Reader
+	buffer _codec_buffer; //Encoding buffer
 };
 
 #endif

@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -67,11 +67,11 @@ class Feature {
 			const uint32_t attr = 0);
 	FEATURE_INFO_T *get_feature_by_id(const uint32_t id);
 
-	//创建物理内存并格式化
+	//Create physical memory and format
 	int do_init(const uint32_t num = MIN_FEATURES);
-	//绑定到物理内存
+	//Bind to physical memory
 	int do_attach(MEM_HANDLE_T handle);
-	//脱离物理内存
+	//Detach from physical memory
 	int do_detach(void);
 
     public:

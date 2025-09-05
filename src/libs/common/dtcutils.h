@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -24,13 +24,13 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 
-/*此文件放置dtc的工具函数*/
+/*This file contains dtc utility functions*/
 namespace dtc
 {
 namespace utils
 {
 /*************************************************
-		获取本机的ip tomchen
+		Get local IP tomchen
 		**************************************************/
 inline std::string get_local_ip()
 {
@@ -62,7 +62,7 @@ inline std::string get_local_ip()
 	return inet_ntoa(stINETAddrLocal.sin_addr);
 }
 /*************************************************
-		切割字符串strOri, 以_Ch为分隔符，结果为theVec
+		Split string strOri using _Ch as delimiter, result stored in theVec
 		**************************************************/
 inline void split_str(std::string strOri, char _Ch,
 		      std::vector<std::string> &theVec)

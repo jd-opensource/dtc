@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@
 
 DTC_BEGIN_NAMESPACE
 
-/* high-level 层支持的cache种类*/
+/* Cache types supported by high-level layer */
 enum MEM_CACHE_TYPE_T {
 	MEM_DTC_TYPE = 0x1UL,
 	MEM_BMP_TYPE = 0x2UL,
 };
 
-/* high-level 层cache的签名、版本、类型等*/
+/* Signature, version, type, etc. of high-level cache */
 #define MEM_CACHE_SIGN 0xFF00FF00FF00FF00ULL
 #define MEM_CACHE_VERSION 0x1ULL
 #define MEM_CACHE_TYPE MEM_DTC_TYPE
@@ -44,8 +44,8 @@ struct cache_info {
 };
 typedef struct cache_info CACHE_INFO_T;
 
-/* Low-Level预留了4k的空间，供后续扩展 */
-/* TODO: 增加更加细致的逻辑判断*/
+/* Low-Level reserves 4k space for future expansion */
+/* TODO: Add more detailed logic judgment */
 struct app_storage {
 	CACHE_INFO_T as_cache_info;
 	MEM_HANDLE_T as_extend_info;
@@ -69,12 +69,12 @@ struct app_storage {
 typedef struct app_storage APP_STORAGE_T;
 
 struct ng_info {
-	NG_LIST_T ni_free_head; //有空闲Node的NG链表
-	NG_LIST_T ni_full_head; //Node分配完的NG链表
-	NODE_ID_T ni_min_id; //下一个被分配NG的起始NodeId
-	MEM_HANDLE_T ni_sys_zone; //第一个NG为系统保留
+	NG_LIST_T ni_free_head; // NG linked list with free Nodes
+	NG_LIST_T ni_full_head; // NG linked list with all Nodes allocated
+	NODE_ID_T ni_min_id; // Starting NodeId of the next allocated NG
+	MEM_HANDLE_T ni_sys_zone; // First NG is reserved for system
 
-	/*以下为统计值，用来控制异步flush的起停，速度等*/
+	/* The following are statistics used to control asynchronous flush start/stop, speed, etc. */
 	uint32_t ni_used_ng;
 	uint32_t ni_used_node;
 	uint32_t ni_dirty_node;
@@ -97,8 +97,8 @@ class NGInfo {
 		Singleton<NGInfo>::destory();
 	}
 
-	Node allocate_node(void); //分配一个新Node
-	int release_node(Node &); //归还CNode到所属的NG并摧毁自己
+	Node allocate_node(void); // Allocate a new Node
+	int release_node(Node &); // Return CNode to its owning NG and destroy itself
 
 	/*statistic, for async flush */
 	void inc_dirty_node(int v)
@@ -144,14 +144,14 @@ class NGInfo {
 	Node clean_node_head();
 	Node empty_node_head();
 
-	/* 获取最小可用的NodeID */
+	/* Get the minimum available NodeID */
 	NODE_ID_T get_min_valid_node_id() const
 	{
 		return (NODE_ID_T)256;
 	}
 
-	/* 获取目前分配的最大NodeID */
-	/* 由于目前node-group大小固定，而且分配后不会释放，因此可以直接通过已用的node-group算出来 */
+	/* Get the currently allocated maximum NodeID */
+	/* Since the current node-group size is fixed and will not be released after allocation, it can be calculated directly through the used node-group */
 	NODE_ID_T max_node_id() const
 	{
 		return nodegroup_info_->ni_used_ng * 256 - 1;
@@ -184,11 +184,11 @@ class NGInfo {
 		return errmsg_;
 	}
 
-	//创建物理内存并格式化
+	// Create physical memory and format
 	int do_init(void);
-	//绑定到物理内存
+	// Bind to physical memory
 	int do_attach(MEM_HANDLE_T handle);
-	//脱离物理内存
+	// Detach from physical memory
 	int do_detach(void);
 
     protected:

@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ class BinlogReader;
 
 class HBLog {
     public:
-	//传入编解码的表结构
+	//Pass in table structure for encoding/decoding
 	HBLog(DTCTableDefinition *tbl);
 	~HBLog();
 
@@ -42,13 +42,13 @@ class HBLog {
 	JournalID get_reader_jid(void);
 	JournalID get_writer_jid(void);
 
-	//不带value，只写更新key
+	//Without value, only write update key
 	int write_update_key(DTCValue key, int type);
 
-	//将多条log记录编码进TaskReqeust
+	//Encode multiple log records into TaskRequest
 	int task_append_all_rows(DTCJobOperation &, int limit);
 
-	//提供给LRUBitUnit来记录lru变更
+	//Provide to LRUBitUnit to record lru changes
 	int write_lru_hb_log(DTCJobOperation &job);
 	int write_update_log(DTCJobOperation &job);
 	int write_update_key(DTCValue key, DTCValue v, int type);

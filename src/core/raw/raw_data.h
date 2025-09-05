@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -27,9 +27,9 @@
 #define PRE_DECODE_ROW 1
 
 typedef enum _EnumDataType {
-	DATA_TYPE_RAW, // 平板数据结构
-	DATA_TYPE_TREE_ROOT, // 树的根节点
-	DATA_TYPE_TREE_NODE // 树的节点
+	DATA_TYPE_RAW, // flat data structure
+	DATA_TYPE_TREE_ROOT, // tree root node
+	DATA_TYPE_TREE_NODE // tree node
 } EnumDataType;
 
 typedef enum _enum_oper_type_ {
@@ -45,22 +45,22 @@ typedef enum _enum_oper_type_ {
 } TOperType;
 
 struct RawFormat {
-	unsigned char data_type_; // 数据类型EnumDataType
-	uint32_t data_size_; // 数据总大小
-	uint32_t row_count_; // 行数
-	uint8_t get_request_count_; // get次数
-	uint16_t latest_request_time_; // 最近访问时间
-	uint16_t latest_update_time_; // 最近更新时间
-	uint16_t create_time_; // 创建时间
-	char p_key_[0]; // key
-	char p_rows_data_[0]; // 行数据
+	unsigned char data_type_; // Data type EnumDataType
+	uint32_t data_size_; // Total data size
+	uint32_t row_count_; // Number of rows
+	uint8_t get_request_count_; // Get request count
+	uint16_t latest_request_time_; // Latest access time
+	uint16_t latest_update_time_; // Latest update time
+	uint16_t create_time_; // Creation time
+	char p_key_[0]; // Key
+	char p_rows_data_[0]; // Row data
 } __attribute__((packed));
 
-// 注意：修改操作可能会导致handle改变，因此需要检查重新保存
+// Note: Modification operations may cause handle changes, so it's necessary to check and save again
 class RawData {
     private:
-	char *p_content_; // 注意：地址可能会因为realloc而改变
-	uint32_t data_size_; // 包括data_type,data_size,rowcnt,key,rows等总数据大小
+	char *p_content_; // Note: Address may change due to realloc
+	uint32_t data_size_; // Total data size including data_type, data_size, rowcnt, key, rows, etc.
 	uint32_t row_count_;
 	uint8_t key_index_;
 	int key_size_;
@@ -80,7 +80,7 @@ class RawData {
 	uint16_t latest_request_time_;
 	uint16_t latest_update_time_;
 	uint16_t create_time_;
-	ALLOC_SIZE_T need_new_bufer_size; // 最近一次分配内存失败需要的大小
+	ALLOC_SIZE_T need_new_bufer_size; // Size needed for the most recent failed memory allocation
 
 	MEM_HANDLE_T handle_;
 	uint64_t size_;
@@ -109,9 +109,9 @@ class RawData {
 
     public:
 	/*************************************************
-	  Description:    构造函数
-	  Input:          pstMalloc	内存分配器
-	                     iAutoDestroy	析构的时候是否自动释放内存
+	  Description:    Constructor
+	  Input:          pstMalloc	Memory allocator
+	                     iAutoDestroy	Whether to automatically free memory during destruction
 	  Output:         
 	  Return:         
 	*************************************************/
@@ -130,13 +130,13 @@ class RawData {
 	}
 
 	/*************************************************
-	  Description:	新分配一块内存，并初始化
-	  Input:		 uchKeyIdx	作为key的字段在table里的下标
-				iKeySize	key的格式，0为变长，非0为定长长度
-				pchKey	为格式化后的key，变长key的第0字节为长度
-				uiDataSize	为数据的大小，用于一次分配足够大的chunk。如果设置为0，则insert row的时候再realloc扩大
+	  Description:	Allocate a new block of memory and initialize it
+	  Input:		 uchKeyIdx	Index of the field used as key in the table
+				iKeySize	Key format, 0 for variable length, non-zero for fixed length
+				pchKey	Formatted key, for variable length key, byte 0 is the length
+				uiDataSize	Data size, used to allocate a sufficiently large chunk at once. If set to 0, realloc will expand during insert row
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int init(uint8_t uchKeyIdx, int iKeySize, const char *pchKey,
 		 ALLOC_SIZE_T uiDataSize = 0, int laid = -1, int expireid = -1,
@@ -144,22 +144,22 @@ class RawData {
 	int do_init(const char *pchKey, ALLOC_SIZE_T uiDataSize = 0);
 
 	/*************************************************
-	  Description:	attach一块已经格式化好的内存
-	  Input:		hHandle	内存的句柄
-				uchKeyIdx	作为key的字段在table里的下标
-				iKeySize	key的格式，0为变长，非0为定长长度
+	  Description:	Attach to a block of pre-formatted memory
+	  Input:		hHandle	Memory handle
+				uchKeyIdx	Index of the field used as key in the table
+				iKeySize	Key format, 0 for variable length, non-zero for fixed length
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int do_attach(MEM_HANDLE_T hHandle, uint8_t uchKeyIdx, int iKeySize,
 		      int laid = -1, int lastcmod = -1, int expireid = -1);
 	int do_attach(MEM_HANDLE_T hHandle);
 
 	/*************************************************
-	  Description:	获取内存块的句柄
+	  Description:	Get the memory block handle
 	  Input:		
 	  Output:		
-	  Return:		句柄。 注意：任何修改操作可能会导致handle改变，因此需要检查重新保存
+	  Return:		Handle. Note: Any modification operation may cause handle changes, so it's necessary to check and save again
 	*************************************************/
 	MEM_HANDLE_T get_handle()
 	{
@@ -172,8 +172,8 @@ class RawData {
 	}
 
 	/*************************************************
-	  Description:	设置一个refrence，在调用CopyRow()或者CopyAll()的时候使用
-	  Input:		pstRef	refrence指针
+	  Description:	Set a reference, used when calling CopyRow() or CopyAll()
+	  Input:		pstRef	Reference pointer
 	  Output:		
 	  Return:		
 	*************************************************/
@@ -183,10 +183,10 @@ class RawData {
 	}
 
 	/*************************************************
-	  Description:	包括key、rows等所有内存的大小
+	  Description:	Size of all memory including key, rows, etc.
 	  Input:		
 	  Output:		
-	  Return:		所有内存的大小
+	  Return:		Total size of all memory
 	*************************************************/
 	uint32_t data_size() const
 	{
@@ -194,10 +194,10 @@ class RawData {
 	}
 
 	/*************************************************
-	  Description:	rows的开始偏移量
+	  Description:	Starting offset of rows
 	  Input:		
 	  Output:		
-	  Return:		rows的开始偏移量
+	  Return:		Starting offset of rows
 	*************************************************/
 	uint32_t data_start() const
 	{
@@ -205,10 +205,10 @@ class RawData {
 	}
 
 	/*************************************************
-	  Description:	内存分配失败时，返回所需要的内存大小
+	  Description:	Return the required memory size when memory allocation fails
 	  Input:		
 	  Output:		
-	  Return:		返回所需要的内存大小
+	  Return:		Return the required memory size
 	*************************************************/
 	ALLOC_SIZE_T need_size()
 	{
@@ -216,18 +216,18 @@ class RawData {
 	}
 
 	/*************************************************
-	  Description:	计算插入该行所需要的内存大小
-	  Input:		stRow	行数据
+	  Description:	Calculate the memory size required for inserting this row
+	  Input:		stRow	Row data
 	  Output:		
-	  Return:		返回所需要的内存大小
+	  Return:		Return the required memory size
 	*************************************************/
 	ALLOC_SIZE_T calc_row_size(const RowValue &stRow, int keyIndex);
 
 	/*************************************************
-	  Description:	获取格式化后的key
+	  Description:	Get the formatted key
 	  Input:		
 	  Output:		
-	  Return:		格式化后的key
+	  Return:		Formatted key
 	*************************************************/
 	const char *key() const
 	{
@@ -239,10 +239,10 @@ class RawData {
 	}
 
 	/*************************************************
-	  Description:	获取key的格式
+	  Description:	Get the key format
 	  Input:		
 	  Output:		
-	  Return:		变长返回0，定长key返回定长的长度
+	  Return:		Returns 0 for variable length, returns fixed length for fixed-length key
 	*************************************************/
 	int key_format() const
 	{
@@ -250,10 +250,10 @@ class RawData {
 	}
 
 	/*************************************************
-	  Description:	获取key的实际长度
+	  Description:	Get the actual length of the key
 	  Input:		
 	  Output:		
-	  Return:		key的实际长度
+	  Return:		Actual length of the key
 	*************************************************/
 	int key_size();
 
@@ -268,126 +268,126 @@ class RawData {
 	}
 
 	/*************************************************
-	  Description:	销毁释放内存
+	  Description:	Destroy and free memory
 	  Input:		
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int destory();
 
 	/*************************************************
-	  Description:	释放多余的内存（通常在delete一些row后调用一次）
+	  Description:	Free excess memory (usually called once after deleting some rows)
 	  Input:		
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int strip_mem();
 
 	/*************************************************
-	  Description:	读取一行数据
+	  Description:	Read one row of data
 	  Input:		
-	  Output:		stRow	保存行数据
-				uchRowFlags	行数据是否脏数据等flag
-				iDecodeFlag	是否只是pre-read，不fetch_row移动指针
-	  Return:		0为成功，非0失败
+	  Output:		stRow	Stores row data
+				uchRowFlags	Flags for whether row data is dirty, etc.
+				iDecodeFlag	Whether it's just pre-read, without fetch_row moving pointer
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int decode_row(RowValue &stRow, unsigned char &uchRowFlags,
 		       int iDecodeFlag = 0);
 
 	/*************************************************
-	  Description:	插入一行数据
-	  Input:		stRow	需要插入的行数据
+	  Description:	Insert one row of data
+	  Input:		stRow	Row data to be inserted
 	  Output:		
-				byFirst	是否插入到最前面，默认添加到最后面
-				isDirty	是否脏数据
-	  Return:		0为成功，非0失败
+				byFirst	Whether to insert at the front, default is to add at the end
+				isDirty	Whether it's dirty data
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int insert_row(const RowValue &stRow, bool byFirst, bool isDirty);
 
 	/*************************************************
-	  Description:	插入一行数据
-	  Input:		stRow	需要插入的行数据
+	  Description:	Insert one row of data
+	  Input:		stRow	Row data to be inserted
 	  Output:		
-				byFirst	是否插入到最前面，默认添加到最后面
-				uchOp	row的标记
-	  Return:		0为成功，非0失败
+				byFirst	Whether to insert at the front, default is to add at the end
+				uchOp	Row flag
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int insert_row_flag(const RowValue &stRow, bool byFirst,
 			    unsigned char uchOp);
 
 	/*************************************************
-	  Description:	插入若干行数据
-	  Input:		uiNRows	行数
-				stRow	需要插入的行数据
+	  Description:	Insert multiple rows of data
+	  Input:		uiNRows	Number of rows
+				stRow	Row data to be inserted
 	  Output:		
-				byFirst	是否插入到最前面，默认添加到最后面
-				isDirty	是否脏数据
-	  Return:		0为成功，非0失败
+				byFirst	Whether to insert at the front, default is to add at the end
+				isDirty	Whether it's dirty data
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int insert_n_rows(unsigned int uiNRows, const RowValue *pstRow,
 			  bool byFirst, bool isDirty);
 
 	/*************************************************
-	  Description:	用指定数据替换当前行
-	  Input:		stRow	新的行数据
+	  Description:	Replace current row with specified data
+	  Input:		stRow	New row data
 	  Output:		
-				isDirty	是否脏数据
-	  Return:		0为成功，非0失败
+				isDirty	Whether it's dirty data
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int replace_cur_row(const RowValue &stRow, bool isDirty);
 
 	/*************************************************
-	  Description:	删除当前行
-	  Input:		stRow	仅使用row的字段类型等信息，不需要实际数据
+	  Description:	Delete current row
+	  Input:		stRow	Only uses field type information from row, no actual data needed
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int delete_cur_row(const RowValue &stRow);
 
 	/*************************************************
-	  Description:	删除所有行
+	  Description:	Delete all rows
 	  Input:		
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int delete_all_rows();
 
 	/*************************************************
-	  Description:	设置当前行的标记
-	  Input:		uchFlag	行的标记
+	  Description:	Set the flag for current row
+	  Input:		uchFlag	Row flag
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int set_cur_row_flag(unsigned char uchFlag);
 
 	/*************************************************
-	  Description:	从refrence copy当前行到本地buffer末尾
+	  Description:	Copy current row from reference to end of local buffer
 	  Input:		
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int copy_row();
 
 	/*************************************************
-	  Description:	用refrence的数据替换本地数据
+	  Description:	Replace local data with reference data
 	  Input:		
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int copy_all();
 
 	/*************************************************
-	  Description:	添加N行已经格式化好的数据到末尾
+	  Description:	Append N rows of pre-formatted data to the end
 	  Input:		
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int append_n_records(unsigned int uiNRows, const char *pchData,
 			     const unsigned int uiLen);
 
 	/*************************************************
-	  Description:	更新最后访问时间戳
-	  Input:	时间戳	
+	  Description:	Update last access timestamp
+	  Input:	Timestamp	
 	  Output:		
 	  Return:
 	*************************************************/
@@ -398,8 +398,8 @@ class RawData {
 	}
 	int get_expire_time(DTCTableDefinition *t, uint32_t &expire);
 	/*************************************************
-	  Description:	获取最后需改时间
-	  Input:	时间戳	
+	  Description:	Get last modification time
+	  Input:	Timestamp	
 	  Output:		
 	  Return:
 	*************************************************/
@@ -408,52 +408,52 @@ class RawData {
 		       int size);
 
 	/*************************************************
-	  Description:	初始化时间戳，包括最后访问时间
-	  、最后更新时间、创建时间三部分
-	  Input:	时间戳(以某个绝对事件为开始的小时数)
-	  虽然名字为Update，其实只会被调用一次
+	  Description:	Initialize timestamp, including last access time,
+	  last update time, and creation time
+	  Input:	Timestamp (hours since some absolute event)
+	  Although named Update, it's actually only called once
 	  tomchen
 	*************************************************/
 	void init_timp_stamp();
 	/*************************************************
-	  Description:	更新节点最后访问时间
-	  Input:	时间戳(以某个绝对事件为开始的小时数)
+	  Description:	Update node's last access time
+	  Input:	Timestamp (hours since some absolute event)
 	   tomchen
 	*************************************************/
 	void update_last_access_time_by_hour();
 	/*************************************************
-	  Description:	更新节点最后更新时间
-	  Input:	时间戳(以某个绝对事件为开始的小时数)
+	  Description:	Update node's last update time
+	  Input:	Timestamp (hours since some absolute event)
 	   tomchen
 	*************************************************/
 	void update_last_update_time_by_hour();
 	/*************************************************
-	  Description:	增加节点被select请求的次数
+	  Description:	Increment the number of select requests for the node
 	 tomchen
 	*************************************************/
 	void inc_select_count();
 	/*************************************************
-	  Description:	获取节点创建时间
+	  Description:	Get node creation time
 	 tomchen
 	*************************************************/
 	uint32_t get_create_time_by_hour();
 	/*************************************************
-	  Description:	获取节点最后访问时间
+	  Description:	Get node's last access time
 	 tomchen
 	*************************************************/
 	uint32_t get_last_access_time_by_hour();
 	/*************************************************
-	  Description:	获取节点最后更新时间
+	  Description:	Get node's last update time
 	 tomchen
 	*************************************************/
 	uint32_t get_last_update_time_by_hour();
 	/*************************************************
-	  Description:	获取节点被select操作的次数
+	  Description:	Get the number of select operations on the node
 	 tomchen
 	*************************************************/
 	uint32_t get_select_op_count();
 	/*************************************************
-	  Description:	attach上时间戳
+	  Description:	Attach timestamp
 	 tomchen
 	*************************************************/
 	void attach_time_stamp();

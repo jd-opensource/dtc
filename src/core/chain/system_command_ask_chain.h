@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -26,9 +26,9 @@ class SystemCommandAskChain : public JobAskInterface<DTCJobOperation> {
 	SystemCommandAskChain(PollerBase *o);
 
     public:
-	//返回实例，如果实例尚未构造，则构造一个新的实例返回
+	//Return instance, if instance not yet constructed, construct a new instance and return
 	static SystemCommandAskChain *get_instance(PollerBase *o);
-	//仅是返回，如果实例尚未构造，则返回空
+	//Just return, if instance not yet constructed, return null
 	static SystemCommandAskChain *get_instance();
 	virtual ~SystemCommandAskChain(void);
 	void register_next_chain(JobAskInterface<DTCJobOperation> *p)
@@ -43,15 +43,15 @@ class SystemCommandAskChain : public JobAskInterface<DTCJobOperation> {
 
     private:
 	ChainJoint<DTCJobOperation> main_chain;
-	//server是否为只读状态
+	//Whether server is in read-only state
 	atomic8_t read_only_;
-	//Readonly的统计对象
+	//Read-only statistics object
 	StatCounter stat_read_only;
 
     private:
 	virtual void job_ask_procedure(DTCJobOperation *);
 
-	//处理serveradmin 命令
+	//Handle serveradmin commands
 	void deal_server_admin(DTCJobOperation *job_operation);
 	void query_mem_info(DTCJobOperation *job_operation);
 };

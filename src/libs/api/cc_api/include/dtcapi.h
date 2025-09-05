@@ -76,7 +76,7 @@ namespace DTC {
 
 	void init_log (const char *app, const char *dir = NULL);
 	void set_log_level(int n);
-	int  set_key_value_max(unsigned int count); // 设置批量操作一次最多多少个key(默认最多32个)
+	int  set_key_value_max(unsigned int count); // Set maximum number of keys for batch operations (default max 32)
 #ifndef WIN32
 	void write_log (int level,
 			const char*file, const char *func, int lineno,
@@ -473,7 +473,7 @@ namespace DTC {
 #undef _REDIR_
             const char *ErrorMessage(void) const;
 
-            //无源模式超时时间   add by xuxinxin, 2014/12/09
+            //No-source mode timeout   add by xuxinxin, 2014/12/09
 			int SetExpireTime(const char* key, int time);
 			int GetExpireTime(const char* key);
 	};

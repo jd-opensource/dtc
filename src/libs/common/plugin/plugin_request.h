@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -123,10 +123,10 @@ class PluginRequest {
 	skinfo_t _skinfo;
 
     protected:
-	/* 预留标志,按照bit操作         */
-	/* 0:  handle_process 执行失败  */
-	/* 1:  handle_process 执行成功  */
-	/* 2:  粘包请求                 */
+	/* Reserved flags, bit operations         */
+	/* 0:  handle_process execution failed  */
+	/* 1:  handle_process execution success  */
+	/* 2:  sticky packet request                 */
 	uint64_t _flags;
 };
 

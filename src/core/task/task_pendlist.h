@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -24,11 +24,11 @@
 
 DTC_BEGIN_NAMESPACE
 /*
- * 请求挂起列表。
+ * Request pending list.
  *
- * 如果发现请求暂时没法满足，则挂起，直到
- *     1. 超时
- *     2. 条件满足被唤醒
+ * If a request temporarily cannot be satisfied, it is suspended until:
+ *     1. Timeout
+ *     2. Conditions are met and awakened
  */
 class BufferProcessAskChain;
 class CacheBase;
@@ -39,8 +39,8 @@ class TaskPendingList : private TimerObject {
 	TaskPendingList(JobAskInterface<DTCJobOperation> *o, int timeout = 5);
 	~TaskPendingList();
 
-	void add2_list(DTCJobOperation *); //加入pending list
-	void Wakeup(void); //唤醒队列中的所有task
+	void add2_list(DTCJobOperation *); //Add to pending list
+	void Wakeup(void); //Wake up all tasks in the queue
 
     private:
 	virtual void job_timer_procedure(void);

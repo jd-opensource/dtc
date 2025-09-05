@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -124,7 +124,7 @@ int msg_init() {
 	}
 	msg_id = 0;
 	frag_id = 0;
-	//红黑树，超时设置
+	// Red-black tree, timeout settings
 	rbtree_init(&tmo_rbt, &tmo_rbs);
 	return 0;
 }
@@ -244,7 +244,7 @@ struct msg *msg_get(struct conn *conn, bool request) {
 }
 
 /*
- *释放msg所对应的资源，回收msg对象
+ * Release resources associated with msg, reclaim msg object
  */
 void msg_put(struct msg *m) {
 
@@ -455,8 +455,8 @@ int msg_recv(struct context *ctx, struct conn *conn) {
 
 	do {
 		/*
-		 * 从msg池中获取一个msg，当由于内存原因获取msg失败时置
-		 * conn->err标志，由于连接客户端关闭原因返回空的不处理
+		 * Get a msg from the msg pool. When getting msg fails due to memory reasons,
+		 * set conn->err flag. Don't process empty returns due to client connection closure
 		 */
 		
 		msg = conn->recv_next(ctx, conn, true);
@@ -630,7 +630,7 @@ static int msg_send_chain(struct context *ctx, struct conn *conn,
 				msg->sending = 0;
 				conn->send_done(ctx, conn, msg);
 			}
-			//因为要执行TAILQ_REMOVE(&send_msgq, msg, m_tqe);
+			// Because we need to execute TAILQ_REMOVE(&send_msgq, msg, m_tqe);
 			continue;
 		}
 

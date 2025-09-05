@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -34,11 +34,11 @@ struct _enf_table {
 typedef struct _enf_table ENF_TABLE_T;
 
 struct _empty_node_filter {
-	uint32_t enf_total; // 占用的总内存
-	uint32_t enf_step; // 表增长步长
-	uint32_t enf_mod; // 分表算子
+	uint32_t enf_total; // Total memory occupied
+	uint32_t enf_step; // Table growth step size
+	uint32_t enf_mod; // Table partitioning modulus
 
-	ENF_TABLE_T enf_tables[0]; // 位图表
+	ENF_TABLE_T enf_tables[0]; // Bitmap tables
 };
 typedef struct _empty_node_filter ENF_T;
 
@@ -75,12 +75,12 @@ class EmptyNodeFilter {
 	}
 
     private:
-	/* 计算表id */
+	/* Calculate table ID */
 	uint32_t get_index(uint32_t key)
 	{
 		return key % _enf->enf_mod;
 	}
-	/* 计算表中的位图偏移 */
+	/* Calculate bitmap offset in table */
 	uint32_t get_offset(uint32_t key)
 	{
 		return key / _enf->enf_mod;

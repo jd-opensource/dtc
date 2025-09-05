@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -42,6 +42,6 @@ class SharedMemory {
 	int mem_lock(void);
 	void mem_unlock(void);
 
-	/* 删除共享内存 */
+	/* Delete shared memory */
 	int mem_delete(void);
 };

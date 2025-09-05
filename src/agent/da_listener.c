@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -260,7 +260,7 @@ static int listener_accept(struct context *ctx, struct conn *l)
 				continue;
 			}
 			/*
-			 * 多进程情况下，同时accept会出现错误，errno=11,程序吞掉这个错误
+			 * In multi-process scenario, simultaneous accept will cause error, errno=11, program swallows this error
 			 */
 			if (errno == EAGAIN || errno == EWOULDBLOCK ||
 			    errno == ECONNABORTED) {
@@ -285,7 +285,7 @@ static int listener_accept(struct context *ctx, struct conn *l)
 	}
 
 	/*
-	 * 对全局的FD资源进行限制,每个进程单独资源
+	 * Limit global FD resources, each process has separate resources
 	 */
 	if (get_ncurr_cconn() >= ctx->max_ncconn ||
 	    get_ncurr_cconn() >
@@ -322,7 +322,7 @@ static int listener_accept(struct context *ctx, struct conn *l)
 		return status;
 	}
 
-	/*所有的客户端连接在exec之后全部关闭*/
+	/*All client connections are closed after exec*/
 	status = fcntl(c->fd, F_SETFD, FD_CLOEXEC);
 	if (status < 0) {
 		log_error("fcntl FD_CLOEXEC on c %d from p %d failed: %s",
@@ -332,7 +332,7 @@ static int listener_accept(struct context *ctx, struct conn *l)
 	}
 
 	/*
-	 * 对于ipv4与ipv6协议关闭negale算法
+	 * Disable Nagle algorithm for ipv4 and ipv6 protocols
 	 */
 	if (l->family == AF_INET || l->family == AF_INET6) {
 		status = set_tcpnodelay(c->fd);

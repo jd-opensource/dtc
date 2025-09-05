@@ -4,7 +4,7 @@ FILE(GLOB_RECURSE SRC_LIST ./*.cc ./*.c)
 
 include(../utils.cmake)
 
-#添加头文件搜索路径，相当于gcc -I
+#add header file search path, equivalent to gcc -I
 INCLUDE_DIRECTORIES(
     . ./algorithm ./buffer ./chain
     ./data ./hotbk ./log ./mem
@@ -20,7 +20,7 @@ INCLUDE_DIRECTORIES(
     ../libs/hsql/include
     ../libs/mysql/include/)
 
-#添加.so/.a文件搜索路径，相当于gcc -L
+#add .so/.a file search path, equivalent to gcc -L
 LINK_DIRECTORIES(
     ${PROJECT_SOURCE_DIR}/src/libs/mysql/libs
     ${PROJECT_SOURCE_DIR}/src/libs/log4cplus/libs
@@ -31,7 +31,7 @@ LINK_DIRECTORIES(
     ${PROJECT_SOURCE_DIR}/build/src/libs/stat
     ${PROJECT_SOURCE_DIR}/build/src/daemons)
 
-#添加链接库，相当于gcc -l
+#add link libraries, equivalent to gcc -l
 LINK_LIBRARIES(libmysqlclient.a)
 LINK_LIBRARIES(liblog4cplus.a)
 LINK_LIBRARIES(libsqlparser.a) 
@@ -43,13 +43,13 @@ LINK_LIBRARIES(libz64.a)
 LINK_LIBRARIES(pthread)
 LINK_LIBRARIES(dl)
 
-#编译参数
+#compilation parameters
 ADD_DEFINITIONS("-g -rdynamic -fPIC -D_CORE_ -fpermissive -std=gnu++11 -D_GLIBCXX_USE_CXX11_ABI=0 -export-dynamic -Wl,--version-script,core.export.lst")
 ADD_DEFINITIONS(-Wno-builtin-macro-redefined)
 
-#编译为.so/.a
+#compile to .so/.a
 ADD_EXECUTABLE(dtcd ${SRC_LIST})
 
-#将目标文件与库文件链接
+#link target files with library files
 TARGET_LINK_LIBRARIES(dtcd libdaemons.a libstat.a libsqlparser.a libcommon.a libyaml-cpp.a liblog4cplus.a libz64.a libmysqlclient.a)
 redefine_file_macro(dtcd)

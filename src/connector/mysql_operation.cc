@@ -1,5 +1,5 @@
 ﻿/*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -349,7 +349,7 @@ int ConnectorProcess::check_table()
         return (-2);
     }
 
-    // 获取返回结果的各列位置
+    // get the column positions of the return results
     int i_name_idx = 0, i_type_idx = 0;
     int i_null_idx = 0, i_key_idx = 0;
     int i_default_idx = 0, i_extra_idx = 0;
@@ -488,7 +488,7 @@ int ConnectorProcess::check_table()
     }
 
     for (int i = 0; i <= table_def->num_fields(); i++) {
-        //bug fix volatile不在db中
+        //bug fix volatile not in db
         if (table_def->is_volatile(i))
             continue;
 
@@ -520,7 +520,7 @@ int ConnectorProcess::machine_init(int GroupID, int r)
 {
     const char *p;
 
-    // 初始化db配置信息
+    // initialize db configuration information
     if (dbConfig->machineCnt <= GroupID) {
         log4cplus_error(
             "parse config error, machineCnt[%d] <= GroupID[%d]",
@@ -603,7 +603,7 @@ void ConnectorProcess::sql_append_string(const char *str, int len)
     }
 }
 
-/* 将字符串printf在原来字符串的后面，如果buffer不够大会自动重新分配buffer */
+/* append string to the original string using printf, buffer will be automatically reallocated if not large enough */
 void ConnectorProcess::sql_printf(const char *Format, ...)
 {
     va_list Arg;
@@ -794,7 +794,7 @@ std::string ConnectorProcess::value_to_str(const DTCValue *v, int fieldType)
             return "NULL";
         }
         db_conn.escape_string(esc.c_str(), v->str.ptr,
-                      v->str.len); // 先对字符串进行escape
+                      v->str.len); // escape the string first
         ret = '\'';
         ret += v->str.ptr;
         ret += "\'";
@@ -843,7 +843,7 @@ inline int ConnectorProcess::format_sql_value(const DTCValue *Value,
                 }
                 db_conn.escape_string(
                     esc.c_str(), Value->str.ptr,
-                    Value->str.len); // 先对字符串进行escape
+                    Value->str.len); // escape the string first
                 if (sql.append(Value->str.ptr) < 0)
                     error_no = -1;
             }
@@ -945,7 +945,7 @@ inline int ConnectorProcess::str_to_value(char *Str, int fieldid,
     case DField::String:
         Value.str.len = _lengths[fieldid];
         Value.str.ptr =
-            Str; // 不重新new，要等这个value使用完后释放内存(如果Str是动态分配的)
+            Str; // don't re-new, wait until this value is used up before releasing memory (if Str is dynamically allocated)
         break;
 
     case DField::Binary:
@@ -970,8 +970,8 @@ int ConnectorProcess::save_row(RowValue *Row, DtcJob *Task)
         return (-1);
 
     for (i = 1; i <= table_def->num_fields(); i++) {
-        //db_conn.Row[0]是key的值，table_def->Field[0]也是key，
-        //因此从1开始。结果Row也是从1开始的(不包括key)
+        //db_conn.Row[0] is the key value, table_def->Field[0] is also the key,
+        //so start from 1. Result Row also starts from 1 (excluding key)
         Ret = str_to_value(db_conn.Row[i], i, table_def->field_type(i),
                    (*Row)[i]);
 
@@ -997,11 +997,11 @@ int ConnectorProcess::process_statement_query(
     const DTCValue* key,
     std::string& s_sql)
 {
-    // hash 计算key落在哪库哪表
+    // hash calculation to determine which database and table the key belongs to
     init_table_name(key, table_def->field_type(0));
     log4cplus_debug("db: %s, sql: %s", DBName, s_sql.c_str());
 
-    // 分表时，需更更换表名
+    // when sharding tables, need to change table name
     if (dbConfig->depoly&2) {
         const char* p_table_name = table_def->table_name();
         if (NULL == p_table_name) {
@@ -1015,7 +1015,7 @@ int ConnectorProcess::process_statement_query(
         }
     }
     
-    // 重新选库，并查询
+    // reselect database and query
     int i_ret = db_conn.do_query(DBName, s_sql.c_str());
     if (i_ret != 0) {
         int i_err = db_conn.get_err_no();
@@ -1064,7 +1064,7 @@ int ConnectorProcess::process_select(DtcJob *Task)
         sql_append_const("SELECT SQL_CALC_FOUND_ROWS ");
     else
         sql_append_const("SELECT ");
-    select_field_concate(Task->request_fields()); // 总是SELECT所有字段
+    select_field_concate(Task->request_fields()); // always SELECT all fields
     sql_append_const(" FROM ");
     sql_append_table();
     log4cplus_info("line:%d" ,__LINE__);
@@ -1093,7 +1093,7 @@ int ConnectorProcess::process_select(DtcJob *Task)
     }
     log4cplus_info("line:%d" ,__LINE__);
     if (error_no !=
-        0) { // 主要检查PrintfAppend是否发生过错误，这里统一检查一次
+        0) { // Mainly check if PrintfAppend has encountered any errors, unified check here
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
         log4cplus_error("error occur: %d", error_no);
         return (-1);
@@ -1168,7 +1168,7 @@ int ConnectorProcess::process_select(DtcJob *Task)
             return (-6);
         }
 
-        // 将结果转换，并保存到task的result里
+        // Convert results and save to task's result
         if (Task->count_only()) {
             nRows = atoi(db_conn.Row[0]);
             //bug fixed return count *
@@ -1191,8 +1191,8 @@ int ConnectorProcess::process_select(DtcJob *Task)
     delete Row;
     db_conn.free_result();
 
-    //bug fixed确认客户端带Limit限制
-    if (haslimit) { // 获取总行数
+    //bug fixed - confirm client has Limit restriction
+    if (haslimit) { // Get total row count
         init_sql_buffer();
         sql_append_const("SELECT FOUND_ROWS() ");
 
@@ -1356,7 +1356,7 @@ int ConnectorProcess::process_insert(DtcJob *Task)
     if (sql.at(-1) == ',')
         sql.trunc(-1);
 
-    if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
+    if (error_no != 0) { // Mainly check if PrintfAppend has encountered any errors
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
         log4cplus_error("error occur: %d", error_no);
         return (-1);
@@ -1435,7 +1435,7 @@ int ConnectorProcess::process_update(DtcJob *Task)
             sql_printf(" LIMIT %u", Task->requestInfo.limit_count());
     }
 
-    if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
+    if (error_no != 0) { // Mainly check if PrintfAppend has encountered any errors
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
         log4cplus_error("error occur: %d", error_no);
         return (-1);
@@ -1492,7 +1492,7 @@ int ConnectorProcess::process_delete(DtcJob *Task)
     }
 
     if (error_no !=
-        0) { // 主要检查PrintfAppend是否发生过错误，这里统一检查一次
+        0) { // Mainly check if PrintfAppend has encountered any errors, unified check here
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
         log4cplus_error("error occur: %d", error_no);
         return (-1);
@@ -1573,19 +1573,19 @@ int ConnectorProcess::process_replace(DtcJob *Task)
     format_sql_value(Task->request_key(), table_def->field_type(0));
     sql_append_const(",");
 
-    /* 补全缺失的默认值 */
+    /* Complete missing default values */
     if (Task->request_operation())
         update_field_concate(Task->request_operation());
     else if (sql.at(-1) == ',') {
         sql.trunc(-1);
     }
 
-    if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
+    if (error_no != 0) { // Mainly check if PrintfAppend has encountered any errors
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
         log4cplus_error("error occur: %d", error_no);
         return (-1);
     }
-    if (error_no != 0) { // 主要检查PrintfAppend是否发生过错误
+    if (error_no != 0) { // Mainly check if PrintfAppend has encountered any errors
         Task->set_error(-EC_ERROR_BASE, __FUNCTION__, "printf error");
         log4cplus_error("error occur: %d", error_no);
         return (-1);

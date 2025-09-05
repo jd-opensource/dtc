@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -53,11 +53,11 @@ class SysMalloc : public MallocBase {
 	}
 
 	/*************************************************
-	  Description:	分配内存
-	  Input:		tSize		分配的内存大小
+	  Description:	Allocate memory
+	  Input:		tSize		Size of memory to allocate
 	  Output:		
-	  Return:		内存块句柄，INVALID_HANDLE为失败
-	*************************************************/
+	  Return:		Memory block handle, INVALID_HANDLE on failure
+	**************************************************/
 	ALLOC_HANDLE_T Malloc(ALLOC_SIZE_T tSize)
 	{
 		void *p = malloc(sizeof(ALLOC_SIZE_T) + tSize);
@@ -70,11 +70,11 @@ class SysMalloc : public MallocBase {
 	}
 
 	/*************************************************
-	  Description:	分配内存，并将内存初始化为0
-	  Input:		tSize		分配的内存大小
+	  Description:	Allocate memory and initialize to 0
+	  Input:		tSize		Size of memory to allocate
 	  Output:		
-	  Return:		内存块句柄，INVALID_HANDLE为失败
-	*************************************************/
+	  Return:		Memory block handle, INVALID_HANDLE on failure
+	**************************************************/
 	ALLOC_HANDLE_T Calloc(ALLOC_SIZE_T tSize)
 	{
 		void *p = calloc(1, sizeof(ALLOC_SIZE_T) + tSize);
@@ -87,12 +87,12 @@ class SysMalloc : public MallocBase {
 	}
 
 	/*************************************************
-	  Description:	重新分配内存
-	  Input:		hHandle	老内存句柄
-				tSize		新分配的内存大小
+	  Description:	Reallocate memory
+	  Input:		hHandle	Old memory handle
+				tSize		New memory size
 	  Output:		
-	  Return:		内存块句柄，INVALID_HANDLE为失败(失败时不会释放老内存块)
-	*************************************************/
+	  Return:		Memory block handle, INVALID_HANDLE on failure (old memory block not freed on failure)
+	**************************************************/
 	ALLOC_HANDLE_T ReAlloc(ALLOC_HANDLE_T hHandle, ALLOC_SIZE_T tSize)
 	{
 		char *old;
@@ -114,11 +114,11 @@ class SysMalloc : public MallocBase {
 	}
 
 	/*************************************************
-	  Description:	释放内存
-	  Input:		hHandle	内存句柄
+	  Description:	Free memory
+	  Input:		hHandle	Memory handle
 	  Output:		
-	  Return:		0为成功，非0失败
-	*************************************************/
+	  Return:		0 on success, non-zero on failure
+	**************************************************/
 	int Free(ALLOC_HANDLE_T hHandle)
 	{
 		if (hHandle == INVALID_HANDLE)
@@ -130,11 +130,11 @@ class SysMalloc : public MallocBase {
 	}
 
 	/*************************************************
-	  Description:	获取内存块大小
-	  Input:		hHandle	内存句柄
+	  Description:	Get memory block size
+	  Input:		hHandle	Memory handle
 	  Output:		
-	  Return:		内存大小
-	*************************************************/
+	  Return:		Memory size
+	**************************************************/
 	ALLOC_SIZE_T chunk_size(ALLOC_HANDLE_T hHandle)
 	{
 		if (hHandle == INVALID_HANDLE)
@@ -145,22 +145,22 @@ class SysMalloc : public MallocBase {
 	}
 
 	/*************************************************
-	  Description:	将句柄转换成内存地址
-	  Input:		内存句柄
+	  Description:	Convert handle to memory address
+	  Input:		Memory handle
 	  Output:		
-	  Return:		内存地址，如果句柄无效返回NULL
-	*************************************************/
+	  Return:		Memory address, NULL if handle is invalid
+	**************************************************/
 	void *handle_to_ptr(ALLOC_HANDLE_T hHandle)
 	{
 		return (char *)0 + hHandle;
 	}
 
 	/*************************************************
-	  Description:	将内存地址转换为句柄
-	  Input:		内存地址
+	  Description:	Convert memory address to handle
+	  Input:		Memory address
 	  Output:		
-	  Return:		内存句柄，如果地址无效返回INVALID_HANDLE
-	*************************************************/
+	  Return:		Memory handle, INVALID_HANDLE if address is invalid
+	**************************************************/
 	ALLOC_HANDLE_T ptr_to_handle(void *p)
 	{
 		return get_handle(p);
@@ -173,11 +173,11 @@ class SysMalloc : public MallocBase {
 	}
 
 	/*************************************************
-	  Description:	检测handle是否有效
-	  Input:		内存句柄
+	  Description:	Check if handle is valid
+	  Input:		Memory handle
 	  Output:		
-      Return:	    0: 有效; -1:无效
-	*************************************************/
+      Return:	    0: valid; -1: invalid
+	**************************************************/
 	virtual int handle_is_valid(ALLOC_HANDLE_T mem_handle)
 	{
 		return 0;

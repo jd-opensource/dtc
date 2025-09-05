@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -41,10 +41,10 @@ int thread_cpu_stat::init()
 	return 0;
 }
 
-//function: 建立cpu统计结构体，添加初始化一些基本项
-//input:    无
-//ouput：   return -1: 初始化失败
-//          return  0：初始化成功
+//function: Create CPU statistics structure and initialize basic items
+//input:    None
+//output:   return -1: initialization failed
+//          return  0: initialization successful
 int thread_cpu_stat::add_cpu_stat_object(const char *thread_name, int stat_idx)
 {
 	Thread *thread = Thread::FindThreadByName(thread_name);
@@ -64,10 +64,10 @@ int thread_cpu_stat::add_cpu_stat_object(const char *thread_name, int stat_idx)
 	return new_cpu_stat->init(thread_name, stat_idx, thread->Pid());
 }
 
-//function: 初始化一些基本项
-//input:    无
-//ouput：   return -1: 初始化失败
-//          return  0：初始化成功
+//function: Initialize basic items
+//input:    None
+//output:   return -1: initialization failed
+//          return  0: initialization successful
 int one_thread_cpu_stat::init(const char *thread_name, int stat_idx, int pid)
 {
 	_pid = pid;

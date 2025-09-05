@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -46,10 +46,10 @@ NGInfo::~NGInfo()
 
 Node NGInfo::allocate_node(void)
 {
-	//优先在空闲链表分配
+	// Prioritize allocation in free list
 	NODE_SET *NS = find_free_ng();
 	if (!NS) {
-		/* 防止NodeGroup把内存碎片化，采用预分配 */
+		/* Prevent NodeGroup from fragmenting memory, using pre-allocation */
 		static int step = DTCGlobal::pre_alloc_nodegroup_count;
 		static int fail = 0;
 		for (int i = 0; i < step; i++) {
@@ -75,7 +75,7 @@ Node NGInfo::allocate_node(void)
 	}
 
 	Node node = NS->allocate_node();
-	//NG中没有任何可分配的Node
+	// There are no allocatable Nodes in NG
 	if (NS->is_full()) {
 		list_del(NS);
 		full_list_add(NS);
@@ -100,7 +100,7 @@ int NGInfo::release_node(Node &node)
 {
 	NODE_SET *NS = node.Owner();
 	if (NS->is_full()) {
-		//NG挂入空闲链表
+		// NG hangs into free list
 		list_del(NS);
 		free_list_add(NS);
 	}
@@ -190,7 +190,7 @@ NODE_SET *NGInfo::allocate_ng(void)
 
 NODE_SET *NGInfo::find_free_ng(void)
 {
-	//链表为空
+	// List is empty
 	if (NG_LIST_EMPTY(&(nodegroup_info_->ni_free_head))) {
 		return (NODE_SET *)0;
 	}

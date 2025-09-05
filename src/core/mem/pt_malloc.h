@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -75,33 +75,33 @@ typedef struct {
 #define DTC_SIGN_C 0xFFFFFFFFU
 #define DTC_SIGN_D 0xFFFFFFFFU
 
-#define DTC_VER_MIN 4 // 本代码认识的dtc内存最小版本
+#define DTC_VER_MIN 4 // Minimum DTC memory version recognized by this code
 
 #define DTC_RESERVE_SIZE (4 * 1024UL)
 
-#define EC_NO_MEM 2041 // 内存不足错误码
+#define EC_NO_MEM 2041 // Insufficient memory error code
 #define EC_KEY_EXIST 2042
 #define EC_KEY_NOT_EXIST 2043
 #define MAXSTATCOUNT 10000 * 3600 * 12
 
 struct _MemHead {
-	uint32_t m_auiSign[14]; // 内存格式标记
-	unsigned short m_ushVer; // 内存格式版本号
-	unsigned short m_ushHeadSize; // 头大小
-	INTER_SIZE_T m_tSize; // 内存总大小
-	INTER_SIZE_T m_tUserAllocSize; // 上层应用分配到可用的内存大小
-	INTER_SIZE_T m_tUserAllocChunkCnt; // 上层应用分配的内存块数量
-	uint32_t m_uiFlags; // 特性标记
-	INTER_HANDLE_T m_hBottom; // 上层应用可用内存底地址
-	INTER_HANDLE_T m_hReserveZone; // 为上层应用保留的地址
-	INTER_HANDLE_T m_hTop; // 目前分配到的最高地址
-	INTER_SIZE_T m_tLastFreeChunkSize; // 最近一次free后，合并得到的chunk大小
-	uint16_t m_ushBinCnt; // bin的数量
-	uint16_t m_ushFastBinCnt; // fastbin数量
-	uint32_t m_auiBinBitMap[(NBINS - 1) / 32 + 1]; // bin的bitmap
-	uint32_t m_shmIntegrity; //共享内存完整性标记
+	uint32_t m_auiSign[14]; // Memory format signature
+	unsigned short m_ushVer; // Memory format version number
+	unsigned short m_ushHeadSize; // Header size
+	INTER_SIZE_T m_tSize; // Total memory size
+	INTER_SIZE_T m_tUserAllocSize; // Memory size available to upper layer applications
+	INTER_SIZE_T m_tUserAllocChunkCnt; // Number of memory chunks allocated by upper layer applications
+	uint32_t m_uiFlags; // Feature flags
+	INTER_HANDLE_T m_hBottom; // Bottom address of memory available to upper layer applications
+	INTER_HANDLE_T m_hReserveZone; // Reserved address for upper layer applications
+	INTER_HANDLE_T m_hTop; // Current highest allocated address
+	INTER_SIZE_T m_tLastFreeChunkSize; // Merged chunk size after the last free operation
+	uint16_t m_ushBinCnt; // Number of bins
+	uint16_t m_ushFastBinCnt; // Number of fast bins
+	uint32_t m_auiBinBitMap[(NBINS - 1) / 32 + 1]; // Bin bitmap
+	uint32_t m_shmIntegrity; // Shared memory integrity flag
 	char m_achReserv
-		[872]; // 保留字段 （使CMemHead的大小为1008Bytes，加上后面的bins后达到4K）
+		[872]; // Reserved fields (making CMemHead size 1008 bytes, reaching 4K with bins that follow)
 } __attribute__((__aligned__(4)));
 typedef struct _MemHead MemHead;
 
@@ -124,8 +124,8 @@ class PtMalloc : public MallocBase {
 	StatItem statDataSize;
 	StatItem statMemoryTop;
 
-	uint64_t statTmpDataSizeRecently; //最近分配的内存大小
-	uint64_t statTmpDataAllocCountRecently; //最近分配的内存次数
+	uint64_t statTmpDataSizeRecently; // Recently allocated memory size
+	uint64_t statTmpDataAllocCountRecently; // Recent memory allocation count
 	StatItem statAverageDataSizeRecently;
 	inline void add_alloc_size_to_stat(uint64_t size)
 	{
@@ -142,7 +142,7 @@ class PtMalloc : public MallocBase {
 		}
 	}
 
-	//最小的chrunk size,
+	// Minimum chunk size
 	unsigned int minChunkSize;
 	inline unsigned int get_min_chunk_size(void)
 	{
@@ -189,7 +189,7 @@ class PtMalloc : public MallocBase {
 		return (m_ptBin[uiBinIdx].m_hNextChunk == INVALID_HANDLE);
 	}
 
-	// 内部做一下统计
+	// Internal statistics
 	ALLOC_HANDLE_T inter_malloc(ALLOC_SIZE_T tSize);
 	ALLOC_HANDLE_T inter_re_alloc(ALLOC_HANDLE_T hHandle,
 				      ALLOC_SIZE_T tSize,
@@ -223,40 +223,40 @@ class PtMalloc : public MallocBase {
 	}
 
 	/*************************************************
-	  Description:	格式化内存
-	  Input:		pAddr	内存块地址
-				tSize		内存块大小
-	  Return:		0为成功，非0失败
-	*************************************************/
+	  Description:	Format memory
+	  Input:		pAddr	Memory block address
+				tSize		Memory block size
+	  Return:		0 on success, non-zero on failure
+	**************************************************/
 	int do_init(void *pAddr, INTER_SIZE_T tSize);
 
 	/*************************************************
-	  Description:	attach已经格式化好的内存块
-	  Input:		pAddr	内存块地址
-				tSize		内存块大小
-	  Return:		0为成功，非0失败
-	*************************************************/
+	  Description:	Attach to already formatted memory block
+	  Input:		pAddr	Memory block address
+				tSize		Memory block size
+	  Return:		0 on success, non-zero on failure
+	**************************************************/
 	int do_attach(void *pAddr, INTER_SIZE_T tSize);
 
 	/*************************************************
-	  Description:	检测内存块的dtc版本
-	  Input:		pAddr	内存块地址
-				tSize		内存块大小
+	  Description:	Detect DTC version of memory block
+	  Input:		pAddr	Memory block address
+				tSize		Memory block size
 	   Output:		
-	  Return:		0为成功，非0失败
-	*************************************************/
+	  Return:		0 on success, non-zero on failure
+	**************************************************/
 	int detect_version();
 
-	/* 共享内存完整性检测接口 */
+	/* Shared memory integrity check interface */
 	int share_memory_integrity();
 	void set_share_memory_integrity(const int flag);
 
 	/*************************************************
-	  Description:	检测内部数据结构bin是否正确
+	  Description:	Check if internal data structure bin is correct
 	  Input:		
 	  Output:		
-	  Return:		0为成功，非0失败
-	*************************************************/
+	  Return:		0 on success, non-zero on failure
+	**************************************************/
 	int check_bin();
 #if BIN_MEM_CHECK
 	int check_mem();
@@ -265,98 +265,98 @@ class PtMalloc : public MallocBase {
 	int dump_mem();
 
 	/*************************************************
-	  Description:	分配内存
-	  Input:		tSize		分配的内存大小
+	  Description:	Allocate memory
+	  Input:		tSize		Size of memory to allocate
 	  Output:		
-	  Return:		内存块句柄，INVALID_HANDLE为失败
-	*************************************************/
+	  Return:		Memory block handle, INVALID_HANDLE on failure
+	**************************************************/
 	ALLOC_HANDLE_T Malloc(ALLOC_SIZE_T tSize);
 
 	/*************************************************
-	  Description:	分配内存，并将内存初始化为0
-	  Input:		tSize		分配的内存大小
+	  Description:	Allocate memory and initialize to 0
+	  Input:		tSize		Size of memory to allocate
 	  Output:		
-	  Return:		内存块句柄，INVALID_HANDLE为失败
-	*************************************************/
+	  Return:		Memory block handle, INVALID_HANDLE on failure
+	**************************************************/
 	ALLOC_HANDLE_T Calloc(ALLOC_SIZE_T tSize);
 
 	/*************************************************
-	  Description:	重新分配内存
-	  Input:		hHandle	老内存句柄
-				tSize		新分配的内存大小
+	  Description:	Reallocate memory
+	  Input:		hHandle	Old memory handle
+				tSize		New memory size
 	  Output:		
-	  Return:		内存块句柄，INVALID_HANDLE为失败(失败时不会释放老内存块)
-	*************************************************/
+	  Return:		Memory block handle, INVALID_HANDLE on failure (old memory block not freed on failure)
+	**************************************************/
 	ALLOC_HANDLE_T ReAlloc(ALLOC_HANDLE_T hHandle, ALLOC_SIZE_T tSize);
 
 	/*************************************************
-	  Description:	释放内存
-	  Input:		hHandle	内存句柄
+	  Description:	Free memory
+	  Input:		hHandle	Memory handle
 	  Output:		
-	  Return:		0为成功，非0失败
-	*************************************************/
+	  Return:		0 on success, non-zero on failure
+	**************************************************/
 	int Free(ALLOC_HANDLE_T hHandle);
 
 	/*************************************************
-	  Description: 获取释放这块内存后可以得到多少free空间	
-	  Input:		hHandle	内存句柄
+	  Description: Get how much free space can be obtained after freeing this memory	
+	  Input:		hHandle	Memory handle
 	  Output:		
-	  Return:		>0为成功，0失败
-	*************************************************/
+	  Return:		>0 on success, 0 on failure
+	**************************************************/
 	unsigned ask_for_destroy_size(ALLOC_HANDLE_T hHandle);
 
 	/*************************************************
-	  Description:	获取内存块大小
-	  Input:		hHandle	内存句柄
+	  Description:	Get memory block size
+	  Input:		hHandle	Memory handle
 	  Output:		
-	  Return:		内存大小
-	*************************************************/
+	  Return:		Memory size
+	**************************************************/
 	ALLOC_SIZE_T chunk_size(ALLOC_HANDLE_T hHandle);
 
 	/*************************************************
-	  Description:	获取用户已经分配的内存总大小
+	  Description:	Get total size of memory already allocated by user
 	  Input:		
 	  Output:		
-	  Return:		内存大小
-	*************************************************/
+	  Return:		Memory size
+	**************************************************/
 	INTER_SIZE_T user_alloc_size()
 	{
 		return m_pstHead->m_tUserAllocSize;
 	}
 
 	/*************************************************
-	  Description:	获取内存总大小
+	  Description:	Get total memory size
 	  Input:		
 	  Output:		
-	  Return:		内存大小
-	*************************************************/
+	  Return:		Memory size
+	**************************************************/
 	INTER_SIZE_T total_size()
 	{
 		return m_pstHead->m_tSize;
 	}
 
 	/*************************************************
-	  Description:	最近一次释放内存，合并后的chunk大小
+	  Description:	Size of merged chunk after the last memory free operation
 	  Input:		
 	  Output:		
-	  Return:		内存大小
-	*************************************************/
+	  Return:		Memory size
+	**************************************************/
 	ALLOC_SIZE_T last_free_size();
 
 	/*************************************************
-	  Description:	获取为上层应用保留的内存块（大小为DTC_RESERVE_SIZE＝4K）
+	  Description:	Get reserved memory block for upper layer applications (size = DTC_RESERVE_SIZE = 4K)
 	  Input:		
 	  Output:		
-	  Return:		内存句柄
-	*************************************************/
+	  Return:		Memory handle
+	**************************************************/
 	ALLOC_HANDLE_T get_reserve_zone();
 
 	/*************************************************
-	  Description:	将句柄转换成内存地址
-	  Input:		内存句柄
+	  Description:	Convert handle to memory address
+	  Input:		Memory handle
 	  Output:		
-	  Return:		内存地址，如果句柄无效返回NULL
-	*************************************************/
+	  Return:		Memory address, NULL if handle is invalid
+	**************************************************/
 	inline void *handle_to_ptr(ALLOC_HANDLE_T hHandle)
 	{
 		if (hHandle == INVALID_HANDLE)
@@ -365,11 +365,11 @@ class PtMalloc : public MallocBase {
 	}
 
 	/*************************************************
-	  Description:	将内存地址转换为句柄
-	  Input:		内存地址
+	  Description:	Convert memory address to handle
+	  Input:		Memory address
 	  Output:		
-	  Return:		内存句柄，如果地址无效返回INVALID_HANDLE
-	*************************************************/
+	  Return:		Memory handle, INVALID_HANDLE if address is invalid
+	**************************************************/
 	inline ALLOC_HANDLE_T ptr_to_handle(void *p)
 	{
 		if ((char *)p < (char *)m_pBaseAddr ||
@@ -379,11 +379,11 @@ class PtMalloc : public MallocBase {
 	}
 
 	/*************************************************
-	  Description:	检测handle是否有效
-	  Input:		内存句柄
+	  Description:	Check if handle is valid
+	  Input:		Memory handle
 	  Output:		
-      Return:	    0: 有效; -1:无效
-	*************************************************/
+      Return:	    0: valid; -1: invalid
+	**************************************************/
 	virtual int handle_is_valid(ALLOC_HANDLE_T mem_handle)
 	{
 		return 0;

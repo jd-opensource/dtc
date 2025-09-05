@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ int PluginDecoderUnit::process_stream(int newfd, int req, void *peer,
 		return -1;
 	}
 
-	/* accept唤醒后立即recv */
+	/* recv immediately after accept wakeup */
 	plugin_client->input_notify();
 
 	return 0;

@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -23,15 +23,15 @@
 
 class DataChunk {
     protected:
-	unsigned char data_type_; // 数据chunk的类型
+	unsigned char data_type_; // Type of data chunk
 
     public:
 	/*************************************************
-	  Description:	计算基本结构大小
+	  Description:	Calculate basic structure size
 	  Input:		
 	  Output:		
-	  Return:		内存大小
-	*************************************************/
+	  Return:		Memory size
+	***********************************************/
 	ALLOC_SIZE_T base_size()
 	{
 		if (data_type_ == DATA_TYPE_RAW)
@@ -54,11 +54,11 @@ class DataChunk {
 	}
 
 	/*************************************************
-	  Description:	获取格式化后的key
+	  Description:	Get formatted key
 	  Input:		
 	  Output:		
-	  Return:		key指针
-	*************************************************/
+	  Return:		key pointer
+	***********************************************/
 	const char *key() const
 	{
 		if ((data_type_ & 0x7f) == DATA_TYPE_RAW) {
@@ -72,11 +72,11 @@ class DataChunk {
 	}
 
 	/*************************************************
-	  Description:	获取格式化后的key
+	  Description:	Get formatted key
 	  Input:		
 	  Output:		
-	  Return:		key指针
-	*************************************************/
+	  Return:		key pointer
+	***********************************************/
 	char *key()
 	{
 		if ((data_type_ & 0x7f) == DATA_TYPE_RAW) {
@@ -90,11 +90,11 @@ class DataChunk {
 	}
 
 	/*************************************************
-	  Description:	保存key
-	  Input:		key	key的实际值
+	  Description:	Save key
+	  Input:		key	actual value of key
 	  Output:		
 	  Return:		
-	*************************************************/
+	**********************************************/
 
 #define SET_KEY_FUNC(type, key)                                                \
 	void set_key(type key)                                                 \
@@ -114,12 +114,12 @@ class DataChunk {
 	SET_KEY_FUNC(uint64_t, ullKey)
 
 	/*************************************************
-	  Description:	保存字符串key
-	  Input:		key	key的实际值
-				iLen	key的长度
+	  Description:	Save string key
+	  Input:		key	actual value of key
+				iLen	length of key
 	  Output:		
 	  Return:		
-	*************************************************/
+	**********************************************/
 	void set_key(const char *pchKey, int iLen)
 	{
 		if (data_type_ == DATA_TYPE_RAW) {
@@ -134,11 +134,11 @@ class DataChunk {
 	}
 
 	/*************************************************
-	  Description:	保存格式化好的字符串key
-	  Input:		key	key的实际值, 要求key[0]是长度
+	  Description:	Save formatted string key
+	  Input:		key	actual value of key, requires key[0] to be length
 	  Output:		
 	  Return:		
-	*************************************************/
+	**********************************************/
 	void set_key(const char *pchKey)
 	{
 		if (data_type_ == DATA_TYPE_RAW) {
@@ -153,10 +153,10 @@ class DataChunk {
 	}
 
 	/*************************************************
-	  Description:	查询字符串key大小
+	  Description:	Query string key size
 	  Input:		
 	  Output:		
-	  Return:		key大小
+	  Return:		key size
 	*************************************************/
 	int str_key_size()
 	{
@@ -170,10 +170,10 @@ class DataChunk {
 	}
 
 	/*************************************************
-	  Description:	查询二进制key大小
+	  Description:	Query binary key size
 	  Input:		
 	  Output:		
-	  Return:		key大小
+	  Return:		key size
 	*************************************************/
 	int bin_key_size()
 	{
@@ -189,10 +189,10 @@ class DataChunk {
 	}
 
 	/*************************************************
-	  Description:	查询数据头大小，如果是CRawData的chunk，data_size()是不包括Row的长度，仅包括头部信息以及key
+	  Description:	Query data header size. If it's CRawData chunk, data_size() does not include Row length, only header info and key
 	  Input:		
 	  Output:		
-	  Return:		内存大小
+	  Return:		memory size
 	*************************************************/
 	unsigned int data_size(int iKeySize)
 	{
@@ -250,10 +250,10 @@ class DataChunk {
 	}
 
 	/*************************************************
-	  Description:	销毁内存并释放内存
+	  Description:	Destroy and free memory
 	  Input:		
 	  Output:		
-	  Return:		0为成功，非0失败
+	  Return:		0 for success, non-zero for failure
 	*************************************************/
 	int destory(MallocBase *pstMalloc)
 	{
@@ -271,7 +271,7 @@ class DataChunk {
 		return (-1);
 	}
 
-	/* 查询如果destroy这块内存，能释放多少空间出来 （包括合并）*/
+	/* Query how much space can be freed if this memory is destroyed (including merging) */
 	unsigned ask_for_destroy_size(MallocBase *pstMalloc)
 	{
 		MEM_HANDLE_T hHandle = pstMalloc->ptr_to_handle(this);

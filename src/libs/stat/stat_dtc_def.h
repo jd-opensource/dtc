@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 #include "stat_info.h"
 
 enum {
-	// 相同的统计项目
+	// Same statistical items
 	S_VERSION = 5,
 	C_TIME,
 
@@ -42,9 +42,9 @@ enum {
 	REQ_USEC_HIT,
 	REQ_USEC_REPLACE,
 
-	// accept连接次数
+	// Number of accept connections
 	ACCEPT_COUNT = 30,
-	// 当前连接数
+	// Current connection count
 	CONN_COUNT,
 
 	CUR_QUEUE_COUNT,
@@ -54,7 +54,7 @@ enum {
 	AGENT_ACCEPT_COUNT,
 	AGENT_CONN_COUNT,
 
-	// server是否为只读状态
+	// Whether server is in read-only status
 	SERVER_READONLY = 40,
 	SERVER_OPENNING_FD,
 	SUPER_GROUP_ENABLE,
@@ -148,7 +148,7 @@ enum {
 	BLACKLIST_CURRENT_SLOT = 3010,
 	BLACKLIST_SIZE,
 	TRY_PURGE_COUNT,
-	// try_purge_size 每次purge的节点个数
+	// try_purge_size Number of nodes purged each time
 	TRY_PURGE_NODES,
 
 	PLUGIN_REQ_USEC_ALL = 10000,
@@ -172,7 +172,7 @@ enum {
 	ROW_SIZE_HISTORY_STAT = 20301,
 	DATA_SURVIVAL_HOUR_STAT = 20302,
 	PURGE_CREATE_UPDATE_STAT = 20303,
-	// 新增Helper的统计项, 从20400开始编号
+	// New Helper statistical items, starting from 20400
 	HELPER_READ_GROUR_CUR_QUEUE_MAX_SIZE = 20400,
 	HELPER_WRITE_GROUR_CUR_QUEUE_MAX_SIZE = 20401,
 	HELPER_COMMIT_GROUR_CUR_QUEUE_MAX_SIZE = 20402,

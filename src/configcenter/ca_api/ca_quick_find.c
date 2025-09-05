@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 */
 #include "ca_quick_find.h"
 
-//二分查找
+//Binary search
 int binary_search_header(NODE_HEADER *headers_ptr, const int low,
 			 const int high, const int key)
 {

@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -145,12 +145,12 @@ int HBLog::Seek(const JournalID &v)
 	return log_reader_->Seek(v);
 }
 
-/* 批量拉取更新key，返回更新key的个数 */
+/* Batch fetch update keys, return count of update keys */
 int HBLog::task_append_all_rows(DTCJobOperation &job, int limit)
 {
 	int count;
 	for (count = 0; count < limit; ++count) {
-		/* 没有待处理日志 */
+		/* No pending logs to process */
 		if (log_reader_->Read())
 			break;
 

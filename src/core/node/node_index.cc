@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -44,8 +44,8 @@ void NodeIndex::destroy()
 int NodeIndex::pre_allocate_index(size_t mem_size)
 {
 	/* 
-	 * 按所有节点全为空节点来分配2级NodeIndex
-	 * 一个空节点占用44 bytes
+	 * Allocate 2-level NodeIndex assuming all nodes are empty nodes
+	 * An empty node occupies 44 bytes
 	 */
 	uint32_t n = 65536 * 256 * 44;
 	n = mem_size / n + 1;

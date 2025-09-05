@@ -32,7 +32,7 @@
 #endif
 
 /*
- * 模拟异步文件
+ * Simulate asynchronous file
  */
 struct CAsyncFilePos {
 	public:
@@ -55,7 +55,7 @@ struct CAsyncFilePos {
 		}
 
 		/*
-		 * 向前移动v bytes
+		 * Move forward v bytes
 		 */
 		inline void Front(int v) {
 			MEMORY_BARRIER();
@@ -64,13 +64,13 @@ struct CAsyncFilePos {
 			MEMORY_BARRIER();
 		}
 		/*
-		 *  递增一个文件编号
+		 * Increment a file number
 		 */
 		inline void Shift(void) {
 			MEMORY_BARRIER();
 			offset = 0;
 			/*
-			 * 有可能在这个点出现暂态，读者会认为自己GT写者，从而出错
+			 * Transient state may occur at this point where reader thinks it's GT writer, causing errors
 			 */
 			serial += 1;
 			MEMORY_BARRIER();
@@ -90,9 +90,9 @@ struct CAsyncFilePos {
 		}
 
 		/*
-		 *  切换文件时，有可能出现暂态出错，见Shift中的解释
+		 * When switching files, transient errors may occur, see explanation in Shift
 		 *
-		 *  因为是无锁判定，所以在读者判定时，我们先调用IsTransient来检测是否暂态，如果是则sespend读者
+		 * Since it's lock-free determination, when reader determines, we first call IsTransient to detect if transient, if so suspend reader
 		 */
 		inline int IsTransient(const CAsyncFilePos &v) {
 			return (serial == v.serial) && (offset > 0) && (v.offset == 0);

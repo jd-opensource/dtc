@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -26,10 +26,10 @@
 DTC_BEGIN_NAMESPACE
 
 struct _hash {
-	uint32_t hh_size; // hash 大小
-	uint32_t hh_free; // 空闲的hash数量
-	uint32_t hh_node; // 挂接的node总数量
-	uint32_t hh_fixedsize; // key大小：变长key时，hh_fixedsize = 0;其他就是其实际长度
+	uint32_t hh_size; // hash size
+	uint32_t hh_free; // number of free hash slots
+	uint32_t hh_node; // total number of attached nodes
+	uint32_t hh_fixedsize; // key size: for variable-length keys, hh_fixedsize = 0; otherwise it's the actual length
 	uint32_t hh_buckets[0]; // hash bucket start
 };
 typedef struct _hash HASH_T;
@@ -50,11 +50,11 @@ class DTCHash {
 
 	inline HASH_ID_T new_hash_slot(const char *key)
 	{
-		//变长key的前一个字节编码的是key的长度
+		//the previous byte of variable-length key encodes the key length
 		uint32_t size = _hash->hh_fixedsize ? _hash->hh_fixedsize :
 						      *(unsigned char *)key++;
 
-		//目前仅支持1、2、4字节的定长key
+		//currently only supports 1, 2, 4-byte fixed-length keys
 		switch (size) {
 		case sizeof(unsigned char):
 			return (*(unsigned char *)key) % _hash->hh_size;
@@ -70,11 +70,11 @@ class DTCHash {
 
 	inline HASH_ID_T hash_slot(const char *key)
 	{
-		//变长key的前一个字节编码的是key的长度
+		//the previous byte of variable-length key encodes the key length
 		uint32_t size = _hash->hh_fixedsize ? _hash->hh_fixedsize :
 						      *(unsigned char *)key++;
 
-		//目前仅支持1、2、4字节的定长key
+		//currently only supports 1, 2, 4-byte fixed-length keys
 		switch (size) {
 		case sizeof(unsigned char):
 			return (*(unsigned char *)key) % _hash->hh_size;
@@ -87,7 +87,7 @@ class DTCHash {
 		unsigned int h = 0, g = 0;
 		const char *arEnd = key + size;
 
-		//变长key hash算法, 目前8字节的定长整型key也是作为变长hash的。
+		//variable-length key hash algorithm, currently 8-byte fixed-length integer keys are also treated as variable-length hash.
 		while (key < arEnd) {
 			h = (h << 4) + *key++;
 			if ((g = (h & 0xF0000000))) {
@@ -109,11 +109,11 @@ class DTCHash {
 		return errmsg_;
 	}
 
-	//创建物理内存并格式化
+	//create and format physical memory
 	int do_init(const uint32_t hsize, const uint32_t fixedsize);
-	//绑定到物理内存
+	//bind to physical memory
 	int do_attach(MEM_HANDLE_T handle);
-	//脱离物理内存
+	//detach from physical memory
 	int do_detach(void);
 
 	uint32_t hash_size() const

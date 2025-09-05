@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -100,12 +100,12 @@ public:
 	KeyHelper *guard;
 
 private:
-	StatCounter statQueueCurCount; /*所有组当前总的队列大小*/
-	StatCounter statQueueMaxCount; /*所有组配置总的队列大小*/
-	StatCounter statReadQueueCurMaxCount; /*所有机器所有主读组当前最大的队列大小*/
-	StatCounter statWriteQueueMaxCount; /*所有机器所有写组当前最大的队列大小*/
-	StatCounter statCommitQueueCurMaxCount; /*所有机器所有提交组当前最大的队列大小*/
-	StatCounter statSlaveReadQueueMaxCount; /*所有机器所有备读组当前最大的队列大小*/
+	StatCounter statQueueCurCount; /*Current total queue size of all groups*/
+	StatCounter statQueueMaxCount; /*Total configured queue size of all groups*/
+	StatCounter statReadQueueCurMaxCount; /*Current maximum queue size of all master read groups on all machines*/
+	StatCounter statWriteQueueMaxCount; /*Current maximum queue size of all write groups on all machines*/
+	StatCounter statCommitQueueCurMaxCount; /*Current maximum queue size of all commit groups on all machines*/
+	StatCounter statSlaveReadQueueMaxCount; /*Current maximum queue size of all slave read groups on all machines*/
 };
 
 #endif

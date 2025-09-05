@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 
 #define HOOKSO "../bin/faultlogger"
 
-/* 设置环境变量LD_PRELOAD */
+/* Set environment variable LD_PRELOAD */
 static void set_ld_preload()
 {
 	if (access(HOOKSO, R_OK) == 0) {
@@ -45,7 +45,7 @@ static void set_ld_preload()
 	}
 }
 
-/* 启动默认日志线程 */
+/* Start default logging thread */
 int start_fault_logger(WatchDog *watchdog)
 {
 	/**

@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -146,7 +146,7 @@ int StatManager::init_stat_info(const char *name, const char *indexfile,
 		return -1;
 	}
 
-	//成功执行时，mmap()返回被映射区的指针，munmap()返回0。失败时，mmap()返回MAP_FAILED[其值为(void *)-1]，munmap返回-1。
+	// On successful execution, mmap() returns a pointer to the mapped region, munmap() returns 0. On failure, mmap() returns MAP_FAILED [value is (void *)-1], munmap returns -1.
 	header_ = (DTCStatHeader *)mmap(NULL, index_size_, PROT_READ,
 					MAP_SHARED, fd, 0);
 	close(fd);

@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ struct FieldDefinition {
 	uint8_t offset;
 	fieldflag_t flags;
 
-	int boffset; //field的bits起始偏移
+	int boffset; //field's bits start offset
 	int bsize; //bits
 	uint16_t next;
 };
@@ -91,8 +91,8 @@ class TableAttribute : public SimpleSection {
 		set_tag(3, n);
 	}
 
-	//压缩字段用来表示设置compressflag的字段id，传给client端使用。
-	//该标识占用tag1的高八位，共计一个字节
+	//Compression field is used to represent the field id with compressflag set, passed to client for use.
+	//This identifier occupies the high 8 bits of tag1, totaling one byte
 	int compress_field_id(void) const
 	{
 		return get_tag(1) ? (((get_tag(1)->u64) >> 56) & 0xFF) : -1;
@@ -296,11 +296,11 @@ class DTCTableDefinition {
 	const int row_size(void) const
 	{
 		return (m_row_size + 7) / 8;
-	}; //返回rowsize 单位bytes
+	}; //return rowsize in bytes
 	const int b_row_size(void) const
 	{
 		return m_row_size;
-	}; //返回rowsize 单位bits
+	}; //return rowsize in bits
 	void set_row_size(int size)
 	{
 		m_row_size = size;

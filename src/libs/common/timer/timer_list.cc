@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -78,7 +78,7 @@ void TimerUnit::update_now_time(int max_wait, int interrupted)
 {
 	int64_t adjustTime = 0;
 	int64_t deadLineTime = 0;
-	const int MAX_DELAY_MS = 1000000; /*前向拨动最多量*/
+	const int MAX_DELAY_MS = 1000000; /*Maximum forward time adjustment*/
 	m_SystemTime = GET_TIMESTAMP();
 
 	if (unlikely(max_wait < 0)) {
@@ -88,7 +88,7 @@ void TimerUnit::update_now_time(int max_wait, int interrupted)
 	}
 
 	adjustTime = m_SystemTime + m_TimeOffSet;
-	/*时间被向后拨动了*/
+	/*Time has been adjusted backward*/
 	if (adjustTime < m_NowTime) {
 		adjustTime = interrupted ?
 				     (m_NowTime) :
@@ -105,7 +105,7 @@ void TimerUnit::update_now_time(int max_wait, int interrupted)
 		m_NowTime = adjustTime;
 		return;
 	}
-	/*时间被向前拨动了*/
+	/*Time has been adjusted forward*/
 	else {
 		adjustTime = interrupted ?
 				     (m_NowTime) :

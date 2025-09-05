@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -130,7 +130,7 @@ int RawData::init(uint8_t uchKeyIdx, int iKeySize, const char *pchKey,
 {
 	int ks = iKeySize != 0 ? iKeySize : 1 + *(unsigned char *)pchKey;
 
-	/*|1字节:类型|4字节:数据大小|4字节: 行数| 1字节 : Get次数| 2字节: 最后访问时间| 2字节 : 最后更新时间|2字节: 最后创建时间 |key|*/
+	/*|1 byte:type|4 bytes:data size|4 bytes: row count| 1 byte : Get count| 2 bytes: last access time| 2 bytes : last update time|2 bytes: last creation time |key|*/
 	uiDataSize += 2 + sizeof(uint32_t) * 2 + sizeof(uint16_t) * 3 + ks;
 
 	handle_ = INVALID_HANDLE;
@@ -381,7 +381,7 @@ int RawData::decode_row(RowValue &stRow, unsigned char &uchRowFlags,
 	GET_VALUE(uchRowFlags, unsigned char);
 
 	for (int j = key_index_ + 1; j <= stRow.num_fields();
-	     j++) //拷贝一行数据
+	     j++) //copy row data
 	{
 		if (stRow.table_definition()->is_discard(j))
 			continue;
@@ -406,7 +406,7 @@ int RawData::decode_row(RowValue &stRow, unsigned char &uchRowFlags,
 			}
 			break;
 
-		case DField::Float: //浮点数
+		case DField::Float: //float type
 			if (likely(stRow.field_size(j) > (int)sizeof(float))) {
 				GET_VALUE(stRow.field_value(j)->flt, double);
 			} else {
@@ -414,8 +414,8 @@ int RawData::decode_row(RowValue &stRow, unsigned char &uchRowFlags,
 			}
 			break;
 
-		case DField::String: //字符串
-		case DField::Binary: //二进制数据
+		case DField::String: //string type
+		case DField::Binary: //binary data
 		default: {
 			GET_VALUE(stRow.field_value(j)->bin.len, int);
 			stRow.field_value(j)->bin.ptr = p_content_ + offset_;
@@ -456,7 +456,7 @@ int RawData::get_expire_time(DTCTableDefinition *t, uint32_t &expire)
 	SKIP_SIZE(sizeof(unsigned char)); //skip flag
 	// the first field should be expire time
 	for (int j = key_index_ + 1; j <= table_definition_->num_fields();
-	     j++) { //拷贝一行数据
+	     j++) { //copy row data
 		if (j == expire_id_) {
 			expire = *((uint32_t *)(p_content_ + offset_));
 			break;
@@ -473,7 +473,7 @@ int RawData::get_expire_time(DTCTableDefinition *t, uint32_t &expire)
 			;
 			break;
 
-		case DField::Float: //浮点数
+		case DField::Float: //float type
 			if (table_definition_->field_size(j) >
 			    (int)sizeof(float))
 				SKIP_SIZE(sizeof(double));
@@ -481,8 +481,8 @@ int RawData::get_expire_time(DTCTableDefinition *t, uint32_t &expire)
 				SKIP_SIZE(sizeof(float));
 			break;
 
-		case DField::String: //字符串
-		case DField::Binary: //二进制数据
+		case DField::String: //string type
+		case DField::Binary: //binary data
 		default:
 			int iLen = 0;
 			GET_VALUE(iLen, int);
@@ -510,7 +510,7 @@ int RawData::get_lastcmod(uint32_t &lastcmod)
 	SKIP_SIZE(sizeof(unsigned char)); //skip flag
 
 	for (int j = key_index_ + 1; j <= table_definition_->num_fields();
-	     j++) //拷贝一行数据
+	     j++) //copy row data
 	{
 		//id: bug fix skip discard
 		if (table_definition_->is_discard(j))
@@ -529,7 +529,7 @@ int RawData::get_lastcmod(uint32_t &lastcmod)
 			;
 			break;
 
-		case DField::Float: //浮点数
+		case DField::Float: //float type
 			if (table_definition_->field_size(j) >
 			    (int)sizeof(float))
 				SKIP_SIZE(sizeof(double));
@@ -537,8 +537,8 @@ int RawData::get_lastcmod(uint32_t &lastcmod)
 				SKIP_SIZE(sizeof(float));
 			break;
 
-		case DField::String: //字符串
-		case DField::Binary: //二进制数据
+		case DField::String: //string type
+		case DField::Binary: //binary data
 		default: {
 			int iLen = 0;
 			GET_VALUE(iLen, int);
@@ -621,7 +621,7 @@ ALLOC_SIZE_T RawData::calc_row_size(const RowValue &stRow, int keyIdx)
 	if (keyIdx == -1)
 		log4cplus_error("RawData may not init yet...");
 	ALLOC_SIZE_T tSize = 1; // flag
-	for (int j = keyIdx + 1; j <= stRow.num_fields(); j++) //拷贝一行数据
+	for (int j = keyIdx + 1; j <= stRow.num_fields(); j++) //copy row data
 	{
 		if (stRow.table_definition()->is_discard(j))
 			continue;
@@ -634,15 +634,15 @@ ALLOC_SIZE_T RawData::calc_row_size(const RowValue &stRow, int keyIdx)
 					 sizeof(int32_t);
 			break;
 
-		case DField::Float: //浮点数
+		case DField::Float: //float type
 			tSize += likely(stRow.field_size(j) >
 					(int)sizeof(float)) ?
 					 sizeof(double) :
 					 sizeof(float);
 			break;
 
-		case DField::String: //字符串
-		case DField::Binary: //二进制数据
+		case DField::String: //string type
+		case DField::Binary: //binary data
 		default: {
 			tSize += sizeof(int);
 			tSize += stRow.field_value(j)->bin.len;
@@ -674,7 +674,7 @@ int RawData::encode_row(const RowValue &stRow, unsigned char uchOp,
 	SET_VALUE(uchOp, unsigned char);
 
 	for (int j = key_index_ + 1; j <= stRow.num_fields();
-	     j++) //拷贝一行数据
+	     j++) //copy row data
 	{
 		if (stRow.table_definition()->is_discard(j))
 			continue;
@@ -696,15 +696,15 @@ int RawData::encode_row(const RowValue &stRow, unsigned char uchOp,
 				SET_VALUE(v->u64, uint32_t);
 			break;
 
-		case DField::Float: //浮点数
+		case DField::Float: //float type
 			if (likely(stRow.field_size(j) > (int)sizeof(float)))
 				SET_VALUE(v->flt, double);
 			else
 				SET_VALUE(v->flt, float);
 			break;
 
-		case DField::String: //字符串
-		case DField::Binary: //二进制数据
+		case DField::String: //string type
+		case DField::Binary: //binary data
 		default: {
 			SET_BIN_VALUE(v->bin.ptr, v->bin.len);
 			break;
@@ -771,7 +771,7 @@ int RawData::insert_n_rows(unsigned int uiNRows, const RowValue *pstRow,
 	for (i = 0; i < uiNRows; i++)
 		tSize += calc_row_size(pstRow[i], key_index_);
 
-	iRet = expand_chunk(tSize); // 先扩大buffer，避免后面insert失败回滚
+	iRet = expand_chunk(tSize); // expand buffer first to avoid rollback if insert fails later
 	if (iRet != 0)
 		return (iRet);
 
@@ -826,7 +826,7 @@ int RawData::skip_row(const RowValue &stRow)
 	SKIP_SIZE(sizeof(unsigned char)); // flag
 
 	for (int j = key_index_ + 1; j <= stRow.num_fields();
-	     j++) //拷贝一行数据
+	     j++) //copy row data
 	{
 		//id: bug fix skip discard
 		if (stRow.table_definition()->is_discard(j))
@@ -842,15 +842,15 @@ int RawData::skip_row(const RowValue &stRow)
 			;
 			break;
 
-		case DField::Float: //浮点数
+		case DField::Float: //float type
 			if (stRow.field_size(j) > (int)sizeof(float))
 				SKIP_SIZE(sizeof(double));
 			else
 				SKIP_SIZE(sizeof(float));
 			break;
 
-		case DField::String: //字符串
-		case DField::Binary: //二进制数据
+		case DField::String: //string type
+		case DField::Binary: //binary data
 		default: {
 			int iLen;
 			GET_VALUE(iLen, int);

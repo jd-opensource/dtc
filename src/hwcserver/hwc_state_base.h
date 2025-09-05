@@ -35,17 +35,17 @@ public:
 
 public:
     /// **************************
-    /// 进入当前状态时，一些处理，比如: 初始化
+    /// Some processing when entering current state, such as: initialization
     /// **************************
     virtual void Enter(void) = 0;
 
     /// **************************
-    /// 退出当前状态时，一些处理
+    /// Some processing when exiting current state
     /// **************************
     virtual void Exit(void) = 0;
 
     /// **************************
-    /// 当前状态时，所要处理的业务逻辑，包括：状态跳转判断逻辑
+    /// Business logic to be processed in current state, including: state transition judgment logic
     /// **************************
     virtual void HandleEvent() = 0;
 
@@ -53,7 +53,7 @@ protected:
     HwcStateManager* p_hwc_state_manager_;
 };
 
-// 减少冗余代码编写
+// Reduce redundant code writing
 #define SYNCSTATE_NAME(stateName)  stateName##State
 
 #define SyncState(stateName)                                    \

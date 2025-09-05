@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -32,15 +32,15 @@ static char *arg_end;
 static char *env_start;
 extern char **environ;
 
-//初始化进程名
+// Initialize process name
 void init_proc_title(int argc, char **argv)
 {
 	int i;
-	arg_start = argv[0]; 			//程序地址
+	arg_start = argv[0]; 			// Program address
 	arg_end = argv[argc - 1] + strlen(argv[argc - 1]) + 1;
 	env_start = environ[0];
 	for (i = 0; i < argc; ++i)
-		argv[i] = STRDUP(argv[i]);   //使可以操作argv空间
+		argv[i] = STRDUP(argv[i]);   // Allow manipulation of argv space
 }
 
 void set_proc_title(const char *title)

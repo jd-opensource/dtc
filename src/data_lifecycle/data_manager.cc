@@ -174,7 +174,7 @@ int DataManager::DoTaskOnce(){
             break;
         }
         for(auto iter = query_info_vec.begin(); iter != query_info_vec.end(); iter++){
-            // 如果执行失败，更新last_id，并退出循环
+            // If execution fails, update last_id and exit the loop
             std::string sql_set = ConstructDeleteSql(iter->field_info);
             ret = DoDelete(sql_set);
             log4cplus_debug("DoDelete ret: %d\n", ret);
@@ -288,7 +288,7 @@ void hextostring(char* str, int len){
 }
 
 std::set<std::string> DataManager::ConstructDeleteSql(const std::string& key){
-    // delete根据key删除，并带上规则
+    // Delete based on key with rules applied
     std::set<std::string> sql_set;
     std::string or_flag = " or ";
     std::set<std::string> res = splitStr(data_rule_, or_flag);
@@ -380,10 +380,10 @@ int DataManager::CreateTable(){
     std::stringstream ss_sql;
     ss_sql << "CREATE TABLE if not exists " << life_cycle_table_name_ << "("
         << "`id` int(11) unsigned NOT NULL AUTO_INCREMENT,"
-        << "`ip` varchar(20) NOT NULL DEFAULT '0' COMMENT '执行清理操作的机器ip',"
+        << "`ip` varchar(20) NOT NULL DEFAULT '0' COMMENT 'IP address of the machine performing cleanup operations',"
         << "`uniq_table_name` varchar(40) DEFAULT NULL UNIQUE ,"
-        << "`last_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '上次删除的记录对应的id',"
-        << "`last_update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '上次删除的记录对应的更新时间',"
+        << "`last_id` int(11) unsigned NOT NULL DEFAULT '0' COMMENT 'ID corresponding to the last deleted record',"
+        << "`last_update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Update time corresponding to the last deleted record',"
         << "PRIMARY KEY (`id`)"
         << ") ENGINE=InnoDB DEFAULT CHARSET=utf8";
     int ret = full_db_conn_->do_query(cold_db_name_.c_str(), ss_sql.str().c_str());
@@ -407,9 +407,9 @@ std::set<std::string> DataManager::splitStr(const std::string& src, const std::s
         }
         last_position = index + separate_characterLen;
     }
-    string last_string = src.substr(last_position);//截取最后一个分隔符后的内容
+    string last_string = src.substr(last_position);//Extract content after the last separator
     if (!last_string.empty() && last_string != " ")
-        strs.insert(last_string);//如果最后一个分隔符后还有内容就入队
+        strs.insert(last_string);//If there's content after the last separator, add to queue
     return strs;
 }
 
@@ -426,8 +426,8 @@ std::vector<std::string> DataManager::splitVecStr(const std::string& src, const 
         }
         last_position = index + separate_characterLen;
     }
-    string last_string = src.substr(last_position);//截取最后一个分隔符后的内容
+    string last_string = src.substr(last_position);//Extract content after the last separator
     if (!last_string.empty() && last_string != " ")
-        strs.push_back(last_string);//如果最后一个分隔符后还有内容就入队
+        strs.push_back(last_string);//If there's content after the last separator, add to queue
     return strs;
 }

@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -65,11 +65,11 @@ DataConnectorAskChain::DataConnectorAskChain()
 	groupMap[1] = NULL;
 	groups[0] = NULL;
 	groups[1] = NULL;
-	/*总队列的统计，暂时还有意义，暂时保留*/
+	/* Total queue statistics, still meaningful for now, temporarily retained */
 	statQueueCurCount = g_stat_mgr.get_stat_int_counter(CUR_QUEUE_COUNT);
 	statQueueMaxCount = g_stat_mgr.get_stat_int_counter(MAX_QUEUE_COUNT);
 
-	/*新增的四个组中最大的队列长度统计项，用来进行告警监控*/
+	/* Added statistics for maximum queue length among four groups, used for alert monitoring */
 	statReadQueueCurMaxCount = g_stat_mgr.get_stat_int_counter(
 		HELPER_READ_GROUR_CUR_QUEUE_MAX_SIZE);
 	statWriteQueueMaxCount = g_stat_mgr.get_stat_int_counter(
@@ -739,7 +739,7 @@ int DataConnectorAskChain::get_queue_cur_max_count(int iColumn)
 	}
 
 	for (int row = 0; row < dbConfig[0]->machineCnt; row++) {
-		/*read组是在group矩阵的第一列*/
+		/* Read group is in the first column of group matrix */
 		ConnectorGroup *readGroup =
 			groups[0][GROUPS_PER_MACHINE * row + iColumn];
 		if (NULL == readGroup) {
@@ -753,12 +753,12 @@ int DataConnectorAskChain::get_queue_cur_max_count(int iColumn)
 	}
 	return max_count;
 }
-/*传入请求类型，每次只根据请求类型统计响应的值*/
+/* Pass in request type, only count corresponding values based on request type each time */
 void DataConnectorAskChain::stat_helper_group_cur_max_queue_count(
 	int iRequestType)
 {
-	/*根据请求类型分辨不出来是主读还是备读(和Workload配置有关)，只好同时即统计主读组又统计备读组了*/
-	/*除非遍历group矩阵里的指针值和selectgroup后的group指针比较，然后再对比矩阵列，这个更复杂*/
+	/* Cannot distinguish between master read and slave read based on request type (related to Workload configuration), have to count both master read group and slave read group */
+	/* Unless traversing pointer values in group matrix and comparing with group pointer after selectgroup, then comparing matrix columns, which is more complex */
 	if (TaskTypeRead == iRequestType) {
 		statReadQueueCurMaxCount =
 			get_queue_cur_max_count(MASTER_READ_GROUP_COLUMN);

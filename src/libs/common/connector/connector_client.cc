@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ ConnectorClient::ConnectorClient(EpollOperation *o, ConnectorGroup *hg, int idx 
     supportBatchKey = 0;
     connectErrorCnt = 0;
     ready = 0;
-    Ready(); // 开始默认可用
+    Ready(); // Start with default availability
 }
 
 ConnectorClient::~ConnectorClient()

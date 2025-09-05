@@ -1,5 +1,5 @@
 /*
-* Copyright [2021] JD.com, Inc.
+* Copyright JD.com, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -139,7 +139,7 @@ int PluginSync::recv_request()
 		break;
 
 	case NET_RECVING:
-		//如果收到部分包，则需要加入idle list, 防止该连接挂死
+		//If partial packet received, need to add to idle list to prevent connection hang
 		attach_timer(owner->idle_list());
 		_plugin_stage = PLUGIN_RECV;
 		break;
@@ -219,7 +219,7 @@ proc_multi:
 		_plugin_stage = PLUGIN_IDLE;
 	}
 
-	//防止多一次output事件触发
+	//Prevent one extra output event trigger
 	disable_output();
 	enable_input();
 	attach_timer(owner->idle_list());
