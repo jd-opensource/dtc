@@ -8,16 +8,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5.0.0
       
-      - name: Install gcc env
-        run: |
-          sudo apt update
-          sudo apt install gcc g++
-        shell: bash
-        
       - name: Install dependency
         run: |
-          sudo apt-get install -y libmxml-dev libnsl2
-    
+          sudo apt update
+          sudo apt install -y libmxml-dev g++ gcc cmake zlib1g-dev libnsl-dev
+        shell: bash
+        
       - name: cmake project
         run: |
           cd ${{github.workspace}}
