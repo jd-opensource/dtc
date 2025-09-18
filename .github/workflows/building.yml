@@ -1,0 +1,24 @@
+name: building
+
+on: push
+
+jobs:        
+  building:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5.0.0
+      
+      - name: Install dependency
+        run: |
+          sudo apt update
+          sudo apt install -y libmxml-dev g++ gcc cmake zlib1g-dev libnsl-dev
+        shell: bash
+        
+      - name: cmake project
+        run: |
+          cd ${{github.workspace}}
+          mkdir build
+          cd build
+          cmake ../
+          make
+
